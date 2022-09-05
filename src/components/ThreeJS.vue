@@ -4,24 +4,84 @@ import * as three from 'three';
 import * as bitwise from '../Bitwise.ts';
 
 export default defineComponent({
-  async mounted() {
-    function renderSize(renderer:three.WebGLRenderer):three.Vector2 {
-      const canvas = renderer.domElement;
+  data() {
+    return {
+      // These non-reactive properties will be set by initThree()
+      //renderer: null,
+      //scene: null,
+      //camera: null,
+      //width: null,
+      //height: null,
+    };
+  },
+
+  methods: {
+    initThree() {
+      // Create the renderer after the <canvas> exists
+      const renderer = new three.WebGLRenderer({
+        canvas: this.$refs['canvas'],
+      });
+      this.renderer = renderer;
+
+      // Record the initial render height/width in case it changes. To
+      // keep responsiveness, we will reset the renderer size and adjust the
+      // camera so that everything looks the same.
+      const { width, height } = this.renderSize();
+      this.width = width;
+      this.height = height;
+
+      const scene = new three.Scene();
+      this.scene = scene;
+
+      // Point a camera at 0, 0
+      // Frustum size appears to work the same as zoom for an
+      // orthographic camera, which makes sense
+      const frustumSize = this.frustumSize = 2;
+      const camera = new three.OrthographicCamera(frustumSize * (width/-2), frustumSize * (width/2), frustumSize * (height/2), frustumSize * (height/-2), 0);
+      this.camera = camera;
+      // Z-position determines which objects are rendered? Use z-position
+      // for layering?
+      camera.position.z = camera.far;
+      camera.zoom = 4;
+    },
+
+    renderSize():three.Vector2 {
+      const canvas = this.renderer.domElement;
       const pixelRatio = window.devicePixelRatio;
       const width  = canvas.clientWidth  * pixelRatio | 0;
       const height = canvas.clientHeight * pixelRatio | 0;
       return new three.Vector2(width, height);
-    }
+    },
 
-    const renderer = new three.WebGLRenderer({
-      canvas: this.$refs['canvas'],
-    });
-    const { width, height } = renderSize(renderer);
+    resizeRendererToDisplaySize() {
+      const canvas = this.renderer.domElement;
+      const render = this.renderSize();
+      const needResize = canvas.width !== render.width || canvas.height !== render.height;
+      if (needResize) {
+        this.renderer.setSize(this.width, this.height, false);
 
-    const scene = new three.Scene();
-    // Point a camera at 0,0
-    const camera = new three.OrthographicCamera(width/-2, width/2, height/2, height/-2, 0, 1000);
-    camera.position.z = 2;
+        // Fix camera settings to maintain exact size/aspect
+        const frustumSize = this.frustumSize;
+        this.camera.left = frustumSize * (render.width/-2);
+        this.camera.right = frustumSize * (render.width/2);
+        this.camera.top = frustumSize * (render.height/2);
+        this.camera.bottom = frustumSize * (render.height/-2);
+        this.camera.updateProjectionMatrix();
+      }
+      return needResize;
+    },
+  },
+
+  unmounted() {
+    this.renderer.dispose();
+    delete this.renderer;
+  },
+
+  async mounted() {
+    this.initThree();
+
+    // XXX: Scroll controls for zoom
+    // XXX: Pinch controls for zoom
 
     // Load tileset
     const tileset = new bitwise.Tileset({
@@ -34,32 +94,24 @@ export default defineComponent({
     const tilemap = new bitwise.Tilemap();
     tilemap.addTileset( "dirt", tileset );
     tilemap.setTile( new three.Vector2(0, 0), "dirt", 3 );
-    scene.add( tilemap );
+    this.scene.add( tilemap );
 
-    function animate(timeMs) {
+    const animate = (timeMs) => {
+      if ( !this.renderer ) {
+        return;
+      }
+
       const time = timeMs * 0.001;
       requestAnimationFrame( animate );
 
       // XXX
 
-      if (resizeRendererToDisplaySize(renderer)) {
-        const canvas = renderer.domElement;
-        camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        camera.updateProjectionMatrix();
+      if (this.resizeRendererToDisplaySize()) {
+        //this.updateCameraAspect();
       }
 
-      renderer.render( scene, camera );
+      this.renderer.render( this.scene, this.camera );
     };
-
-    function resizeRendererToDisplaySize(renderer) {
-      const canvas = renderer.domElement;
-      const render = renderSize(renderer);
-      const needResize = canvas.width !== render.width || canvas.height !== render.height;
-      if (needResize) {
-        renderer.setSize(width, height, false);
-      }
-      return needResize;
-    }
 
     animate();
   },
