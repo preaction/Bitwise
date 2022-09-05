@@ -13,15 +13,14 @@ type TileData = {
 }
 
 type TilesetOptions = {
-  game:bitwise.Game;
-  url:string;
+  src:string;
   tileWidth:Number;
   tileHeight:Number;
   tiles:TileData[];
 }
 
 export default class Tileset {
-  url:string;
+  src:string;
   readonly tileWidth:Number;
   readonly tileHeight:Number;
   tiles:TileData[] = [];
@@ -36,11 +35,11 @@ export default class Tileset {
     if ( !opts.tileWidth ) {
       throw "tileWidth must be specified";
     }
-    this.url = opts.url;
+    this.src = opts.src;
     this.tileWidth = opts.tileWidth;
     this.tileHeight = opts.tileHeight || opts.tileWidth;
 
-    if ( this.url ) {
+    if ( this.src ) {
       this.load();
     }
   }
@@ -68,7 +67,7 @@ export default class Tileset {
           this._buildTiles();
           resolve(t);
         };
-        this._texture = loader.load( this.url, after, undefined, reject );
+        this._texture = loader.load( this.src, after, undefined, reject );
       },
     );
   }

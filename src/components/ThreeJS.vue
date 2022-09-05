@@ -6,6 +6,9 @@ import * as bitwise from '../Bitwise.ts';
 export default defineComponent({
   data() {
     return {
+      layers: [],
+      tilesets: [],
+
       // These non-reactive properties will be set by initThree()
       //renderer: null,
       //scene: null,
