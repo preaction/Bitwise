@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Flexo</title>
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./node_modules/font-awesome/css/font-awesome.min.css">
+  </head>
+  <body>
+
+    <template id="page-home">
+      Home
+    </template>
+
+    <template id="page-list-jobs">
+      <button data-action="create-job" class="btn btn-primary">Create Job</button>
+      <ul id="jobs-list"></ul>
+    </template>
+
+    <template id="page-edit-job">
+      <header class="form-row align-items-center">
+        <h1 class="col-auto">Edit Plan</h1>
+        <a href="/job" class="btn btn-secondary">
+          <i class="fa fa-arrow-left"></i> Back to Jobs
+        </a>
+      </header>
+      <div id="plan-errors" class="d-none alert alert-danger">
+        There are some errors in your job.
+        <ul>
+        </ul>
+      </div>
+      <div class="form-group">
+        <label class="mb-1" for="label">Job Label</label>
+        <input id="label" class="form-control" name="label" type="text" placeholder="Job Label">
+        <!-- XXX: Add folders to organize jobs -->
+      </div>
+      <div class="form-group">
+        <label for="description">Job Description</label>
+        <textarea id="description" class="form-control"></textarea>
+      </div>
+
+      <!--
+      <div class="input-container my-2">
+        <h2>Input</h2>
+        <ul id="all-inputs" class="list-unstyled">
+        </ul>
+        <select class="add-input form-control col-auto">
+            <option>Add Input...</option>
+        </select>
+      </div>
+      -->
+
+      <div class="task-container my-2">
+        <h2>Tasks</h2>
+
+        <div data-task-list></div>
+
+        <div class="my-3">
+          <select class="add-task form-control">
+            <option>Add Task...</option>
+          </select>
+        </div>
+      </div>
+
+      <button name="save-job" class="btn btn-primary">Save Job</button>
+    </template>
+
+    <template id="task-form">
+      <div class="task-form bg-light border border-secondary rounded p-3 mt-3 shadow">
+        <input type="hidden" name="class" value="" />
+        <header class="form-row align-items-center justify-content-between">
+          <h3 class="col-auto" data-task-type></h3>
+          <div class="col-auto align-self-start btn-toolbar" role="toolbar">
+            <div class="btn-group btn-group-sm mr-2" role="group" aria-label="Move Task">
+              <button type="button" class="btn btn-sm btn-outline-secondary task-move-up" aria-label="Move Task Up">
+                <i class="fa fa-chevron-up"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary task-move-down" aria-label="Move Task Down">
+                <i class="fa fa-chevron-down"></i>
+              </button>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-sm btn-outline-danger task-remove" aria-label="Remove task">
+                <i class="fa fa-times-circle"></i>
+              </button>
+            </div>
+          </div>
+        </header>
+        <div class="form-group">
+          <label class="mb-1" for="name">Task Name</label>
+          <input id="name" class="form-control" placeholder="Task Name"/>
+        </div>
+        <div class="form-group">
+          <label class="mb-1" for="label">Task Label</label>
+          <input id="label" class="form-control" placeholder="Task Label"/>
+        </div>
+        <div class="form-group">
+          <label for="description">Task Description</label>
+          <textarea id="description" class="form-control"></textarea>
+        </div>
+        <section class="config-form">
+          <div data-config-form></div>
+        </section>
+      </div>
+    </template>
+
+    <!-- You can also require other files to run in this process -->
+    <script src="./node_modules/jquery/dist/jquery.slim.min.js"></script>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="./dist/frontend/renderer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+
+import * as three from 'three';
+import * as bitwise from '../Bitwise.ts';
+
+type TileData = {
+  x:Number;
+  y:Number;
+  passable?:boolean;
+  /**
+   * A clone of the Tileset texture with the appropriate offsets.
+   */
+  _texture:three.Texture;
+}
+
+type TilesetOptions = {
+  game:bitwise.Game;
+  url:string;
+  tileWidth:Number;
+  tileHeight:Number;
+  tiles:TileData[];
+}
+
+export default class Tileset {
+  url:string;
+  readonly tileWidth:Number;
+  readonly tileHeight:Number;
+  tiles:TileData[] = [];
+
+  /**
+   * The main texture, before any transformations.
+   */
+  _texture:three.Texture;
+  _loadPromise:Promise;
+
+  constructor( opts:TilesetOptions ) {
+    if ( !opts.tileWidth ) {
+      throw "tileWidth must be specified";
+    }
+    this.url = opts.url;
+    this.tileWidth = opts.tileWidth;
+    this.tileHeight = opts.tileHeight || opts.tileWidth;
+
+    if ( this.url ) {
+      this.load();
+    }
+  }
+
+  get imageWidth():Number {
+    const img = this._texture.image;
+    return img.naturalWidth || img.width;
+  }
+
+  get imageHeight():Number {
+    const img = this._texture.image;
+    return img.naturalHeight || img.height;
+  }
+
+  load():Promise {
+    if ( this._loadPromise ) {
+      return this._loadPromise;
+    }
+    const loader = new three.TextureLoader();
+    this._loadPromise = new Promise(
+      (resolve, reject) => {
+        const after = ( t:three.Texture ) => {
+          // Texture repeat should be the size of one tile.
+          t.repeat.set( this.tileWidth / this.imageWidth, this.tileHeight / this.imageHeight );
+          this._buildTiles();
+          resolve(t);
+        };
+        this._texture = loader.load( this.url, after, undefined, reject );
+      },
+    );
+  }
+
+  _buildTiles() {
+    for ( let py = 0; py < this.imageHeight; py += this.tileHeight ) {
+      const y = py/this.tileHeight;
+      const rowIdx = y*(this.imageWidth/this.tileWidth);
+      for ( let px = 0; px < this.imageWidth; px += this.tileWidth ) {
+        const x = px/this.tileWidth;
+        const idx = rowIdx + x;
+        // Clone _texture with the correct offsets for each tile.
+        // _texture.repeat is already set to show one tile, so just
+        // changing the offset changes which tile is shown on the
+        // texture.
+        const texture = this._texture.clone();
+        texture.offset.set(px, py);
+        this.tiles[idx] = { x, y, _texture: texture };
+      }
+    }
+  }
+}
+
