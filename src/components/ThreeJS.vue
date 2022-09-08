@@ -88,7 +88,7 @@ export default defineComponent({
 
     // Load tileset
     const tileset = new bitwise.Tileset({
-      url: "/Tilesets/TS_Dirt.png",
+      src: "/Tilesets/TS_Dirt.png",
       tileWidth: 16,
     });
     await tileset.load();

@@ -1,25 +1,56 @@
+/**
+ * The app store holds on to user preferences and remembers where the
+ * user's projects are.
+ */
 
-import { defineStore } from 'pinia';
+import { toRaw } from 'vue';
+import { defineStore, acceptHMRUpdate } from 'pinia';
 
-interface State {
-  component:{ [key:string]: { component: any, form: any } }
-  action:{ [key:string]: any }
-}
+export const useAppStore = defineStore('app', {
+  state: () => ({
+    currentProject: null,
+    recentProjects: electron.store.get( 'app', 'recentProjects', [] ),
+    openTabs: [
+    ],
+    currentTabIndex: 0,
+  }),
 
-export const useAppStore = defineStore('app', () => {
-  const state:State = {
-    component: {},
-    action: {},
-  };
-
-  return {
-    ...state,
-    registerComponent( name:string, component:any, form:any ) {
-      state.component[name] = { component, form };
+  actions: {
+    showTab( index:Number ) {
+      this.currentTabIndex = index;
     },
-    registerAction( name:string, action:any ) {
-      state.action[name] = action;
+    openTab( tab:Tab ) {
+      this.openTabs.push( tab );
+      this.showTab( this.openTabs.length - 1 );
     },
-  };
+    async openProject( path:string=null ) {
+      if ( !path ) {
+        const res = await electron.openProject();
+        path = res.filePaths[0];
+      }
+      this.currentProject = path;
+
+      // Update the recent projects list
+      const i = this.recentProjects.indexOf( path );
+      if ( i >= 0 ) {
+        this.recentProjects.splice(i, 1);
+      }
+      this.recentProjects.unshift( path );
+      // Keep the last few projects only
+      this.recentProjects.length = Math.min( this.recentProjects.length, 5 );
+      electron.store.set( 'app', 'recentProjects', toRaw(this.recentProjects) );
+
+      // XXX: Load up project files
+    },
+    saveProject() {
+    },
+    async newProject() {
+      const res = await electron.newProject();
+      this.openProject(res.filePath);
+    },
+  },
 });
 
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useAppStore, import.meta.hot))
+}
