@@ -28,7 +28,7 @@ export default defineComponent({
       await this.appStore.newProject();
       this.$emit('select');
     },
-    async openProject( project:string ) {
+    async openProject( project?:string ) {
       await this.appStore.openProject( project );
       this.$emit('select');
     },
@@ -38,17 +38,17 @@ export default defineComponent({
 
 <template>
   <div class="d-flex">
-    <div class="flex-fill">
+    <div class="flex-fill d-flex flex-column">
       <h4>Recent Projects</h4>
 
-      <button v-for="project in recentProjects" class="btn btn-default d-block" @click="openProject(project)">
+      <button v-for="project in recentProjects" class="btn btn-default text-start" @click="openProject(project)">
         {{ projectName(project) }}
       </button>
 
     </div>
-    <div class="flex-fill">
-      <h4>Create Project</h4>
-      <button class="btn btn-default" @click="newProject">Create...</button>
+    <div class="flex-fill d-flex flex-column">
+      <button class="btn btn-default text-start" @click="newProject">Create Project...</button>
+      <button class="btn btn-default text-start" @click="openProject()">Open Project...</button>
     </div>
   </div>
 </template>

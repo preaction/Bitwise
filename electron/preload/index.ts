@@ -13,6 +13,12 @@ contextBridge.exposeInMainWorld('electron', {
   },
   // Any other methods you want to expose in the window object.
   // ...
+  openProject() {
+    return ipcRenderer.invoke('bitwise-open-project');
+  },
+  newProject() {
+    return ipcRenderer.invoke('bitwise-new-project');
+  },
 });
 
 

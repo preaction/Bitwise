@@ -1,4 +1,5 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import * as fs from 'node:fs/promises';
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
 import { release } from 'os'
 import { join } from 'path'
 
@@ -111,3 +112,27 @@ ipcMain.handle('open-win', (event, arg) => {
     // childWindow.webContents.openDevTools({ mode: "undocked", activate: true })
   }
 })
+
+ipcMain.handle('bitwise-open-project', event => {
+  return dialog.showOpenDialog(win, {
+    filters: [],
+    properties: [ 'openDirectory', 'createDirectory' ],
+  });
+});
+
+ipcMain.handle('bitwise-new-project', event => {
+  return dialog.showSaveDialog(win, {
+    defaultPath: 'New Project',
+    filters: [],
+    properties: [ 'createDirectory' ],
+  })
+  .then(
+    (res) => {
+      if ( res.filePath ) {
+        // XXX: What to do if directory exists?
+        return fs.mkdir(res.filePath).then(() => res);
+      }
+      return res
+    },
+  );
+});
