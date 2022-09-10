@@ -28,8 +28,8 @@ export default defineComponent({
       this.clearClickTimeout();
       this.$emit('select', { path: [this.name] });
     },
-    handleSelectChild(item) {
-      this.$emit('select', { path: [this.name, item.name] });
+    handleSelectChild({path}) {
+      this.$emit('select', { path: [this.name, ...path] });
     },
     clearClickTimeout() {
       if ( this.clickTimeout ) {
@@ -63,7 +63,7 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in children">
-        <ProjectTreeItem v-bind="child" @select="handleSelectChild(child)"/>
+        <ProjectTreeItem v-bind="child" @select="handleSelectChild"/>
       </div>
     </div>
   </div>
