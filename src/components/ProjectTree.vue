@@ -17,8 +17,8 @@ export default defineComponent({
     ...mapState(useAppStore, ['projectItems']),
   },
   methods: {
-    newTab() {
-      this.appStore.openTab({ name: "Test", component: "MapEditor", props: {}, edited: false });
+    select(item) {
+      this.$emit('select', item);
     },
     addToProject() {
       // - Tilemap
@@ -41,7 +41,7 @@ export default defineComponent({
     </div>
     <div class="project-tree-scroll">
       <div v-for="item in projectItems" class="text-start">
-        <ProjectTreeItem v-bind="item" />
+        <ProjectTreeItem @select="select" v-bind="item" />
       </div>
     </div>
   </div>

@@ -1,10 +1,13 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+const DBLCLICK_DELAY = 250;
+
 export default defineComponent({
   name: 'ProjectTreeItem',
   props: ['name', 'children'],
   data() {
     return {
+      clickTimeout: null,
       showChildren: false,
     };
   },
@@ -14,8 +17,37 @@ export default defineComponent({
     },
   },
   methods: {
+    handleClick() {
+      if ( !this.clickTimeout ) {
+        // First click, start the timeout
+        this.clickTimeout = setTimeout( () => this.toggleChildren(), DBLCLICK_DELAY );
+        return;
+      }
+    },
+    select() {
+      this.clearClickTimeout();
+      this.$emit('select', { path: [this.name] });
+    },
+    handleSelectChild(item) {
+      this.$emit('select', { path: [this.name, item.name] });
+    },
+    clearClickTimeout() {
+      if ( this.clickTimeout ) {
+        clearTimeout( this.clickTimeout );
+        this.clickTimeout = null;
+      }
+    },
     toggleChildren() {
+      this.clearClickTimeout();
       this.showChildren = this.showChildren ? false : true;
+    },
+    preventTextSelect(event) {
+      // This must be done separately because selection happens after
+      // mousedown and dblclick happens after mouseup
+      // https://stackoverflow.com/a/43321596
+      if (event.detail === 2) {
+        event.preventDefault();
+      }
     },
   },
 });
@@ -23,7 +55,7 @@ export default defineComponent({
 
 <template>
   <div class="project-tree-item">
-    <div class="name ps-1 d-flex justify-content-between" @click="toggleChildren">
+    <div class="name ps-1 d-flex justify-content-between" @click="handleClick" @dblclick="select" @mousedown="preventTextSelect">
       <span>{{ name }}</span>
       <span v-if="hasChildren">
         <i class="bi" :class="showChildren ? 'bi-caret-down-fill' : 'bi-caret-right-fill'"></i>
@@ -31,7 +63,7 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in children">
-        <ProjectTreeItem v-bind="child" />
+        <ProjectTreeItem v-bind="child" @select="handleSelectChild(child)"/>
       </div>
     </div>
   </div>
