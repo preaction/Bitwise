@@ -69,7 +69,7 @@ export default defineComponent({
     </div>
   </div>
 
-  <div class="project-tree bg-light">
+  <div class="sidebar bg-light">
     <ProjectTree />
   </div>
 
@@ -99,12 +99,12 @@ html, body { height: 100% }
   grid-template-rows: 42px 1fr;
 }
 
-.project-tree {
-  --project-tree-width: 8em;
+.sidebar {
+  --sidebar-width: auto;
   grid-column: 1;
   grid-row: 1/-1;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-  width: var(--project-tree-width);
+  width: var(--sidebar-width);
   transition: width 0.2s;
   display: flex;
   flex-flow: column;

@@ -136,3 +136,24 @@ ipcMain.handle('bitwise-new-project', event => {
     },
   );
 });
+
+async function descend( path:string ) {
+  return fs.readdir(path, { withFileTypes: true })
+  .then( async (paths) => {
+    return Promise.all(
+      paths.filter( p => !p.name.match(/^\./) ).map( async p => {
+        const item = {
+          name: p.name,
+        };
+        if ( p.isDirectory() ) {
+          item.children = await descend( path + '/' + p.name );
+        }
+        return item;
+      })
+    );
+  });
+}
+
+ipcMain.handle('bitwise-read-project', (event, path) => {
+  return descend(path);
+});

@@ -19,6 +19,9 @@ contextBridge.exposeInMainWorld('electron', {
   newProject() {
     return ipcRenderer.invoke('bitwise-new-project');
   },
+  readProject( path:string ) {
+    return ipcRenderer.invoke('bitwise-read-project', path);
+  },
 });
 
 

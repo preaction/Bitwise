@@ -13,6 +13,7 @@ export const useAppStore = defineStore('app', {
     openTabs: [
     ],
     currentTabIndex: 0,
+    projectItems: [],
   }),
 
   actions: {
@@ -40,7 +41,8 @@ export const useAppStore = defineStore('app', {
       this.recentProjects.length = Math.min( this.recentProjects.length, 5 );
       electron.store.set( 'app', 'recentProjects', toRaw(this.recentProjects) );
 
-      // XXX: Load up project files
+      // Load up project files
+      this.projectItems = await electron.readProject(path);
     },
     saveProject() {
     },
