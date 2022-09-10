@@ -21,6 +21,7 @@ export const useAppStore = defineStore('app', {
       this.currentTabIndex = index;
     },
     openTab( tab:Tab ) {
+      console.log( 'open tab', tab );
       this.openTabs.push( tab );
       this.showTab( this.openTabs.length - 1 );
     },

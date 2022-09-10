@@ -1,13 +1,13 @@
 <script lang="ts">
 import * as bootstrap from "bootstrap";
-import { defineComponent } from "vue";
-import { mapStores } from 'pinia';
+import { defineComponent, markRaw } from "vue";
+import { mapStores, mapState } from 'pinia';
 import { useAppStore } from "./store/app.ts";
 import NewTab from "./components/NewTab.vue";
 import MapEditor from "./components/MapEditor.vue";
 import ProjectTree from "./components/ProjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
-
+import ImageView from "./components/ImageView.vue";
 
 export default defineComponent({
   components: {
@@ -15,6 +15,7 @@ export default defineComponent({
     MapEditor,
     ProjectTree,
     ProjectSelect,
+    ImageView,
   },
   data() {
     return {
@@ -22,6 +23,7 @@ export default defineComponent({
   },
   computed: {
     ...mapStores(useAppStore),
+    ...mapState(useAppStore, ['currentProject']),
     tabs() {
       return this.appStore.openTabs;
     },
@@ -43,10 +45,31 @@ export default defineComponent({
     load() {
       this.modal.hide();
     },
+    openTab( item ) {
+      // Determine what kind of component to use
+      const name = item.path[ item.path.length - 1 ];
+      if ( name.match( /\.json$/ ) ) {
+        // JSON files are game objects
+        console.log( 'open component', item );
+        // XXX: Fetch the file to decide which tab component to use
+      }
+      else if ( name.match( /\.(png|gif|jpe?g)$/ ) ) {
+        const tab = {
+          name,
+          component: markRaw(ImageView),
+          props: {
+            src: item.path.join('/'),
+          },
+        };
+        this.appStore.openTab(tab);
+      }
+    },
   },
   mounted() {
-    this.modal = new bootstrap.Modal( this.$refs.projectDialog, {} );
-    this.modal.show();
+    if ( !this.currentProject ) {
+      this.modal = new bootstrap.Modal( this.$refs.projectDialog, {} );
+      this.modal.show();
+    }
   },
 });
 </script>
@@ -70,7 +93,7 @@ export default defineComponent({
   </div>
 
   <div class="sidebar bg-light">
-    <ProjectTree />
+    <ProjectTree @select="openTab" />
   </div>
 
   <header>
@@ -85,7 +108,7 @@ export default defineComponent({
     </nav>
   </header>
 
-  <component v-if="currentTab" @update="updateTab" :is="currentTab.component" :bind="currentTab.props" />
+  <component v-if="currentTab" @update="updateTab" :is="currentTab.component" v-bind="currentTab.props" />
 </template>
 
 <style>

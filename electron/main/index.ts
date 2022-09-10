@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
-import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
 import { release } from 'os'
-import { join } from 'path'
+import * as path from 'path'
 
 // Initialize electron-store
 import Store from 'electron-store'
@@ -32,22 +32,22 @@ if (!app.requestSingleInstanceLock()) {
 
 export const ROOT_PATH = {
   // /dist
-  dist: join(__dirname, '../..'),
+  dist: path.join(__dirname, '../..'),
   // /dist or /public
-  public: join(__dirname, app.isPackaged ? '../..' : '../../../public'),
+  public: path.join(__dirname, app.isPackaged ? '../..' : '../../../public'),
 }
 
 let win: BrowserWindow | null = null
 // Here, you can also use other preload
-const preload = join(__dirname, '../preload/index.js')
+const preload = path.join(__dirname, '../preload/index.js')
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin
 const url = `http://${process.env['VITE_DEV_SERVER_HOST']}:${process.env['VITE_DEV_SERVER_PORT']}`
-const indexHtml = join(ROOT_PATH.dist, 'index.html')
+const indexHtml = path.join(ROOT_PATH.dist, 'index.html')
 
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
-    icon: join(ROOT_PATH.public, 'favicon.ico'),
+    icon: path.join(ROOT_PATH.public, 'favicon.ico'),
     webPreferences: {
       preload,
     },
@@ -157,3 +157,11 @@ async function descend( path:string ) {
 ipcMain.handle('bitwise-read-project', (event, path) => {
   return descend(path);
 });
+
+// Register a protocol to allow reading files from the project root
+app.whenReady().then(() => {
+  protocol.registerFileProtocol('bfile', (request, callback) => {
+    const url = request.url.substr(8);
+    callback({ path: path.normalize(`${url}`) });
+  })
+})
