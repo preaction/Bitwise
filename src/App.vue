@@ -55,7 +55,7 @@ export default defineComponent({
     },
     openTab( item ) {
       // Determine what kind of component to use
-      const name = item.path[ item.path.length - 1 ];
+      const name = item.name;
       if ( name.match( /\.json$/ ) ) {
         // JSON files are game objects
         console.log( 'open component', item );
@@ -66,7 +66,7 @@ export default defineComponent({
           name,
           component: markRaw(ImageView),
           props: {
-            src: item.path.join('/'),
+            src: item.path,
           },
         };
         this.appStore.openTab(tab);

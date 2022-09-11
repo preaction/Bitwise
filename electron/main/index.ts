@@ -137,16 +137,21 @@ ipcMain.handle('bitwise-new-project', event => {
   );
 });
 
-async function descend( path:string ) {
-  return fs.readdir(path, { withFileTypes: true })
+async function descend( filePath:string, root:string='' ) {
+  if ( root == '' ) {
+    root = filePath;
+    filePath = '';
+  }
+  return fs.readdir( path.join(root, filePath), { withFileTypes: true })
   .then( async (paths) => {
     return Promise.all(
       paths.filter( p => !p.name.match(/^\./) ).map( async p => {
         const item = {
           name: p.name,
+          path: path.join( filePath, p.name ),
         };
         if ( p.isDirectory() ) {
-          item.children = await descend( path + '/' + p.name );
+          item.children = await descend( item.path, root );
         }
         return item;
       })
@@ -165,3 +170,7 @@ app.whenReady().then(() => {
     callback({ path: path.normalize(`${url}`) });
   })
 })
+
+ipcMain.handle('bitwise-save-file', (event, path, data) => {
+  return fs.writeFile( path, JSON.stringify( data ) );
+});

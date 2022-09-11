@@ -4,7 +4,7 @@ const DBLCLICK_DELAY = 250;
 
 export default defineComponent({
   name: 'ProjectTreeItem',
-  props: ['name', 'children'],
+  props: ['name', 'path', 'children'],
   data() {
     return {
       clickTimeout: null,
@@ -26,10 +26,10 @@ export default defineComponent({
     },
     select() {
       this.clearClickTimeout();
-      this.$emit('select', { path: [this.name] });
+      this.$emit('select', { path: this.path, name: this.name, children: this.children });
     },
-    handleSelectChild({path}) {
-      this.$emit('select', { path: [this.name, ...path] });
+    handleSelectChild(item) {
+      this.$emit('select', item);
     },
     clearClickTimeout() {
       if ( this.clickTimeout ) {
@@ -49,13 +49,20 @@ export default defineComponent({
         event.preventDefault();
       }
     },
+    dragstart( event ) {
+      event.dataTransfer.setData('bitwise/file', this.path);
+    },
   },
 });
 </script>
 
 <template>
   <div class="project-tree-item">
-    <div class="name ps-1 d-flex justify-content-between" @click="handleClick" @dblclick="select" @mousedown="preventTextSelect">
+    <div class="name ps-1 d-flex justify-content-between"
+      draggable="true" @dragstart="dragstart"
+      @click="handleClick" @dblclick="select"
+      @mousedown="preventTextSelect"
+    >
       <span>{{ name }}</span>
       <span v-if="hasChildren">
         <i class="bi" :class="showChildren ? 'bi-caret-down-fill' : 'bi-caret-right-fill'"></i>

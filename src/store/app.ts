@@ -51,6 +51,15 @@ export const useAppStore = defineStore('app', {
       const res = await electron.newProject();
       this.openProject(res.filePath);
     },
+    getFileUrl( path:string ):string {
+      console.log( 'getFileUrl', path );
+      return 'bfile://' + this.currentProject + '/' + path;
+    },
+    getFile( path:string ) {
+    },
+    saveFile( path:string, data:Object ) {
+      electron.saveFile( this.currentProject + '/' + path, data );
+    },
   },
 });
 

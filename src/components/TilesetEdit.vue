@@ -1,12 +1,13 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapState } from 'pinia';
+import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
 export default defineComponent({
   props: ['src'],
   data() {
     return {
       name: 'New Tileset',
+      edited: false,
       imageSrc: '',
       gutter: 0,
       tileWidth: 0,
@@ -14,12 +15,49 @@ export default defineComponent({
     };
   },
   mounted() {
-    this.$emit('update', { name: this.name, edited: false });
+    this.$emit('update', { name: this.name, edited: this.edited });
   },
   computed: {
     ...mapState( useAppStore, ['currentProject'] ),
-    imageUrl() {
-      return 'bfile://' + this.currentProject + '/' + this.imageSrc;
+  },
+  methods: {
+    ...mapActions( useAppStore, ['getFileUrl', 'saveFile'] ),
+    dragover(event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "link";
+    },
+    drop(event) {
+      const data = event.dataTransfer.getData("bitwise/file");
+      if ( data ) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "link";
+        console.log( data );
+        this.imageSrc = data;
+        this.edited = true;
+        this.updateTab();
+      }
+      else {
+        event.dataTransfer.dropEffect = "";
+      }
+    },
+    updateTab() {
+      this.$emit( 'update', { name: this.name, edited: this.edited } );
+    },
+    save() {
+      // XXX: Rename if needed
+      var src = this.src;
+      if ( !src ) {
+        src = this.name + '.json';
+      }
+      // XXX: Update "src" property
+      this.saveFile( src, {
+        imageSrc: this.imageSrc,
+        tileWidth: this.tileWidth,
+        tileHeight: this.tileHeight,
+        gutter: this.gutter,
+      });
+      this.edited = false;
+      this.updateTab();
     },
   },
 });
@@ -28,16 +66,31 @@ export default defineComponent({
 <template>
   <div class="tileset-edit">
     <div class="tab-toolbar">
-      Toolbar
+      <div class="btn-toolbar" role="toolbar" aria-label="Tileset editor toolbar">
+        <div class="btn-group" role="group" aria-label="File actions">
+          <button type="button" class="btn btn-outline-dark"
+            :disabled="!edited" @click="save"
+          >
+            <i class="fa fa-save"></i>
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="tab-main">
+    <div class="tab-main" @dragover="dragover" @drop="drop">
       <!-- XXX: Center -->
-      <img v-if="imageSrc" :src="imageUrl" />
+      <img v-if="imageSrc" :src="getFileUrl( imageSrc )" />
       <div v-else>Drag/drop an image here</div>
       <!-- XXX: Grid overlay -->
     </div>
     <div class="tab-sidebar">
-      <div>Image Select</div>
+      <div>
+        <label>Name</label>
+        <input v-model="name" @change="updateTab" />
+      </div>
+      <div @dragover="dragover" @drop="drop">
+        <span v-if="imageSrc">{{ imageSrc }}</span>
+        <span v-else>Image Select</span>
+      </div>
       <div>
         <label>Tile Width</label>
         <input v-model="tileWidth" />
