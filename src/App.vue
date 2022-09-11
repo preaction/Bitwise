@@ -8,6 +8,7 @@ import MapEditor from "./components/MapEditor.vue";
 import ProjectTree from "./components/ProjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
+import TilesetEdit from "./components/TilesetEdit.vue";
 
 export default defineComponent({
   components: {
@@ -16,6 +17,7 @@ export default defineComponent({
     ProjectTree,
     ProjectSelect,
     ImageView,
+    TilesetEdit,
   },
   data() {
     return {
@@ -35,7 +37,7 @@ export default defineComponent({
     },
   },
   methods: {
-    updateTab({ name: string, edited: boolean }) {
+    updateTab({ name, edited }) {
       this.currentTab.name = name;
       this.currentTab.edited = edited;
     },
@@ -44,6 +46,12 @@ export default defineComponent({
     },
     load() {
       this.modal.hide();
+    },
+    newTab( component ) {
+      this.appStore.openTab({
+        component,
+        props: {},
+      });
     },
     openTab( item ) {
       // Determine what kind of component to use
@@ -92,11 +100,19 @@ export default defineComponent({
     </div>
   </div>
 
-  <div class="sidebar bg-light">
+  <div class="app-sidebar bg-light">
+    <div class="dropdown m-2">
+      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Add to Project...
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" @click="newTab('TilesetEdit')">Tileset</a></li>
+      </ul>
+    </div>
     <ProjectTree @select="openTab" />
   </div>
 
-  <header>
+  <header class="app-tabbar">
     <nav class="nav nav-tabs px-2">
       <a v-for="tab, i in tabs"
         href="#" class="nav-link"
@@ -108,7 +124,7 @@ export default defineComponent({
     </nav>
   </header>
 
-  <component v-if="currentTab" @update="updateTab" :is="currentTab.component" v-bind="currentTab.props" />
+  <component class="app-main" v-if="currentTab" @update="updateTab" :is="currentTab.component" v-bind="currentTab.props" />
 </template>
 
 <style>
@@ -118,19 +134,27 @@ html, body { height: 100% }
   overflow: hidden;
   display: grid;
   place-content: stretch;
-  grid-template-columns: minmax(0, auto) 1fr;
   grid-template-rows: 42px 1fr;
+  grid-template-columns: minmax(0, auto) 1fr;
+  grid-template-areas: "sidebar tabbar" "sidebar main";
 }
 
-.sidebar {
+.app-sidebar {
   --sidebar-width: auto;
-  grid-column: 1;
-  grid-row: 1/-1;
+  grid-area: sidebar;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
   width: var(--sidebar-width);
   transition: width 0.2s;
   display: flex;
   flex-flow: column;
+}
+
+.app-main {
+  grid-area: main;
+}
+
+.app-tabbar {
+  grid-area: tabbar;
 }
 
 </style>
