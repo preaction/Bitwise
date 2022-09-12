@@ -159,7 +159,27 @@ async function descend( filePath:string, root:string='' ) {
   });
 }
 
+let aborter;
 ipcMain.handle('bitwise-read-project', (event, path) => {
+  if ( aborter ) {
+    aborter.abort();
+  }
+  aborter = new AbortController();
+  const watcher = fs.watch( path, { signal: aborter.signal, recursive: true, persistent: false } );
+  (async () => {
+    try {
+      for await (const event of watcher) {
+        console.log( 'got watcher event', event );
+        win.webContents.send( 'watch', event );
+      }
+    }
+    catch (err) {
+      if (err.name === 'AbortError') {
+        return;
+      }
+      throw err;
+    }
+  })();
   return descend(path);
 });
 
@@ -171,6 +191,33 @@ app.whenReady().then(() => {
   })
 })
 
+ipcMain.handle('bitwise-new-file', ( event, root, name, ext, data ) => {
+  console.log( 'bitwise-new-file', root, name, ext, data );
+  // XXX: Ensure extension on filename
+  return dialog.showSaveDialog(win, {
+    defaultPath: path.join( root, name ),
+    filters: [],
+    properties: [ 'createDirectory' ],
+  })
+  .then(
+    (res) => {
+      if ( res.filePath ) {
+        if ( !res.filePath.match( "\\." + ext + "$" ) ) {
+          res.filePath += '.' + ext;
+        }
+        // XXX: Write to new file then rename to avoid losing data
+        return fs.writeFile( res.filePath, data ).then( () => res );
+      }
+      return res
+    },
+  );
+});
+
 ipcMain.handle('bitwise-save-file', (event, path, data) => {
-  return fs.writeFile( path, JSON.stringify( data ) );
+  // XXX: Write to new file then rename to avoid losing data
+  return fs.writeFile( path, data );
+});
+
+ipcMain.handle('bitwise-read-file', (event, path) => {
+  return fs.readFile( path, { encoding: 'utf8' } );
 });

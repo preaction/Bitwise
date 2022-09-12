@@ -37,9 +37,10 @@ export default defineComponent({
     },
   },
   methods: {
-    updateTab({ name, edited }) {
-      this.currentTab.name = name;
-      this.currentTab.edited = edited;
+    updateTab(data:Object) {
+      console.log( 'updated', data );
+      this.currentTab.data = data;
+      this.currentTab.edited = true;
     },
     showTab( index: Number ) {
       this.appStore.showTab( index );
@@ -47,30 +48,68 @@ export default defineComponent({
     load() {
       this.modal.hide();
     },
-    newTab( component ) {
+    newTab( name:string, component ) {
       this.appStore.openTab({
+        name,
         component,
-        props: {},
+        data: {},
+        edited: true,
       });
     },
-    openTab( item ) {
+
+    async openTab( item ) {
       // Determine what kind of component to use
       const name = item.name;
       if ( name.match( /\.json$/ ) ) {
         // JSON files are game objects
         console.log( 'open component', item );
-        // XXX: Fetch the file to decide which tab component to use
+        // Fetch the file to decide which tab component to use
+        const fileContent = await this.appStore.readFile(item.path);
+        const data = JSON.parse( fileContent );
+        const tab = {
+          name: item.name,
+          src: item.path,
+          component: data.component,
+          data: data,
+          edited: false,
+        };
+        this.appStore.openTab(tab);
       }
       else if ( name.match( /\.(png|gif|jpe?g)$/ ) ) {
         const tab = {
           name,
+          src: item.path,
           component: markRaw(ImageView),
-          props: {
-            src: item.path,
-          },
+          data: item.path,
+          edited: false,
         };
         this.appStore.openTab(tab);
       }
+    },
+
+    async saveTab() {
+      const tab = this.currentTab;
+      // No src? Open save as dialog
+      if ( !tab.src ) {
+        const res = await this.appStore.newFile(
+          tab.name,
+          'json',
+          JSON.stringify( tab.data ),
+        );
+        console.log('newFile', res);
+        if ( !res.canceled ) {
+          this.currentTab.src = res.filePath;
+          this.currentTab.edited = false;
+        }
+        return;
+      }
+      // Otherwise, just write the data!
+      const res = await this.appStore.saveFile(
+        tab.src,
+        JSON.stringify( tab.data ),
+      );
+      console.log('saveFile', res);
+      this.currentTab.edited = false;
     },
   },
   mounted() {
@@ -106,7 +145,7 @@ export default defineComponent({
         Add to Project...
       </button>
       <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="#" @click="newTab('TilesetEdit')">Tileset</a></li>
+        <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
       </ul>
     </div>
     <ProjectTree @select="openTab" />
@@ -124,7 +163,7 @@ export default defineComponent({
     </nav>
   </header>
 
-  <component class="app-main" v-if="currentTab" @update="updateTab" :is="currentTab.component" v-bind="currentTab.props" />
+  <component class="app-main" v-if="currentTab" @update:modelValue="updateTab" @save="saveTab" :is="currentTab.component" :edited="currentTab.edited" v-model="currentTab.data" />
 </template>
 
 <style>

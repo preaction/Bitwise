@@ -2,26 +2,29 @@
 import { defineComponent } from "vue";
 import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
+
+type Tileset = {
+  imageSrc: string,
+  tileWidth: Number,
+  tileHeight: Number,
+  gutter: Number,
+};
+
 export default defineComponent({
-  props: ['src'],
+  props: ['modelValue', 'edited'],
   data() {
     return {
-      name: 'New Tileset',
-      edited: false,
-      imageSrc: '',
-      gutter: 0,
-      tileWidth: 0,
-      tileHeight: 0,
+      imageSrc: this.modelValue.imageSrc,
+      tileWidth: this.modelValue.tileWidth,
+      tileHeight: this.modelValue.tileHeight,
+      gutter: this.modelValue.gutter,
     };
   },
   mounted() {
-    this.$emit('update', { name: this.name, edited: this.edited });
-  },
-  computed: {
-    ...mapState( useAppStore, ['currentProject'] ),
+    this.$emit( 'update:modelValue', this.$data );
   },
   methods: {
-    ...mapActions( useAppStore, ['getFileUrl', 'saveFile'] ),
+    ...mapActions( useAppStore, ['getFileUrl'] ),
     dragover(event) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "link";
@@ -33,31 +36,22 @@ export default defineComponent({
         event.dataTransfer.dropEffect = "link";
         console.log( data );
         this.imageSrc = data;
-        this.edited = true;
-        this.updateTab();
+        this.update();
       }
       else {
         event.dataTransfer.dropEffect = "";
       }
     },
-    updateTab() {
-      this.$emit( 'update', { name: this.name, edited: this.edited } );
-    },
-    save() {
-      // XXX: Rename if needed
-      var src = this.src;
-      if ( !src ) {
-        src = this.name + '.json';
-      }
-      // XXX: Update "src" property
-      this.saveFile( src, {
+    update() {
+      this.$emit('update:modelValue', {
         imageSrc: this.imageSrc,
         tileWidth: this.tileWidth,
         tileHeight: this.tileHeight,
         gutter: this.gutter,
       });
-      this.edited = false;
-      this.updateTab();
+    },
+    save() {
+      this.$emit('save');
     },
   },
 });
@@ -83,25 +77,21 @@ export default defineComponent({
       <!-- XXX: Grid overlay -->
     </div>
     <div class="tab-sidebar">
-      <div>
-        <label>Name</label>
-        <input v-model="name" @change="updateTab" />
-      </div>
       <div @dragover="dragover" @drop="drop">
         <span v-if="imageSrc">{{ imageSrc }}</span>
         <span v-else>Image Select</span>
       </div>
       <div>
         <label>Tile Width</label>
-        <input v-model="tileWidth" />
+        <input v-model="tileWidth" @change="update" />
       </div>
       <div>
         <label>Tile Height</label>
-        <input v-model="tileHeight" />
+        <input v-model="tileHeight" @change="update" />
       </div>
       <div>
         <label>Gutter</label>
-        <input v-model="gutter" />
+        <input v-model="gutter" @change="update" />
       </div>
     </div>
   </div>

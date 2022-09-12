@@ -22,8 +22,21 @@ contextBridge.exposeInMainWorld('electron', {
   readProject( path:string ) {
     return ipcRenderer.invoke('bitwise-read-project', path);
   },
+  readFile( path:string ) {
+    return ipcRenderer.invoke('bitwise-read-file', path);
+  },
+  newFile( path:string, name:string, ext:string, data ) {
+    console.log( 'newFile', path, name, ext, data );
+    return ipcRenderer.invoke('bitwise-new-file', path, name, ext, data);
+  },
   saveFile( path:string, data ) {
     return ipcRenderer.invoke('bitwise-save-file', path, data);
+  },
+  on( channel:string, cb ) {
+    return ipcRenderer.on( channel, cb );
+  },
+  removeListener( channel:string, cb ) {
+    return ipcRenderer.removeListener( channel, cb );
   },
 });
 

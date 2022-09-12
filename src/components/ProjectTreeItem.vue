@@ -65,7 +65,7 @@ export default defineComponent({
     >
       <span>{{ name }}</span>
       <span v-if="hasChildren">
-        <i class="bi" :class="showChildren ? 'bi-caret-down-fill' : 'bi-caret-right-fill'"></i>
+        <i class="fa" :class="showChildren ? 'fa-caret-down' : 'fa-caret-left'"></i>
       </span>
     </div>
     <div v-if="hasChildren && showChildren" class="children">

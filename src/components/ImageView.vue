@@ -1,18 +1,15 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapState } from 'pinia';
+import { mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
 export default defineComponent({
-  props: ['src'],
-  computed: {
-    ...mapState( useAppStore, ['currentProject'] ),
-    url() {
-      return 'bfile://' + this.currentProject + '/' + this.src;
-    },
+  props: ['modelValue'],
+  methods: {
+    ...mapActions( useAppStore, ['getFileUrl'] ),
   },
 });
 </script>
 
 <template>
-  <img :src="url" />
+  <img :src="getFileUrl(modelValue)" />
 </template>

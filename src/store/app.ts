@@ -14,6 +14,7 @@ export const useAppStore = defineStore('app', {
     ],
     currentTabIndex: 0,
     projectItems: [],
+    _fsWatcher: null,
   }),
 
   actions: {
@@ -26,6 +27,9 @@ export const useAppStore = defineStore('app', {
       this.showTab( this.openTabs.length - 1 );
     },
     async openProject( path:string=null ) {
+      if ( this._fsWatcher ) {
+        electron.removeListener( 'watch', this.fsWatcher );
+      }
       if ( !path ) {
         const res = await electron.openProject();
         path = res.filePaths[0];
@@ -44,6 +48,12 @@ export const useAppStore = defineStore('app', {
 
       // Load up project files
       this.projectItems = await electron.readProject(path);
+
+      this._fsWatcher = this.changeFile.bind(this);
+      electron.on( 'watch', this._fsWatcher );
+    },
+    changeFile(event, {eventType, filename}) {
+      console.log( 'file changed', eventType, filename );
     },
     saveProject() {
     },
@@ -52,13 +62,17 @@ export const useAppStore = defineStore('app', {
       this.openProject(res.filePath);
     },
     getFileUrl( path:string ):string {
-      console.log( 'getFileUrl', path );
-      return 'bfile://' + this.currentProject + '/' + path;
+      console.log( 'getFileUrl', toRaw(path) );
+      return 'bfile://' + this.currentProject + '/' + toRaw(path);
     },
-    getFile( path:string ) {
+    readFile( path:string ) {
+      return electron.readFile( this.currentProject + '/' + path );
     },
     saveFile( path:string, data:Object ) {
-      electron.saveFile( this.currentProject + '/' + path, data );
+      return electron.saveFile( this.currentProject + '/' + path, data );
+    },
+    newFile( name:string, ext:string, data:Object ) {
+      return electron.newFile( this.currentProject, name, ext, data );
     },
   },
 });
