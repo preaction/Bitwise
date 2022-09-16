@@ -87,6 +87,17 @@ export default defineComponent({
       }
     },
 
+    closeTab( i:Number ) {
+      const tab = this.tabs[ i ];
+      if ( tab.edited ) {
+        const okay = confirm("Unsaved changes will be lost. Close tab?");
+        if ( !okay ) {
+          return;
+        }
+      }
+      this.appStore.closeTab( this.tabs[i] );
+    },
+
     async saveTab() {
       const tab = this.currentTab;
       // No src? Open save as dialog
@@ -152,13 +163,13 @@ export default defineComponent({
   </div>
 
   <header class="app-tabbar">
-    <nav class="nav nav-tabs px-2">
-      <a v-for="tab, i in tabs"
-        href="#" class="nav-link"
+    <nav class="px-2">
+      <a v-for="tab, i in tabs" href="#"
         @click.prevent="showTab(i)"
         :aria-current="i === currentTabIndex ? 'true' : ''"
       >
         {{tab.name}}
+        <i class="fa-solid fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
       </a>
     </nav>
   </header>
@@ -194,6 +205,26 @@ html, body { height: 100% }
 
 .app-tabbar {
   grid-area: tabbar;
+}
+.app-tabbar :link {
+  color: var(--bs-gray);
+  text-decoration: none;
+  border: 1px solid black;
+  background: var(--bs-body-bg);
+  padding: 2px;
+  margin: 0 2px 0 0;
+}
+
+.app-tabbar :link[aria-current=true] {
+  color: var(--bs-light);
+  background: var(--bs-primary);
+}
+
+.app-tabbar :link i {
+  visibility: hidden;
+}
+.app-tabbar :link:hover i {
+  visibility: visible;
 }
 
 </style>

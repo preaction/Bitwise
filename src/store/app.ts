@@ -26,6 +26,17 @@ export const useAppStore = defineStore('app', {
       this.openTabs.push( tab );
       this.showTab( this.openTabs.length - 1 );
     },
+    closeTab( tab:Tab ) {
+      for ( let i = 0; i < this.openTabs.length; i++ ) {
+        if ( this.openTabs[i] === tab ) {
+          this.openTabs.splice(i, 1);
+          if ( this.currentTabIndex >= this.openTabs.length ) {
+            this.currentTabIndex = this.openTabs.length - 1;
+          }
+          break;
+        }
+      }
+    },
     async openProject( path:string=null ) {
       if ( this._fsWatcher ) {
         electron.removeListener( 'watch', this.fsWatcher );
