@@ -9,6 +9,7 @@ import ProjectTree from "./components/ProjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
 import TilesetEdit from "./components/TilesetEdit.vue";
+import SceneEdit from "./components/SceneEdit.vue";
 
 export default defineComponent({
   components: {
@@ -18,6 +19,7 @@ export default defineComponent({
     ProjectSelect,
     ImageView,
     TilesetEdit,
+    SceneEdit,
   },
   data() {
     return {
@@ -156,6 +158,7 @@ export default defineComponent({
         Add to Project...
       </button>
       <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
         <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
       </ul>
     </div>
