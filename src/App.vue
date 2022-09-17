@@ -96,6 +96,7 @@ export default defineComponent({
 
     async saveTab() {
       const tab = this.currentTab;
+      tab.data.component = tab.component;
       // No src? Open save as dialog
       if ( !tab.src ) {
         const res = await this.appStore.newFile(
