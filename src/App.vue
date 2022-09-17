@@ -1,7 +1,7 @@
 <script lang="ts">
 import * as bootstrap from "bootstrap";
 import { defineComponent, markRaw } from "vue";
-import { mapStores, mapState } from 'pinia';
+import { mapStores, mapState, mapActions, mapGetters } from 'pinia';
 import { useAppStore } from "./store/app.ts";
 import NewTab from "./components/NewTab.vue";
 import MapEditor from "./components/MapEditor.vue";
@@ -25,18 +25,14 @@ export default defineComponent({
   },
   computed: {
     ...mapStores(useAppStore),
-    ...mapState(useAppStore, ['currentProject']),
-    tabs() {
-      return this.appStore.openTabs;
-    },
-    currentTabIndex() {
-      return this.appStore.currentTabIndex;
-    },
+    ...mapState(useAppStore, ['currentProject', 'currentTabIndex', 'openTabs']),
+    ...mapGetters(useAppStore, ['hasSessionState']),
     currentTab() {
-      return this.tabs[ this.currentTabIndex ];
+      return this.openTabs[ this.currentTabIndex ];
     },
   },
   methods: {
+    ...mapActions(useAppStore, ['loadSessionState']),
     updateTab(data:Object) {
       console.log( 'updated', data );
       this.currentTab.data = data;
@@ -79,7 +75,7 @@ export default defineComponent({
         const tab = {
           name,
           src: item.path,
-          component: markRaw(ImageView),
+          component: "ImageView",
           data: item.path,
           edited: false,
         };
@@ -88,14 +84,14 @@ export default defineComponent({
     },
 
     closeTab( i:Number ) {
-      const tab = this.tabs[ i ];
+      const tab = this.openTabs[ i ];
       if ( tab.edited ) {
         const okay = confirm("Unsaved changes will be lost. Close tab?");
         if ( !okay ) {
           return;
         }
       }
-      this.appStore.closeTab( this.tabs[i] );
+      this.appStore.closeTab( this.openTabs[i] );
     },
 
     async saveTab() {
@@ -124,6 +120,9 @@ export default defineComponent({
     },
   },
   mounted() {
+    if ( this.hasSessionState ) {
+      this.loadSessionState();
+    }
     if ( !this.currentProject ) {
       this.modal = new bootstrap.Modal( this.$refs.projectDialog, {} );
       this.modal.show();
@@ -164,7 +163,7 @@ export default defineComponent({
 
   <header class="app-tabbar">
     <nav class="px-2">
-      <a v-for="tab, i in tabs" href="#"
+      <a v-for="tab, i in openTabs" href="#"
         @click.prevent="showTab(i)"
         :aria-current="i === currentTabIndex ? 'true' : ''"
       >

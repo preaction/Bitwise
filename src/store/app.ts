@@ -17,35 +17,96 @@ export const useAppStore = defineStore('app', {
     _fsWatcher: null,
   }),
 
+  getters: {
+    hasSessionState() {
+      return !!sessionStorage.getItem('currentProject');
+    },
+    hasStoredState() {
+      return !!electron.store.get( 'app', 'savedState', false );
+    },
+    storedStateProject() {
+      const path = electron.store.get( 'app', 'savedState.currentProject', '' );
+      return path.split('/').pop();
+    },
+  },
+
   actions: {
+    saveSessionState() {
+      sessionStorage.setItem('currentProject', this.currentProject);
+      sessionStorage.setItem('openTabs', JSON.stringify( this.openTabs ) );
+      sessionStorage.setItem('currentTabIndex', this.currentTabIndex);
+    },
+
+    loadSessionState() {
+      const currentProject = sessionStorage.getItem('currentProject');
+      const openTabs = JSON.parse( sessionStorage.getItem('openTabs') );
+      const currentTabIndex = sessionStorage.getItem('currentTabIndex');
+
+      if ( !currentProject ) {
+        return;
+      }
+
+      this.openProject( currentProject );
+      this.openTabs = openTabs;
+      this.showTab( currentTabIndex );
+    },
+
+    loadStoredState() {
+      const state = electron.store.get( 'app', 'savedState', {} );
+      if ( !state.currentProject ) {
+        return;
+      }
+      this.openProject( state.currentProject );
+      this.openTabs = state.openTabs;
+      this.showTab( state.currentTabIndex );
+    },
+
+    saveStoredState() {
+      const { currentProject, openTabs, currentTabIndex } = this;
+      console.log( toRaw(openTabs) );
+      electron.store.set( 'app', 'savedState', {
+        currentProject: toRaw(currentProject),
+        openTabs: toRaw(openTabs),
+        currentTabIndex: toRaw(currentTabIndex),
+      } );
+    },
+
     showTab( index:Number ) {
       this.currentTabIndex = index;
+      this.saveSessionState();
+      this.saveStoredState();
     },
+
     openTab( tab:Tab ) {
       console.log( 'open tab', tab );
       this.openTabs.push( tab );
       this.showTab( this.openTabs.length - 1 );
     },
+
     closeTab( tab:Tab ) {
       for ( let i = 0; i < this.openTabs.length; i++ ) {
         if ( this.openTabs[i] === tab ) {
           this.openTabs.splice(i, 1);
           if ( this.currentTabIndex >= this.openTabs.length ) {
-            this.currentTabIndex = this.openTabs.length - 1;
+            this.showTab( this.openTabs.length - 1 );
           }
           break;
         }
       }
     },
+
     async openProject( path:string=null ) {
       if ( this._fsWatcher ) {
-        electron.removeListener( 'watch', this.fsWatcher );
+        electron.removeListener( 'watch', this._fsWatcher );
       }
       if ( !path ) {
         const res = await electron.openProject();
         path = res.filePaths[0];
       }
       this.currentProject = path;
+
+      this.saveSessionState();
+      this.saveStoredState();
 
       // Update the recent projects list
       const i = this.recentProjects.indexOf( path );
@@ -63,25 +124,32 @@ export const useAppStore = defineStore('app', {
       this._fsWatcher = this.changeFile.bind(this);
       electron.on( 'watch', this._fsWatcher );
     },
+
     changeFile(event, {eventType, filename}) {
       console.log( 'file changed', eventType, filename );
     },
+
     saveProject() {
     },
+
     async newProject() {
       const res = await electron.newProject();
       this.openProject(res.filePath);
     },
+
     getFileUrl( path:string ):string {
       console.log( 'getFileUrl', toRaw(path) );
       return 'bfile://' + this.currentProject + '/' + toRaw(path);
     },
+
     readFile( path:string ) {
       return electron.readFile( this.currentProject + '/' + path );
     },
+
     saveFile( path:string, data:Object ) {
       return electron.saveFile( this.currentProject + '/' + path, data );
     },
+
     newFile( name:string, ext:string, data:Object ) {
       return electron.newFile( this.currentProject, name, ext, data );
     },

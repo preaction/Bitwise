@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapStores, mapState } from 'pinia';
+import { mapStores, mapState, mapGetters, mapActions } from 'pinia';
 import { useAppStore } from '../store/app.ts';
 
 export default defineComponent({
@@ -19,8 +19,13 @@ export default defineComponent({
   },
   computed: {
     ...mapStores(useAppStore),
+    ...mapGetters(useAppStore, ['hasStoredState', 'storedStateProject']),
   },
   methods: {
+    loadStoredState() {
+      this.appStore.loadStoredState();
+      this.$emit('select');
+    },
     projectName( path:string ) {
       return path.split('/').pop();
     },
@@ -47,6 +52,7 @@ export default defineComponent({
 
     </div>
     <div class="flex-fill d-flex flex-column">
+      <button v-if="hasStoredState" class="btn btn-primary text-start" @click="loadStoredState">Resume {{storedStateProject}}</button>
       <button class="btn btn-default text-start" @click="newProject">Create Project...</button>
       <button class="btn btn-default text-start" @click="openProject()">Open Project...</button>
     </div>
