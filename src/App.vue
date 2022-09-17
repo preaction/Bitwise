@@ -164,7 +164,7 @@ export default defineComponent({
   <header class="app-tabbar">
     <nav class="px-2">
       <a v-for="tab, i in openTabs" href="#"
-        @click.prevent="showTab(i)"
+        @click.prevent="showTab(i)" :key="tab.src"
         :aria-current="i === currentTabIndex ? 'true' : ''"
       >
         {{tab.name}}
@@ -173,7 +173,12 @@ export default defineComponent({
     </nav>
   </header>
 
-  <component class="app-main" v-if="currentTab" @update:modelValue="updateTab" @save="saveTab" :is="currentTab.component" :edited="currentTab.edited" v-model="currentTab.data" />
+  <component class="app-main" v-if="currentTab"
+    :is="currentTab.component" :edited="currentTab.edited"
+    :key="currentTab.src"
+    v-model="currentTab.data"
+    @update:modelValue="updateTab" @save="saveTab"
+  />
 </template>
 
 <style>
