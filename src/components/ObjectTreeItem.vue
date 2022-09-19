@@ -1,10 +1,10 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, toRaw } from "vue";
 const DBLCLICK_DELAY = 250;
 
 export default defineComponent({
   name: 'ObjectTreeItem',
-  props: ['name', 'path', 'children', 'expand'],
+  props: ['item', 'expand', 'onclickitem', 'ondblclickitem', 'dragtype'],
   data() {
     return {
       clickTimeout: null,
@@ -13,7 +13,7 @@ export default defineComponent({
   },
   computed: {
     hasChildren() {
-      return this.children && this.children.length > 0;
+      return this.item?.children?.length > 0;
     },
     showChildren() {
       return typeof this.expand !== "undefined" ? this.expand : this._expand;
@@ -21,18 +21,36 @@ export default defineComponent({
   },
   methods: {
     handleClick() {
-      if ( !this.clickTimeout ) {
+      // If we don't need to handle double-click, we can just handle the
+      // click right away!
+      if ( !this.ondblclickitem ) {
+        if ( !this.onclickitem && this.item.children ) {
+          this.toggleChildren();
+        }
+        else if ( this.onclickitem ) {
+          this.onclickitem(this.item);
+        }
+      }
+      // Otherwise, if we need to handle both click and double-click
+      else if ( (this.onclickitem||this.item.children) && !this.clickTimeout ) {
         // First click, start the timeout
-        this.clickTimeout = setTimeout( () => this.toggleChildren(), DBLCLICK_DELAY );
+        this.clickTimeout = setTimeout( () => {
+          this.clearClickTimeout();
+          if ( this.onclickitem ) {
+            this.onclickitem(this.item);
+          }
+          else {
+            this.toggleChildren();
+          }
+        }, DBLCLICK_DELAY );
         return;
       }
     },
-    select() {
+    handleDoubleClick() {
       this.clearClickTimeout();
-      this.$emit('select', { path: this.path, name: this.name, children: this.children });
-    },
-    handleSelectChild(item) {
-      this.$emit('select', item);
+      if ( this.ondblclickitem ) {
+        this.ondblclickitem(this.item);
+      }
     },
     clearClickTimeout() {
       if ( this.clickTimeout ) {
@@ -53,7 +71,7 @@ export default defineComponent({
       }
     },
     dragstart( event ) {
-      event.dataTransfer.setData('bitwise/file', this.path);
+      event.dataTransfer.setData('bitwise/' + this.dragtype, this.path);
     },
   },
 });
@@ -63,17 +81,17 @@ export default defineComponent({
   <div class="object-tree-item">
     <div class="name ps-1 d-flex justify-content-between"
       draggable="true" @dragstart="dragstart"
-      @click="handleClick" @dblclick="select"
+      @click="handleClick" @dblclick="handleDoubleClick"
       @mousedown="preventTextSelect"
     >
-      <span>{{ name }}</span>
+      <span>{{ item.name }}</span>
       <span v-if="hasChildren">
-        <i class="fa" :class="showChildren ? 'fa-caret-down' : 'fa-caret-left'"></i>
+        <i class="fa" @click="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-left'"></i>
       </span>
     </div>
     <div v-if="hasChildren && showChildren" class="children">
-      <div v-for="child in children">
-        <ObjectTreeItem v-bind="child" @select="handleSelectChild"/>
+      <div v-for="child in item.children">
+        <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="child" />
       </div>
     </div>
   </div>

@@ -112,7 +112,7 @@ export default defineComponent({
     </div>
     <div class="tab-sidebar">
       <div>
-        <ObjectTreeItem v-bind="$data" :expand="true" @select="select" />
+        <ObjectTreeItem :dragtype="entity" :item="$data" :expand="true" :onclickitem="select" />
       </div>
       <div v-if="selectedEntity">
         <div>{{ selectedEntity.type }}</div>

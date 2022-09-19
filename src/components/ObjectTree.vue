@@ -3,7 +3,7 @@ import { defineComponent } from "vue";
 import ObjectTreeItem from "./ObjectTreeItem.vue";
 
 export default defineComponent({
-  props: ['items'],
+  props: ['items', 'onclickitem', 'ondblclickitem', 'dragtype'],
   data() {
     return {
     };
@@ -11,22 +11,13 @@ export default defineComponent({
   components: {
     ObjectTreeItem,
   },
-  methods: {
-    select(item) {
-      this.$emit('select', item);
-    },
-    addToProject() {
-      // - Tilemap
-      // - Tileset
-    },
-  }
 });
 </script>
 
 <template>
   <div class="object-tree">
     <div v-for="item in items" class="text-start">
-      <ObjectTreeItem @select="select" v-bind="item" />
+      <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="item" :dragtype="dragtype" />
     </div>
   </div>
 </template>
