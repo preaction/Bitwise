@@ -4,10 +4,16 @@ import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import * as bitwise from '../Bitwise.ts';
 
 import Position from './bitwise/Position.vue';
 import OrthographicCamera from './bitwise/OrthographicCamera.vue';
+
+// XXX: In the future, scene entities like this will need to be loaded by
+// the code, on demand.
+import Tileset from './../bitwise/Tileset.ts';
+import { Tilemap, Tile } from './../bitwise/Tilemap.ts';
 
 export default defineComponent({
   components: {
@@ -19,38 +25,17 @@ export default defineComponent({
   props: ['modelValue', 'edited'],
   data() {
     return {
-      path: '/',
       type: 'Scene',
       name: 'New Scene',
-      children: [
-        {
-          name: 'Camera',
-          type: 'OrthographicCamera',
-          path: '/Camera',
-          components: [
-            {
-              type: 'Position',
-              data: {
-                x: 0,
-                y: 0,
-                z: 4,
-              },
-            },
-            {
-              type: 'OrthographicCamera',
-              data: {
-                frustum: 2,
-              },
-            },
-          ],
-        },
+      entities: null,
+      treeItems: [
       ],
       selectedEntity: null,
       ...this.modelValue,
     };
   },
 
-  mounted() {
+  async mounted() {
     this.game = new bitwise.Game({
       canvas: this.$refs['canvas'],
       loader: {
@@ -61,22 +46,72 @@ export default defineComponent({
     // XXX: Scroll controls for zoom
     // XXX: Pinch controls for zoom
 
-    const scene = new bitwise.Scene( this.game );
+    const scene = this.scene = new bitwise.Scene( this.game );
+    if ( this.entities ) {
+      scene.deserialize( this.entities );
+    }
+    else {
+      // Create a new, blank scene
+      const camera = scene.addEntity();
+      camera.addComponent( "Position" );
+      camera.addComponent( "OrthographicCamera", { frustum: 2 } );
+
+      // Random thingy
+      const thing = camera.addEntity();
+      thing.addComponent( "Position", { x: 1, y: 1, z: 1 } );
+
+      this.update();
+    }
+
+    // Find all the entities and build tree items for them
+    const tree = {};
+    for ( const id of scene.listEntities() ) {
+      const hasParent = bitecs.hasComponent( scene.world, scene.components.Parent, id );
+      if ( hasParent ) {
+        const pid = scene.components.Parent.id[id];
+        console.log( `ID: ${id}; PID: ${pid}` );
+      }
+      else {
+        console.log( `ID: ${id}; PID: -1` );
+      }
+    }
+
+
+
+    // Load tileset
+    const tileset = new Tileset({
+      src: this.game.loader.base + "Tilesets/TS_Dirt.png",
+      tileWidth: 16,
+    });
+    await tileset.load();
+
+    // Add tilemap
+    const tilemap = new Tilemap();
+    tilemap.addTileset( "dirt", tileset );
+    tilemap.setTile( new three.Vector2(0, 0), "dirt", 3 );
+    scene._scene.add( tilemap );
+
+
+
+
+
+
+
     this.game.scenes.push( scene );
     this.game.start();
     scene.start();
-
-    this.$emit( 'update:modelValue', this.$data );
   },
 
   unmounted() {
-    this.game.stop();
+    this.game?.stop();
   },
 
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
     update() {
       this.$emit('update:modelValue', {
+        name: this.name,
+        entities: this.scene.serialize(),
       });
     },
     save() {
@@ -89,6 +124,10 @@ export default defineComponent({
       else {
         this.selectedEntity = item;
       }
+    },
+
+    updateComponent( type:string, data:Object ) {
+      // XXX: Update data in current entity in scene
     },
   },
 });
@@ -120,7 +159,7 @@ export default defineComponent({
           <input v-model="selectedEntity.name" />
         </label>
         <div v-for="c in selectedEntity.components">
-          <component :is="c.type" v-bind="c.data" />
+          <component :is="c.type" v-model="c.data" @update="updateComponent( c.type, c.data )" />
         </div>
       </div>
       <div v-else>

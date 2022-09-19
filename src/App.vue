@@ -1,6 +1,6 @@
 <script lang="ts">
 import * as bootstrap from "bootstrap";
-import { defineComponent, markRaw } from "vue";
+import { defineComponent, markRaw, toRaw } from "vue";
 import { mapStores, mapState, mapActions, mapGetters } from 'pinia';
 import { useAppStore } from "./store/app.ts";
 import NewTab from "./components/NewTab.vue";
@@ -97,12 +97,13 @@ export default defineComponent({
     async saveTab() {
       const tab = this.currentTab;
       tab.data.component = tab.component;
+      console.log( 'saving', toRaw(tab.data) );
       // No src? Open save as dialog
       if ( !tab.src ) {
         const res = await this.appStore.newFile(
           tab.name,
           'json',
-          JSON.stringify( tab.data ),
+          JSON.stringify( toRaw( tab.data ) ),
         );
         console.log('newFile', res);
         if ( !res.canceled ) {
@@ -160,7 +161,7 @@ export default defineComponent({
         <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
       </ul>
     </div>
-    <ObjectTree :dragtype="file" :ondblclickitem="(item) => openTab(item)" :items="projectItems" />
+    <ObjectTree :dragtype="file" :ondblclickitem="openTab" :items="projectItems" />
   </div>
 
   <header class="app-tabbar">

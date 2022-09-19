@@ -13,10 +13,10 @@
 import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Game from './Game.ts';
+import Entity from './Entity.ts';
 import OrthographicCamera from './system/OrthographicCamera.ts';
 import Position from './system/Position.ts';
-import Tileset from './Tileset.ts';
-import { Tilemap, Tile } from './Tilemap.ts';
+import Parent from './system/Parent.ts';
 
 // SceneState is the current state of the scene.
 // XXX: This should be in a separate class so it can be exported
@@ -46,10 +46,14 @@ export default class Scene extends three.EventDispatcher {
   // to the Game class, or the Game class be involved in defining which
   // systems are available.
   systems:any;
+  components:any;
   // entities are the bitecs entities in this scene.
   entities:Number[];
 
   cameraQuery:any;
+
+  serializer:any;
+  deserializer:any;
 
   constructor( game:Game ) {
     super();
@@ -58,34 +62,21 @@ export default class Scene extends three.EventDispatcher {
 
     this.world = bitecs.createWorld();
     this.systems = {};
-    this.systems.Position = new Position( this );
-    this.systems.OrthographicCamera = new OrthographicCamera( this );
+    this.components = {};
+    this.addSystem( "Parent", Parent );
+    this.addSystem( "Position", Position );
+    this.addSystem( "OrthographicCamera", OrthographicCamera );
 
-    this.cameraQuery = bitecs.defineQuery([ this.systems.OrthographicCamera.component ]);
+    this.cameraQuery = bitecs.defineQuery([ this.components.OrthographicCamera ]);
+    this.parentQuery = bitecs.defineQuery([ this.components.Parent ]);
+    this.rootQuery = bitecs.defineQuery([ bitecs.Not(this.components.Parent) ]);
   }
 
   // start() should initialize the scene and get it ready to be
   // rendered. When the scene is ready, it should set its state to
   // "Start".
   async start() {
-    // Load tileset
-    const tileset = new Tileset({
-      src: this.game.loader.base + "Tilesets/TS_Dirt.png",
-      tileWidth: 16,
-    });
-    await tileset.load();
-
-    // Add tilemap
-    const tilemap = new Tilemap();
-    tilemap.addTileset( "dirt", tileset );
-    tilemap.setTile( new three.Vector2(0, 0), "dirt", 3 );
-    this._scene.add( tilemap );
-
-    const camera = bitecs.addEntity(this.world);
-    bitecs.addComponent(this.world, this.systems.Position.component, camera);
-    bitecs.addComponent(this.world, this.systems.OrthographicCamera.component, camera);
-    this.systems.Position.component.z[camera] = 4;
-    //this.systems.OrthographicCamera.component.zoom[camera] = 4;
+    // XXX: Add entities to scene?
 
     this.state = SceneState.Start;
   }
@@ -97,5 +88,50 @@ export default class Scene extends three.EventDispatcher {
 
   render(renderer:three.Renderer) {
     this.systems.OrthographicCamera.render( renderer );
+  }
+
+  serialize() {
+    // XXX: Not using bitecs serialize/deserialize because I can't get
+    // them to work...
+    const data = [];
+    for ( const id of this.listEntities() ) {
+      const entity = new Entity( this, id );
+      const eData = {};
+      data.push( eData );
+      for ( const c of entity.listComponents() ) {
+        eData[c] = entity.getComponent(c);
+      }
+    }
+    return data;
+  }
+
+  deserialize( data:Object[] ) {
+    // XXX: Not using bitecs serialize/deserialize because I can't get
+    // them to work...
+    for ( const eData of data ) {
+      const entity = this.addEntity();
+      for ( const c in eData ) {
+        entity.addComponent( c, eData[c] );
+      }
+    }
+  }
+
+  addSystem( name:string, system:any ) {
+    this.systems[name] = new system( this );
+    this.components[name] = this.systems[name].component;
+  }
+
+  addEntity( parent:Number=-1 ) {
+    const id = bitecs.addEntity( this.world );
+    if ( parent >= 0 ) {
+      const component = this.components.Parent;
+      bitecs.addComponent( this.world, component, id );
+      component.id[id] = parent;
+    }
+    return new Entity(this, id);
+  }
+
+  listEntities() {
+    return this.parentQuery( this.world ).concat( this.rootQuery( this.world ) );
   }
 }
