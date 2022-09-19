@@ -3,17 +3,20 @@ import { defineComponent } from "vue";
 const DBLCLICK_DELAY = 250;
 
 export default defineComponent({
-  name: 'ProjectTreeItem',
-  props: ['name', 'path', 'children'],
+  name: 'ObjectTreeItem',
+  props: ['name', 'path', 'children', 'expand'],
   data() {
     return {
       clickTimeout: null,
-      showChildren: false,
+      _expand: this.expand,
     };
   },
   computed: {
     hasChildren() {
       return this.children && this.children.length > 0;
+    },
+    showChildren() {
+      return typeof this.expand !== "undefined" ? this.expand : this._expand;
     },
   },
   methods: {
@@ -39,7 +42,7 @@ export default defineComponent({
     },
     toggleChildren() {
       this.clearClickTimeout();
-      this.showChildren = this.showChildren ? false : true;
+      this._expand = this._expand ? false : true;
     },
     preventTextSelect(event) {
       // This must be done separately because selection happens after
@@ -57,7 +60,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="project-tree-item">
+  <div class="object-tree-item">
     <div class="name ps-1 d-flex justify-content-between"
       draggable="true" @dragstart="dragstart"
       @click="handleClick" @dblclick="select"
@@ -70,22 +73,22 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in children">
-        <ProjectTreeItem v-bind="child" @select="handleSelectChild"/>
+        <ObjectTreeItem v-bind="child" @select="handleSelectChild"/>
       </div>
     </div>
   </div>
 </template>
 
 <style>
-  .project-tree-item .name {
+  .object-tree-item .name {
     cursor: pointer;
     padding: 2px;
     margin: 0 0 0 -2px;
   }
-  .project-tree-item:hover > .name {
+  .object-tree-item:hover > .name {
     background: #ddd;
   }
-  .project-tree-item .children {
+  .object-tree-item .children {
     border-left: 2px solid var(--bs-gray-300);
     margin-left: 2px;
   }

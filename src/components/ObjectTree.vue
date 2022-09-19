@@ -1,20 +1,15 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapStores, mapState } from 'pinia';
-import { useAppStore } from "../store/app.ts";
-import ProjectTreeItem from "./ProjectTreeItem.vue";
+import ObjectTreeItem from "./ObjectTreeItem.vue";
 
 export default defineComponent({
+  props: ['items'],
   data() {
     return {
     };
   },
   components: {
-    ProjectTreeItem,
-  },
-  computed: {
-    ...mapStores(useAppStore),
-    ...mapState(useAppStore, ['projectItems']),
+    ObjectTreeItem,
   },
   methods: {
     select(item) {
@@ -29,15 +24,15 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="project-tree">
-    <div v-for="item in projectItems" class="text-start">
-      <ProjectTreeItem @select="select" v-bind="item" />
+  <div class="object-tree">
+    <div v-for="item in items" class="text-start">
+      <ObjectTreeItem @select="select" v-bind="item" />
     </div>
   </div>
 </template>
 
 <style>
-  .project-tree {
+  .object-tree {
     font-size: 0.9em;
     height: 100%;
     margin: 0 0.2em;

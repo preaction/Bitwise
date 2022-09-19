@@ -4,8 +4,7 @@ import { defineComponent, markRaw } from "vue";
 import { mapStores, mapState, mapActions, mapGetters } from 'pinia';
 import { useAppStore } from "./store/app.ts";
 import NewTab from "./components/NewTab.vue";
-import MapEditor from "./components/MapEditor.vue";
-import ProjectTree from "./components/ProjectTree.vue";
+import ObjectTree from "./components/ObjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
 import TilesetEdit from "./components/TilesetEdit.vue";
@@ -14,8 +13,7 @@ import SceneEdit from "./components/SceneEdit.vue";
 export default defineComponent({
   components: {
     NewTab,
-    MapEditor,
-    ProjectTree,
+    ObjectTree,
     ProjectSelect,
     ImageView,
     TilesetEdit,
@@ -27,7 +25,7 @@ export default defineComponent({
   },
   computed: {
     ...mapStores(useAppStore),
-    ...mapState(useAppStore, ['currentProject', 'currentTabIndex', 'openTabs']),
+    ...mapState(useAppStore, ['currentProject', 'currentTabIndex', 'openTabs', 'projectItems']),
     ...mapGetters(useAppStore, ['hasSessionState']),
     currentTab() {
       return this.openTabs[ this.currentTabIndex ];
@@ -162,7 +160,7 @@ export default defineComponent({
         <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
       </ul>
     </div>
-    <ProjectTree @select="openTab" />
+    <ObjectTree @select="openTab" :items="projectItems" />
   </div>
 
   <header class="app-tabbar">

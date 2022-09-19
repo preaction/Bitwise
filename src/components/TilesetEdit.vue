@@ -14,10 +14,11 @@ export default defineComponent({
   props: ['modelValue', 'edited'],
   data() {
     return {
-      imageSrc: this.modelValue.imageSrc,
-      tileWidth: this.modelValue.tileWidth,
-      tileHeight: this.modelValue.tileHeight,
-      gutter: this.modelValue.gutter,
+      imageSrc: '',
+      tileWidth: 16,
+      tileHeight: 16,
+      gutter: 0,
+      ...this.modelValue,
     };
   },
   mounted() {
