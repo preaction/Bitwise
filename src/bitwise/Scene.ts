@@ -17,6 +17,7 @@ import Entity from './Entity.ts';
 import OrthographicCamera from './system/OrthographicCamera.ts';
 import Position from './system/Position.ts';
 import Parent from './system/Parent.ts';
+import Sprite from './system/Sprite.ts';
 
 // SceneState is the current state of the scene.
 // XXX: This should be in a separate class so it can be exported
@@ -48,6 +49,7 @@ export default class Scene extends three.EventDispatcher {
   systems:any;
   components:any;
   // entities are the bitecs entities in this scene.
+  // XXX: Store the entity name somewhere
   entities:Number[];
 
   cameraQuery:any;
@@ -66,6 +68,7 @@ export default class Scene extends three.EventDispatcher {
     this.addSystem( "Parent", Parent );
     this.addSystem( "Position", Position );
     this.addSystem( "OrthographicCamera", OrthographicCamera );
+    this.addSystem( "Sprite", Sprite );
 
     this.cameraQuery = bitecs.defineQuery([ this.components.OrthographicCamera ]);
     this.parentQuery = bitecs.defineQuery([ this.components.Parent ]);
@@ -84,6 +87,7 @@ export default class Scene extends three.EventDispatcher {
   update( timeMs:DOMHighResTimeStamp ) {
     // XXX: Run through every system's update() method
     this.systems.OrthographicCamera.update( timeMs );
+    this.systems.Sprite.update( timeMs );
   }
 
   render(renderer:three.Renderer) {
@@ -97,6 +101,7 @@ export default class Scene extends three.EventDispatcher {
     for ( const id of this.listEntities() ) {
       const entity = new Entity( this, id );
       const eData = {};
+      // XXX: Store the entity name somewhere
       data.push( eData );
       for ( const c of entity.listComponents() ) {
         eData[c] = entity.getComponent(c);
@@ -110,6 +115,7 @@ export default class Scene extends three.EventDispatcher {
     // them to work...
     for ( const eData of data ) {
       const entity = this.addEntity();
+      // XXX: Store the entity name somewhere
       for ( const c in eData ) {
         entity.addComponent( c, eData[c] );
       }

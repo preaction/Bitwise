@@ -60,12 +60,12 @@ export default class OrthographicCamera {
     // Frustum size appears to work the same as zoom for an
     // orthographic camera, which makes sense
     const frustumSize = this.component.frustum[eid] || 2;
-    const camera = new three.OrthographicCamera(frustumSize * (width/-2), frustumSize * (width/2), frustumSize * (height/2), frustumSize * (height/-2), 0);
+    const far = this.component.far[eid] || 10;
+    const near = this.component.near[eid] || 0;
+    const camera = new three.OrthographicCamera(frustumSize * (width/-2), frustumSize * (width/2), frustumSize * (height/2), frustumSize * (height/-2), near, far);
     this.cameras[eid] = camera;
-    // Z-position determines which objects are rendered? Use z-position
-    // for layering?
-    camera.position.z = camera.far;
-    camera.zoom = this.component.zoom[eid] || 10;
+    camera.zoom = this.component.zoom[eid] || 4;
+    console.log( `Near: ${camera.near}; Far: ${camera.far}` );
 
     this.scene._scene.add( camera );
   }

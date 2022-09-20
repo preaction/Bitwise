@@ -21,6 +21,28 @@ export default class Game extends three.EventDispatcher {
     this.loader = opt.loader;
   }
 
+  texturePaths:{ [key:string]: three.Texture } = {};
+  textures:three.Texture[] = [];
+  promises:{ [key:string]: Promise } = {};
+
+  loadTexture( path:string ) {
+    if ( this.promises[path] ) {
+      return this.promises[path];
+    }
+    // XXX: Load the texture, and keep track of the promises we make
+    // for loading purposes.
+    // XXX: We may want to make a general "loader" object that can be used
+    // for progress reporting.
+    const loader = new three.TextureLoader();
+    return this.promises[path] = new Promise(
+      (resolve, reject) => {
+        const texture = loader.load( this.loader.base + path, resolve, undefined, reject ) 
+        this.textures.push( texture );
+        this.texturePaths[path] = this.textures.indexOf(texture);
+      },
+    );
+  }
+
   start() {
     // Create the renderer after the <canvas> exists
     const renderer = new three.WebGLRenderer({

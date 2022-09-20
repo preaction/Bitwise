@@ -28,8 +28,9 @@ export default defineComponent({
       type: 'Scene',
       name: 'New Scene',
       entities: null,
-      treeItems: [
-      ],
+      sceneTree: {
+        children: [],
+      },
       selectedEntity: null,
       ...this.modelValue,
     };
@@ -54,11 +55,15 @@ export default defineComponent({
       // Create a new, blank scene
       const camera = scene.addEntity();
       camera.addComponent( "Position" );
-      camera.addComponent( "OrthographicCamera", { frustum: 2 } );
+      camera.addComponent( "OrthographicCamera", { frustum: 0.2, far: 5 } );
 
       // Random thingy
-      const thing = camera.addEntity();
-      thing.addComponent( "Position", { x: 1, y: 1, z: 1 } );
+      const path = "Other/Misc/Tree/Tree.png";
+      await this.game.loadTexture( path );
+      const sprite = camera.addEntity();
+      sprite.addComponent( "Position", { x: 1, y: 0, z: 0 } );
+      sprite.addComponent( "Sprite", { texture: this.game.textures[path] } );
+
 
       this.update();
     }
@@ -66,15 +71,23 @@ export default defineComponent({
     // Find all the entities and build tree items for them
     const tree = {};
     for ( const id of scene.listEntities() ) {
+      if ( !tree[id] ) {
+        tree[id] = { entity: null, children: [] };
+      }
+      tree[id].entity = id;
+      tree[id].name = id;
+
       const hasParent = bitecs.hasComponent( scene.world, scene.components.Parent, id );
       if ( hasParent ) {
         const pid = scene.components.Parent.id[id];
-        console.log( `ID: ${id}; PID: ${pid}` );
-      }
-      else {
-        console.log( `ID: ${id}; PID: -1` );
+        if ( !tree[pid] ) {
+          tree[pid] = { entity: null, children: [] };
+        }
+        tree[pid].children.push( tree[id] );
+        delete tree[id];
       }
     }
+    this.sceneTree.children = Object.values(tree);
 
 
 
@@ -151,7 +164,7 @@ export default defineComponent({
     </div>
     <div class="tab-sidebar">
       <div>
-        <ObjectTreeItem :dragtype="entity" :item="$data" :expand="true" :onclickitem="select" />
+        <ObjectTreeItem :dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select" />
       </div>
       <div v-if="selectedEntity">
         <div>{{ selectedEntity.type }}</div>
