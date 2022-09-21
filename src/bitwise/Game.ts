@@ -5,6 +5,8 @@
 import * as three from 'three';
 import Scene from './Scene.ts';
 
+let tick = 0;
+
 export default class Game extends three.EventDispatcher {
   canvas:HTMLCanvasElement;
   loader:Object; // XXX: Need a real class here
@@ -21,7 +23,8 @@ export default class Game extends three.EventDispatcher {
     this.loader = opt.loader;
   }
 
-  texturePaths:{ [key:string]: three.Texture } = {};
+  texturePaths:{ [key:Number]: string } = {};
+  textureIds:{ [key:string]: Number } = {};
   textures:three.Texture[] = [];
   promises:{ [key:string]: Promise } = {};
 
@@ -38,7 +41,8 @@ export default class Game extends three.EventDispatcher {
       (resolve, reject) => {
         const texture = loader.load( this.loader.base + path, resolve, undefined, reject ) 
         this.textures.push( texture );
-        this.texturePaths[path] = this.textures.indexOf(texture);
+        this.texturePaths[this.textures.indexOf(texture)] = path;
+        this.textureIds[ path ] = this.textures.indexOf(texture);
       },
     );
   }
@@ -88,8 +92,9 @@ export default class Game extends three.EventDispatcher {
     if ( !this.renderer ) {
       return;
     }
-    requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t) );
-
+    if ( ++tick % 100 === 0 ) {
+      console.log( `render tick ${tick}` );
+    }
     // XXX: Only run this if our ResizeObserver has gotten a hit.
     // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
     this.resizeRendererToDisplaySize()
@@ -98,17 +103,19 @@ export default class Game extends three.EventDispatcher {
     for ( const scene:Scene of this.scenes ) {
       switch (scene.state) {
         case "START":
-          scene.render( this.renderer );
+          scene.render();
           scene.state = "RUN";
           continue SCENES;
         case "RUN":
           scene.update( timeMilli );
           // fall-through to render
         case "PAUSE":
-          scene.render( this.renderer );
+          scene.render();
           continue SCENES;
       }
     }
+
+    requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t) );
   }
 
 }

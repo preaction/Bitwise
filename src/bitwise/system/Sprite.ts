@@ -1,7 +1,7 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import Scene from './Scene.ts';
+import Scene from '../Scene.ts';
 
 export default class Sprite {
   scene:Scene;
@@ -12,56 +12,48 @@ export default class Sprite {
 
   constructor( scene:Scene ) {
     this.scene = scene;
-    this.component = bitecs.defineComponent( this.componentData );
-    this.position = scene.systems.Position;
-    this.query = bitecs.defineQuery([ this.position.component, this.component ]);
+
+    this.position = scene.components[ "Position" ];
+    this.component = scene.components[ "Sprite" ];
+
+    this.query = bitecs.defineQuery([ this.position.store, this.component.store ]);
     this.enterQuery = bitecs.enterQuery( this.query );
     this.exitQuery = bitecs.exitQuery( this.query );
   }
 
-  get world() {
-    return this.scene.world;
-  }
-
-  get componentData() {
-    return {
-      texture: bitecs.Types.ui8,
-    }
-  }
-
   update( timeMilli:Number ) {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
-    const add = this.enterQuery(this.world);
+    const add = this.enterQuery(this.scene.world);
     for ( const eid of add ) {
       this.add( eid ); 
     }
 
-    // cameraQuery: Update camera properties if needed
-    const update = this.query(this.world);
-    for ( const eid of update ) {
+    // exitedQuery for cameraQuery: Remove Camera from Scene
+    const remove = this.exitQuery(this.scene.world);
+    for ( const eid of remove ) {
       // XXX
     }
 
-    // exitedQuery for cameraQuery: Remove Camera from Scene
-    const remove = this.exitQuery(this.world);
-    for ( const eid of remove ) {
+    // cameraQuery: Update camera properties and render if needed
+    const update = this.query(this.scene.world);
+    for ( const eid of update ) {
       // XXX
     }
   }
 
   add( eid:Number ) {
     // Find the sprite's texture
-    const tid = this.component.texture[eid];
+    const tid = this.component.store.textureId[eid];
     const texture = this.scene.game.textures[tid];
     const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
     const sprite = this.sprites[eid] = new three.Sprite( material );
-    console.log( `Adding sprite ${eid}: Texture(${tid})`, this.scene.game.texturePaths );
-    sprite.position.x = this.position.component.x[eid];
-    sprite.position.y = this.position.component.y[eid];
-    sprite.position.z = this.position.component.z[eid];
+    sprite.position.x = this.position.store.x[eid];
+    sprite.position.y = this.position.store.y[eid];
+    sprite.position.z = this.position.store.z[eid];
     // XXX: Figure out why the camera shows things very small unless
     // I do this.
     sprite.scale.multiplyScalar(16);
+    // XXX: If entity has a Parent, add it to that instead
     this.scene._scene.add( sprite );
   }
 

@@ -3,7 +3,7 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene from './Scene.ts';
 
-export default class OrthographicCamera {
+export default class Render {
   scene:Scene;
   cameras:three.OrthographicCamera[] = [];
   component:any;
@@ -11,45 +11,44 @@ export default class OrthographicCamera {
 
   constructor( scene:Scene ) {
     this.scene = scene;
-    this.component = bitecs.defineComponent( this.componentData );
-    this.position = scene.systems.Position;
-    this.query = bitecs.defineQuery([ this.position.component, this.component ]);
+
+    this.position = scene.components[ "Position" ];
+    if ( !this.position ) {
+      throw "Position component required";
+    }
+    this.component = scene.components[ "OrthographicCamera" ];
+    if ( !this.component ) {
+      throw "OrthographicCamera component required";
+    }
+
+    this.query = bitecs.defineQuery([ this.position.store, this.component.store ]);
     this.enterQuery = bitecs.enterQuery( this.query );
     this.exitQuery = bitecs.exitQuery( this.query );
 
     scene.addEventListener( "resize", (e:Object) => this.onResize(e) );
   }
 
-  get world() {
-    return this.scene.world;
-  }
-
-  get componentData() {
-    return {
-      frustum: bitecs.Types.f32,
-      zoom: bitecs.Types.f32,
-      near: bitecs.Types.f32,
-      far: bitecs.Types.f32,
-    }
-  }
-
   update( timeMilli:Number ) {
+  }
+
+  render() {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
-    const add = this.enterQuery(this.world);
+    const add = this.enterQuery(this.scene.world);
     for ( const eid of add ) {
       this.add( eid ); 
     }
 
-    // cameraQuery: Update camera properties if needed
-    const update = this.query(this.world);
-    for ( const eid of update ) {
+    // exitedQuery for cameraQuery: Remove Camera from Scene
+    const remove = this.exitQuery(this.scene.world);
+    for ( const eid of remove ) {
       // XXX
     }
 
-    // exitedQuery for cameraQuery: Remove Camera from Scene
-    const remove = this.exitQuery(this.world);
-    for ( const eid of remove ) {
-      // XXX
+    // cameraQuery: Update camera properties and render if needed
+    const update = this.query(this.scene.world);
+    for ( const eid of update ) {
+      // XXX: Object3d should be its own component somehow
+      this.scene.game.renderer.render( this.scene._scene, this.cameras[eid] );
     }
   }
 
@@ -59,12 +58,13 @@ export default class OrthographicCamera {
     // Point a camera at 0, 0
     // Frustum size appears to work the same as zoom for an
     // orthographic camera, which makes sense
-    const frustumSize = this.component.frustum[eid] || 2;
-    const far = this.component.far[eid] || 10;
-    const near = this.component.near[eid] || 0;
+    const cameraData = this.component.store;
+    const frustumSize = cameraData.frustum[eid] || 2;
+    const far = cameraData.far[eid] || 10;
+    const near = cameraData.near[eid] || 0;
     const camera = new three.OrthographicCamera(frustumSize * (width/-2), frustumSize * (width/2), frustumSize * (height/2), frustumSize * (height/-2), near, far);
     this.cameras[eid] = camera;
-    camera.zoom = this.component.zoom[eid] || 4;
+    camera.zoom = cameraData.zoom[eid] || 4;
     console.log( `Near: ${camera.near}; Far: ${camera.far}` );
 
     this.scene._scene.add( camera );
@@ -87,19 +87,6 @@ export default class OrthographicCamera {
       camera.top = frustumSize * (height/2);
       camera.bottom = frustumSize * (height/-2);
       camera.updateProjectionMatrix();
-    }
-  }
-
-  render(renderer:three.Renderer) {
-    // enteredQuery for cameraQuery: Create Camera and add to Scene
-    const add = this.enterQuery(this.world);
-    for ( const eid of add ) {
-      this.add( eid ); 
-    }
-
-    const cameras = this.query(this.world);
-    for ( const eid of cameras ) {
-      renderer.render( this.scene._scene, this.cameras[eid] );
     }
   }
 }

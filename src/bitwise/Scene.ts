@@ -14,10 +14,6 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Game from './Game.ts';
 import Entity from './Entity.ts';
-import OrthographicCamera from './system/OrthographicCamera.ts';
-import Position from './system/Position.ts';
-import Parent from './system/Parent.ts';
-import Sprite from './system/Sprite.ts';
 
 // SceneState is the current state of the scene.
 // XXX: This should be in a separate class so it can be exported
@@ -43,19 +39,17 @@ export default class Scene extends three.EventDispatcher {
 
   // world is the bitecs World object. Each scene has its own.
   world:any;
-  // systems are the components available. This may need to be moved
-  // to the Game class, or the Game class be involved in defining which
-  // systems are available.
-  systems:any;
-  components:any;
+
+  // systems are added to the scene to make the game go.
+  systems:any = {};
+
+  // components are data added to entities
+  components:any = {};
+
   // entities are the bitecs entities in this scene.
   // XXX: Store the entity name somewhere
-  entities:Number[];
-
-  cameraQuery:any;
-
-  serializer:any;
-  deserializer:any;
+  entities:any = {};
+  eids:Number[] = [];
 
   constructor( game:Game ) {
     super();
@@ -65,14 +59,6 @@ export default class Scene extends three.EventDispatcher {
     this.world = bitecs.createWorld();
     this.systems = {};
     this.components = {};
-    this.addSystem( "Parent", Parent );
-    this.addSystem( "Position", Position );
-    this.addSystem( "OrthographicCamera", OrthographicCamera );
-    this.addSystem( "Sprite", Sprite );
-
-    this.cameraQuery = bitecs.defineQuery([ this.components.OrthographicCamera ]);
-    this.parentQuery = bitecs.defineQuery([ this.components.Parent ]);
-    this.rootQuery = bitecs.defineQuery([ bitecs.Not(this.components.Parent) ]);
   }
 
   // start() should initialize the scene and get it ready to be
@@ -86,58 +72,75 @@ export default class Scene extends three.EventDispatcher {
 
   update( timeMs:DOMHighResTimeStamp ) {
     // XXX: Run through every system's update() method
-    this.systems.OrthographicCamera.update( timeMs );
     this.systems.Sprite.update( timeMs );
+    this.systems.Render.update( timeMs );
   }
 
-  render(renderer:three.Renderer) {
-    this.systems.OrthographicCamera.render( renderer );
+  render() {
+    this.systems.Render.render();
   }
 
-  serialize() {
+  freeze() {
     // XXX: Not using bitecs serialize/deserialize because I can't get
     // them to work...
     const data = [];
-    for ( const id of this.listEntities() ) {
-      const entity = new Entity( this, id );
-      const eData = {};
-      // XXX: Store the entity name somewhere
-      data.push( eData );
+    for ( const id of this.eids ) {
+      const entity = this.entities[id];
+      const eData = {
+        name: entity.name,
+        type: entity.type,
+      };
       for ( const c of entity.listComponents() ) {
-        eData[c] = entity.getComponent(c);
+        eData[c] = this.components[c].freezeEntity(id);
       }
+      data.push( eData );
     }
-    return data;
+    return { entities: data };
   }
 
-  deserialize( data:Object[] ) {
+  thaw( data:Object ) {
+    console.log( "Thawing scene from", data );
     // XXX: Not using bitecs serialize/deserialize because I can't get
     // them to work...
-    for ( const eData of data ) {
+    // Load the metadata first so that components have something to hook
+    // on to.
+    for ( const eData of data.entities ) {
       const entity = this.addEntity();
-      // XXX: Store the entity name somewhere
+      entity.name = eData.name;
+      entity.type = eData.type;
+      entity.path = eData.path;
+      eData.id = entity.id;
+    }
+    for ( const eData of data.entities ) {
       for ( const c in eData ) {
-        entity.addComponent( c, eData[c] );
+        if ( typeof eData[c] !== "object" ) {
+          continue;
+        }
+        this.components[c].thawEntity(eData.id, eData[c]);
       }
     }
   }
 
+  // XXX: Systems have an order
   addSystem( name:string, system:any ) {
     this.systems[name] = new system( this );
-    this.components[name] = this.systems[name].component;
   }
 
-  addEntity( parent:Number=-1 ) {
+  addComponent( name:string, component:any ) {
+    console.log( `Adding component ${name}`, component );
+    this.components[name] = new component( this, this.world );
+  }
+
+  addEntity() {
     const id = bitecs.addEntity( this.world );
-    if ( parent >= 0 ) {
-      const component = this.components.Parent;
-      bitecs.addComponent( this.world, component, id );
-      component.id[id] = parent;
-    }
-    return new Entity(this, id);
+    this.eids.push(id);
+    this.entities[id] = new Entity(this, id);
+    return this.entities[id];
   }
 
-  listEntities() {
-    return this.parentQuery( this.world ).concat( this.rootQuery( this.world ) );
+  removeEntity( id:Number ) {
+    bitecs.removeEntity( this.world, id );
+    delete this.entities[id];
+    this.eids.splice( this.eids.indexOf(id), 1 );
   }
 }

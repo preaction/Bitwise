@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, toRaw } from "vue";
 import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
@@ -14,6 +14,12 @@ import OrthographicCamera from './bitwise/OrthographicCamera.vue';
 // the code, on demand.
 import Tileset from './../bitwise/Tileset.ts';
 import { Tilemap, Tile } from './../bitwise/Tilemap.ts';
+import ParentComponent from '../bitwise/component/Parent.ts';
+import PositionComponent from '../bitwise/component/Position.ts';
+import CameraComponent from '../bitwise/component/OrthographicCamera.ts';
+import SpriteComponent from '../bitwise/component/Sprite.ts';
+import SpriteSystem from '../bitwise/system/Sprite.ts';
+import RenderSystem from '../bitwise/system/Render.ts';
 
 export default defineComponent({
   components: {
@@ -25,14 +31,11 @@ export default defineComponent({
   props: ['modelValue', 'edited'],
   data() {
     return {
-      type: 'Scene',
-      name: 'New Scene',
-      entities: null,
       sceneTree: {
+        name: this.modelValue.name || 'New Scene',
         children: [],
       },
       selectedEntity: null,
-      ...this.modelValue,
     };
   },
 
@@ -48,38 +51,55 @@ export default defineComponent({
     // XXX: Pinch controls for zoom
 
     const scene = this.scene = new bitwise.Scene( this.game );
-    if ( this.entities ) {
-      scene.deserialize( this.entities );
+    scene.addComponent( "Parent", ParentComponent );
+    scene.addComponent( "Position", PositionComponent );
+    scene.addComponent( "OrthographicCamera", CameraComponent );
+    scene.addComponent( "Sprite", SpriteComponent );
+
+    scene.addSystem( "Sprite", SpriteSystem );
+    scene.addSystem( "Render", RenderSystem );
+
+    if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
+      scene.thaw( toRaw( this.modelValue ) );
     }
     else {
       // Create a new, blank scene
       const camera = scene.addEntity();
+      camera.name = "Camera";
+      camera.type = "Camera";
       camera.addComponent( "Position" );
       camera.addComponent( "OrthographicCamera", { frustum: 0.2, far: 5 } );
+      console.log( `Camera ID: ${camera.id}` );
 
       // Random thingy
       const path = "Other/Misc/Tree/Tree.png";
       await this.game.loadTexture( path );
-      const sprite = camera.addEntity();
+      const sprite = scene.addEntity();
+      sprite.name = "Sprite";
+      sprite.type = "Sprite";
+      sprite.addComponent( "Parent", { id: camera.id } );
       sprite.addComponent( "Position", { x: 1, y: 0, z: 0 } );
-      sprite.addComponent( "Sprite", { texture: this.game.textures[path] } );
-
+      sprite.addComponent( "Sprite", { textureId: this.game.textures[path] } );
+      console.log( `Sprite ID: ${sprite.id}` );
 
       this.update();
     }
 
     // Find all the entities and build tree items for them
     const tree = {};
-    for ( const id of scene.listEntities() ) {
+    for ( const id of scene.eids ) {
+      const entity = scene.entities[id];
+      console.log( `Treeing entity ${id}` );
       if ( !tree[id] ) {
         tree[id] = { entity: null, children: [] };
       }
       tree[id].entity = id;
-      tree[id].name = id;
+      tree[id].name = entity.name;
 
-      const hasParent = bitecs.hasComponent( scene.world, scene.components.Parent, id );
-      if ( hasParent ) {
-        const pid = scene.components.Parent.id[id];
+      console.log( entity.listComponents() );
+      if ( entity.listComponents().includes("Parent") ) {
+        const pid = scene.components.Parent.store.id[id];
+        console.log( `Parenting to ${pid}` );
         if ( !tree[pid] ) {
           tree[pid] = { entity: null, children: [] };
         }
@@ -87,6 +107,7 @@ export default defineComponent({
         delete tree[id];
       }
     }
+    console.log( "Completed tree:", tree );
     this.sceneTree.children = Object.values(tree);
 
 
@@ -122,16 +143,18 @@ export default defineComponent({
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
     update() {
+      const sceneData = this.scene.freeze();
+      console.log( 'Frozen', sceneData );
       this.$emit('update:modelValue', {
+        ...sceneData,
         name: this.name,
-        entities: this.scene.serialize(),
       });
     },
     save() {
       this.$emit('save');
     },
     select(item) {
-      if ( item.type === "Scene" && item.path === "/" ) {
+      if ( this.sceneTree === item ) {
         this.selectedEntity = null;
       }
       else {
@@ -164,12 +187,12 @@ export default defineComponent({
     </div>
     <div class="tab-sidebar">
       <div>
-        <ObjectTreeItem :dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select" />
+        <ObjectTreeItem dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select" />
       </div>
       <div v-if="selectedEntity">
         <div>{{ selectedEntity.type }}</div>
         <label>Name:
-          <input v-model="selectedEntity.name" />
+          <input v-model="selectedEntity.name" pattern="^[^/]+$" />
         </label>
         <div v-for="c in selectedEntity.components">
           <component :is="c.type" v-model="c.data" @update="updateComponent( c.type, c.data )" />
@@ -178,7 +201,7 @@ export default defineComponent({
       <div v-else>
         <div>Scene</div>
         <label>Name:
-          <input v-model="name" />
+          <input v-model="sceneTree.name" pattern="^[^/]+$" />
         </label>
       </div>
     </div>
