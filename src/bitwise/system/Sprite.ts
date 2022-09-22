@@ -37,7 +37,17 @@ export default class Sprite {
     // cameraQuery: Update camera properties and render if needed
     const update = this.query(this.scene.world);
     for ( const eid of update ) {
-      // XXX
+      const sprite = this.sprites[eid];
+      sprite.position.x = this.position.store.x[eid];
+      sprite.position.y = this.position.store.y[eid];
+      sprite.position.z = this.position.store.z[eid];
+
+      const tid = this.component.store.textureId[eid];
+      const texture = this.scene.game.textures[tid];
+      if ( this.materials[eid].map !== texture ) {
+        const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
+        this.sprites[eid].material = material;
+      }
     }
   }
 

@@ -161,7 +161,7 @@ export default defineComponent({
         <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
       </ul>
     </div>
-    <ObjectTree :dragtype="file" :ondblclickitem="openTab" :items="projectItems" />
+    <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems" />
   </div>
 
   <header class="app-tabbar">

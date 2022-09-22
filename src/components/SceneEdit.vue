@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, toRaw } from "vue";
+import { defineComponent, toRaw, markRaw } from "vue";
 import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
@@ -7,8 +7,9 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import * as bitwise from '../Bitwise.ts';
 
-import Position from './bitwise/Position.vue';
-import OrthographicCamera from './bitwise/OrthographicCamera.vue';
+import PositionEdit from './bitwise/Position.vue';
+import OrthographicCameraEdit from './bitwise/OrthographicCamera.vue';
+import SpriteEdit from './bitwise/Sprite.vue';
 
 // XXX: In the future, scene entities like this will need to be loaded by
 // the code, on demand.
@@ -16,7 +17,7 @@ import Tileset from './../bitwise/Tileset.ts';
 import { Tilemap, Tile } from './../bitwise/Tilemap.ts';
 import ParentComponent from '../bitwise/component/Parent.ts';
 import PositionComponent from '../bitwise/component/Position.ts';
-import CameraComponent from '../bitwise/component/OrthographicCamera.ts';
+import OrthographicCameraComponent from '../bitwise/component/OrthographicCamera.ts';
 import SpriteComponent from '../bitwise/component/Sprite.ts';
 import SpriteSystem from '../bitwise/system/Sprite.ts';
 import RenderSystem from '../bitwise/system/Render.ts';
@@ -25,8 +26,9 @@ export default defineComponent({
   components: {
     ObjectTreeItem,
 
-    Position,
-    OrthographicCamera,
+    PositionEdit,
+    OrthographicCameraEdit,
+    SpriteEdit,
   },
   props: ['modelValue', 'edited'],
   data() {
@@ -36,6 +38,8 @@ export default defineComponent({
         children: [],
       },
       selectedEntity: null,
+      selectedComponents: {},
+      componentForms: markRaw({}),
     };
   },
 
@@ -53,8 +57,11 @@ export default defineComponent({
     const scene = this.scene = new bitwise.Scene( this.game );
     scene.addComponent( "Parent", ParentComponent );
     scene.addComponent( "Position", PositionComponent );
-    scene.addComponent( "OrthographicCamera", CameraComponent );
+    this.componentForms[ "Position" ] = PositionEdit;
+    scene.addComponent( "OrthographicCamera", OrthographicCameraComponent );
+    this.componentForms[ "OrthographicCamera" ] = OrthographicCameraEdit;
     scene.addComponent( "Sprite", SpriteComponent );
+    this.componentForms[ "Sprite" ] = SpriteEdit;
 
     scene.addSystem( "Sprite", SpriteSystem );
     scene.addSystem( "Render", RenderSystem );
@@ -68,7 +75,7 @@ export default defineComponent({
       camera.name = "Camera";
       camera.type = "Camera";
       camera.addComponent( "Position" );
-      camera.addComponent( "OrthographicCamera", { frustum: 0.2, far: 5 } );
+      camera.addComponent( "OrthographicCamera", { frustum: 0.2, far: 5, near: 0, zoom: 1 } );
       console.log( `Camera ID: ${camera.id}` );
 
       // Random thingy
@@ -156,14 +163,21 @@ export default defineComponent({
     select(item) {
       if ( this.sceneTree === item ) {
         this.selectedEntity = null;
+        this.selectedComponents = {};
       }
       else {
-        this.selectedEntity = item;
+        this.selectedEntity = this.scene.entities[item.entity];
+        this.selectedComponents = {};
+        for ( const c of this.selectedEntity.listComponents() ) {
+          this.selectedComponents[c] = this.selectedEntity.getComponent(c);
+        }
       }
     },
 
-    updateComponent( type:string, data:Object ) {
-      // XXX: Update data in current entity in scene
+    updateComponent( name:string, data:Object ) {
+      console.log( `Entity ${this.selectedEntity.id} Component ${name}`, data );
+      this.selectedEntity.setComponent(name, toRaw(data));
+      this.selectedComponents[name] = data;
     },
   },
 });
@@ -190,12 +204,12 @@ export default defineComponent({
         <ObjectTreeItem dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select" />
       </div>
       <div v-if="selectedEntity">
-        <div>{{ selectedEntity.type }}</div>
+        <div>{{ selectedEntity.type || "Unknown Type" }}</div>
         <label>Name:
           <input v-model="selectedEntity.name" pattern="^[^/]+$" />
         </label>
-        <div v-for="c in selectedEntity.components">
-          <component :is="c.type" v-model="c.data" @update="updateComponent( c.type, c.data )" />
+        <div v-for="c in selectedEntity.listComponents()">
+          <component :is="componentForms[c]" v-model="selectedComponents[c]" :scene="scene" @update="updateComponent(c, $event)" />
         </div>
       </div>
       <div v-else>

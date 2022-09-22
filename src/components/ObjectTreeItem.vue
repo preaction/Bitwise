@@ -71,7 +71,8 @@ export default defineComponent({
       }
     },
     dragstart( event ) {
-      event.dataTransfer.setData('bitwise/' + this.dragtype, this.path);
+      console.log( `Dragging ${this.path}: bitwise/${this.dragtype}` );
+      event.dataTransfer.setData('bitwise/' + this.dragtype, this.item.path);
     },
   },
 });
@@ -91,7 +92,7 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in item.children">
-        <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="child" />
+        <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="child" :dragtype="dragtype" />
       </div>
     </div>
   </div>

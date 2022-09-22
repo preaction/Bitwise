@@ -24,6 +24,7 @@ export default class Entity {
   setComponent( name:string, data:Object ) {
     const component = this.scene.components[name].store;
     for ( let key in data ) {
+      console.log( `Setting ${name} ${key} to ${data[key]}` );
       component[key][this.id] = data[key];
     }
   }

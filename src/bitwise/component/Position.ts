@@ -10,5 +10,4 @@ export default class Position extends Component {
       z: bitecs.Types.f32,
     }
   }
-
 }

@@ -48,7 +48,15 @@ export default class Render {
     const update = this.query(this.scene.world);
     for ( const eid of update ) {
       // XXX: Object3d should be its own component somehow
-      this.scene.game.renderer.render( this.scene._scene, this.cameras[eid] );
+      const camera = this.cameras[eid];
+      camera.position.x = this.position.store.x[eid];
+      camera.position.y = this.position.store.y[eid];
+      camera.position.z = this.position.store.z[eid];
+      camera.far = this.component.store.far[eid];
+      camera.near = this.component.store.near[eid];
+      camera.zoom = this.component.store.zoom[eid];
+      camera.updateProjectionMatrix();
+      this.scene.game.renderer.render( this.scene._scene, camera );
     }
   }
 
