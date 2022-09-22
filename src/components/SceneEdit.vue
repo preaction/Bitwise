@@ -117,30 +117,10 @@ export default defineComponent({
     console.log( "Completed tree:", tree );
     this.sceneTree.children = Object.values(tree);
 
-
-
-    // Load tileset
-    const tileset = new Tileset({
-      src: this.game.loader.base + "Tilesets/TS_Dirt.png",
-      tileWidth: 16,
-    });
-    await tileset.load();
-
-    // Add tilemap
-    const tilemap = new Tilemap();
-    tilemap.addTileset( "dirt", tileset );
-    tilemap.setTile( new three.Vector2(0, 0), "dirt", 3 );
-    scene._scene.add( tilemap );
-
-
-
-
-
-
-
     this.game.scenes.push( scene );
     this.game.start();
-    scene.start();
+    scene.update(0);
+    scene.render();
   },
 
   unmounted() {
@@ -178,6 +158,9 @@ export default defineComponent({
       console.log( `Entity ${this.selectedEntity.id} Component ${name}`, data );
       this.selectedEntity.setComponent(name, toRaw(data));
       this.selectedComponents[name] = data;
+      this.update();
+      this.scene.update(0);
+      this.scene.render();
     },
   },
 });
@@ -200,23 +183,29 @@ export default defineComponent({
       <canvas ref="canvas" />
     </div>
     <div class="tab-sidebar">
-      <div>
+      <div class="scene-tree">
         <ObjectTreeItem dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select" />
       </div>
-      <div v-if="selectedEntity">
-        <div>{{ selectedEntity.type || "Unknown Type" }}</div>
-        <label>Name:
+      <div class="entity-pane" v-if="selectedEntity">
+        <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
+        <div class="d-flex justify-content-between align-items-center">
+          <label>Name</label>
           <input v-model="selectedEntity.name" pattern="^[^/]+$" />
-        </label>
+        </div>
         <div v-for="c in selectedEntity.listComponents()">
-          <component :is="componentForms[c]" v-model="selectedComponents[c]" :scene="scene" @update="updateComponent(c, $event)" />
+          <component v-if="componentForms[c]" :is="componentForms[c]"
+            v-model="selectedComponents[c]"
+            class="mb-2 component-form"
+            :scene="scene" @update="updateComponent(c, $event)"
+          />
         </div>
       </div>
       <div v-else>
-        <div>Scene</div>
-        <label>Name:
+        <h5>Scene</h5>
+        <div class="d-flex justify-content-between align-items-center">
+          <label>Name</label>
           <input v-model="sceneTree.name" pattern="^[^/]+$" />
-        </label>
+        </div>
       </div>
     </div>
   </div>
@@ -237,8 +226,12 @@ export default defineComponent({
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
   }
   .tab-sidebar {
+    font-size: 0.9em;
     grid-area: sidebar;
     padding: 2px;
+    width: 300px;
+    background: var(--bs-light);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%)
   }
   .tab-main {
     grid-area: main;
@@ -250,5 +243,17 @@ export default defineComponent({
     display: block;
     width: 100%;
     height: 100%;
+  }
+  .scene-tree {
+    border-bottom: 1px solid rgb(0 0 0 / 10%);
+    margin-bottom: 2px;
+  }
+  .entity-pane {
+    padding: 2px;
+  }
+  .component-form {
+    padding-top: 2px;
+    border-top: 1px solid rgb(0 0 0 / 10%);
+    margin-top: 2px;
   }
 </style>

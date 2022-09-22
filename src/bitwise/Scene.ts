@@ -70,6 +70,14 @@ export default class Scene extends three.EventDispatcher {
     this.state = SceneState.Start;
   }
 
+  async pause() {
+    this.state = SceneState.Pause;
+  }
+
+  async stop() {
+    this.state = SceneState.Stop;
+  }
+
   update( timeMs:DOMHighResTimeStamp ) {
     // XXX: Run through every system's update() method
     this.systems.Sprite.update( timeMs );

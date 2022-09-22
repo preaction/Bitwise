@@ -18,24 +18,24 @@ export default defineComponent({
 <template>
   <div>
     <h6>Position</h6>
-    <div class="d-flex">
-      <div>
-        <label>X
-          <input @change="update" v-model="$data.x">
-        </label>
-      </div>
-      <div>
-        <label>Y
-          <input @change="update" v-model="$data.y">
-        </label>
-      </div>
-      <div>
-        <label>Z
-          <input @change="update" v-model="$data.z">
-        </label>
-      </div>
+    <div class="d-flex position align-items-center">
+      <label>X</label>
+      <input @change="update" v-model="$data.x">
+      <label>Y</label>
+      <input @change="update" v-model="$data.y">
+      <label>Z</label>
+      <input @change="update" v-model="$data.z">
     </div>
   </div>
 </template>
 <style>
+  .position label {
+    padding: 0 2px;
+  }
+  .position input {
+    margin: 0 4px 0 0;
+    flex: 1 1 auto;
+    width: 2em;
+    text-align: right;
+  }
 </style>

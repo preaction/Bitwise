@@ -43,6 +43,7 @@ export default class Game extends three.EventDispatcher {
         this.textures.push( texture );
         this.texturePaths[this.textures.indexOf(texture)] = path;
         this.textureIds[ path ] = this.textures.indexOf(texture);
+        console.log( `Loading texture ${path} (${this.textureIds[path]})` );
       },
     );
   }
@@ -92,9 +93,7 @@ export default class Game extends three.EventDispatcher {
     if ( !this.renderer ) {
       return;
     }
-    if ( ++tick % 100 === 0 ) {
-      console.log( `render tick ${tick}` );
-    }
+
     // XXX: Only run this if our ResizeObserver has gotten a hit.
     // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
     this.resizeRendererToDisplaySize()

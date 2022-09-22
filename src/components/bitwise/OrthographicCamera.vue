@@ -18,25 +18,21 @@ export default defineComponent({
 <template>
   <div>
     <h6>Orthographic Camera</h6>
-    <div>
-      <label>Frustum
-        <input @change="update" v-model="$data.frustum">
-      </label>
+    <div class="d-flex justify-content-between align-items-center">
+      <label>Frustum</label>
+      <input @change="update" v-model="$data.frustum" class="text-end">
     </div>
-    <div>
-      <label>Zoom
-        <input @change="update" v-model="$data.zoom">
-      </label>
+    <div class="d-flex justify-content-between align-items-center">
+      <label>Zoom</label>
+      <input @change="update" v-model="$data.zoom" class="text-end">
     </div>
-    <div>
-      <label>Near
-        <input @change="update" v-model="$data.near">
-      </label>
+    <div class="d-flex justify-content-between align-items-center">
+      <label>Near</label>
+      <input @change="update" v-model="$data.near" class="text-end">
     </div>
-    <div>
-      <label>Far
-        <input @change="update" v-model="$data.far">
-      </label>
+    <div class="d-flex justify-content-between align-items-center">
+      <label>Far</label>
+      <input @change="update" v-model="$data.far" class="text-end">
     </div>
   </div>
 </template>
