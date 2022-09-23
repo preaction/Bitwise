@@ -24,7 +24,7 @@ export default defineComponent({
         event.dataTransfer.dropEffect = "link";
         console.log( data );
         await this.scene.game.loadTexture( data );
-        this.$data.textureId = this.scene.game.textureIds[ data ];
+        this.textureId = this.$data.textureId = this.scene.game.textureIds[ data ];
         this.update();
       }
       else {
@@ -34,14 +34,13 @@ export default defineComponent({
   },
   computed: {
     textureName() {
-      return this.scene.game.texturePaths[ this.textureId ].split( '/' ).pop();
+      return this.scene.game.texturePaths[ this.textureId ]?.split( '/' ).pop();
     },
   },
 });
 </script>
 <template>
   <div>
-    <h6>Sprite</h6>
     <div class="d-flex justify-content-between texture-field align-items-center" @dragover="dragover" @drop="drop">
       <label class="me-2">Texture</label>
       <input readonly class="flex-fill text-end" :value="textureName"

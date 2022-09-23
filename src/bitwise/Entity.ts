@@ -29,6 +29,11 @@ export default class Entity {
     }
   }
 
+  removeComponent( name:string ) {
+    const component = this.scene.components[name];
+    component.removeEntity( this.id );
+  }
+
   getComponent( name:string ):Object {
     const component = this.scene.components[name].store;
     const data = {};

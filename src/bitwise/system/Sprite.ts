@@ -31,7 +31,7 @@ export default class Sprite {
     // exitedQuery for cameraQuery: Remove Camera from Scene
     const remove = this.exitQuery(this.scene.world);
     for ( const eid of remove ) {
-      // XXX
+      this.remove(eid);
     }
 
     // cameraQuery: Update camera properties and render if needed

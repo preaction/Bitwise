@@ -17,7 +17,6 @@ export default defineComponent({
 </script>
 <template>
   <div>
-    <h6>Orthographic Camera</h6>
     <div class="d-flex justify-content-between align-items-center">
       <label>Frustum</label>
       <input @change="update" v-model="$data.frustum" class="text-end">

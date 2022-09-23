@@ -127,6 +127,12 @@ export default defineComponent({
     this.game?.stop();
   },
 
+  computed: {
+    availableComponents() {
+      return [ "Position", "OrthographicCamera", "Sprite" ];
+    },
+  },
+
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
     update() {
@@ -162,6 +168,29 @@ export default defineComponent({
       this.scene.update(0);
       this.scene.render();
     },
+
+    removeComponent( name:string ) {
+      if ( confirm( 'Are you sure?' ) ) {
+        this.selectedEntity.removeComponent(name);
+        this.scene.update(0);
+        this.scene.render();
+        this.update();
+      }
+    },
+
+    hasComponent( name:string ) {
+      return this.selectedEntity.listComponents().includes(name);
+    },
+
+    addComponent( name:string ) {
+      if ( this.hasComponent(name) ) {
+        return;
+      }
+      this.selectedEntity.addComponent(name);
+      this.scene.update(0);
+      this.scene.render();
+      this.update();
+    },
   },
 });
 </script>
@@ -193,14 +222,28 @@ export default defineComponent({
           <input v-model="selectedEntity.name" pattern="^[^/]+$" />
         </div>
         <div v-for="c in selectedEntity.listComponents()">
-          <component v-if="componentForms[c]" :is="componentForms[c]"
-            v-model="selectedComponents[c]"
-            class="mb-2 component-form"
-            :scene="scene" @update="updateComponent(c, $event)"
-          />
+          <div v-if="componentForms[c]" class="my-2 component-form">
+            <div class="mb-1 d-flex justify-content-between align-items-center">
+              <h6 class="m-0">{{ c }}</h6>
+              <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
+            </div>
+            <component :is="componentForms[c]" v-model="selectedComponents[c]"
+              :scene="scene" @update="updateComponent(c, $event)"
+            />
+          </div>
+        </div>
+        <div class="dropdown m-2 mt-4 text-center dropup">
+          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Add Component...
+          </button>
+          <ul class="dropdown-menu">
+            <li v-for="c in availableComponents">
+              <a class="dropdown-item" :class="hasComponent(c) ? 'disabled' : ''" href="#" @click="addComponent(c)">{{c}}</a>
+            </li>
+          </ul>
         </div>
       </div>
-      <div v-else>
+      <div v-else class="entity-pane">
         <h5>Scene</h5>
         <div class="d-flex justify-content-between align-items-center">
           <label>Name</label>
@@ -226,6 +269,8 @@ export default defineComponent({
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
   }
   .tab-sidebar {
+    display: flex;
+    flex-flow: column;
     font-size: 0.9em;
     grid-area: sidebar;
     padding: 2px;
@@ -247,13 +292,19 @@ export default defineComponent({
   .scene-tree {
     border-bottom: 1px solid rgb(0 0 0 / 10%);
     margin-bottom: 2px;
+    overflow: scroll;
+    flex: 1 1 35%;
   }
   .entity-pane {
+    flex: 1 1 65%;
     padding: 2px;
   }
   .component-form {
     padding-top: 2px;
     border-top: 1px solid rgb(0 0 0 / 10%);
     margin-top: 2px;
+  }
+  .icon-button {
+    cursor: pointer;
   }
 </style>

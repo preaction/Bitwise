@@ -37,7 +37,7 @@ export default class Game extends three.EventDispatcher {
     // XXX: We may want to make a general "loader" object that can be used
     // for progress reporting.
     const loader = new three.TextureLoader();
-    return this.promises[path] = new Promise(
+    const promise = this.promises[path] = new Promise(
       (resolve, reject) => {
         const texture = loader.load( this.loader.base + path, resolve, undefined, reject ) 
         this.textures.push( texture );
@@ -46,6 +46,8 @@ export default class Game extends three.EventDispatcher {
         console.log( `Loading texture ${path} (${this.textureIds[path]})` );
       },
     );
+    promise.then( () => this.scenes.forEach( s => s.render() ) );
+    return promise;
   }
 
   start() {

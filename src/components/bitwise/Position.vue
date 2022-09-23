@@ -17,7 +17,6 @@ export default defineComponent({
 </script>
 <template>
   <div>
-    <h6>Position</h6>
     <div class="d-flex position align-items-center">
       <label>X</label>
       <input @change="update" v-model="$data.x">
