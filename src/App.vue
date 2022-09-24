@@ -120,6 +120,38 @@ export default defineComponent({
       console.log('saveFile', res);
       this.currentTab.edited = false;
     },
+
+    showFileDropdown( event:MouseEvent ) {
+      if ( this._showingDropdown ) {
+        this._showingDropdown.hide();
+      }
+      const el = event.target.closest( '.dropdown' );
+      if ( !el ) {
+        console.log( ".dropdown not found for ", event.target );
+      }
+      const dropdown = bootstrap.Dropdown.getInstance( el.querySelector('[data-bs-toggle]') );
+      dropdown.show();
+      this._showingDropdown = dropdown;
+    },
+
+    hideFileDropdown( event:MouseEvent ) {
+      const el = event.target.closest( '.dropdown' );
+      if ( !el ) {
+        console.log( ".dropdown not found for ", event.target );
+      }
+      const dropdown = bootstrap.Dropdown.getInstance(el.querySelector('[data-bs-toggle]'));
+      if ( !dropdown ) {
+        return;
+      }
+      dropdown.hide();
+      this._showingDropdown = null;
+    },
+
+    deleteFile( item:Object ) {
+      if ( confirm( `Are you sure you want to delete "${item.name}"?` ) ) {
+        this.appStore.deleteTree( item.path );
+      }
+    },
   },
   mounted() {
     if ( this.hasSessionState ) {
@@ -134,59 +166,72 @@ export default defineComponent({
 </script>
 
 <template>
-  <div ref="projectDialog" class="modal fade modal-lg" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="welcomeDialogTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title" id="welcomeDialogTitle">
-            Welcome to Bitwise
-          </h3>
-        </div>
-        <div class="modal-body">
-          <ProjectSelect @select="load" />
-        </div>
-        <div class="modal-footer">
+  <div class="app-container">
+    <div ref="projectDialog" class="modal fade modal-lg" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="welcomeDialogTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="welcomeDialogTitle">
+              Welcome to Bitwise
+            </h3>
+          </div>
+          <div class="modal-body">
+            <ProjectSelect @select="load" />
+          </div>
+          <div class="modal-footer">
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="app-sidebar bg-light">
-    <div class="dropdown m-2">
-      <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Add to Project...
-      </button>
-      <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
-        <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
-      </ul>
+    <div class="app-sidebar bg-light">
+      <div class="dropdown m-2">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Add to Project...
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
+          <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
+        </ul>
+      </div>
+      <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems">
+        <template #menu="{item}">
+          <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
+            <i class="fa-solid fa-ellipsis-vertical" @click.prevent.stop="showFileDropdown"
+              data-bs-toggle="dropdown"
+              data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" @click="deleteFile(item)">Delete</a></li>
+            </ul>
+          </div>
+        </template>
+      </ObjectTree>
     </div>
-    <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems" />
+
+    <header class="app-tabbar">
+      <nav class="px-2">
+        <a v-for="tab, i in openTabs" href="#"
+          @click.prevent="showTab(i)" :key="tab.src"
+          :aria-current="i === currentTabIndex ? 'true' : ''"
+        >
+          {{tab.name}}
+          <i class="fa-solid fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
+        </a>
+      </nav>
+    </header>
+
+    <component class="app-main" v-if="currentTab"
+      :is="currentTab.component" :edited="currentTab.edited"
+      :key="currentTab.src"
+      v-model="currentTab.data"
+      @update:modelValue="updateTab" @save="saveTab"
+    />
   </div>
-
-  <header class="app-tabbar">
-    <nav class="px-2">
-      <a v-for="tab, i in openTabs" href="#"
-        @click.prevent="showTab(i)" :key="tab.src"
-        :aria-current="i === currentTabIndex ? 'true' : ''"
-      >
-        {{tab.name}}
-        <i class="fa-solid fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
-      </a>
-    </nav>
-  </header>
-
-  <component class="app-main" v-if="currentTab"
-    :is="currentTab.component" :edited="currentTab.edited"
-    :key="currentTab.src"
-    v-model="currentTab.data"
-    @update:modelValue="updateTab" @save="saveTab"
-  />
 </template>
 
 <style>
-html, body { height: 100% }
-#app {
+html, body, #app { height: 100% }
+.app-container {
   height: 100%;
   overflow: hidden;
   display: grid;
@@ -201,6 +246,7 @@ html, body { height: 100% }
   grid-area: sidebar;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
   width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
   transition: width 0.2s;
   display: flex;
   flex-flow: column;
@@ -232,6 +278,15 @@ html, body { height: 100% }
 }
 .app-tabbar :link:hover i {
   visibility: visible;
+}
+
+.filetree-dropdown > i {
+  display: none;
+  padding: 0 2px;
+}
+.object-tree-item .name:hover .filetree-dropdown > i,
+.object-tree-item .name .filetree-dropdown > i.show {
+  display: inline;
 }
 
 </style>

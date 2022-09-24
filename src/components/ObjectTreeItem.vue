@@ -88,11 +88,16 @@ export default defineComponent({
       <span v-if="hasChildren" class="me-1">
         <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
       </span>
-      <span>{{ item.name }}</span>
+      <span class="flex-fill">{{ item.name }}</span>
+      <slot name="menu" :item="item" />
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in item.children">
-        <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="child" :dragtype="dragtype" />
+        <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="child" :dragtype="dragtype">
+          <template #menu="{item}">
+            <slot name="menu" :item="item" />
+          </template>
+        </ObjectTreeItem>
       </div>
     </div>
   </div>

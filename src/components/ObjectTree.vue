@@ -17,7 +17,11 @@ export default defineComponent({
 <template>
   <div class="object-tree">
     <div v-for="item in items" class="text-start">
-      <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="item" :dragtype="dragtype" />
+      <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="item" :dragtype="dragtype">
+        <template #menu="{item}">
+          <slot name="menu" :item="item" />
+        </template>
+      </ObjectTreeItem>
     </div>
   </div>
 </template>

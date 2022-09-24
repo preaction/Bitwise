@@ -153,6 +153,10 @@ export const useAppStore = defineStore('app', {
     newFile( name:string, ext:string, data:Object ) {
       return electron.newFile( this.currentProject, name, ext, data );
     },
+
+    deleteTree( path:string ) {
+      return electron.deleteTree( this.currentProject, path );
+    },
   },
 });
 

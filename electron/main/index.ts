@@ -221,3 +221,7 @@ ipcMain.handle('bitwise-save-file', (event, path, data) => {
 ipcMain.handle('bitwise-read-file', (event, path) => {
   return fs.readFile( path, { encoding: 'utf8' } );
 });
+
+ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {
+  return fs.rm( path.join( root, tree ), { recursive: true } );
+});
