@@ -275,8 +275,8 @@ export default defineComponent({
       <div v-else class="entity-pane">
         <h5>Scene</h5>
         <div class="d-flex justify-content-between align-items-center">
-          <label>Name</label>
-          <input v-model="sceneTree.name" pattern="^[^/]+$" />
+          <label class="me-1">Name</label>
+          <input v-model="sceneTree.name" class="flex-fill text-end col-1" pattern="^[^/]+$" />
         </div>
       </div>
     </div>

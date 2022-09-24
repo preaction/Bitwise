@@ -42,22 +42,39 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="d-flex">
-    <div class="flex-fill d-flex flex-column">
-      <h4>Recent Projects</h4>
-
-      <button v-for="project in recentProjects" class="btn btn-default text-start" @click="openProject(project)">
+  <div class="project-select">
+    <button v-if="hasStoredState" class="resume-project mx-2 btn btn-primary text-start mb-2" @click="loadStoredState">Resume {{storedStateProject}}</button>
+    <div class="project-buttons px-2 d-flex flex-column align-items-stretch">
+      <button class="btn btn-outline-dark text-start mb-2" @click="newProject">Create Project...</button>
+      <button class="btn btn-outline-dark text-start mb-2" @click="openProject()">Open Project...</button>
+    </div>
+    <h4 class="recent-heading px-2 mt-2">Recent Projects</h4>
+    <div class="recent-buttons px-2 d-flex flex-column align-items-stretch">
+      <button v-for="project in recentProjects" class="btn btn-outline-dark text-start mb-2" @click="openProject(project)">
         {{ projectName(project) }}
       </button>
-
-    </div>
-    <div class="flex-fill d-flex flex-column">
-      <button v-if="hasStoredState" class="btn btn-primary text-start" @click="loadStoredState">Resume {{storedStateProject}}</button>
-      <button class="btn btn-default text-start" @click="newProject">Create Project...</button>
-      <button class="btn btn-default text-start" @click="openProject()">Open Project...</button>
     </div>
   </div>
 </template>
 
 <style>
+  .project-select {
+    display: grid;
+    place-content: stretch;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "restore recent-heading" "buttons recent";
+  }
+  .resume-project {
+    grid-area: restore;
+  }
+  .project-buttons {
+    grid-area: buttons;
+  }
+  .recent-heading {
+    grid-area: recent-heading;
+  }
+  .recent-buttons {
+    grid-area: recent;
+  }
 </style>
