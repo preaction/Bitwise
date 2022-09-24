@@ -63,7 +63,7 @@ export default defineComponent({
     <div class="tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Tileset editor toolbar">
         <div class="btn-group" role="group" aria-label="File actions">
-          <button type="button" class="btn btn-outline-dark"
+          <button type="button" class="btn btn-outline-dark btn-sm"
             :disabled="!edited" @click="save"
           >
             <i class="fa fa-save"></i>

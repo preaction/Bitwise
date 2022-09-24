@@ -18,20 +18,20 @@ export default defineComponent({
 <template>
   <div>
     <div class="d-flex justify-content-between align-items-center">
-      <label>Frustum</label>
-      <input @change="update" v-model="$data.frustum" class="text-end">
+      <label class="me-1">Frustum</label>
+      <input @change="update" v-model="$data.frustum" class="flex-fill col-1 text-end">
     </div>
     <div class="d-flex justify-content-between align-items-center">
-      <label>Zoom</label>
-      <input @change="update" v-model="$data.zoom" class="text-end">
+      <label class="me-1">Zoom</label>
+      <input @change="update" v-model="$data.zoom" class="flex-fill col-1 text-end">
     </div>
     <div class="d-flex justify-content-between align-items-center">
-      <label>Near</label>
-      <input @change="update" v-model="$data.near" class="text-end">
+      <label class="me-1">Near</label>
+      <input @change="update" v-model="$data.near" class="flex-fill col-1 text-end">
     </div>
     <div class="d-flex justify-content-between align-items-center">
-      <label>Far</label>
-      <input @change="update" v-model="$data.far" class="text-end">
+      <label class="me-1">Far</label>
+      <input @change="update" v-model="$data.far" class="flex-fill col-1 text-end">
     </div>
   </div>
 </template>

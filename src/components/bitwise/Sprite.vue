@@ -42,9 +42,8 @@ export default defineComponent({
 <template>
   <div>
     <div class="d-flex justify-content-between texture-field align-items-center" @dragover="dragover" @drop="drop">
-      <label class="me-2">Texture</label>
-      <input readonly class="flex-fill text-end" :value="textureName"
-      placeholder="Drag/Drop Here"/>
+      <label class="me-1">Texture</label>
+      <input readonly class="flex-fill col-1 text-end" :value="textureName" placeholder="Drag/Drop Here" />
     </div>
   </div>
 </template>

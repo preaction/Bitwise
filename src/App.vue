@@ -153,7 +153,7 @@ export default defineComponent({
 
   <div class="app-sidebar bg-light">
     <div class="dropdown m-2">
-      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         Add to Project...
       </button>
       <ul class="dropdown-menu">

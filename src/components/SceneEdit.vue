@@ -215,7 +215,7 @@ export default defineComponent({
     <div class="tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Scene editor toolbar">
         <div class="btn-group" role="group" aria-label="File actions">
-          <button type="button" class="btn btn-outline-dark"
+          <button type="button" class="btn btn-outline-dark btn-sm"
             :disabled="!edited" @click="save"
           >
             <i class="fa fa-save"></i>
@@ -229,7 +229,7 @@ export default defineComponent({
     <div class="tab-sidebar">
       <div class="scene-toolbar">
         <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fa fa-file-circle-plus"></i>
             New Entity
           </button>
@@ -247,10 +247,10 @@ export default defineComponent({
       <div class="entity-pane" v-if="selectedEntity">
         <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
         <div class="d-flex justify-content-between align-items-center">
-          <label>Name</label>
-          <input v-model="selectedEntity.name" pattern="^[^/]+$" />
+          <label class="me-1">Name</label>
+          <input class="flex-fill text-end col-1" v-model="selectedEntity.name" pattern="^[^/]+$" />
         </div>
-        <div v-for="c in selectedEntity.listComponents()">
+        <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
           <div v-if="componentForms[c]" class="my-2 component-form">
             <div class="mb-1 d-flex justify-content-between align-items-center">
               <h6 class="m-0">{{ c }}</h6>
@@ -262,7 +262,7 @@ export default defineComponent({
           </div>
         </div>
         <div class="dropdown m-2 mt-4 text-center dropup">
-          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             Add Component...
           </button>
           <ul class="dropdown-menu">
@@ -303,7 +303,7 @@ export default defineComponent({
     font-size: 0.9em;
     grid-area: sidebar;
     padding: 2px;
-    width: 300px;
+    width: 200px;
     background: var(--bs-light);
     box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
     overflow: hidden;
