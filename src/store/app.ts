@@ -78,6 +78,7 @@ export const useAppStore = defineStore('app', {
     },
 
     openTab( tab:Tab ) {
+      // XXX: If tab lacks icon, add icon based on Component
       console.log( 'open tab', tab );
       this.openTabs.push( tab );
       this.showTab( this.openTabs.length - 1 );
@@ -121,15 +122,32 @@ export const useAppStore = defineStore('app', {
       electron.store.set( 'app', 'recentProjects', toRaw(this.recentProjects) );
 
       // Load up project files
+      this.readProject();
       this.projectItems = await electron.readProject(path);
 
       this._fsWatcher = this.changeFile.bind(this);
       electron.on( 'watch', this._fsWatcher );
     },
 
-    async changeFile(event, {eventType, filename}) {
+    changeFile(event, {eventType, filename}) {
       console.log( 'file changed', eventType, filename );
-      this.projectItems = await electron.readProject(this.currentProject);
+      this.readProject();
+    },
+
+    async readProject() {
+      // XXX: Map component to icon class
+      this.projectItems = await electron.readProject(this.currentProject)
+        .then( items => {
+          const descend = item => {
+            // XXX: Set icon
+            // Descend
+            if ( item.children ) {
+              item.children = item.children.map(descend);
+            }
+            return item;
+          };
+          return items.map(descend);
+        });
     },
 
     saveProject() {

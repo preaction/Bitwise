@@ -88,6 +88,9 @@ export default defineComponent({
       <span v-if="hasChildren" class="me-1">
         <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
       </span>
+      <span v-else-if="item.icon">
+        <i class="fa" :class="item.icon"></i>
+      </span>
       <span class="flex-fill">{{ item.name }}</span>
       <slot name="menu" :item="item" />
     </div>

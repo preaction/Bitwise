@@ -146,8 +146,10 @@ async function descend( filePath:string, root:string='' ) {
   .then( async (paths) => {
     return Promise.all(
       paths.filter( p => !p.name.match(/^\./) ).map( async p => {
+        const ext = p.isFile() ? p.name.substring( p.name.lastIndexOf( '.' ) ) : '';
         const item = {
-          name: p.name,
+          name: p.name.substring( 0, p.name.length - ext.length ),
+          ext,
           path: path.join( filePath, p.name ),
         };
         if ( p.isDirectory() ) {

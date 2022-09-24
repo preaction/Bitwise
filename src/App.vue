@@ -48,10 +48,12 @@ export default defineComponent({
     load() {
       this.modal.hide();
     },
+
     newTab( name:string, component ) {
       this.appStore.openTab({
         name,
         component,
+        ext: '.json',
         data: {},
         edited: true,
       });
@@ -59,8 +61,8 @@ export default defineComponent({
 
     async openTab( item ) {
       // Determine what kind of component to use
-      const name = item.name;
-      if ( name.match( /\.json$/ ) ) {
+      const ext = item.ext;
+      if ( ext === '.json' ) {
         // JSON files are game objects
         console.log( 'open component', item );
         // Fetch the file to decide which tab component to use
@@ -68,6 +70,7 @@ export default defineComponent({
         const data = JSON.parse( fileContent );
         const tab = {
           name: item.name,
+          ext,
           src: item.path,
           component: data.component,
           data: data,
@@ -75,9 +78,10 @@ export default defineComponent({
         };
         this.appStore.openTab(tab);
       }
-      else if ( name.match( /\.(png|gif|jpe?g)$/ ) ) {
+      else if ( ext.match( /\.(png|gif|jpe?g)$/ ) ) {
         const tab = {
-          name,
+          name: item.name.replace( /\.(png|gif|jpe?g)$/, '' ),
+          ext,
           src: item.path,
           component: "ImageView",
           data: item.path,
@@ -111,9 +115,9 @@ export default defineComponent({
         return;
       }
       // Name changes? Write new file and delete old
-      if ( tab.src != tab.name && !tab.src.endsWith('/' + tab.name) ) {
+      if ( tab.src != tab.name + tab.ext && !tab.src.endsWith('/' + tab.name + tab.ext) ) {
         const oldSrc = tab.src;
-        const newSrc = oldSrc.substring( 0, oldSrc.lastIndexOf( tab.name ) ) + tab.name;
+        const newSrc = oldSrc.replace( oldSrc.substring( oldSrc.lastIndexOf( '/' ) + 1 ), tab.name + tab.ext );
         console.log( `Rename file ${oldSrc} to ${newSrc}` );
         try {
           await this.appStore.readFile( newSrc );
