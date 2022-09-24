@@ -146,17 +146,22 @@ export default defineComponent({
     save() {
       this.$emit('save');
     },
+
     select(item) {
       if ( this.sceneTree === item ) {
         this.selectedEntity = null;
         this.selectedComponents = {};
+        return;
       }
-      else {
-        this.selectedEntity = this.scene.entities[item.entity];
-        this.selectedComponents = {};
-        for ( const c of this.selectedEntity.listComponents() ) {
-          this.selectedComponents[c] = this.selectedEntity.getComponent(c);
-        }
+      this.selectEntity( this.scene.entities[item.entity] );
+    },
+
+    selectEntity(entity) {
+      this.selectedEntity = entity;
+      // XXX: selectedComponents could be a computed property
+      this.selectedComponents = {};
+      for ( const c of this.selectedEntity.listComponents() ) {
+        this.selectedComponents[c] = this.selectedEntity.getComponent(c);
       }
     },
 
@@ -191,6 +196,16 @@ export default defineComponent({
       this.scene.render();
       this.update();
     },
+
+    addEntity( ...components:string[] ) {
+      const entity = this.scene.addEntity();
+      this.sceneTree.children.push( { name: entity.name, entity: entity.id, children: [] } );
+      for ( const c of components ) {
+        entity.addComponent(c);
+      }
+      this.selectEntity( entity );
+      this.update();
+    },
   },
 });
 </script>
@@ -212,6 +227,20 @@ export default defineComponent({
       <canvas ref="canvas" />
     </div>
     <div class="tab-sidebar">
+      <div class="scene-toolbar">
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa fa-file-circle-plus"></i>
+            New Entity
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" @click="addEntity()">Blank</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" @click="addEntity('Position','Sprite')">Sprite</a></li>
+            <li><a class="dropdown-item" href="#" @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</a></li>
+          </ul>
+        </div>
+      </div>
       <div class="scene-tree">
         <ObjectTreeItem dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select" />
       </div>
@@ -276,7 +305,8 @@ export default defineComponent({
     padding: 2px;
     width: 300px;
     background: var(--bs-light);
-    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%)
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
+    overflow: hidden;
   }
   .tab-main {
     grid-area: main;
@@ -289,15 +319,19 @@ export default defineComponent({
     width: 100%;
     height: 100%;
   }
+  .scene-toolbar {
+    flex: 0 0 auto;
+  }
   .scene-tree {
     border-bottom: 1px solid rgb(0 0 0 / 10%);
     margin-bottom: 2px;
     overflow: scroll;
-    flex: 1 1 35%;
+    flex: 1 1 25%;
   }
   .entity-pane {
-    flex: 1 1 65%;
+    flex: 1 1 75%;
     padding: 2px;
+    overflow: scroll;
   }
   .component-form {
     padding-top: 2px;
