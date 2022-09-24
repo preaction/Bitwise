@@ -80,15 +80,15 @@ export default defineComponent({
 
 <template>
   <div class="object-tree-item">
-    <div class="name ps-1 d-flex justify-content-between"
+    <div class="name ps-1 d-flex"
       draggable="true" @dragstart="dragstart"
       @click="handleClick" @dblclick="handleDoubleClick"
       @mousedown="preventTextSelect"
     >
-      <span>{{ item.name }}</span>
-      <span v-if="hasChildren">
-        <i class="fa" @click="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-left'"></i>
+      <span v-if="hasChildren" class="me-1">
+        <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
       </span>
+      <span>{{ item.name }}</span>
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in item.children">
