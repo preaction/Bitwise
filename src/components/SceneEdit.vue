@@ -30,11 +30,11 @@ export default defineComponent({
     OrthographicCameraEdit,
     SpriteEdit,
   },
-  props: ['modelValue', 'edited'],
+  props: ['modelValue', 'name', 'edited'],
   data() {
     return {
       sceneTree: {
-        name: this.modelValue.name || 'New Scene',
+        name: this.name || 'New Scene',
         children: [],
       },
       selectedEntity: null,
@@ -138,6 +138,7 @@ export default defineComponent({
     update() {
       const sceneData = this.scene.freeze();
       console.log( 'Frozen', sceneData );
+      this.$emit('update:name', this.name);
       this.$emit('update:modelValue', {
         ...sceneData,
         name: this.name,
@@ -205,6 +206,13 @@ export default defineComponent({
       }
       this.selectEntity( entity );
       this.update();
+    },
+
+    updateName( event ) {
+      const name = event.target.value;
+      this.sceneTree.name = name;
+      this.modelValue.name = name;
+      this.$emit( 'update:name', name );
     },
   },
 });
@@ -276,7 +284,7 @@ export default defineComponent({
         <h5>Scene</h5>
         <div class="d-flex justify-content-between align-items-center">
           <label class="me-1">Name</label>
-          <input v-model="sceneTree.name" class="flex-fill text-end col-1" pattern="^[^/]+$" />
+          <input v-model="sceneTree.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
         </div>
       </div>
     </div>

@@ -38,6 +38,10 @@ export default defineComponent({
       this.currentTab.data = data;
       this.currentTab.edited = true;
     },
+    updateTabName(name:string) {
+      this.currentTab.name = name;
+      this.currentTab.edited = true;
+    },
     showTab( index: Number ) {
       this.appStore.showTab( index );
     },
@@ -97,28 +101,41 @@ export default defineComponent({
     async saveTab() {
       const tab = this.currentTab;
       tab.data.component = tab.component;
-      console.log( 'saving', toRaw(tab.data) );
       // No src? Open save as dialog
       if ( !tab.src ) {
-        const res = await this.appStore.newFile(
+        await this.appStore.newFile(
           tab.name,
           'json',
           JSON.stringify( toRaw( tab.data ) ),
         );
-        console.log('newFile', res);
-        if ( !res.canceled ) {
-          this.currentTab.src = res.filePath;
-          this.currentTab.edited = false;
+        return;
+      }
+      // Name changes? Write new file and delete old
+      if ( tab.src != tab.name && !tab.src.endsWith('/' + tab.name) ) {
+        const oldSrc = tab.src;
+        const newSrc = oldSrc.substring( 0, oldSrc.lastIndexOf( tab.name ) ) + tab.name;
+        console.log( `Rename file ${oldSrc} to ${newSrc}` );
+        try {
+          await this.appStore.readFile( newSrc );
+          // If we've got a file, the file exists.
+          // Ask to overwrite
+          if ( !confirm( `File ${newSrc} exists. Overwrite?` ) ) {
+            return;
+          }
         }
+        catch (e) {
+          // File does not exist, continue...
+        }
+        tab.src = newSrc;
+        await this.appStore.saveFile( tab.src, JSON.stringify( tab.data ) );
+        await this.appStore.deleteTree( oldSrc );
         return;
       }
       // Otherwise, just write the data!
-      const res = await this.appStore.saveFile(
+      await this.appStore.saveFile(
         tab.src,
         JSON.stringify( tab.data ),
       );
-      console.log('saveFile', res);
-      this.currentTab.edited = false;
     },
 
     showFileDropdown( event:MouseEvent ) {
@@ -223,8 +240,11 @@ export default defineComponent({
     <component class="app-main" v-if="currentTab"
       :is="currentTab.component" :edited="currentTab.edited"
       :key="currentTab.src"
+      v-model:name="currentTab.name"
       v-model="currentTab.data"
-      @update:modelValue="updateTab" @save="saveTab"
+      @update:modelValue="updateTab"
+      @update:name="updateTabName"
+      @save="saveTab"
     />
   </div>
 </template>

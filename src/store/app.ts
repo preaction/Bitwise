@@ -93,6 +93,8 @@ export const useAppStore = defineStore('app', {
           break;
         }
       }
+      this.saveSessionState();
+      this.saveStoredState();
     },
 
     async openProject( path:string=null ) {
@@ -125,8 +127,9 @@ export const useAppStore = defineStore('app', {
       electron.on( 'watch', this._fsWatcher );
     },
 
-    changeFile(event, {eventType, filename}) {
+    async changeFile(event, {eventType, filename}) {
       console.log( 'file changed', eventType, filename );
+      this.projectItems = await electron.readProject(this.currentProject);
     },
 
     saveProject() {
@@ -147,14 +150,34 @@ export const useAppStore = defineStore('app', {
     },
 
     saveFile( path:string, data:Object ) {
-      return electron.saveFile( this.currentProject + '/' + path, data );
+      return electron.saveFile( this.currentProject + '/' + path, data )
+        .then( res => {
+          const tab = this.openTabs[ this.currentTabIndex ];
+          tab.edited = false;
+
+          this.saveSessionState();
+          this.saveStoredState();
+        } );
     },
 
     newFile( name:string, ext:string, data:Object ) {
-      return electron.newFile( this.currentProject, name, ext, data );
+      return electron.newFile( this.currentProject, name, ext, data )
+        .then( res => {
+          if ( !res.canceled ) {
+            const name = res.filePath.split('/').pop();
+            const tab = this.openTabs[ this.currentTabIndex ];
+            tab.name = name;
+            tab.src = res.filePath.replace( this.currentProject, '' );
+            tab.edited = false;
+
+            this.saveSessionState();
+            this.saveStoredState();
+          }
+        });
     },
 
     deleteTree( path:string ) {
+      // XXX: Pre-delete item from projectItems
       return electron.deleteTree( this.currentProject, path );
     },
   },
