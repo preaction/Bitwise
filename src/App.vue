@@ -239,7 +239,7 @@ export default defineComponent({
           :aria-current="i === currentTabIndex ? 'true' : ''"
         >
           <i class="fa" :class="tab.icon"></i> {{tab.name}}
-          <i class="delete fa-solid fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
+          <i class="delete fa fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
         </a>
       </nav>
     </header>

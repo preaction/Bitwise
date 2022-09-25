@@ -220,6 +220,21 @@ export default defineComponent({
       this.modelValue.name = name;
       this.$emit( 'update:name', name );
     },
+
+    deleteEntity( item ) {
+      if ( confirm( `Are you sure you want to delete "${item.name}"?` ) ) {
+        const scene = this.scene;
+        const entity = scene.entities[ item.entity ];
+        if ( this.selectedEntity?.id === entity.id ) {
+          this.select( this.sceneTree );
+        }
+        scene.removeEntity( entity.id );
+        scene.update(0);
+        scene.render();
+        this.$refs.tree.removeItem(item);
+        this.update();
+      }
+    },
   },
 });
 </script>
@@ -256,7 +271,11 @@ export default defineComponent({
         </div>
       </div>
       <div class="scene-tree">
-        <ObjectTreeItem dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select" />
+        <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select">
+          <template #menu="{item}">
+            <i class="delete fa fa-circle-xmark align-self-center" @click.prevent.stop="deleteEntity(item)"></i>
+          </template>
+        </ObjectTreeItem>
       </div>
       <div class="entity-pane" v-if="selectedEntity">
         <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
@@ -354,5 +373,12 @@ export default defineComponent({
   }
   .icon-button {
     cursor: pointer;
+  }
+
+  .object-tree-item .name i.delete {
+    visibility: hidden;
+  }
+  .object-tree-item .name:hover i.delete {
+    visibility: visible;
   }
 </style>

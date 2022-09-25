@@ -11,13 +11,29 @@ export default defineComponent({
   components: {
     ObjectTreeItem,
   },
+  methods: {
+    removeItem( item ) {
+      const idx = this.items.indexOf( item );
+      if ( idx >= 0 ) {
+        this.items.splice( idx, 1 );
+        return true;
+      }
+      for ( const tree of this.$refs.children ) {
+        const removed = tree.removeItem( item );
+        if ( removed ) {
+          return removed;
+        }
+      }
+      return false;
+    },
+  },
 });
 </script>
 
 <template>
   <div class="object-tree">
-    <div v-for="item in items" class="text-start">
-      <ObjectTreeItem :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="item" :dragtype="dragtype">
+    <div v-for="item, i in items" class="text-start">
+      <ObjectTreeItem ref="children" :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="item" :dragtype="dragtype">
         <template #menu="{item}">
           <slot name="menu" :item="item" />
         </template>
