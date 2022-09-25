@@ -85,11 +85,12 @@ export default defineComponent({
       @click="handleClick" @dblclick="handleDoubleClick"
       @mousedown="preventTextSelect"
     >
-      <span v-if="hasChildren" class="me-1">
-        <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
+      <span v-if="item.icon">
+        <i v-if="hasChildren" class="me-1 fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
+        <i class="me-1 fa" :class="item.icon"></i>
       </span>
-      <span v-else-if="item.icon">
-        <i class="fa" :class="item.icon"></i>
+      <span v-else-if="hasChildren" class="me-1">
+        <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-folder-open' : 'fa-folder'"></i>
       </span>
       <span class="flex-fill">{{ item.name }}</span>
       <slot name="menu" :item="item" />

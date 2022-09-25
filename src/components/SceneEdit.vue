@@ -35,11 +35,16 @@ export default defineComponent({
     return {
       sceneTree: {
         name: this.name || 'New Scene',
+        icon: 'fa-film',
         children: [],
       },
       selectedEntity: null,
       selectedComponents: {},
       componentForms: markRaw({}),
+      icons: {
+        "Camera": "fa-camera",
+        "Sprite": "fa-image-portrait",
+      },
     };
   },
 
@@ -102,6 +107,7 @@ export default defineComponent({
       }
       tree[id].entity = id;
       tree[id].name = entity.name;
+      tree[id].icon = this.icons[ entity.type ];
 
       console.log( entity.listComponents() );
       if ( entity.listComponents().includes("Parent") ) {

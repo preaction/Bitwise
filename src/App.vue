@@ -53,6 +53,7 @@ export default defineComponent({
       this.appStore.openTab({
         name,
         component,
+        icon: this.appStore.icons[component],
         ext: '.json',
         data: {},
         edited: true,
@@ -71,6 +72,7 @@ export default defineComponent({
         const tab = {
           name: item.name,
           ext,
+          icon: this.appStore.icons[data.component],
           src: item.path,
           component: data.component,
           data: data,
@@ -82,6 +84,7 @@ export default defineComponent({
         const tab = {
           name: item.name.replace( /\.(png|gif|jpe?g)$/, '' ),
           ext,
+          icon: 'fa-image',
           src: item.path,
           component: "ImageView",
           data: item.path,
@@ -235,8 +238,8 @@ export default defineComponent({
           @click.prevent="showTab(i)" :key="tab.src"
           :aria-current="i === currentTabIndex ? 'true' : ''"
         >
-          {{tab.name}}
-          <i class="fa-solid fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
+          <i class="fa" :class="tab.icon"></i> {{tab.name}}
+          <i class="delete fa-solid fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
         </a>
       </nav>
     </header>
@@ -297,10 +300,10 @@ html, body, #app { height: 100% }
   background: var(--bs-primary);
 }
 
-.app-tabbar :link i {
+.app-tabbar :link i.delete {
   visibility: hidden;
 }
-.app-tabbar :link:hover i {
+.app-tabbar :link:hover i.delete {
   visibility: visible;
 }
 

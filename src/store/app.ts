@@ -14,6 +14,10 @@ export const useAppStore = defineStore('app', {
     ],
     currentTabIndex: 0,
     projectItems: [],
+    icons: {
+      SceneEdit: 'fa-film',
+      TilesetEdit: 'fa-grid-2-plus',
+    },
     _fsWatcher: null,
   }),
 
@@ -137,16 +141,24 @@ export const useAppStore = defineStore('app', {
     async readProject() {
       // XXX: Map component to icon class
       this.projectItems = await electron.readProject(this.currentProject)
-        .then( items => {
-          const descend = item => {
-            // XXX: Set icon
-            // Descend
-            if ( item.children ) {
-              item.children = item.children.map(descend);
+        .then( async items => {
+          const descend = async item => {
+            if ( item.children && item.children.length ) {
+              // Descend
+              item.children = await Promise.all( item.children.map(i => descend(i)) );
+            }
+            else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
+              item.icon = 'fa-image';
+            }
+            else {
+              const json = await this.readFile( item.path );
+              const data = JSON.parse( json );
+              const comp = data.component;
+              item.icon = this.icons[ comp ];
             }
             return item;
           };
-          return items.map(descend);
+          return Promise.all( items.map( descend ) );
         });
     },
 
