@@ -15,6 +15,9 @@ export default class Entity {
   }
 
   addComponent( name:string, data:Object ) {
+    if ( !this.scene.components[name] ) {
+      this.scene.addComponent( name );
+    }
     console.log( `Adding component ${name} to ${this.id}` );
     const component = this.scene.components[name];
     component.addEntity( this.id );

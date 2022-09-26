@@ -119,4 +119,19 @@ export default class Game extends three.EventDispatcher {
     requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t) );
   }
 
+  components:{ [key:string]: (Scene, Object) => Component } = {};
+  registerComponent( name:string, component:( Scene, Object ) => Component ) {
+    this.components[name] = component;
+  }
+
+  systems:{ [key:string]: (Scene) => System } = {};
+  registerSystem( name:string, system:( Scene ) => System ) {
+    this.systems[name] = system;
+  }
+
+  addScene() {
+    const scene = new Scene( this );
+    this.scenes.push( scene );
+    return scene;
+  }
 }

@@ -124,17 +124,22 @@ export default class Scene extends three.EventDispatcher {
         if ( typeof eData[c] !== "object" ) {
           continue;
         }
+        if ( !this.components[c] ) {
+          this.addComponent( c );
+        }
         this.components[c].thawEntity(eData.id, eData[c]);
       }
     }
   }
 
   // XXX: Systems have an order
-  addSystem( name:string, system:any ) {
+  addSystem( name:string ) {
+    const system = this.game.systems[ name ];
     this.systems[name] = new system( this );
   }
 
-  addComponent( name:string, component:any ) {
+  addComponent( name:string ) {
+    const component = this.game.components[ name ];
     console.log( `Adding component ${name}`, component );
     this.components[name] = new component( this, this.world );
   }

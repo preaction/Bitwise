@@ -214,6 +214,8 @@ export default defineComponent({
           Add to Project...
         </button>
         <ul class="dropdown-menu">
+          <!-- <li><a class="dropdown-item" href="#" @click="newFolder()">Folder...</a></li> -->
+          <!-- <li><hr class="dropdown-divider"></li> -->
           <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
           <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
         </ul>

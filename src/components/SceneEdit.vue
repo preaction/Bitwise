@@ -45,34 +45,28 @@ export default defineComponent({
         "Camera": "fa-camera",
         "Sprite": "fa-image-portrait",
       },
+      playing: false,
+      paused: false,
     };
   },
 
   async mounted() {
-    this.game = new bitwise.Game({
-      canvas: this.$refs['canvas'],
-      loader: {
-        base: this.getFileUrl(""),
-      },
-    });
+    const game = this.editGame = this.createGame( 'edit-canvas' );
+
+    this.componentForms[ "Position" ] = PositionEdit;
+    this.componentForms[ "OrthographicCamera" ] = OrthographicCameraEdit;
+    this.componentForms[ "Sprite" ] = SpriteEdit;
 
     // XXX: Scroll controls for zoom
     // XXX: Pinch controls for zoom
 
-    const scene = this.scene = new bitwise.Scene( this.game );
-    scene.addComponent( "Parent", ParentComponent );
-    scene.addComponent( "Position", PositionComponent );
-    this.componentForms[ "Position" ] = PositionEdit;
-    scene.addComponent( "OrthographicCamera", OrthographicCameraComponent );
-    this.componentForms[ "OrthographicCamera" ] = OrthographicCameraEdit;
-    scene.addComponent( "Sprite", SpriteComponent );
-    this.componentForms[ "Sprite" ] = SpriteEdit;
-
-    scene.addSystem( "Sprite", SpriteSystem );
-    scene.addSystem( "Render", RenderSystem );
+    const scene = this.editScene = game.addScene();
 
     if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
       scene.thaw( toRaw( this.modelValue ) );
+      // XXX: Systems should be recorded in frozen scene data
+      scene.addSystem( 'Render' );
+      scene.addSystem( 'Sprite' );
     }
     else {
       // Create a new, blank scene
@@ -85,14 +79,17 @@ export default defineComponent({
 
       // Random thingy
       const path = "Other/Misc/Tree/Tree.png";
-      await this.game.loadTexture( path );
+      await game.loadTexture( path );
       const sprite = scene.addEntity();
       sprite.name = "Sprite";
       sprite.type = "Sprite";
       sprite.addComponent( "Parent", { id: camera.id } );
       sprite.addComponent( "Position", { x: 1, y: 0, z: 0 } );
-      sprite.addComponent( "Sprite", { textureId: this.game.textures[path] } );
+      sprite.addComponent( "Sprite", { textureId: game.textures[path] } );
       console.log( `Sprite ID: ${sprite.id}` );
+
+      scene.addSystem( 'Render' );
+      scene.addSystem( 'Sprite' );
 
       this.update();
     }
@@ -123,17 +120,19 @@ export default defineComponent({
     console.log( "Completed tree:", tree );
     this.sceneTree.children = Object.values(tree);
 
-    this.game.scenes.push( scene );
-    this.game.start();
-    scene.update(0);
-    scene.render();
+    this.editGame.start();
   },
 
   unmounted() {
-    this.game?.stop();
+    if ( this.playing ) {
+      this.stop();
+    }
   },
 
   computed: {
+    scene() {
+      return this.playing ? this.playScene : this.editScene;
+    },
     availableComponents() {
       return [ "Position", "OrthographicCamera", "Sprite" ];
     },
@@ -141,8 +140,28 @@ export default defineComponent({
 
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
+
+    createGame( canvas:string ):bitwise.Game {
+      const game = new bitwise.Game({
+        canvas: this.$refs[canvas],
+        loader: {
+          base: this.getFileUrl(""),
+        },
+      });
+
+      game.registerComponent( "Parent", ParentComponent );
+      game.registerComponent( "Position", PositionComponent );
+      game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
+      game.registerComponent( "Sprite", SpriteComponent );
+      game.registerSystem( "Sprite", SpriteSystem );
+      game.registerSystem( "Render", RenderSystem );
+
+      return game;
+    },
+
     update() {
-      const sceneData = this.scene.freeze();
+      // update() always works with the edit scene
+      const sceneData = this.editScene.freeze();
       console.log( 'Frozen', sceneData );
       this.$emit('update:name', this.name);
       this.$emit('update:modelValue', {
@@ -150,6 +169,7 @@ export default defineComponent({
         name: this.name,
       });
     },
+
     save() {
       this.$emit('save');
     },
@@ -205,7 +225,7 @@ export default defineComponent({
     },
 
     addEntity( ...components:string[] ) {
-      const entity = this.scene.addEntity();
+      const entity = this.editScene.addEntity();
       this.sceneTree.children.push( { name: entity.name, entity: entity.id, children: [] } );
       for ( const c of components ) {
         entity.addComponent(c);
@@ -235,6 +255,40 @@ export default defineComponent({
         this.update();
       }
     },
+
+    play() {
+      const playState = this.editScene.freeze();
+
+      this.playGame = this.createGame( 'play-canvas' );
+      const scene = this.playScene = this.playGame.addScene();
+      scene.thaw( playState );
+      // XXX: Systems should be recorded in frozen scene data
+      scene.addSystem( 'Render' );
+      scene.addSystem( 'Sprite' );
+
+      this.playing = true;
+      this.paused = false;
+      this.$nextTick( () => {
+        this.playGame.start();
+        this.playScene.start();
+      } );
+    },
+
+    pause() {
+      this.playScene.pause();
+      this.paused = true;
+    },
+
+    stop() {
+      this.playScene.stop();
+      this.playGame.stop();
+
+      this.playScene = null;
+      this.playGame = null;
+
+      this.playing = false;
+      this.paused = false;
+    },
   },
 });
 </script>
@@ -243,17 +297,36 @@ export default defineComponent({
   <div class="scene-edit">
     <div class="tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Scene editor toolbar">
-        <div class="btn-group" role="group" aria-label="File actions">
-          <button type="button" class="btn btn-outline-dark btn-sm"
-            :disabled="!edited" @click="save"
+        <button type="button" class="btn btn-outline-dark btn-sm me-1"
+          :disabled="!edited" @click="save"
+        >
+          <i class="fa fa-save"></i>
+        </button>
+        <div class="btn-group" role="group" aria-label="Play/pause">
+          <button type="button" class="btn btn-sm"
+            :class="!playing ? 'btn-danger' : 'btn-outline-danger'"
+            :disabled="!playing" @click="stop"
           >
-            <i class="fa fa-save"></i>
+            <i class="fa fa-stop"></i>
+          </button>
+          <button type="button" class="btn btn-sm"
+            :class="playing && !paused ? 'btn-success' : 'btn-outline-success'"
+            :disabled="playing && !paused" @click="play"
+          >
+            <i class="fa fa-play"></i>
+          </button>
+          <button type="button" class="btn btn-sm"
+            :class="playing && paused ? 'btn-warning' : 'btn-outline-warning'"
+            :disabled="!playing || ( playing && paused )" @click="pause"
+          >
+            <i class="fa fa-pause"></i>
           </button>
         </div>
       </div>
     </div>
     <div class="tab-main">
-      <canvas ref="canvas" />
+      <canvas ref="edit-canvas" v-show="playing == false" />
+      <canvas ref="play-canvas" v-show="playing == true" />
     </div>
     <div class="tab-sidebar">
       <div class="scene-toolbar">
