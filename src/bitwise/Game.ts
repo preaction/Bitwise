@@ -14,6 +14,7 @@ export default class Game extends three.EventDispatcher {
 
   width:Number = 0;
   height:Number = 0;
+  autoSize:boolean = true;
 
   scenes:Scene[] = [];
 
@@ -21,6 +22,11 @@ export default class Game extends three.EventDispatcher {
     super();
     this.canvas = opt.canvas;
     this.loader = opt.loader;
+    this.width = opt.renderer?.width;
+    this.height = opt.renderer?.height;
+    if ( this.width > 0 || this.height > 0 ) {
+      this.autoSize = false;
+    }
   }
 
   texturePaths:{ [key:Number]: string } = {};
@@ -57,13 +63,17 @@ export default class Game extends three.EventDispatcher {
     });
     this.renderer = renderer;
 
-    // Record the initial render height/width in case it changes. To
-    // keep responsiveness, we will reset the renderer size and adjust the
-    // camera so that everything looks the same.
-    const { width, height } = this.renderSize();
-    this.width = width;
-    this.height = height;
+    if ( this.autoSize ) {
+      // Record the initial render height/width in case it changes. To
+      // keep responsiveness, we will reset the renderer size and adjust the
+      // camera so that everything looks the same.
+      const { width, height } = this.renderSize();
+      this.width = width;
+      this.height = height;
+      window.addEventListener( 'resize', this.onResize.bind(this) );
+    }
 
+    this.renderer.setSize(this.width, this.height, false);
     this.render();
   }
 
@@ -72,12 +82,17 @@ export default class Game extends three.EventDispatcher {
     this.renderer = null;
   }
 
+  onResize() {
+    this.resizeRendererToDisplaySize()
+  }
+
   renderSize():three.Vector2 {
     const canvas = this.renderer.domElement;
     const pixelRatio = window.devicePixelRatio;
     const width  = canvas.clientWidth  * pixelRatio | 0;
     const height = canvas.clientHeight * pixelRatio | 0;
-    return new three.Vector2(width, height);
+    const vec = new three.Vector2(width, height);
+    return vec;
   }
 
   resizeRendererToDisplaySize() {
@@ -85,8 +100,8 @@ export default class Game extends three.EventDispatcher {
     const render = this.renderSize();
     const needResize = canvas.width !== render.width || canvas.height !== render.height;
     if (needResize) {
-      this.renderer.setSize(this.width, this.height, false);
-      this.dispatchEvent({ type: 'resize', width: this.width, height: this.height });
+      this.dispatchEvent({ type: 'resize', width: render.width, height: render.height });
+      this.renderer.setSize(render.width, render.height, false);
     }
     return needResize;
   }
@@ -95,10 +110,6 @@ export default class Game extends three.EventDispatcher {
     if ( !this.renderer ) {
       return;
     }
-
-    // XXX: Only run this if our ResizeObserver has gotten a hit.
-    // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
-    this.resizeRendererToDisplaySize()
 
     SCENES:
     for ( const scene:Scene of this.scenes ) {

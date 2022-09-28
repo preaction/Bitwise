@@ -54,7 +54,9 @@ export default class Scene extends three.EventDispatcher {
   constructor( game:Game ) {
     super();
     this.game = game;
-    game.addEventListener( "resize", (e:Object) => this.dispatchEvent("resize", e) );
+    game.addEventListener( "resize", (e:Object) => {
+      this.dispatchEvent(e);
+    });
 
     this.world = bitecs.createWorld();
     this.systems = {};
@@ -140,7 +142,7 @@ export default class Scene extends three.EventDispatcher {
 
   addComponent( name:string ) {
     const component = this.game.components[ name ];
-    console.log( `Adding component ${name}`, component );
+    console.log( `Adding component ${name}` );
     this.components[name] = new component( this, this.world );
   }
 

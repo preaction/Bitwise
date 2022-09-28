@@ -25,7 +25,9 @@ export default class Render {
     this.enterQuery = bitecs.enterQuery( this.query );
     this.exitQuery = bitecs.exitQuery( this.query );
 
-    scene.addEventListener( "resize", (e:Object) => this.onResize(e) );
+    scene.addEventListener( "resize", (e:Object) => {
+      this.onResize(e);
+    });
   }
 
   update( timeMilli:Number ) {
@@ -73,7 +75,6 @@ export default class Render {
     const camera = new three.OrthographicCamera(frustumSize * (width/-2), frustumSize * (width/2), frustumSize * (height/2), frustumSize * (height/-2), near, far);
     this.cameras[eid] = camera;
     camera.zoom = cameraData.zoom[eid] || 4;
-    console.log( `Near: ${camera.near}; Far: ${camera.far}` );
 
     this.scene._scene.add( camera );
   }
@@ -86,14 +87,15 @@ export default class Render {
   onResize(e:{width:Number, height:Number}) {
     // Fix camera settings to maintain exact size/aspect
     const { width, height } = e;
-    const update = this.query(this.world);
+    const ratio = width / height;
+    const update = this.query(this.scene.world);
     for ( const eid of update ) {
-      const frustumSize = this.component.frustum[eid];
+      const frustumSize = this.component.store.frustum[eid];
       const camera = this.cameras[eid];
-      camera.left = frustumSize * (width/-2);
-      camera.right = frustumSize * (width/2);
-      camera.top = frustumSize * (height/2);
-      camera.bottom = frustumSize * (height/-2);
+      camera.left = frustumSize / ratio / -2;
+      camera.right = frustumSize / ratio / 2;
+      camera.top = frustumSize / 2;
+      camera.bottom = frustumSize / -2
       camera.updateProjectionMatrix();
     }
   }

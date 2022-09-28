@@ -74,7 +74,7 @@ export default defineComponent({
       camera.name = "Camera";
       camera.type = "Camera";
       camera.addComponent( "Position" );
-      camera.addComponent( "OrthographicCamera", { frustum: 0.2, far: 5, near: 0, zoom: 1 } );
+      camera.addComponent( "OrthographicCamera", { frustum: 1, far: 5, near: 0, zoom: 1 } );
       console.log( `Camera ID: ${camera.id}` );
 
       // Random thingy
@@ -121,6 +121,7 @@ export default defineComponent({
     this.sceneTree.children = Object.values(tree);
 
     this.editGame.start();
+    this.editScene.update(0);
   },
 
   unmounted() {
@@ -141,12 +142,13 @@ export default defineComponent({
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
 
-    createGame( canvas:string ):bitwise.Game {
+    createGame( canvas:string, opt:Object ):bitwise.Game {
       const game = new bitwise.Game({
         canvas: this.$refs[canvas],
         loader: {
           base: this.getFileUrl(""),
         },
+        ...opt,
       });
 
       game.registerComponent( "Parent", ParentComponent );
@@ -259,7 +261,13 @@ export default defineComponent({
     play() {
       const playState = this.editScene.freeze();
 
-      this.playGame = this.createGame( 'play-canvas' );
+      this.playGame = this.createGame( 'play-canvas', {
+        // XXX: Get from game settings
+        renderer: {
+          width: 1280,
+          height: 720,
+        },
+      });
       const scene = this.playScene = this.playGame.addScene();
       scene.thaw( playState );
       // XXX: Systems should be recorded in frozen scene data
@@ -324,8 +332,10 @@ export default defineComponent({
         </div>
       </div>
     </div>
-    <div class="tab-main">
+    <div class="tab-main-edit">
       <canvas ref="edit-canvas" v-show="playing == false" />
+    </div>
+    <div class="tab-main-play">
       <canvas ref="play-canvas" v-show="playing == true" />
     </div>
     <div class="tab-sidebar">
@@ -396,6 +406,8 @@ export default defineComponent({
     grid-template-rows: 42px 1fr;
     grid-template-columns: 1fr minmax(0, auto);
     grid-template-areas: "toolbar toolbar" "main sidebar";
+    height: 100%;
+    overflow: hidden;
   }
   .tab-toolbar {
     grid-area: toolbar;
@@ -414,9 +426,15 @@ export default defineComponent({
     box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
     overflow: hidden;
   }
-  .tab-main {
+  .tab-main-edit {
     grid-area: main;
-    padding: 2px;
+    align-self: stretch;
+    justify-self: stretch;
+    height: 100%;
+    overflow: hidden;
+  }
+  .tab-main-play {
+    grid-area: main;
     align-self: center;
     justify-self: center;
   }
