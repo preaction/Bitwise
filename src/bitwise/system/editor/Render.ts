@@ -30,6 +30,47 @@ export default class Render {
     scene.addEventListener( "resize", (e:Object) => {
       this.onResize(e);
     });
+    scene.game.input.on( 'wheel', this.onWheel.bind(this) );
+    scene.game.input.on( 'mousedown', this.onMouseDown.bind(this) );
+    scene.game.input.on( 'mouseup', this.onMouseUp.bind(this) );
+    scene.game.input.on( 'mousemove', this.onMouseMove.bind(this) );
+  }
+
+  onWheel( event:WheelEvent ) {
+    event.preventDefault();
+    // XXX: Zoom when mouse is at coordinates other than 0,0 should move
+    // the window to keep the pixel under the cursor in the same place
+    this.camera.zoom += event.deltaY * 0.01;
+    if ( this.camera.zoom < 0.001 ) {
+      this.camera.zoom = 0.001;
+    }
+    this.camera.updateProjectionMatrix();
+    this.render();
+  }
+
+  mouseIsDown:boolean = false;
+  onMouseDown( event:MouseEvent ) {
+    event.preventDefault();
+    this.mouseIsDown = true;
+    // XXX: Mouse down outside selected element de-selects
+  }
+
+  onMouseUp( event:MouseEvent ) {
+    event.preventDefault();
+    this.mouseIsDown = false;
+    // XXX: Mouse up without moving selects element
+  }
+
+  onMouseMove( event:MouseEvent ) {
+    event.preventDefault();
+    // XXX: Mouse move with object selected moves object
+    // XXX: Mouse move with button down moves camera
+    if ( this.mouseIsDown ) {
+      const { movementX: x, movementY: y } = event;
+      this.camera.position.x -= x / this.camera.zoom / 2.5;
+      this.camera.position.y += y / this.camera.zoom / 2.5;
+      this.render();
+    }
   }
 
   update( timeMilli:Number ) {

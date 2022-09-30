@@ -4,6 +4,7 @@
  */
 import * as three from 'three';
 import Scene from './Scene.ts';
+import Input from './Input.ts';
 
 let tick = 0;
 
@@ -18,6 +19,7 @@ export default class Game extends three.EventDispatcher {
 
   scenes:Scene[] = [];
   data:Object;
+  input:Input;
 
   constructor( opt:Object ) {
     super();
@@ -26,6 +28,7 @@ export default class Game extends three.EventDispatcher {
     this.width = opt.renderer?.width;
     this.height = opt.renderer?.height;
     this.data = opt.data || {};
+    this.input = new Input( this );
     if ( this.width > 0 || this.height > 0 ) {
       this.autoSize = false;
     }
