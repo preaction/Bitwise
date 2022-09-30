@@ -17,6 +17,7 @@ export default class Game extends three.EventDispatcher {
   autoSize:boolean = true;
 
   scenes:Scene[] = [];
+  data:Object;
 
   constructor( opt:Object ) {
     super();
@@ -24,6 +25,7 @@ export default class Game extends three.EventDispatcher {
     this.loader = opt.loader;
     this.width = opt.renderer?.width;
     this.height = opt.renderer?.height;
+    this.data = opt.data || {};
     if ( this.width > 0 || this.height > 0 ) {
       this.autoSize = false;
     }
@@ -100,8 +102,8 @@ export default class Game extends three.EventDispatcher {
     const render = this.renderSize();
     const needResize = canvas.width !== render.width || canvas.height !== render.height;
     if (needResize) {
-      this.dispatchEvent({ type: 'resize', width: render.width, height: render.height });
       this.renderer.setSize(render.width, render.height, false);
+      this.dispatchEvent({ type: 'resize', width: render.width, height: render.height });
     }
     return needResize;
   }

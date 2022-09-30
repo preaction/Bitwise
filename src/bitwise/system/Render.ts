@@ -65,14 +65,21 @@ export default class Render {
   add( eid:Number ) {
     console.log( `Adding camera ${eid}` );
     const { width, height } = this.scene.game;
+    const ratio = width / height;
     // Point a camera at 0, 0
     // Frustum size appears to work the same as zoom for an
     // orthographic camera, which makes sense
     const cameraData = this.component.store;
-    const frustumSize = cameraData.frustum[eid] || 2;
+    const frustumSize = cameraData.frustum[eid] || 20;
     const far = cameraData.far[eid] || 10;
     const near = cameraData.near[eid] || 0;
-    const camera = new three.OrthographicCamera(frustumSize * (width/-2), frustumSize * (width/2), frustumSize * (height/2), frustumSize * (height/-2), near, far);
+    const camera = new three.OrthographicCamera(
+      frustumSize * (ratio/-2),
+      frustumSize * (ratio/2),
+      frustumSize /2,
+      frustumSize /-2,
+      near, far,
+    );
     this.cameras[eid] = camera;
     camera.zoom = cameraData.zoom[eid] || 4;
 
@@ -92,8 +99,8 @@ export default class Render {
     for ( const eid of update ) {
       const frustumSize = this.component.store.frustum[eid];
       const camera = this.cameras[eid];
-      camera.left = frustumSize / ratio / -2;
-      camera.right = frustumSize / ratio / 2;
+      camera.left = frustumSize * ratio / -2;
+      camera.right = frustumSize * ratio / 2;
       camera.top = frustumSize / 2;
       camera.bottom = frustumSize / -2
       camera.updateProjectionMatrix();

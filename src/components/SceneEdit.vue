@@ -22,6 +22,8 @@ import SpriteComponent from '../bitwise/component/Sprite.ts';
 import SpriteSystem from '../bitwise/system/Sprite.ts';
 import RenderSystem from '../bitwise/system/Render.ts';
 
+import EditorRenderSystem from '../bitwise/system/editor/Render.ts';
+
 export default defineComponent({
   components: {
     ObjectTreeItem,
@@ -51,7 +53,7 @@ export default defineComponent({
   },
 
   async mounted() {
-    const game = this.editGame = this.createGame( 'edit-canvas' );
+    const game = this.editGame = this.createEditorGame( 'edit-canvas' );
 
     this.componentForms[ "Position" ] = PositionEdit;
     this.componentForms[ "OrthographicCamera" ] = OrthographicCameraEdit;
@@ -142,11 +144,18 @@ export default defineComponent({
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
 
-    createGame( canvas:string, opt:Object ):bitwise.Game {
+    // The player game is sized according to the game settings and uses
+    // the runtime systems
+    createPlayerGame( canvas:string, opt:Object ):bitwise.Game {
       const game = new bitwise.Game({
         canvas: this.$refs[canvas],
         loader: {
           base: this.getFileUrl(""),
+        },
+        // XXX: Get from game settings
+        renderer: {
+          width: 1280,
+          height: 720,
         },
         ...opt,
       });
@@ -157,6 +166,32 @@ export default defineComponent({
       game.registerComponent( "Sprite", SpriteComponent );
       game.registerSystem( "Sprite", SpriteSystem );
       game.registerSystem( "Render", RenderSystem );
+
+      return game;
+    },
+
+    // The editor game is sized to fit the screen and uses some custom
+    // editor systems.
+    createEditorGame( canvas:string, opt:Object ):bitwise.Game {
+      const game = new bitwise.Game({
+        canvas: this.$refs[canvas],
+        loader: {
+          base: this.getFileUrl(""),
+        },
+        data: {
+          // XXX: Get from game settings
+          gameWidth: 1280,
+          gameHeight: 720,
+        },
+        ...opt,
+      });
+
+      game.registerComponent( "Parent", ParentComponent );
+      game.registerComponent( "Position", PositionComponent );
+      game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
+      game.registerComponent( "Sprite", SpriteComponent );
+      game.registerSystem( "Sprite", SpriteSystem );
+      game.registerSystem( "Render", EditorRenderSystem );
 
       return game;
     },
@@ -261,13 +296,7 @@ export default defineComponent({
     play() {
       const playState = this.editScene.freeze();
 
-      this.playGame = this.createGame( 'play-canvas', {
-        // XXX: Get from game settings
-        renderer: {
-          width: 1280,
-          height: 720,
-        },
-      });
+      this.playGame = this.createPlayerGame( 'play-canvas' );
       const scene = this.playScene = this.playGame.addScene();
       scene.thaw( playState );
       // XXX: Systems should be recorded in frozen scene data
