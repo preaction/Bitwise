@@ -9,7 +9,6 @@ export default defineComponent({
   },
   methods: {
     update() {
-      this.$data.rw = 1;
       this.$emit( 'update:modelValue', this.$data );
       this.$emit( 'update', this.$data );
     },
@@ -19,21 +18,13 @@ export default defineComponent({
 <template>
   <div>
     <div class="d-flex position align-items-center">
+      <span>Origin</span>
       <label>X</label>
-      <input @change="update" v-model="$data.x">
+      <input @change="update" v-model="$data.ox">
       <label>Y</label>
-      <input @change="update" v-model="$data.y">
+      <input @change="update" v-model="$data.oy">
       <label>Z</label>
-      <input @change="update" v-model="$data.z">
-    </div>
-    <div class="d-flex position align-items-center">
-      <span>Rotate</span>
-      <label>X</label>
-      <input @change="update" v-model="$data.rx">
-      <label>Y</label>
-      <input @change="update" v-model="$data.ry">
-      <label>Z</label>
-      <input @change="update" v-model="$data.rz">
+      <input @change="update" v-model="$data.oz">
     </div>
     <div class="d-flex position align-items-center">
       <span>Scale</span>
@@ -47,13 +38,4 @@ export default defineComponent({
   </div>
 </template>
 <style>
-  .position label {
-    padding: 0 2px;
-  }
-  .position input {
-    margin: 0 4px 0 0;
-    flex: 1 1 auto;
-    width: 2em;
-    text-align: right;
-  }
 </style>

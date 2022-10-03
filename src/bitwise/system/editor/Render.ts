@@ -159,9 +159,9 @@ export default class Render {
 
     const geometry = new three.BoxGeometry(1, 1, 1);
     const wireframe = new three.WireframeGeometry( geometry );
-    const camera = new three.LineSegments( wireframe );
+    const mat = new three.LineBasicMaterial( { color: 0x00ccff, linewidth: 2 } );
+    const camera = new three.LineSegments( wireframe, mat );
     camera.material.depthTest = false;
-    camera.material.opacity = 0.25;
     camera.material.transparent = true;
 
     console.log( `Wireframe scale ${width}, ${height}, ${depth} (ratio ${ratio})` );

@@ -84,6 +84,7 @@ export default class Scene extends three.EventDispatcher {
     // XXX: Run through every system's update() method
     this.systems.Sprite.update( timeMs );
     this.systems.Render.update( timeMs );
+    this.systems.Physics?.update( timeMs );
   }
 
   render() {

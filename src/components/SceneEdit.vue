@@ -10,6 +10,8 @@ import * as bitwise from '../Bitwise.ts';
 import PositionEdit from './bitwise/Position.vue';
 import OrthographicCameraEdit from './bitwise/OrthographicCamera.vue';
 import SpriteEdit from './bitwise/Sprite.vue';
+import RigidBodyEdit from './bitwise/RigidBody.vue';
+import BoxColliderEdit from './bitwise/BoxCollider.vue';
 
 // XXX: In the future, scene entities like this will need to be loaded by
 // the code, on demand.
@@ -19,10 +21,15 @@ import ParentComponent from '../bitwise/component/Parent.ts';
 import PositionComponent from '../bitwise/component/Position.ts';
 import OrthographicCameraComponent from '../bitwise/component/OrthographicCamera.ts';
 import SpriteComponent from '../bitwise/component/Sprite.ts';
+import RigidBodyComponent from '../bitwise/component/RigidBody.ts';
+import BoxColliderComponent from '../bitwise/component/BoxCollider.ts';
+
 import SpriteSystem from '../bitwise/system/Sprite.ts';
 import RenderSystem from '../bitwise/system/Render.ts';
+import PhysicsSystem from '../bitwise/system/Physics.ts';
 
 import EditorRenderSystem from '../bitwise/system/editor/Render.ts';
+import EditorPhysicsSystem from '../bitwise/system/editor/Physics.ts';
 
 export default defineComponent({
   components: {
@@ -58,6 +65,8 @@ export default defineComponent({
     this.componentForms[ "Position" ] = PositionEdit;
     this.componentForms[ "OrthographicCamera" ] = OrthographicCameraEdit;
     this.componentForms[ "Sprite" ] = SpriteEdit;
+    this.componentForms[ "BoxCollider" ] = BoxColliderEdit;
+    this.componentForms[ "RigidBody" ] = RigidBodyEdit;
 
     // XXX: Scroll controls for zoom
     // XXX: Pinch controls for zoom
@@ -69,6 +78,7 @@ export default defineComponent({
       // XXX: Systems should be recorded in frozen scene data
       scene.addSystem( 'Render' );
       scene.addSystem( 'Sprite' );
+      scene.addSystem( 'Physics' );
     }
     else {
       // Create a new, blank scene
@@ -92,6 +102,7 @@ export default defineComponent({
 
       scene.addSystem( 'Render' );
       scene.addSystem( 'Sprite' );
+      scene.addSystem( 'Physics' );
 
       this.update();
     }
@@ -137,7 +148,7 @@ export default defineComponent({
       return this.playing ? this.playScene : this.editScene;
     },
     availableComponents() {
-      return [ "Position", "OrthographicCamera", "Sprite" ];
+      return [ "Position", "OrthographicCamera", "Sprite", "RigidBody", "BoxCollider" ];
     },
   },
 
@@ -164,6 +175,9 @@ export default defineComponent({
       game.registerComponent( "Position", PositionComponent );
       game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
       game.registerComponent( "Sprite", SpriteComponent );
+      game.registerComponent( "RigidBody", RigidBodyComponent );
+      game.registerComponent( "BoxCollider", BoxColliderComponent );
+      game.registerSystem( "Physics", PhysicsSystem );
       game.registerSystem( "Sprite", SpriteSystem );
       game.registerSystem( "Render", RenderSystem );
 
@@ -190,7 +204,10 @@ export default defineComponent({
       game.registerComponent( "Position", PositionComponent );
       game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
       game.registerComponent( "Sprite", SpriteComponent );
+      game.registerComponent( "RigidBody", RigidBodyComponent );
+      game.registerComponent( "BoxCollider", BoxColliderComponent );
       game.registerSystem( "Sprite", SpriteSystem );
+      game.registerSystem( "Physics", EditorPhysicsSystem );
       game.registerSystem( "Render", EditorRenderSystem );
 
       return game;
@@ -302,6 +319,7 @@ export default defineComponent({
       // XXX: Systems should be recorded in frozen scene data
       scene.addSystem( 'Render' );
       scene.addSystem( 'Sprite' );
+      scene.addSystem( 'Physics' );
 
       this.playing = true;
       this.paused = false;
