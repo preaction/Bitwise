@@ -50,6 +50,8 @@ export default defineComponent({
       selectedEntity: null,
       selectedComponents: {},
       componentForms: markRaw({}),
+      systemForms: markRaw({}),
+      sceneSystems: [],
       icons: {
         "Camera": "fa-camera",
         "Sprite": "fa-image-portrait",
@@ -84,9 +86,9 @@ export default defineComponent({
       scene.addComponent( 'OrthographicCamera' );
       scene.addComponent( 'RigidBody' );
       scene.addComponent( 'BoxCollider' );
-      scene.addSystem( 'Render' );
-      scene.addSystem( 'Sprite' );
       scene.addSystem( 'Physics' );
+      scene.addSystem( 'Sprite' );
+      scene.addSystem( 'Render' );
 
       // XXX: Default camera should come from game settings
       const camera = scene.addEntity();
@@ -98,35 +100,11 @@ export default defineComponent({
       this.update();
     }
 
-    // Find all the entities and build tree items for them
-    const tree = {};
-    for ( const id of scene.eids ) {
-      const entity = scene.entities[id];
-      console.log( `Treeing entity ${id}` );
-      if ( !tree[id] ) {
-        tree[id] = { entity: null, children: [] };
-      }
-      tree[id].entity = id;
-      tree[id].name = entity.name;
-      tree[id].icon = this.icons[ entity.type ];
-
-      console.log( entity.listComponents() );
-      if ( entity.listComponents().includes("Parent") ) {
-        const pid = scene.components.Parent.store.id[id];
-        console.log( `Parenting to ${pid}` );
-        if ( !tree[pid] ) {
-          tree[pid] = { entity: null, children: [] };
-        }
-        tree[pid].children.push( tree[id] );
-        delete tree[id];
-      }
-    }
-    console.log( "Completed tree:", tree );
-    this.sceneTree.children = Object.values(tree);
-
     this.editGame.start();
     this.editScene.update(0);
     this.editScene.render();
+
+    this.updateSceneTree(scene);
   },
 
   unmounted() {
@@ -146,6 +124,37 @@ export default defineComponent({
 
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
+
+    updateSceneTree( scene:Scene ) {
+      // Find all the entities and build tree items for them
+      const tree = {};
+      for ( const id of scene.eids ) {
+        const entity = scene.entities[id];
+        console.log( `Treeing entity ${id}` );
+        if ( !tree[id] ) {
+          tree[id] = { entity: null, children: [] };
+        }
+        tree[id].entity = id;
+        tree[id].name = entity.name;
+        tree[id].icon = this.icons[ entity.type ];
+
+        console.log( entity.listComponents() );
+        if ( entity.listComponents().includes("Parent") ) {
+          const pid = scene.components.Parent.store.id[id];
+          console.log( `Parenting to ${pid}` );
+          if ( !tree[pid] ) {
+            tree[pid] = { entity: null, children: [] };
+          }
+          tree[pid].children.push( tree[id] );
+          delete tree[id];
+        }
+      }
+      console.log( "Completed tree:", tree );
+      this.sceneTree.children = Object.values(tree);
+
+      // Update the systems array
+      this.sceneSystems = scene.systems.map( s => ({ name: s.name, data: s.freeze() }) );
+    },
 
     // The player game is sized according to the game settings and uses
     // the runtime systems
@@ -303,25 +312,25 @@ export default defineComponent({
       }
     },
 
+    updateSystem( idx:Number, data:Object ) {
+      this.sceneSystems[idx].data = data;
+      // XXX: Add freeze/thaw for systems
+      //this.scene.systems[idx].thaw( data );
+      this.update();
+      this.scene.update(0);
+      this.scene.render();
+    },
     play() {
       const playState = this.editScene.freeze();
 
       this.playGame = this.createPlayerGame( 'play-canvas' );
       const scene = this.playScene = this.playGame.addScene();
-      // XXX: Systems/Components should be recorded in frozen scene data
-      scene.addComponent( 'Position' );
-      scene.addComponent( 'Sprite' );
-      scene.addComponent( 'OrthographicCamera' );
-      scene.addComponent( 'RigidBody' );
-      scene.addComponent( 'BoxCollider' );
-      scene.addSystem( 'Render' );
-      scene.addSystem( 'Sprite' );
-      scene.addSystem( 'Physics' );
       scene.thaw( playState );
 
       this.playing = true;
       this.paused = false;
       this.$nextTick( () => {
+        this.updateSceneTree(scene);
         this.playGame.start();
         this.playScene.start();
       } );
@@ -341,6 +350,31 @@ export default defineComponent({
 
       this.playing = false;
       this.paused = false;
+
+      this.updateSceneTree(this.editScene);
+    },
+
+    startDragSystem(event, index) {
+      event.dataTransfer.setData("bitwise/system", index);
+    },
+
+    dragOverSystem(event, index) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      // XXX: Show drop indicator
+    },
+
+    dropSystem(event, index) {
+      const data = event.dataTransfer.getData("bitwise/system");
+      if ( data ) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        console.log( `Moving system ${data} to ${index}` );
+        const system = this.scene.systems.splice(data, 1);
+        this.scene.systems.splice( index, 0, ...system );
+        this.update();
+        this.updateSceneTree( this.scene );
+      }
     },
   },
 });
@@ -433,11 +467,25 @@ export default defineComponent({
           </ul>
         </div>
       </div>
+
       <div v-else class="entity-pane">
         <h5>Scene</h5>
         <div class="d-flex justify-content-between align-items-center">
           <label class="me-1">Name</label>
           <input v-model="sceneTree.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
+        </div>
+        <div v-for="s, idx in sceneSystems" :key="s.name" class="system-form">
+          <div class="mb-1 d-flex justify-content-between align-items-center"
+            draggable="true" @dragstart="startDragSystem( $event, idx )"
+            @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"
+          >
+            <h6 class="m-0"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
+            <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
+          </div>
+          <div v-if="systemForms[s.name]" class="my-2">
+            <component :is="systemForms[s.name]" v-model="s.data"
+            @update="updateSystem(idx, $event)" />
+          </div>
         </div>
       </div>
     </div>
@@ -515,6 +563,13 @@ export default defineComponent({
     visibility: hidden;
   }
   .object-tree-item .name:hover i.delete {
+    visibility: visible;
+  }
+
+  .system-form .system-move {
+    visibility: hidden;
+  }
+  .system-form:hover .system-move {
     visibility: visible;
   }
 </style>
