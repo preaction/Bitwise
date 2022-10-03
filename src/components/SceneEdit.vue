@@ -118,7 +118,12 @@ export default defineComponent({
       return this.playing ? this.playScene : this.editScene;
     },
     availableComponents() {
+      // XXX: These should be gotten from Game object
       return [ "Position", "OrthographicCamera", "Sprite", "RigidBody", "BoxCollider" ];
+    },
+    availableSystems() {
+      // XXX: These should be gotten from Game object
+      return [ "Render", "Sprite", "Physics" ];
     },
   },
 
@@ -376,6 +381,30 @@ export default defineComponent({
         this.updateSceneTree( this.scene );
       }
     },
+
+    hasSystem( name:string ) {
+      return !!this.sceneSystems.find( s => s.name === name );
+    },
+
+    addSystem( name:string ) {
+      if ( this.hasSystem(name) ) {
+        return;
+      }
+      this.scene.addSystem( name );
+      this.scene.update(0);
+      this.scene.render();
+      this.update();
+      this.updateSceneTree( this.scene );
+    },
+
+    removeSystem( idx ) {
+      this.scene.systems.splice( idx, 1 );
+      this.scene.update(0);
+      this.scene.render();
+      this.update();
+      this.updateSceneTree( this.scene );
+    },
+
   },
 });
 </script>
@@ -486,6 +515,16 @@ export default defineComponent({
             <component :is="systemForms[s.name]" v-model="s.data"
             @update="updateSystem(idx, $event)" />
           </div>
+        </div>
+        <div class="dropdown m-2 mt-4 text-center dropup">
+          <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Add System...
+          </button>
+          <ul class="dropdown-menu">
+            <li v-for="s in availableSystems">
+              <a class="dropdown-item" :class="hasSystem(s) ? 'disabled' : ''" href="#" @click="addSystem(s)">{{s}}</a>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
