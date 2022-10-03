@@ -17,4 +17,10 @@ export default class Position extends Component {
       sz: bitecs.Types.f32,
     }
   }
+  addEntity( eid:Number ) {
+    super.addEntity(eid);
+    this.store.sx[eid] = 1;
+    this.store.sy[eid] = 1;
+    this.store.sz[eid] = 1;
+  }
 }

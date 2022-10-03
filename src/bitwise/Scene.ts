@@ -143,7 +143,6 @@ export default class Scene extends three.EventDispatcher {
 
   addComponent( name:string ) {
     const component = this.game.components[ name ];
-    console.log( `Adding component ${name}` );
     this.components[name] = new component( this, this.world );
   }
 

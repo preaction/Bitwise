@@ -41,6 +41,9 @@ export default class Sprite {
       sprite.position.x = this.position.store.x[eid];
       sprite.position.y = this.position.store.y[eid];
       sprite.position.z = this.position.store.z[eid];
+      sprite.scale.x = this.position.store.sx[eid];
+      sprite.scale.y = this.position.store.sy[eid];
+      sprite.scale.z = this.position.store.sz[eid];
 
       const tid = this.component.store.textureId[eid];
       const texture = this.scene.game.textures[tid];
@@ -60,9 +63,9 @@ export default class Sprite {
     sprite.position.x = this.position.store.x[eid];
     sprite.position.y = this.position.store.y[eid];
     sprite.position.z = this.position.store.z[eid];
-    // XXX: Figure out why the camera shows things very small unless
-    // I do this.
-    sprite.scale.multiplyScalar(16);
+    sprite.scale.x = this.position.store.sx[eid];
+    sprite.scale.y = this.position.store.sy[eid];
+    sprite.scale.z = this.position.store.sz[eid];
     // XXX: If entity has a Parent, add it to that instead
     this.scene._scene.add( sprite );
   }

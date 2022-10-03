@@ -74,35 +74,36 @@ export default defineComponent({
     const scene = this.editScene = game.addScene();
 
     if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
-      scene.thaw( toRaw( this.modelValue ) );
-      // XXX: Systems should be recorded in frozen scene data
+      // XXX: Systems/Components should be recorded in frozen scene data
+      scene.addComponent( 'Position' );
+      scene.addComponent( 'Sprite' );
+      scene.addComponent( 'OrthographicCamera' );
+      scene.addComponent( 'RigidBody' );
+      scene.addComponent( 'BoxCollider' );
       scene.addSystem( 'Render' );
       scene.addSystem( 'Sprite' );
       scene.addSystem( 'Physics' );
+
+      scene.thaw( toRaw( this.modelValue ) );
     }
     else {
       // Create a new, blank scene
-      const camera = scene.addEntity();
-      camera.name = "Camera";
-      camera.type = "Camera";
-      camera.addComponent( "Position" );
-      camera.addComponent( "OrthographicCamera", { frustum: 1, far: 5, near: 0, zoom: 1 } );
-      console.log( `Camera ID: ${camera.id}` );
-
-      // Random thingy
-      const path = "Other/Misc/Tree/Tree.png";
-      await game.loadTexture( path );
-      const sprite = scene.addEntity();
-      sprite.name = "Sprite";
-      sprite.type = "Sprite";
-      sprite.addComponent( "Parent", { id: camera.id } );
-      sprite.addComponent( "Position", { x: 1, y: 0, z: 0 } );
-      sprite.addComponent( "Sprite", { textureId: game.textures[path] } );
-      console.log( `Sprite ID: ${sprite.id}` );
-
+      // XXX: Default components/systems should come from game settings
+      scene.addComponent( 'Position' );
+      scene.addComponent( 'Sprite' );
+      scene.addComponent( 'OrthographicCamera' );
+      scene.addComponent( 'RigidBody' );
+      scene.addComponent( 'BoxCollider' );
       scene.addSystem( 'Render' );
       scene.addSystem( 'Sprite' );
       scene.addSystem( 'Physics' );
+
+      // XXX: Default camera should come from game settings
+      const camera = scene.addEntity();
+      camera.name = "Camera";
+      camera.type = "Camera";
+      camera.addComponent( "Position", { sx: 1, sy: 1, sz: 1 } );
+      camera.addComponent( "OrthographicCamera", { frustum: 10, far: 10, near: 0, zoom: 1 } );
 
       this.update();
     }
@@ -135,6 +136,7 @@ export default defineComponent({
 
     this.editGame.start();
     this.editScene.update(0);
+    this.editScene.render();
   },
 
   unmounted() {
@@ -315,11 +317,16 @@ export default defineComponent({
 
       this.playGame = this.createPlayerGame( 'play-canvas' );
       const scene = this.playScene = this.playGame.addScene();
-      scene.thaw( playState );
-      // XXX: Systems should be recorded in frozen scene data
+      // XXX: Systems/Components should be recorded in frozen scene data
+      scene.addComponent( 'Position' );
+      scene.addComponent( 'Sprite' );
+      scene.addComponent( 'OrthographicCamera' );
+      scene.addComponent( 'RigidBody' );
+      scene.addComponent( 'BoxCollider' );
       scene.addSystem( 'Render' );
       scene.addSystem( 'Sprite' );
       scene.addSystem( 'Physics' );
+      scene.thaw( playState );
 
       this.playing = true;
       this.paused = false;

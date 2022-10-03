@@ -38,6 +38,9 @@ contextBridge.exposeInMainWorld('electron', {
   removeListener( channel:string, cb ) {
     return ipcRenderer.removeListener( channel, cb );
   },
+  deleteTree( root:string, path:string ) {
+    return ipcRenderer.invoke('bitwise-delete-tree', root, path);
+  },
 });
 
 
