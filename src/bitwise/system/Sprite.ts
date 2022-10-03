@@ -1,18 +1,19 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
+import System from '../System.ts';
 import Scene from '../Scene.ts';
 
-export default class Sprite {
+export default class Sprite extends System {
+  name:string;
   scene:Scene;
   sprites:three.Sprite[] = [];
   materials:three.SpriteMaterial[] = [];
   component:any;
   position:any;
 
-  constructor( scene:Scene ) {
-    this.scene = scene;
-
+  constructor( name:string, scene:Scene, data:Object ) {
+    super(name, scene, data);
     this.position = scene.components[ "Position" ];
     this.component = scene.components[ "Sprite" ];
 

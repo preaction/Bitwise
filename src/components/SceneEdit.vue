@@ -74,16 +74,6 @@ export default defineComponent({
     const scene = this.editScene = game.addScene();
 
     if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
-      // XXX: Systems/Components should be recorded in frozen scene data
-      scene.addComponent( 'Position' );
-      scene.addComponent( 'Sprite' );
-      scene.addComponent( 'OrthographicCamera' );
-      scene.addComponent( 'RigidBody' );
-      scene.addComponent( 'BoxCollider' );
-      scene.addSystem( 'Render' );
-      scene.addSystem( 'Sprite' );
-      scene.addSystem( 'Physics' );
-
       scene.thaw( toRaw( this.modelValue ) );
     }
     else {
@@ -217,6 +207,7 @@ export default defineComponent({
 
     update() {
       // update() always works with the edit scene
+      // XXX: Editor scene should freeze camera settings
       const sceneData = this.editScene.freeze();
       console.log( 'Frozen', sceneData );
       this.$emit('update:name', this.name);

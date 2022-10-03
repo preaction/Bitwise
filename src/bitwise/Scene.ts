@@ -41,7 +41,7 @@ export default class Scene extends three.EventDispatcher {
   world:any;
 
   // systems are added to the scene to make the game go.
-  systems:any = {};
+  systems:any = [];
 
   // components are data added to entities
   components:any = {};
@@ -59,7 +59,7 @@ export default class Scene extends three.EventDispatcher {
     });
 
     this.world = bitecs.createWorld();
-    this.systems = {};
+    this.systems = [];
     this.components = {};
   }
 
@@ -81,14 +81,23 @@ export default class Scene extends three.EventDispatcher {
   }
 
   update( timeMs:DOMHighResTimeStamp ) {
-    // XXX: Run through every system's update() method
-    this.systems.Sprite.update( timeMs );
-    this.systems.Render.update( timeMs );
-    this.systems.Physics?.update( timeMs );
+    for ( const system of this.systems ) {
+      // XXX: Create inlined version of this function with only those
+      // systems that have update methods
+      if ( system.update ) {
+        system.update( timeMs );
+      }
+    }
   }
 
   render() {
-    this.systems.Render.render();
+    for ( const system of this.systems ) {
+      // XXX: Create inlined version of this function with only those
+      // systems that have render methods
+      if ( system.render ) {
+        system.render();
+      }
+    }
   }
 
   freeze() {
@@ -106,15 +115,25 @@ export default class Scene extends three.EventDispatcher {
       }
       data.push( eData );
     }
-    return { entities: data };
+
+    return {
+      entities: data,
+      components: Object.keys( this.components ),
+      systems: this.systems.map( s => s.freeze() ),
+    };
   }
 
   thaw( data:Object ) {
     console.log( "Thawing scene from", data );
-    // XXX: Not using bitecs serialize/deserialize because I can't get
-    // them to work...
-    // Load the metadata first so that components have something to hook
-    // on to.
+    for ( const name of data.components ) {
+      this.addComponent( name );
+    }
+    for ( const system of data.systems ) {
+      this.addSystem( system.name, system.data );
+    }
+
+    // Load the entity metadata first so that components have something
+    // to hook on to.
     for ( const eData of data.entities ) {
       const entity = this.addEntity();
       entity.name = eData.name;
@@ -127,18 +146,14 @@ export default class Scene extends three.EventDispatcher {
         if ( typeof eData[c] !== "object" ) {
           continue;
         }
-        if ( !this.components[c] ) {
-          this.addComponent( c );
-        }
         this.components[c].thawEntity(eData.id, eData[c]);
       }
     }
   }
 
-  // XXX: Systems have an order
-  addSystem( name:string ) {
+  addSystem( name:string, data:Object ) {
     const system = this.game.systems[ name ];
-    this.systems[name] = new system( this );
+    this.systems.push( new system( name, this, data ) );
   }
 
   addComponent( name:string ) {

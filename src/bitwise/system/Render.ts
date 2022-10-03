@@ -1,16 +1,16 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
+import System from '../System.ts';
 import Scene from './Scene.ts';
 
-export default class Render {
-  scene:Scene;
+export default class Render extends System {
   cameras:three.OrthographicCamera[] = [];
   component:any;
   position:any;
 
-  constructor( scene:Scene ) {
-    this.scene = scene;
+  constructor( name:string, scene:Scene, data:Object ) {
+    super(name, scene, data);
 
     this.position = scene.components[ "Position" ];
     if ( !this.position ) {

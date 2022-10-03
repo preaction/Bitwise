@@ -2,16 +2,16 @@
 import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene from '../../Scene.ts';
+import System from '../../System.ts';
 
-export default class Physics {
-  scene:Scene;
+export default class Physics extends System {
   position:any;
   collider:Object = {};
 
   bodies:Array = [];
 
-  constructor( scene:Scene ) {
-    this.scene = scene;
+  constructor( name:string, scene:Scene, data:Object ) {
+    super(name, scene, data);
 
     this.position = scene.components[ "Position" ];
     this.collider.box = scene.components[ "BoxCollider" ];

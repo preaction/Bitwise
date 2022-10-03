@@ -2,9 +2,10 @@
 import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Ammo from 'ammo.js';
+import System from '../System.ts';
 import Scene from '../Scene.ts';
 
-export default class Physics {
+export default class Physics extends System {
   scene:Scene;
   rigidbody:any;
   position:any;
@@ -13,8 +14,8 @@ export default class Physics {
   universe:any;
   bodies:Array = [];
 
-  constructor( scene:Scene ) {
-    this.scene = scene;
+  constructor( name:string, scene:Scene, data:Object ) {
+    super( name, scene, data );
 
     this.position = scene.components[ "Position" ];
     this.rigidbody = scene.components[ "RigidBody" ];
