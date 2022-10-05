@@ -1,20 +1,20 @@
 
 import * as bitecs from 'bitecs';
-import Scene from './Scene.ts';
+import Scene from './Scene.js';
 
 export default class Entity {
-  id:Number;
+  id:number;
   type:string = "Entity";
   name:string = "New Entity";
   path:string = "";
   scene:Scene;
 
-  constructor(scene:Scene, id:Number) {
+  constructor(scene:Scene, id:number) {
     this.scene = scene;
     this.id = id;
   }
 
-  addComponent( name:string, data:Object ) {
+  addComponent( name:string, data:{ [key:string]: number } ) {
     if ( !this.scene.components[name] ) {
       this.scene.addComponent( name );
     }
@@ -24,7 +24,7 @@ export default class Entity {
     this.setComponent(name, data);
   }
 
-  setComponent( name:string, data:Object ) {
+  setComponent( name:string, data:{ [key:string]: number } ) {
     const component = this.scene.components[name].store;
     for ( let key in data ) {
       console.log( `Setting ${name} ${key} to ${data[key]}` );
@@ -37,9 +37,9 @@ export default class Entity {
     component.removeEntity( this.id );
   }
 
-  getComponent( name:string ):Object {
+  getComponent( name:string ):{ [key:string]: number } {
     const component = this.scene.components[name].store;
-    const data = {};
+    const data:{ [key:string]: number } = {};
     for ( let key in component ) {
       data[key] = component[key][this.id];
     }
@@ -58,9 +58,5 @@ export default class Entity {
       }
     }
     return names;
-  }
-
-  addEntity() {
-    return this.scene.addEntity( this.id );
   }
 }

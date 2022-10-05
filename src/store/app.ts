@@ -75,7 +75,7 @@ export const useAppStore = defineStore('app', {
       } );
     },
 
-    showTab( index:Number ) {
+    showTab( index:number ) {
       this.currentTabIndex = index;
       this.saveSessionState();
       this.saveStoredState();
@@ -150,7 +150,7 @@ export const useAppStore = defineStore('app', {
             else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
               item.icon = 'fa-image';
             }
-            else {
+            else if ( item.ext.match( /\.json$/ ) ) {
               const json = await this.readFile( item.path );
               const data = JSON.parse( json );
               const comp = data.component;

@@ -1,8 +1,8 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import Scene from '../../Scene.ts';
-import System from '../../System.ts';
+import Scene from '../../Scene.js';
+import System from '../../System.js';
 
 export default class Physics extends System {
   position:any;
@@ -21,7 +21,7 @@ export default class Physics extends System {
     this.exitQuery = bitecs.exitQuery( this.query );
   }
 
-  update( timeMilli:Number ) {
+  update( timeMilli:number ) {
     const position = this.position.store;
 
     const add = this.enterQuery(this.scene.world);

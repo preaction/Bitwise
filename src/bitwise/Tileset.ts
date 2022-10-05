@@ -1,10 +1,10 @@
 
 import * as three from 'three';
-import * as bitwise from '../Bitwise.ts';
+import * as bitwise from '../Bitwise.js';
 
 type TileData = {
-  x:Number;
-  y:Number;
+  x:number;
+  y:number;
   passable?:boolean;
   /**
    * A clone of the Tileset texture with the appropriate offsets.
@@ -14,15 +14,15 @@ type TileData = {
 
 type TilesetOptions = {
   src:string;
-  tileWidth:Number;
-  tileHeight:Number;
+  tileWidth:number;
+  tileHeight:number;
   tiles:TileData[];
 }
 
 export default class Tileset {
   src:string;
-  readonly tileWidth:Number;
-  readonly tileHeight:Number;
+  readonly tileWidth:number;
+  readonly tileHeight:number;
   tiles:TileData[] = [];
 
   /**
@@ -44,12 +44,12 @@ export default class Tileset {
     }
   }
 
-  get imageWidth():Number {
+  get imageWidth():number {
     const img = this._texture.image;
     return img.naturalWidth || img.width;
   }
 
-  get imageHeight():Number {
+  get imageHeight():number {
     const img = this._texture.image;
     return img.naturalHeight || img.height;
   }

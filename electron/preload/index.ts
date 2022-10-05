@@ -3,10 +3,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electron', {
   store: {
-    get(file, val, def) {
+    get(file:string, val:string, def:any) {
       return ipcRenderer.sendSync('electron-store-get', file, val, def);
     },
-    set(file, property, val) {
+    set(file:string, property:string, val:any) {
       ipcRenderer.send('electron-store-set', file, property, val);
     },
     // Other method you want to add like has(), reset(), etc.
@@ -25,17 +25,17 @@ contextBridge.exposeInMainWorld('electron', {
   readFile( path:string ) {
     return ipcRenderer.invoke('bitwise-read-file', path);
   },
-  newFile( path:string, name:string, ext:string, data ) {
+  newFile( path:string, name:string, ext:string, data:any ) {
     console.log( 'newFile', path, name, ext, data );
     return ipcRenderer.invoke('bitwise-new-file', path, name, ext, data);
   },
-  saveFile( path:string, data ) {
+  saveFile( path:string, data:any ) {
     return ipcRenderer.invoke('bitwise-save-file', path, data);
   },
-  on( channel:string, cb ) {
+  on( channel:string, cb:Function ) {
     return ipcRenderer.on( channel, cb );
   },
-  removeListener( channel:string, cb ) {
+  removeListener( channel:string, cb:Function ) {
     return ipcRenderer.removeListener( channel, cb );
   },
   deleteTree( root:string, path:string ) {

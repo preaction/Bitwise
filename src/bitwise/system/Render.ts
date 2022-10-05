@@ -1,8 +1,8 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import System from '../System.ts';
-import Scene from './Scene.ts';
+import System from '../System.js';
+import Scene from './Scene.js';
 
 export default class Render extends System {
   cameras:three.OrthographicCamera[] = [];
@@ -30,7 +30,7 @@ export default class Render extends System {
     });
   }
 
-  update( timeMilli:Number ) {
+  update( timeMilli:number ) {
   }
 
   render() {
@@ -62,7 +62,7 @@ export default class Render extends System {
     }
   }
 
-  add( eid:Number ) {
+  add( eid:number ) {
     console.log( `Adding camera ${eid}` );
     const { width, height } = this.scene.game;
     const ratio = width / height;
@@ -86,12 +86,12 @@ export default class Render extends System {
     this.scene._scene.add( camera );
   }
 
-  remove( eid:Number ) {
+  remove( eid:number ) {
     this.scene._scene.remove( this.cameras[eid] );
     this.cameras[eid] = null;
   }
 
-  onResize(e:{width:Number, height:Number}) {
+  onResize(e:{width:number, height:number}) {
     // Fix camera settings to maintain exact size/aspect
     const { width, height } = e;
     const ratio = width / height;

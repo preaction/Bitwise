@@ -1,8 +1,8 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import Scene from '../../Scene.ts';
-import System from '../../System.ts';
+import Scene from '../../Scene.js';
+import System from '../../System.js';
 
 export default class Render extends System {
   camera:three.OrthographicCamera;
@@ -73,7 +73,7 @@ export default class Render extends System {
     }
   }
 
-  update( timeMilli:Number ) {
+  update( timeMilli:number ) {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
     const add = this.enterQuery(this.scene.world);
     for ( const eid of add ) {
@@ -145,7 +145,7 @@ export default class Render extends System {
     console.log( this.camera );
   }
 
-  add( eid:Number ) {
+  add( eid:number ) {
     console.log( `Adding wireframe for camera ${eid}` );
     const { gameWidth, gameHeight } = this.scene.game.data;
     const ratio = gameWidth / gameHeight;
@@ -175,12 +175,12 @@ export default class Render extends System {
     this.scene._scene.add( camera );
   }
 
-  remove( eid:Number ) {
+  remove( eid:number ) {
     this.scene._scene.remove( this.sceneCameras[eid] );
     this.sceneCameras[eid] = null;
   }
 
-  onResize(e:{width:Number, height:Number}) {
+  onResize(e:{width:number, height:number}) {
     // Fix camera settings to maintain exact size/aspect
     const { width, height } = e;
     const ratio = width / height;

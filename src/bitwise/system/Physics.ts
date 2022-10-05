@@ -2,8 +2,8 @@
 import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Ammo from 'ammo.js';
-import System from '../System.ts';
-import Scene from '../Scene.ts';
+import System from '../System.js';
+import Scene from '../Scene.js';
 
 export default class Physics extends System {
   scene:Scene;
@@ -38,7 +38,7 @@ export default class Physics extends System {
     this.universe.setGravity(new Ammo.btVector3(0, -0.75, 0));
   }
 
-  update( timeMilli:Number ) {
+  update( timeMilli:number ) {
     const position = this.position.store;
     const rigidBody = this.rigidbody.store;
 

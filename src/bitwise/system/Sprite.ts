@@ -1,8 +1,8 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import System from '../System.ts';
-import Scene from '../Scene.ts';
+import System from '../System.js';
+import Scene from '../Scene.js';
 
 export default class Sprite extends System {
   name:string;
@@ -22,7 +22,7 @@ export default class Sprite extends System {
     this.exitQuery = bitecs.exitQuery( this.query );
   }
 
-  update( timeMilli:Number ) {
+  update( timeMilli:number ) {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
     const add = this.enterQuery(this.scene.world);
     for ( const eid of add ) {
@@ -55,7 +55,7 @@ export default class Sprite extends System {
     }
   }
 
-  add( eid:Number ) {
+  add( eid:number ) {
     // Find the sprite's texture
     const tid = this.component.store.textureId[eid];
     const texture = this.scene.game.textures[tid];
@@ -71,7 +71,7 @@ export default class Sprite extends System {
     this.scene._scene.add( sprite );
   }
 
-  remove( eid:Number ) {
+  remove( eid:number ) {
     this.scene._scene.remove( this.sprites[eid] );
     this.sprites[eid] = null;
   }

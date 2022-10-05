@@ -114,6 +114,9 @@ ipcMain.handle('open-win', (event, arg) => {
 })
 
 ipcMain.handle('bitwise-open-project', event => {
+  if ( !win ) {
+    return;
+  }
   return dialog.showOpenDialog(win, {
     filters: [],
     properties: [ 'openDirectory', 'createDirectory' ],
@@ -121,6 +124,9 @@ ipcMain.handle('bitwise-open-project', event => {
 });
 
 ipcMain.handle('bitwise-new-project', event => {
+  if ( !win ) {
+    return;
+  }
   return dialog.showSaveDialog(win, {
     defaultPath: 'New Project',
     filters: [],
@@ -163,6 +169,9 @@ async function descend( filePath:string, root:string='' ) {
 
 let aborter;
 ipcMain.handle('bitwise-read-project', (event, path) => {
+  if ( !win ) {
+    return;
+  }
   if ( aborter ) {
     aborter.abort();
   }
@@ -194,6 +203,9 @@ app.whenReady().then(() => {
 })
 
 ipcMain.handle('bitwise-new-file', ( event, root, name, ext, data ) => {
+  if ( !win ) {
+    return;
+  }
   console.log( 'bitwise-new-file', root, name, ext, data );
   // XXX: Ensure extension on filename
   return dialog.showSaveDialog(win, {

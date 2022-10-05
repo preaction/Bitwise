@@ -12,8 +12,10 @@
  */
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import Game from './Game.ts';
-import Entity from './Entity.ts';
+import Game from './Game.js';
+import Component from './Component.js';
+import System from './System.js';
+import Entity from './Entity.js';
 
 // SceneState is the current state of the scene.
 // XXX: This should be in a separate class so it can be exported
@@ -32,6 +34,12 @@ enum SceneState {
   Pause = "PAUSE",
 }
 
+type SceneData = {
+  entities: Array<{[key:string]:any}>,
+  components: string[],
+  systems: any[],
+};
+
 export default class Scene extends three.EventDispatcher {
   game:Game;
   state:SceneState = SceneState.Stop;
@@ -41,20 +49,20 @@ export default class Scene extends three.EventDispatcher {
   world:any;
 
   // systems are added to the scene to make the game go.
-  systems:any = [];
+  systems:System[] = [];
 
   // components are data added to entities
-  components:any = {};
+  components:{ [key:string]: Component } = {};
 
   // entities are the bitecs entities in this scene.
   // XXX: Store the entity name somewhere
   entities:any = {};
-  eids:Number[] = [];
+  eids:number[] = [];
 
   constructor( game:Game ) {
     super();
     this.game = game;
-    game.addEventListener( "resize", (e:Object) => {
+    game.addEventListener( "resize", (e:{width: number, height: number}) => {
       this.dispatchEvent(e);
     });
 
@@ -100,13 +108,13 @@ export default class Scene extends three.EventDispatcher {
     }
   }
 
-  freeze() {
+  freeze():SceneData {
     // XXX: Not using bitecs serialize/deserialize because I can't get
     // them to work...
     const data = [];
     for ( const id of this.eids ) {
       const entity = this.entities[id];
-      const eData = {
+      const eData:{ [key:string]: any } = {
         name: entity.name,
         type: entity.type,
       };
@@ -123,7 +131,7 @@ export default class Scene extends three.EventDispatcher {
     };
   }
 
-  thaw( data:Object ) {
+  thaw( data:SceneData ) {
     console.log( "Thawing scene from", data );
     for ( const name of data.components ) {
       this.addComponent( name );
@@ -151,7 +159,7 @@ export default class Scene extends three.EventDispatcher {
     }
   }
 
-  addSystem( name:string, data:Object ) {
+  addSystem( name:string, data:any ) {
     const system = this.game.systems[ name ];
     this.systems.push( new system( name, this, data ) );
   }
@@ -168,7 +176,7 @@ export default class Scene extends three.EventDispatcher {
     return this.entities[id];
   }
 
-  removeEntity( id:Number ) {
+  removeEntity( id:number ) {
     bitecs.removeEntity( this.world, id );
     delete this.entities[id];
     this.eids.splice( this.eids.indexOf(id), 1 );

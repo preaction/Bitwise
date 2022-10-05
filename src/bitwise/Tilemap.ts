@@ -1,11 +1,11 @@
 
 import * as three from 'three';
-import * as bitwise from '../Bitwise.ts';
+import * as bitwise from '../Bitwise.js';
 
 export class Tile extends three.Mesh {
   tileset: bitwise.Tileset;
-  tileIndex: Number;
-  constructor( vec:three.Vector2, tileset:bitwise.Tileset, tileIndex:Number ) {
+  tileIndex: number;
+  constructor( vec:three.Vector2, tileset:bitwise.Tileset, tileIndex:number ) {
     const geometry = new three.PlaneGeometry(tileset.tileWidth, tileset.tileHeight);
     // XXX: Should setting tileIndex update texture?
     const texture = tileset.tiles[tileIndex]._texture;
@@ -20,8 +20,8 @@ export class Tile extends three.Mesh {
 
 export class Tilemap extends three.Object3D {
   tileset:{ [key:string]:bitwise.Tileset } = {};
-  tileWidth:Number;
-  tileHeight:Number;
+  tileWidth:number;
+  tileHeight:number;
   tiles:Tile[][] = [];
 
   // XXX: This will be for optimization later.
@@ -36,7 +36,7 @@ export class Tilemap extends three.Object3D {
     return tileset;
   }
 
-  setTile( coords:three.Vector2, tilesetKey:string, tileIndex:Number ):Tile {
+  setTile( coords:three.Vector2, tilesetKey:string, tileIndex:number ):Tile {
     const tileset = this.tileset[tilesetKey];
     if ( !this.tiles[coords.x] ) {
       this.tiles[coords.x] = [];

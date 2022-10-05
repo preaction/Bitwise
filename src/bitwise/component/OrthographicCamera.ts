@@ -1,6 +1,6 @@
 
 import * as bitecs from 'bitecs';
-import Component from '../Component.ts';
+import Component from '../Component.js';
 
 export default class OrthographicCamera extends Component {
   get componentData() {

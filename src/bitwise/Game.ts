@@ -3,25 +3,31 @@
  * Scenes. Any number of Scenes may be active at once.
  */
 import * as three from 'three';
-import Scene from './Scene.ts';
-import Input from './Input.ts';
+import Scene from './Scene.js';
+import Input from './Input.js';
+import Component from './Component.js';
+import System from './System.js';
 
 let tick = 0;
 
 export default class Game extends three.EventDispatcher {
   canvas:HTMLCanvasElement;
   loader:Object; // XXX: Need a real class here
-  renderer:three.WebGLRenderer;
+  renderer:three.WebGLRenderer = null;
 
-  width:Number = 0;
-  height:Number = 0;
+  width:number = 0;
+  height:number = 0;
   autoSize:boolean = true;
 
   scenes:Scene[] = [];
   data:Object;
   input:Input;
 
-  constructor( opt:Object ) {
+  components:{ [key:string]: typeof Component } = {};
+  systems:{ [key:string]: typeof System } = {};
+
+  // XXX: define game constructor options object
+  constructor( opt:any ) {
     super();
     this.canvas = opt.canvas;
     this.loader = opt.loader;
@@ -34,8 +40,8 @@ export default class Game extends three.EventDispatcher {
     }
   }
 
-  texturePaths:{ [key:Number]: string } = {};
-  textureIds:{ [key:string]: Number } = {};
+  texturePaths:{ [key:number]: string } = {};
+  textureIds:{ [key:string]: number } = {};
   textures:three.Texture[] = [];
   promises:{ [key:string]: Promise } = {};
 
@@ -135,12 +141,10 @@ export default class Game extends three.EventDispatcher {
     requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t) );
   }
 
-  components:{ [key:string]: (Scene, Object) => Component } = {};
   registerComponent( name:string, component:( Scene, Object ) => Component ) {
     this.components[name] = component;
   }
 
-  systems:{ [key:string]: (Scene) => System } = {};
   registerSystem( name:string, system:( Scene ) => System ) {
     this.systems[name] = system;
   }

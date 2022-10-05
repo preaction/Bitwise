@@ -11,7 +11,7 @@ declare global {
   interface Window {
     electron: {
       store: {
-        get: (file: string, key: string, default?: any) => any;
+        get: (file: string, key: string, def?: any) => any;
         set: (file: string, key: string, val: any) => void;
         // any other methods you've defined...
       };

@@ -1,6 +1,6 @@
 
 import * as bitecs from 'bitecs';
-import Component from '../Component.ts';
+import Component from '../Component.js';
 
 export default class Position extends Component {
   get componentData() {
@@ -17,7 +17,7 @@ export default class Position extends Component {
       sz: bitecs.Types.f32,
     }
   }
-  addEntity( eid:Number ) {
+  addEntity( eid:number ) {
     super.addEntity(eid);
     this.store.sx[eid] = 1;
     this.store.sy[eid] = 1;

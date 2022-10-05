@@ -1,6 +1,6 @@
 
 import * as bitecs from 'bitecs';
-import Component from '../Component.ts';
+import Component from '../Component.js';
 
 export default class Parent extends Component {
   get componentData() {
@@ -8,7 +8,7 @@ export default class Parent extends Component {
       id: bitecs.Types.eid,
     }
   }
-  freezeEntity( eid:Number ) {
+  freezeEntity( eid:number ) {
     const data = super.freezeEntity(eid);
     const entity = this.scene.entities[ eid ];
     var parent = this.scene.entities[ data.id ];
@@ -22,7 +22,7 @@ export default class Parent extends Component {
     entity.path = data.path;
     return data;
   }
-  thawEntity( eid:Number, data:Object ) {
+  thawEntity( eid:number, data:Object ) {
     const parts = data.path.split("/");
     const name = parts.pop();
     const path = parts.join("/");

@@ -5,9 +5,9 @@ import { useAppStore } from "../store/app.ts";
 
 type Tileset = {
   imageSrc: string,
-  tileWidth: Number,
-  tileHeight: Number,
-  gutter: Number,
+  tileWidth: number,
+  tileHeight: number,
+  gutter: number,
 };
 
 export default defineComponent({

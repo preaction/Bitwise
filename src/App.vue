@@ -42,7 +42,7 @@ export default defineComponent({
       this.currentTab.name = name;
       this.currentTab.edited = true;
     },
-    showTab( index: Number ) {
+    showTab( index: number ) {
       this.appStore.showTab( index );
     },
     load() {
@@ -94,7 +94,7 @@ export default defineComponent({
       }
     },
 
-    closeTab( i:Number ) {
+    closeTab( i:number ) {
       const tab = this.openTabs[ i ];
       if ( tab.edited ) {
         const okay = confirm("Unsaved changes will be lost. Close tab?");

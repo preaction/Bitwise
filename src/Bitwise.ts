@@ -1,9 +1,11 @@
 
-import Game from './bitwise/Game.ts';
-import Scene from './bitwise/Scene.ts';
-import Entity from './bitwise/Entity.ts';
-import Tileset from './bitwise/Tileset.ts';
-import { Tilemap, Tile } from './bitwise/Tilemap.ts';
+import Game from './bitwise/Game.js';
+import Scene from './bitwise/Scene.js';
+import Entity from './bitwise/Entity.js';
+import Tileset from './bitwise/Tileset.js';
+import { Tilemap, Tile } from './bitwise/Tilemap.js';
+import Component from './bitwise/Component.js';
+import System from './bitwise/System.js';
 
 export {
   Game,
@@ -12,4 +14,6 @@ export {
   Tile,
   Scene,
   Entity,
+  Component,
+  System,
 }

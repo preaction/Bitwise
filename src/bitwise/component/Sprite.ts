@@ -1,6 +1,6 @@
 
 import * as bitecs from 'bitecs';
-import Component from '../Component.ts';
+import Component from '../Component.js';
 
 export default class Sprite extends Component {
   get componentData() {
@@ -8,13 +8,13 @@ export default class Sprite extends Component {
       textureId: bitecs.Types.ui8,
     }
   }
-  freezeEntity( eid:Number ) {
+  freezeEntity( eid:number ) {
     const data = super.freezeEntity(eid);
     data.texturePath = this.scene.game.texturePaths[data.textureId];
     delete data.textureId;
     return data;
   }
-  thawEntity( eid:Number, data:Object ) {
+  thawEntity( eid:number, data:Object ) {
     console.log( `Thawing sprite. Loading texture ${data.texturePath}` );
     this.scene.game.loadTexture( data.texturePath );
     const textureId = this.scene.game.textureIds[ data.texturePath ];

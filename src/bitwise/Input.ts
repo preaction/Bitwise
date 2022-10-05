@@ -1,5 +1,5 @@
 
-import Game from './Game.ts';
+import Game from './Game.js';
 
 export default class Input {
   // Event types
@@ -16,7 +16,7 @@ export default class Input {
   game:Game;
   constructor( game:Game ) {
     this.game = game;
-    game.canvas.tabindex = 1;
+    game.canvas.tabIndex = 1;
   }
   on( event:string, fn:(e:Event) => void ) {
     this.game.canvas.addEventListener( event, fn );

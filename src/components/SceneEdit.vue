@@ -317,7 +317,7 @@ export default defineComponent({
       }
     },
 
-    updateSystem( idx:Number, data:Object ) {
+    updateSystem( idx:number, data:Object ) {
       this.sceneSystems[idx].data = data;
       // XXX: Add freeze/thaw for systems
       //this.scene.systems[idx].thaw( data );
