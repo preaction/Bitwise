@@ -142,10 +142,13 @@ export const useAppStore = defineStore('app', {
       // XXX: Map component to icon class
       this.projectItems = await electron.readProject(this.currentProject)
         .then( async items => {
+          const ignore = item => {
+            return !item.path.match( /^\./ ) && !item.path.match(/^tsconfig\.json$/);
+          };
           const descend = async item => {
             if ( item.children && item.children.length ) {
               // Descend
-              item.children = await Promise.all( item.children.map(i => descend(i)) );
+              item.children = await Promise.all( item.children.filter( ignore ).map(i => descend(i)) );
             }
             else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
               item.icon = 'fa-image';
@@ -158,7 +161,7 @@ export const useAppStore = defineStore('app', {
             }
             return item;
           };
-          return Promise.all( items.map( descend ) );
+          return Promise.all( items.filter( ignore ).map( descend ) );
         });
     },
 

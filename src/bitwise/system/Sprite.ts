@@ -67,7 +67,7 @@ export default class Sprite extends System {
     sprite.scale.x = this.position.store.sx[eid];
     sprite.scale.y = this.position.store.sy[eid];
     sprite.scale.z = this.position.store.sz[eid];
-    // XXX: If entity has a Parent, add it to that instead
+    // XXX: If entity has a parent, add it to that instead
     this.scene._scene.add( sprite );
   }
 

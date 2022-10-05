@@ -151,7 +151,7 @@ async function descend( filePath:string, root:string='' ) {
   return fs.readdir( path.join(root, filePath), { withFileTypes: true })
   .then( async (paths) => {
     return Promise.all(
-      paths.filter( p => !p.name.match(/^\./) ).map( async p => {
+      paths.map( async p => {
         const ext = p.isFile() ? p.name.substring( p.name.lastIndexOf( '.' ) ) : '';
         const item = {
           name: p.name.substring( 0, p.name.length - ext.length ),

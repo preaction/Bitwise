@@ -17,7 +17,6 @@ import BoxColliderEdit from './bitwise/BoxCollider.vue';
 // the code, on demand.
 import Tileset from './../bitwise/Tileset.ts';
 import { Tilemap, Tile } from './../bitwise/Tilemap.ts';
-import ParentComponent from '../bitwise/component/Parent.ts';
 import PositionComponent from '../bitwise/component/Position.ts';
 import OrthographicCameraComponent from '../bitwise/component/OrthographicCamera.ts';
 import SpriteComponent from '../bitwise/component/Sprite.ts';
@@ -94,7 +93,7 @@ export default defineComponent({
       const camera = scene.addEntity();
       camera.name = "Camera";
       camera.type = "Camera";
-      camera.addComponent( "Position", { sx: 1, sy: 1, sz: 1 } );
+      camera.addComponent( "Position", { sx: 1, sy: 1, sz: 1, pid: 2**32-1 } );
       camera.addComponent( "OrthographicCamera", { frustum: 10, far: 10, near: 0, zoom: 1 } );
 
       this.update();
@@ -143,9 +142,8 @@ export default defineComponent({
         tree[id].name = entity.name;
         tree[id].icon = this.icons[ entity.type ];
 
-        console.log( entity.listComponents() );
-        if ( entity.listComponents().includes("Parent") ) {
-          const pid = scene.components.Parent.store.id[id];
+        const pid = scene.components.Position.store.pid[id];
+        if ( pid < 2**32-1 ) {
           console.log( `Parenting to ${pid}` );
           if ( !tree[pid] ) {
             tree[pid] = { entity: null, children: [] };
@@ -177,7 +175,6 @@ export default defineComponent({
         ...opt,
       });
 
-      game.registerComponent( "Parent", ParentComponent );
       game.registerComponent( "Position", PositionComponent );
       game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
       game.registerComponent( "Sprite", SpriteComponent );
@@ -206,7 +203,6 @@ export default defineComponent({
         ...opt,
       });
 
-      game.registerComponent( "Parent", ParentComponent );
       game.registerComponent( "Position", PositionComponent );
       game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
       game.registerComponent( "Sprite", SpriteComponent );
@@ -475,11 +471,11 @@ export default defineComponent({
           <input class="flex-fill text-end col-1" v-model="selectedEntity.name" pattern="^[^/]+$" />
         </div>
         <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
+          <div class="mb-1 d-flex justify-content-between align-items-center">
+            <h6 class="m-0">{{ c }}</h6>
+            <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
+          </div>
           <div v-if="componentForms[c]" class="my-2 component-form">
-            <div class="mb-1 d-flex justify-content-between align-items-center">
-              <h6 class="m-0">{{ c }}</h6>
-              <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
-            </div>
             <component :is="componentForms[c]" v-model="selectedComponents[c]"
               :scene="scene" @update="updateComponent(c, $event)"
             />

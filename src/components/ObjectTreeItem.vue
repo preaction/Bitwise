@@ -12,6 +12,9 @@ export default defineComponent({
     };
   },
   computed: {
+    isFolder() {
+      return this.item?.children?.length >= 0;
+    },
     hasChildren() {
       return this.item?.children?.length > 0;
     },
@@ -103,7 +106,7 @@ export default defineComponent({
         <i v-if="hasChildren" class="me-1 fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
         <i class="me-1 fa" :class="item.icon"></i>
       </span>
-      <span v-else-if="hasChildren" class="me-1">
+      <span v-else-if="isFolder" class="me-1">
         <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-folder-open' : 'fa-folder'"></i>
       </span>
       <span class="flex-fill">{{ item.name }}</span>
