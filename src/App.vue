@@ -9,6 +9,7 @@ import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
 import TilesetEdit from "./components/TilesetEdit.vue";
 import SceneEdit from "./components/SceneEdit.vue";
+import GameConfig from "./components/GameConfig.vue";
 
 export default defineComponent({
   components: {
@@ -18,6 +19,7 @@ export default defineComponent({
     ImageView,
     TilesetEdit,
     SceneEdit,
+    GameConfig,
   },
   data() {
     return {
@@ -176,6 +178,28 @@ export default defineComponent({
         this.appStore.deleteTree( item.path );
       }
     },
+
+    async showGameConfigTab() {
+      let data = {};
+
+      try {
+        const fileContent = await this.appStore.readFile('bitwise.config.json');
+        data = JSON.parse( fileContent );
+      }
+      catch (err) {
+        console.log( `Error opening bitwise.config.json: ${err}` );
+      }
+
+      this.appStore.openTab({
+        name: "Game Config",
+        component: "GameConfig",
+        ext: 'json',
+        icon: 'fa-gear',
+        src: 'bitwise.config.json',
+        data: data,
+        edited: false,
+      });
+    },
   },
   mounted() {
     if ( this.hasSessionState ) {
@@ -209,16 +233,21 @@ export default defineComponent({
     </div>
 
     <div class="app-sidebar bg-light">
-      <div class="dropdown m-2">
-        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          Add to Project...
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="dropdown m-2 flex-fill">
+          <button class="btn btn-secondary btn-sm w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Add...
+          </button>
+          <ul class="dropdown-menu">
+            <!-- <li><a class="dropdown-item" href="#" @click="newFolder()">Folder...</a></li> -->
+            <!-- <li><hr class="dropdown-divider"></li> -->
+            <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
+            <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
+          </ul>
+        </div>
+        <button class="btn btn-secondary btn-sm me-2" type="button" @click="showGameConfigTab">
+          <i class="fa fa-gear"></i>
         </button>
-        <ul class="dropdown-menu">
-          <!-- <li><a class="dropdown-item" href="#" @click="newFolder()">Folder...</a></li> -->
-          <!-- <li><hr class="dropdown-divider"></li> -->
-          <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
-          <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
-        </ul>
       </div>
       <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems">
         <template #menu="{item}">

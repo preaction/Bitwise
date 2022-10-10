@@ -176,6 +176,7 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
     aborter.abort();
   }
   aborter = new AbortController();
+
   const watcher = fs.watch( path, { signal: aborter.signal, recursive: true, persistent: false } );
   (async () => {
     try {
