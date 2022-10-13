@@ -11,4 +11,7 @@ export default class RigidBody extends Component {
       vz: bitecs.Types.f32,
     }
   }
+  static editorComponent():string {
+    return 'component/bitwise/RigidBody.vue';
+  }
 }

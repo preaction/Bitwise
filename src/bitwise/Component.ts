@@ -1,5 +1,4 @@
 
-import * as bitecs from 'bitecs';
 import Scene from './Scene.js';
 
 export default abstract class Component {
@@ -11,13 +10,16 @@ export default abstract class Component {
   constructor( scene:Scene, world:any ) {
     this.scene = scene;
     this.world = world;
-    this.store = bitecs.defineComponent( this.componentData );
+    this.store = scene.game.ecs.defineComponent( this.componentData );
+  }
+  static editorComponent():string {
+    return '';
   }
   addEntity( eid:number ) {
-    bitecs.addComponent( this.world, this.store, eid );
+    this.scene.game.ecs.addComponent( this.world, this.store, eid );
   }
   removeEntity( eid:number ) {
-    bitecs.removeComponent( this.world, this.store, eid );
+    this.scene.game.ecs.removeComponent( this.world, this.store, eid );
   }
   thawEntity( eid:number, data:{ [key:string]: number } ) {
     this.addEntity( eid );

@@ -1,5 +1,4 @@
 
-import * as bitecs from 'bitecs';
 import Scene from './Scene.js';
 
 export default class Entity {
@@ -49,7 +48,7 @@ export default class Entity {
   listComponents() {
     const names = [];
     COMPONENT:
-    for ( const c of bitecs.getEntityComponents(this.scene.world, this.id) ) {
+    for ( const c of this.scene.game.ecs.getEntityComponents(this.scene.world, this.id) ) {
       for ( const name in this.scene.components ) {
         if ( this.scene.components[name].store === c ) {
           names.push(name);

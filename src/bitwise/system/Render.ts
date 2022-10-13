@@ -1,6 +1,5 @@
 
 import * as three from 'three';
-import * as bitecs from 'bitecs';
 import System from '../System.js';
 import Scene from './Scene.js';
 
@@ -21,9 +20,9 @@ export default class Render extends System {
       throw "OrthographicCamera component required";
     }
 
-    this.query = bitecs.defineQuery([ this.position.store, this.component.store ]);
-    this.enterQuery = bitecs.enterQuery( this.query );
-    this.exitQuery = bitecs.exitQuery( this.query );
+    this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
+    this.enterQuery = scene.game.ecs.enterQuery( this.query );
+    this.exitQuery = scene.game.ecs.exitQuery( this.query );
 
     scene.addEventListener( "resize", (e:Object) => {
       this.onResize(e);

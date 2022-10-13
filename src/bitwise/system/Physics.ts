@@ -1,12 +1,10 @@
 
 import * as three from 'three';
-import * as bitecs from 'bitecs';
 import Ammo from 'ammo.js';
 import System from '../System.js';
 import Scene from '../Scene.js';
 
 export default class Physics extends System {
-  scene:Scene;
   rigidbody:any;
   position:any;
   collider:Object = {};
@@ -21,9 +19,9 @@ export default class Physics extends System {
     this.rigidbody = scene.components[ "RigidBody" ];
     this.collider.box = scene.components[ "BoxCollider" ];
 
-    this.query = bitecs.defineQuery([ this.position.store, this.rigidbody.store ]);
-    this.enterQuery = bitecs.enterQuery( this.query );
-    this.exitQuery = bitecs.exitQuery( this.query );
+    this.query = scene.game.ecs.defineQuery([ this.position.store, this.rigidbody.store ]);
+    this.enterQuery = scene.game.ecs.enterQuery( this.query );
+    this.exitQuery = scene.game.ecs.exitQuery( this.query );
 
     this.initAmmo();
   }
@@ -52,7 +50,7 @@ export default class Physics extends System {
       let motionState = new Ammo.btDefaultMotionState( transform );
 
       let collider;
-      if ( bitecs.hasComponent( this.scene.world, this.collider.box.store, eid ) ) {
+      if ( this.scene.game.ecs.hasComponent( this.scene.world, this.collider.box.store, eid ) ) {
         const box = this.collider.box.store;
         // Scale should be adjusted by object scale
         const scale = new Ammo.btVector3(box.sx[eid] * position.sx[eid], box.sy[eid] * position.sy[eid], box.sz[eid] * position.sz[eid]);

@@ -9,6 +9,11 @@ rmSync('dist', { recursive: true, force: true }) // v14.14.0
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      external: [ 'esbuild' ],
+    },
+  },
   plugins: [
     vue(),
     electron({
@@ -33,8 +38,6 @@ export default defineConfig({
           },
         },
       },
-      // Enables use of Node.js API in the Renderer-process
-      renderer: {},
     }),
   ],
   server: {

@@ -5,38 +5,11 @@ import { useAppStore } from "../store/app.ts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import * as bitwise from '../Bitwise.ts';
-
-import PositionEdit from './bitwise/Position.vue';
-import OrthographicCameraEdit from './bitwise/OrthographicCamera.vue';
-import SpriteEdit from './bitwise/Sprite.vue';
-import RigidBodyEdit from './bitwise/RigidBody.vue';
-import BoxColliderEdit from './bitwise/BoxCollider.vue';
-
-// XXX: In the future, scene entities like this will need to be loaded by
-// the code, on demand.
-import Tileset from './../bitwise/Tileset.ts';
-import { Tilemap, Tile } from './../bitwise/Tilemap.ts';
-import PositionComponent from '../bitwise/component/Position.ts';
-import OrthographicCameraComponent from '../bitwise/component/OrthographicCamera.ts';
-import SpriteComponent from '../bitwise/component/Sprite.ts';
-import RigidBodyComponent from '../bitwise/component/RigidBody.ts';
-import BoxColliderComponent from '../bitwise/component/BoxCollider.ts';
-
-import SpriteSystem from '../bitwise/system/Sprite.ts';
-import RenderSystem from '../bitwise/system/Render.ts';
-import PhysicsSystem from '../bitwise/system/Physics.ts';
-
-import EditorRenderSystem from '../bitwise/system/editor/Render.ts';
-import EditorPhysicsSystem from '../bitwise/system/editor/Physics.ts';
+import Game from '../bitwise/Game.ts';
 
 export default defineComponent({
   components: {
     ObjectTreeItem,
-
-    PositionEdit,
-    OrthographicCameraEdit,
-    SpriteEdit,
   },
   props: ['modelValue', 'name', 'edited'],
   data() {
@@ -48,8 +21,6 @@ export default defineComponent({
       },
       selectedEntity: null,
       selectedComponents: {},
-      componentForms: markRaw({}),
-      systemForms: markRaw({}),
       sceneSystems: [],
       icons: {
         "Camera": "fa-camera",
@@ -62,12 +33,6 @@ export default defineComponent({
 
   async mounted() {
     const game = this.editGame = this.createEditorGame( 'edit-canvas' );
-
-    this.componentForms[ "Position" ] = PositionEdit;
-    this.componentForms[ "OrthographicCamera" ] = OrthographicCameraEdit;
-    this.componentForms[ "Sprite" ] = SpriteEdit;
-    this.componentForms[ "BoxCollider" ] = BoxColliderEdit;
-    this.componentForms[ "RigidBody" ] = RigidBodyEdit;
 
     // XXX: Scroll controls for zoom
     // XXX: Pinch controls for zoom
@@ -113,12 +78,12 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapState( useAppStore, ['gameClass', 'components', 'systems', 'componentForms', 'systemForms'] ),
     scene() {
       return this.playing ? this.playScene : this.editScene;
     },
     availableComponents() {
-      // XXX: These should be gotten from Game object
-      return [ "Position", "OrthographicCamera", "Sprite", "RigidBody", "BoxCollider" ];
+      return Object.keys( this.components );
     },
     availableSystems() {
       // XXX: These should be gotten from Game object
@@ -161,8 +126,8 @@ export default defineComponent({
 
     // The player game is sized according to the game settings and uses
     // the runtime systems
-    createPlayerGame( canvas:string, opt:Object ):bitwise.Game {
-      const game = new bitwise.Game({
+    createPlayerGame( canvas:string, opt:Object ):Game {
+      const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
           base: this.getFileUrl(""),
@@ -175,22 +140,28 @@ export default defineComponent({
         ...opt,
       });
 
-      game.registerComponent( "Position", PositionComponent );
-      game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
-      game.registerComponent( "Sprite", SpriteComponent );
-      game.registerComponent( "RigidBody", RigidBodyComponent );
-      game.registerComponent( "BoxCollider", BoxColliderComponent );
-      game.registerSystem( "Physics", PhysicsSystem );
-      game.registerSystem( "Sprite", SpriteSystem );
-      game.registerSystem( "Render", RenderSystem );
+      for ( const name in this.components ) {
+        console.log( `Registering player game component ${name}` );
+        game.registerComponent( name, this.components[name] );
+      }
+      for ( const name in this.systems ) {
+        // XXX: Systems should have a class method that returns the
+        // editor version of the system. Using naming conventions is
+        // bad and I should feel bad.
+        if ( name.match(/^Editor/) ) {
+          continue;
+        }
+        console.log( `Registering player game system ${name}` );
+        game.registerSystem( name, this.systems[name] );
+      }
 
       return game;
     },
 
     // The editor game is sized to fit the screen and uses some custom
     // editor systems.
-    createEditorGame( canvas:string, opt:Object ):bitwise.Game {
-      const game = new bitwise.Game({
+    createEditorGame( canvas:string, opt:Object ):Game {
+      const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
           base: this.getFileUrl(""),
@@ -203,14 +174,18 @@ export default defineComponent({
         ...opt,
       });
 
-      game.registerComponent( "Position", PositionComponent );
-      game.registerComponent( "OrthographicCamera", OrthographicCameraComponent );
-      game.registerComponent( "Sprite", SpriteComponent );
-      game.registerComponent( "RigidBody", RigidBodyComponent );
-      game.registerComponent( "BoxCollider", BoxColliderComponent );
-      game.registerSystem( "Sprite", SpriteSystem );
-      game.registerSystem( "Physics", EditorPhysicsSystem );
-      game.registerSystem( "Render", EditorRenderSystem );
+      for ( const name in this.components ) {
+        console.log( `Registering editor game component ${name}` );
+        game.registerComponent( name, this.components[name] );
+      }
+      for ( const name in this.systems ) {
+        if ( name.match(/^Editor/) ) {
+          continue;
+        }
+        console.log( `Registering editor game system ${name}` );
+        let system = this.systems[ "Editor" + name ] || this.systems[name];
+        game.registerSystem( name, system );
+      }
 
       return game;
     },

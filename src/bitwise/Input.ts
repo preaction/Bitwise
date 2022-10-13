@@ -16,7 +16,9 @@ export default class Input {
   game:Game;
   constructor( game:Game ) {
     this.game = game;
-    game.canvas.tabIndex = 1;
+    if ( game.canvas ) {
+      game.canvas.tabIndex = 1;
+    }
   }
   on( event:string, fn:(e:Event) => void ) {
     this.game.canvas.addEventListener( event, fn );

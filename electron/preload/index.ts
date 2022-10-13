@@ -41,6 +41,9 @@ contextBridge.exposeInMainWorld('electron', {
   deleteTree( root:string, path:string ) {
     return ipcRenderer.invoke('bitwise-delete-tree', root, path);
   },
+  buildProject( root:string ) {
+    return ipcRenderer.invoke('bitwise-build-project', root);
+  },
 });
 
 

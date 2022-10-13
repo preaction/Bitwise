@@ -3,17 +3,51 @@
  * Scenes. Any number of Scenes may be active at once.
  */
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import Scene from './Scene.js';
 import Input from './Input.js';
 import Component from './Component.js';
 import System from './System.js';
 
+import PositionComponent from 'bitwise/component/Position.ts';
+import OrthographicCameraComponent from 'bitwise/component/OrthographicCamera.ts';
+import SpriteComponent from 'bitwise/component/Sprite.ts';
+import RigidBodyComponent from 'bitwise/component/RigidBody.ts';
+import BoxColliderComponent from 'bitwise/component/BoxCollider.ts';
+
+import SpriteSystem from 'bitwise/system/Sprite.ts';
+import RenderSystem from 'bitwise/system/Render.ts';
+import PhysicsSystem from 'bitwise/system/Physics.ts';
+
+import EditorRenderSystem from 'bitwise/system/editor/Render.ts';
+import EditorPhysicsSystem from 'bitwise/system/editor/Physics.ts';
+
 let tick = 0;
+
+const DEFAULT_SYSTEMS = {
+  Sprite: SpriteSystem,
+  Render: RenderSystem,
+  Physics: PhysicsSystem,
+  // XXX: Default systems should load their own editor system if they
+  // have one? Is there a way to keep editor systems out of the full
+  // game build?
+  EditorRender: EditorRenderSystem,
+  EditorPhysics: EditorPhysicsSystem,
+};
+
+const DEFAULT_COMPONENTS = {
+  Position: PositionComponent,
+  OrthographicCamera: OrthographicCameraComponent,
+  Sprite: SpriteComponent,
+  RigidBody: RigidBodyComponent,
+  BoxCollider: BoxColliderComponent,
+};
 
 export default class Game extends three.EventDispatcher {
   canvas:HTMLCanvasElement;
   loader:Object; // XXX: Need a real class here
   renderer:three.WebGLRenderer = null;
+  ecs:typeof bitecs;
 
   width:number = 0;
   height:number = 0;
@@ -26,18 +60,32 @@ export default class Game extends three.EventDispatcher {
   components:{ [key:string]: typeof Component } = {};
   systems:{ [key:string]: typeof System } = {};
 
-  // XXX: define game constructor options object
+  // XXX: define game constructor options object type
+  get config():any { return {} }
   constructor( opt:any ) {
     super();
+    const conf = this.config;
+    // XXX: Config should be merged with options
+    this.ecs = bitecs;
     this.canvas = opt.canvas;
     this.loader = opt.loader;
-    this.width = opt.renderer?.width;
-    this.height = opt.renderer?.height;
+    this.width = opt.renderer?.width || conf.renderer?.width;
+    this.height = opt.renderer?.height || conf.renderer?.height;
     this.data = opt.data || {};
     this.input = new Input( this );
     if ( this.width > 0 || this.height > 0 ) {
       this.autoSize = false;
     }
+    this.components = {
+      ...DEFAULT_COMPONENTS,
+      ...conf.components,
+      ...opt.components,
+    };
+    this.systems = {
+      ...DEFAULT_SYSTEMS,
+      ...conf.systems,
+      ...opt.systems,
+    };
   }
 
   texturePaths:{ [key:number]: string } = {};

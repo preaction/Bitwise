@@ -3,23 +3,64 @@
  * user's projects are.
  */
 
-import { toRaw } from 'vue';
+import * as Vue from 'vue';
 import { defineStore, acceptHMRUpdate } from 'pinia';
+import { loadModule } from 'vue3-sfc-loader';
+
+// Core Component Forms
+import PositionEdit from '../components/bitwise/Position.vue';
+import OrthographicCameraEdit from '../components/bitwise/OrthographicCamera.vue';
+import SpriteEdit from '../components/bitwise/Sprite.vue';
+import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
+import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 
 export const useAppStore = defineStore('app', {
-  state: () => ({
-    currentProject: null,
-    recentProjects: electron.store.get( 'app', 'recentProjects', [] ),
-    openTabs: [
-    ],
-    currentTabIndex: 0,
-    projectItems: [],
-    icons: {
-      SceneEdit: 'fa-film',
-      TilesetEdit: 'fa-grid-2-plus',
-    },
-    _fsWatcher: null,
-  }),
+  state: () => {
+    const vueLoaderOptions = {
+      moduleCache: {
+        vue: Vue,
+      },
+      async getFile(url) {
+        const res = await fetch(url);
+        if ( !res.ok ) {
+          throw Object.assign(new Error(res.statusText + ' ' + url), { res });
+        }
+        return {
+          getContentData: (asBinary) => asBinary ? res.arrayBuffer() : res.text(),
+        }
+      },
+      addStyle(textContent) {
+        const style = Object.assign(document.createElement('style'), { textContent });
+        const ref = document.head.getElementsByTagName('style')[0] || null;
+        document.head.insertBefore(style, ref);
+      },
+    };
+
+    return {
+      currentProject: null,
+      recentProjects: electron.store.get( 'app', 'recentProjects', [] ),
+      openTabs: [
+      ],
+      currentTabIndex: 0,
+      projectItems: [],
+      icons: {
+        SceneEdit: 'fa-film',
+        TilesetEdit: 'fa-grid-2-plus',
+      },
+      _fsWatcher: null,
+      gameClass: null,
+      components: Vue.markRaw({}),
+      systems: Vue.markRaw({}),
+      componentForms: Vue.markRaw({
+        "Position": PositionEdit,
+        "OrthographicCamera": OrthographicCameraEdit,
+        "Sprite": SpriteEdit,
+        "RigidBody": RigidBodyEdit,
+        "BoxCollider": BoxColliderEdit,
+      }),
+      systemForms: Vue.markRaw({}),
+    };
+  },
 
   getters: {
     hasSessionState() {
@@ -41,7 +82,7 @@ export const useAppStore = defineStore('app', {
       sessionStorage.setItem('currentTabIndex', this.currentTabIndex);
     },
 
-    loadSessionState() {
+    async loadSessionState() {
       const currentProject = sessionStorage.getItem('currentProject');
       const openTabs = JSON.parse( sessionStorage.getItem('openTabs') );
       const currentTabIndex = sessionStorage.getItem('currentTabIndex');
@@ -50,28 +91,28 @@ export const useAppStore = defineStore('app', {
         return;
       }
 
-      this.openProject( currentProject );
+      await this.openProject( currentProject );
       this.openTabs = openTabs;
       this.showTab( currentTabIndex );
     },
 
-    loadStoredState() {
+    async loadStoredState() {
       const state = electron.store.get( 'app', 'savedState', {} );
       if ( !state.currentProject ) {
         return;
       }
-      this.openProject( state.currentProject );
+      await this.openProject( state.currentProject );
       this.openTabs = state.openTabs;
       this.showTab( state.currentTabIndex );
     },
 
     saveStoredState() {
       const { currentProject, openTabs, currentTabIndex } = this;
-      console.log( toRaw(openTabs) );
+      console.log( Vue.toRaw(openTabs) );
       electron.store.set( 'app', 'savedState', {
-        currentProject: toRaw(currentProject),
-        openTabs: toRaw(openTabs),
-        currentTabIndex: toRaw(currentTabIndex),
+        currentProject: Vue.toRaw(currentProject),
+        openTabs: Vue.toRaw(openTabs),
+        currentTabIndex: Vue.toRaw(currentTabIndex),
       } );
     },
 
@@ -123,11 +164,39 @@ export const useAppStore = defineStore('app', {
       this.recentProjects.unshift( path );
       // Keep the last few projects only
       this.recentProjects.length = Math.min( this.recentProjects.length, 5 );
-      electron.store.set( 'app', 'recentProjects', toRaw(this.recentProjects) );
+      electron.store.set( 'app', 'recentProjects', Vue.toRaw(this.recentProjects) );
 
       // Load up project files
       this.readProject();
       this.projectItems = await electron.readProject(path);
+
+      // XXX: Build 'bitwise.js' file from the files read:
+      //  - All systems and components found should be loaded
+      //  - bitwise.config.json should be loaded and merged
+
+      // Build and load project game class
+      try {
+        await electron.buildProject( this.currentProject );
+      }
+      catch (e) {
+        console.log( `Could not build project: ${e}` );
+      }
+      try {
+        const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/.build/bitwise.js' );
+        this.gameClass = mod.default;
+        console.log( 'Game class:', this.gameClass );
+      }
+      catch (e) {
+        console.log( `Could not load game class: ${e}` );
+      }
+
+      if ( this.gameClass ) {
+        // XXX: This is probably completely wrong and components/systems
+        // should be got from instances, not class
+        const game = new this.gameClass({});
+        this.components = game.components;
+        this.systems = game.systems;
+      }
 
       this._fsWatcher = this.changeFile.bind(this);
       electron.on( 'watch', this._fsWatcher );
@@ -143,7 +212,7 @@ export const useAppStore = defineStore('app', {
       this.projectItems = await electron.readProject(this.currentProject)
         .then( async items => {
           const ignore = item => {
-            return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
+            return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.js(?:on)?$/);
           };
           const descend = async item => {
             if ( item.children && item.children.length ) {
@@ -174,8 +243,8 @@ export const useAppStore = defineStore('app', {
     },
 
     getFileUrl( path:string ):string {
-      console.log( 'getFileUrl', toRaw(path) );
-      return 'bfile://' + this.currentProject + '/' + toRaw(path);
+      console.log( 'getFileUrl', Vue.toRaw(path) );
+      return 'bfile://' + this.currentProject + '/' + Vue.toRaw(path);
     },
 
     readFile( path:string ) {

@@ -1,6 +1,5 @@
 
 import * as three from 'three';
-import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
 
@@ -16,9 +15,9 @@ export default class Physics extends System {
     this.position = scene.components[ "Position" ];
     this.collider.box = scene.components[ "BoxCollider" ];
 
-    this.query = bitecs.defineQuery([ this.position.store ]);
-    this.enterQuery = bitecs.enterQuery( this.query );
-    this.exitQuery = bitecs.exitQuery( this.query );
+    this.query = scene.game.ecs.defineQuery([ this.position.store ]);
+    this.enterQuery = scene.game.ecs.enterQuery( this.query );
+    this.exitQuery = scene.game.ecs.exitQuery( this.query );
   }
 
   update( timeMilli:number ) {
@@ -26,7 +25,7 @@ export default class Physics extends System {
 
     const add = this.enterQuery(this.scene.world);
     for ( const eid of add ) {
-      if ( bitecs.hasComponent( this.scene.world, this.collider.box.store, eid ) ) {
+      if ( this.scene.game.ecs.hasComponent( this.scene.world, this.collider.box.store, eid ) ) {
         const box = this.collider.box.store;
         const geometry = new three.BoxGeometry(1, 1, 1);
         const wireframe = new three.WireframeGeometry( geometry );

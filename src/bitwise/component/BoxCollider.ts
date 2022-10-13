@@ -13,4 +13,7 @@ export default class BoxCollider extends Component {
       sz: bitecs.Types.f32,
     }
   }
+  static editorComponent():string {
+    return 'component/bitwise/BoxCollider.vue';
+  }
 }

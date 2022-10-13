@@ -1,7 +1,9 @@
 import * as fs from 'node:fs/promises';
+import { fork } from 'node:child_process';
 import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
 import { release } from 'os'
 import * as path from 'path'
+import * as esbuild from 'esbuild';
 
 // Initialize electron-store
 import Store from 'electron-store'
@@ -196,6 +198,9 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
 });
 
 // Register a protocol to allow reading files from the project root
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'bfile', privileges: { bypassCSP: true } }
+]);
 app.whenReady().then(() => {
   protocol.registerFileProtocol('bfile', (request, callback) => {
     const url = request.url.substr(8);
@@ -240,3 +245,45 @@ ipcMain.handle('bitwise-read-file', (event, path) => {
 ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {
   return fs.rm( path.join( root, tree ), { recursive: true } );
 });
+
+ipcMain.handle('bitwise-build-project', (event, root) => {
+    console.log( `Building project ${root}` );
+    return esbuild.build({
+      nodePaths: [
+        // This provides bundled libraries like 'bitecs', 'three', and
+        // 'Ammo'
+        path.resolve( __dirname, '../../../node_modules' ),
+        // This provides the 'bitwise' library. XXX: This should probably be
+        // put into node_modules or 'dist' or something...
+        path.resolve( __dirname, '../../../src' ),
+      ],
+      bundle: true,
+      define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
+      external: [
+        // Ammo.js can run in Node, but esbuild tries to resolve these
+        // Node modules even if we are going to run in the browser.
+        'fs', 'path',
+      ],
+      absWorkingDir: root,
+      entryPoints: [path.join( root, 'bitwise.config.js' )],
+      outdir: path.join( root, '.build' ),
+      // XXX: outfile could be 'game.js'
+      outbase: root,
+      format: 'esm',
+      sourcemap: true,
+    })
+    // XXX: Dup new stdout/stderr to get errors from Typescript compiler
+    // XXX: Use `tsc` to type check with --noemit
+  // return new Promise( (resolve, reject) => {
+    // const tsc = path.resolve( __dirname, '../../../node_modules/typescript/bin/tsc' );
+    // const cp = fork( tsc, [], { cwd: root } );
+    // cp.on('error', (err) => { reject(err) } );
+    // cp.on('exit', (code, signal) => {
+    //   if ( code === 0 ) {
+    //     return resolve();
+    //   }
+    //   reject(`Exit status ${code} (Signal ${signal})`);
+    // } );
+  // } );
+});
+

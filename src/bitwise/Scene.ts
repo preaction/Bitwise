@@ -11,8 +11,6 @@
  * may have corresponding Physics components on Entities.
  */
 import * as three from 'three';
-import * as bitecs from 'bitecs';
-import Game from './Game.js';
 import Component from './Component.js';
 import System from './System.js';
 import Entity from './Entity.js';
@@ -41,7 +39,7 @@ type SceneData = {
 };
 
 export default class Scene extends three.EventDispatcher {
-  game:Game;
+  game:any;
   state:SceneState = SceneState.Stop;
   _scene:three.Scene = new three.Scene();
 
@@ -59,14 +57,14 @@ export default class Scene extends three.EventDispatcher {
   entities:any = {};
   eids:number[] = [];
 
-  constructor( game:Game ) {
+  constructor( game:any ) {
     super();
     this.game = game;
     game.addEventListener( "resize", (e:{width: number, height: number}) => {
       this.dispatchEvent(e);
     });
 
-    this.world = bitecs.createWorld();
+    this.world = game.ecs.createWorld();
     this.systems = [];
     this.components = {};
   }
@@ -161,6 +159,7 @@ export default class Scene extends three.EventDispatcher {
 
   addSystem( name:string, data:any ) {
     const system = this.game.systems[ name ];
+    console.log( `Adding system to scene ${name}`, system );
     this.systems.push( new system( name, this, data ) );
   }
 
@@ -170,14 +169,14 @@ export default class Scene extends three.EventDispatcher {
   }
 
   addEntity() {
-    const id = bitecs.addEntity( this.world );
+    const id = this.game.ecs.addEntity( this.world );
     this.eids.push(id);
     this.entities[id] = new Entity(this, id);
     return this.entities[id];
   }
 
   removeEntity( id:number ) {
-    bitecs.removeEntity( this.world, id );
+    this.game.ecs.removeEntity( this.world, id );
     delete this.entities[id];
     this.eids.splice( this.eids.indexOf(id), 1 );
   }
