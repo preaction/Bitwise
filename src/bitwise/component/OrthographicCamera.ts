@@ -11,7 +11,4 @@ export default class OrthographicCamera extends Component {
       far: bitecs.Types.f32,
     };
   }
-  static editorComponent():string {
-    return 'component/bitwise/OrthographicCamera.vue';
-  }
 }

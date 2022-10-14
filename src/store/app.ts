@@ -67,28 +67,28 @@ function buildGameJs(config, moduleItems) {
   return gameFile.replaceAll(/\n {4}/g, "\n");
 }
 
+const vueLoaderOptions = {
+  moduleCache: {
+    vue: Vue,
+  },
+  async getFile(url) {
+    const res = await fetch(url);
+    if ( !res.ok ) {
+      throw Object.assign(new Error(res.statusText + ' ' + url), { res });
+    }
+    return {
+      getContentData: (asBinary) => asBinary ? res.arrayBuffer() : res.text(),
+    }
+  },
+  addStyle(textContent) {
+    const style = Object.assign(document.createElement('style'), { textContent });
+    const ref = document.head.getElementsByTagName('style')[0] || null;
+    document.head.insertBefore(style, ref);
+  },
+};
+
 export const useAppStore = defineStore('app', {
   state: () => {
-    const vueLoaderOptions = {
-      moduleCache: {
-        vue: Vue,
-      },
-      async getFile(url) {
-        const res = await fetch(url);
-        if ( !res.ok ) {
-          throw Object.assign(new Error(res.statusText + ' ' + url), { res });
-        }
-        return {
-          getContentData: (asBinary) => asBinary ? res.arrayBuffer() : res.text(),
-        }
-      },
-      addStyle(textContent) {
-        const style = Object.assign(document.createElement('style'), { textContent });
-        const ref = document.head.getElementsByTagName('style')[0] || null;
-        document.head.insertBefore(style, ref);
-      },
-    };
-
     return {
       currentProject: null,
       recentProjects: electron.store.get( 'app', 'recentProjects', [] ),
@@ -220,9 +220,49 @@ export const useAppStore = defineStore('app', {
       electron.store.set( 'app', 'recentProjects', Vue.toRaw(this.recentProjects) );
 
       // Load up project files
-      this.readProject();
-      this.projectItems = await electron.readProject(path);
+      await this.readProject();
+      await this.buildProject();
 
+      this._fsWatcher = this.changeFile.bind(this);
+      electron.on( 'watch', this._fsWatcher );
+    },
+
+    changeFile(event, {eventType, filename}) {
+      console.log( 'file changed', eventType, filename );
+      this.readProject();
+      if ( !filename.match(/^\./) && filename.match( /\.[tj]s$/ ) ) {
+        this.buildProject();
+      }
+    },
+
+    async readProject() {
+      // XXX: Map component to icon class
+      this.projectItems = await electron.readProject(this.currentProject)
+        .then( async items => {
+          const ignore = item => {
+            return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
+          };
+          const descend = async item => {
+            if ( item.children && item.children.length ) {
+              // Descend
+              item.children = await Promise.all( item.children.filter( ignore ).map(i => descend(i)) );
+            }
+            else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
+              item.icon = 'fa-image';
+            }
+            else if ( item.ext.match( /\.json$/ ) ) {
+              const json = await this.readFile( item.path );
+              const data = JSON.parse( json );
+              const comp = data.component;
+              item.icon = this.icons[ comp ];
+            }
+            return item;
+          };
+          return Promise.all( items.filter( ignore ).map( descend ) );
+        });
+    },
+
+    async buildProject() {
       // Build 'bitwise.js' file from the files read:
       //  - All systems and components found should be loaded
       //  - bitwise.config.json should be loaded and merged
@@ -274,42 +314,15 @@ export const useAppStore = defineStore('app', {
         const game = new this.gameClass({});
         this.components = game.components;
         this.systems = game.systems;
+        for ( const name in game.components ) {
+          const component = game.components[name];
+          if ( component.editorComponent ) {
+            console.log( `Loading editor component ${name}: ${component.editorComponent}` );
+            const path = this.currentProject + '/' + component.editorComponent;
+            this.componentForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
+          }
+        }
       }
-
-      this._fsWatcher = this.changeFile.bind(this);
-      electron.on( 'watch', this._fsWatcher );
-    },
-
-    changeFile(event, {eventType, filename}) {
-      console.log( 'file changed', eventType, filename );
-      this.readProject();
-    },
-
-    async readProject() {
-      // XXX: Map component to icon class
-      this.projectItems = await electron.readProject(this.currentProject)
-        .then( async items => {
-          const ignore = item => {
-            return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
-          };
-          const descend = async item => {
-            if ( item.children && item.children.length ) {
-              // Descend
-              item.children = await Promise.all( item.children.filter( ignore ).map(i => descend(i)) );
-            }
-            else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
-              item.icon = 'fa-image';
-            }
-            else if ( item.ext.match( /\.json$/ ) ) {
-              const json = await this.readFile( item.path );
-              const data = JSON.parse( json );
-              const comp = data.component;
-              item.icon = this.icons[ comp ];
-            }
-            return item;
-          };
-          return Promise.all( items.filter( ignore ).map( descend ) );
-        });
     },
 
     saveProject() {

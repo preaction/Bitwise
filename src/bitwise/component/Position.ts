@@ -19,10 +19,6 @@ export default class Position extends Component {
     }
   }
 
-  static editorComponent():string {
-    return 'component/bitwise/Position.vue';
-  }
-
   addEntity( eid:number ) {
     super.addEntity(eid);
     this.store.sx[eid] = 1;

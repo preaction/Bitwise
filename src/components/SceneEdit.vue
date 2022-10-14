@@ -86,8 +86,7 @@ export default defineComponent({
       return Object.keys( this.components );
     },
     availableSystems() {
-      // XXX: These should be gotten from Game object
-      return [ "Render", "Sprite", "Physics" ];
+      return Object.keys( this.systems ).filter( s => !s.match(/^Editor/) );
     },
   },
 

@@ -12,7 +12,7 @@ export default abstract class Component {
     this.world = world;
     this.store = scene.game.ecs.defineComponent( this.componentData );
   }
-  static editorComponent():string {
+  static get editorComponent():string {
     return '';
   }
   addEntity( eid:number ) {

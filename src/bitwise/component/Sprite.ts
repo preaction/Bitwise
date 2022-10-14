@@ -9,10 +9,6 @@ export default class Sprite extends Component {
     }
   }
 
-  static editorComponent():string {
-    return 'component/bitwise/Sprite.vue';
-  }
-
   freezeEntity( eid:number ) {
     const data = super.freezeEntity(eid);
     data.texturePath = this.scene.game.texturePaths[data.textureId];

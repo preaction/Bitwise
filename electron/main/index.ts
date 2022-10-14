@@ -199,7 +199,7 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
 
 // Register a protocol to allow reading files from the project root
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'bfile', privileges: { bypassCSP: true } }
+  { scheme: 'bfile', privileges: { standard: true, supportFetchAPI: true, bypassCSP: true } }
 ]);
 app.whenReady().then(() => {
   protocol.registerFileProtocol('bfile', (request, callback) => {
