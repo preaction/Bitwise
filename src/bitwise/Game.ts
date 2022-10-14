@@ -165,7 +165,7 @@ export default class Game extends three.EventDispatcher {
     return needResize;
   }
 
-  render( timeMilli:DOMHighResTimeStamp=0 ) {
+  render( timeMilli:DOMHighResTimeStamp=0, timeTotal:DOMHighResTimeStamp=0 ) {
     if ( !this.renderer ) {
       return;
     }
@@ -186,7 +186,7 @@ export default class Game extends three.EventDispatcher {
       }
     }
 
-    requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t) );
+    requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t-timeTotal, t) );
   }
 
   registerComponent( name:string, component:( Scene, Object ) => Component ) {
