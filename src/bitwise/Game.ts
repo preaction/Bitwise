@@ -9,18 +9,18 @@ import Input from './Input.js';
 import Component from './Component.js';
 import System from './System.js';
 
-import PositionComponent from 'bitwise/component/Position.ts';
-import OrthographicCameraComponent from 'bitwise/component/OrthographicCamera.ts';
-import SpriteComponent from 'bitwise/component/Sprite.ts';
-import RigidBodyComponent from 'bitwise/component/RigidBody.ts';
-import BoxColliderComponent from 'bitwise/component/BoxCollider.ts';
+import PositionComponent from './component/Position.ts';
+import OrthographicCameraComponent from './component/OrthographicCamera.ts';
+import SpriteComponent from './component/Sprite.ts';
+import RigidBodyComponent from './component/RigidBody.ts';
+import BoxColliderComponent from './component/BoxCollider.ts';
 
-import SpriteSystem from 'bitwise/system/Sprite.ts';
-import RenderSystem from 'bitwise/system/Render.ts';
-import PhysicsSystem from 'bitwise/system/Physics.ts';
+import SpriteSystem from './system/Sprite.ts';
+import RenderSystem from './system/Render.ts';
+import PhysicsSystem from './system/Physics.ts';
 
-import EditorRenderSystem from 'bitwise/system/editor/Render.ts';
-import EditorPhysicsSystem from 'bitwise/system/editor/Physics.ts';
+import EditorRenderSystem from './system/editor/Render.ts';
+import EditorPhysicsSystem from './system/editor/Physics.ts';
 
 let tick = 0;
 

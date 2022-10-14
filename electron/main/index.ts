@@ -246,8 +246,8 @@ ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {
   return fs.rm( path.join( root, tree ), { recursive: true } );
 });
 
-ipcMain.handle('bitwise-build-project', (event, root) => {
-    console.log( `Building project ${root}` );
+ipcMain.handle('bitwise-build-project', (event, root, src, dest) => {
+    console.log( `Building project ${root}: ${src} -> ${dest}` );
     return esbuild.build({
       nodePaths: [
         // This provides bundled libraries like 'bitecs', 'three', and
@@ -265,9 +265,8 @@ ipcMain.handle('bitwise-build-project', (event, root) => {
         'fs', 'path',
       ],
       absWorkingDir: root,
-      entryPoints: [path.join( root, 'bitwise.config.js' )],
-      outdir: path.join( root, '.build' ),
-      // XXX: outfile could be 'game.js'
+      entryPoints: [path.join( root, src )],
+      outfile: path.join( root, dest ),
       outbase: root,
       format: 'esm',
       sourcemap: true,

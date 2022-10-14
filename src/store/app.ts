@@ -14,6 +14,59 @@ import SpriteEdit from '../components/bitwise/Sprite.vue';
 import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
 import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 
+function buildGameJs(config, moduleItems) {
+  // We only know plugins, not whether they are components or systems,
+  // so we have to load them all and figure out which is what later...
+  const imports = {};
+  for ( const item of moduleItems ) {
+    let varname = item.name;
+    if ( imports[ varname ] ) {
+      let idx = 1;
+      while ( imports[ varname + idx ] ) {
+        idx++;
+      }
+      varname = varname + idx;
+    }
+    imports[varname] = {
+      stmt: `import ${varname} from './${item.path}';`,
+      name: item.name,
+    };
+  }
+
+  const gameFile = `
+    import Game from 'bitwise/Game.ts';
+    import System from 'bitwise/System.ts';
+    import Component from 'bitwise/Component.ts';
+
+    // Import custom components and systems
+    ${Object.keys(imports).sort().map( k => imports[k].stmt ).join("\n")}
+    const mods = [ ${Object.keys(imports).sort().join(', ')} ];
+    const modNames = [ ${Object.keys(imports).sort().map( k => `"${imports[k].name}"` ).join(', ')} ];
+
+    const config = ${JSON.stringify( config )};
+    config.components = {};
+    config.systems = {};
+
+    mods.forEach( (p, i) => {
+      const name = modNames[i];
+      if ( p.prototype instanceof Component ) {
+        config.components[name] = p;
+      }
+      if ( p.prototype instanceof System ) {
+        config.systems[name] = p;
+      }
+    } );
+
+    export default class MyGame extends Game {
+      get config() {
+        return config;
+      }
+    };
+  `;
+
+  return gameFile.replaceAll(/\n {4}/g, "\n");
+}
+
 export const useAppStore = defineStore('app', {
   state: () => {
     const vueLoaderOptions = {
@@ -170,19 +223,46 @@ export const useAppStore = defineStore('app', {
       this.readProject();
       this.projectItems = await electron.readProject(path);
 
-      // XXX: Build 'bitwise.js' file from the files read:
+      // Build 'bitwise.js' file from the files read:
       //  - All systems and components found should be loaded
       //  - bitwise.config.json should be loaded and merged
+      const findModules = items => {
+        const mods = [];
+        for ( const i of items ) {
+          if ( i.name.match(/^\./) ) {
+            continue;
+          }
+          if ( i.path.match(/\.[tj]s$/) ) {
+            mods.push(i);
+          }
+          if ( i.children ) {
+            mods.push( ...findModules( i.children ) );
+          }
+        }
+        return mods;
+      };
+      const modules = findModules( this.projectItems );
+      let gameConf = {};
+      try {
+        const confJson = await electron.readFile( this.currentProject + '/bitwise.config.json' );
+        gameConf = JSON.parse(confJson);
+      }
+      catch (e) {
+        console.log( `Could not read project config: ${e}` );
+      }
+
+      const gameJs = buildGameJs( gameConf, modules );
+      await electron.saveFile( this.currentProject + '/.bitwise.js', gameJs );
 
       // Build and load project game class
       try {
-        await electron.buildProject( this.currentProject );
+        await electron.buildProject( this.currentProject, '.bitwise.js', '.build/game.js' );
       }
       catch (e) {
         console.log( `Could not build project: ${e}` );
       }
       try {
-        const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/.build/bitwise.js' );
+        const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/.build/game.js' );
         this.gameClass = mod.default;
         console.log( 'Game class:', this.gameClass );
       }
@@ -191,8 +271,6 @@ export const useAppStore = defineStore('app', {
       }
 
       if ( this.gameClass ) {
-        // XXX: This is probably completely wrong and components/systems
-        // should be got from instances, not class
         const game = new this.gameClass({});
         this.components = game.components;
         this.systems = game.systems;
@@ -212,7 +290,7 @@ export const useAppStore = defineStore('app', {
       this.projectItems = await electron.readProject(this.currentProject)
         .then( async items => {
           const ignore = item => {
-            return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.js(?:on)?$/);
+            return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
           };
           const descend = async item => {
             if ( item.children && item.children.length ) {
