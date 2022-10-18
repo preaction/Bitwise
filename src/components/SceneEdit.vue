@@ -19,6 +19,7 @@ export default defineComponent({
         icon: 'fa-film',
         children: [],
       },
+      selectedSceneItem: null,
       selectedEntity: null,
       selectedComponents: {},
       sceneSystems: [],
@@ -208,9 +209,11 @@ export default defineComponent({
     select(item) {
       if ( this.sceneTree === item ) {
         this.selectedEntity = null;
+        this.selectedSceneItem = null;
         this.selectedComponents = {};
         return;
       }
+      this.selectedSceneItem = item;
       this.selectEntity( this.scene.entities[item.entity] );
     },
 
@@ -375,6 +378,10 @@ export default defineComponent({
       this.updateSceneTree( this.scene );
     },
 
+    updateEntityName() {
+      this.selectedEntity.name = this.selectedSceneItem.name;
+      this.update();
+    },
   },
 });
 </script>
@@ -442,7 +449,9 @@ export default defineComponent({
         <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
         <div class="d-flex justify-content-between align-items-center">
           <label class="me-1">Name</label>
-          <input class="flex-fill text-end col-1" v-model="selectedEntity.name" pattern="^[^/]+$" />
+          <input class="flex-fill text-end col-1" v-model="selectedSceneItem.name"
+            @keyup="updateEntityName" pattern="^[^/]+$"
+          />
         </div>
         <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
           <div class="mb-1 d-flex justify-content-between align-items-center">
