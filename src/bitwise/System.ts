@@ -14,4 +14,6 @@ export default class System {
       data: {},
     };
   }
+  update( timeMilli:number=0, timeTotal:number=0 ) { }
+  render() { }
 }

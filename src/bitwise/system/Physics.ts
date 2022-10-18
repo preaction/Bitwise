@@ -1,5 +1,6 @@
 
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import Ammo from 'ammo.js';
 import System from '../System.js';
 import Scene from '../Scene.js';
@@ -7,17 +8,23 @@ import Scene from '../Scene.js';
 export default class Physics extends System {
   rigidbody:any;
   position:any;
-  collider:Object = {};
+  collider:{ box: Component };
 
   universe:any;
-  bodies:Array = [];
+  bodies:Array<any> = [];
 
-  constructor( name:string, scene:Scene, data:Object ) {
+  query:bitecs.Query;
+  enterQuery:bitecs.Query;
+  exitQuery:bitecs.Query;
+
+  constructor( name:string, scene:Scene, data:any ) {
     super( name, scene, data );
 
     this.position = scene.components[ "Position" ];
     this.rigidbody = scene.components[ "RigidBody" ];
-    this.collider.box = scene.components[ "BoxCollider" ];
+    this.collider = {
+      box: scene.components[ "BoxCollider" ],
+    };
 
     this.query = scene.game.ecs.defineQuery([ this.position.store, this.rigidbody.store ]);
     this.enterQuery = scene.game.ecs.enterQuery( this.query );

@@ -17,7 +17,7 @@ import Entity from './Entity.js';
 
 // SceneState is the current state of the scene.
 // XXX: This should be in a separate class so it can be exported
-enum SceneState {
+export enum SceneState {
   // Stop means the scene is not rendering or updating.
   Stop = "STOP",
   // Start means the scene is getting ready to start. The scene will get
@@ -54,13 +54,13 @@ export default class Scene extends three.EventDispatcher {
 
   // entities are the bitecs entities in this scene.
   // XXX: Store the entity name somewhere
-  entities:any = {};
+  entities:{ [key:number]: Entity } = {};
   eids:number[] = [];
 
   constructor( game:any ) {
     super();
     this.game = game;
-    game.addEventListener( "resize", (e:{width: number, height: number}) => {
+    game.addEventListener( "resize", (e:{type: string, width: number, height: number}) => {
       this.dispatchEvent(e);
     });
 

@@ -4,23 +4,23 @@
  */
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import Scene from './Scene.js';
+import Scene, { SceneState } from './Scene.js';
 import Input from './Input.js';
 import Component from './Component.js';
 import System from './System.js';
 
-import PositionComponent from './component/Position.ts';
-import OrthographicCameraComponent from './component/OrthographicCamera.ts';
-import SpriteComponent from './component/Sprite.ts';
-import RigidBodyComponent from './component/RigidBody.ts';
-import BoxColliderComponent from './component/BoxCollider.ts';
+import PositionComponent from './component/Position.js';
+import OrthographicCameraComponent from './component/OrthographicCamera.js';
+import SpriteComponent from './component/Sprite.js';
+import RigidBodyComponent from './component/RigidBody.js';
+import BoxColliderComponent from './component/BoxCollider.js';
 
-import SpriteSystem from './system/Sprite.ts';
-import RenderSystem from './system/Render.ts';
-import PhysicsSystem from './system/Physics.ts';
+import SpriteSystem from './system/Sprite.js';
+import RenderSystem from './system/Render.js';
+import PhysicsSystem from './system/Physics.js';
 
-import EditorRenderSystem from './system/editor/Render.ts';
-import EditorPhysicsSystem from './system/editor/Physics.ts';
+import EditorRenderSystem from './system/editor/Render.js';
+import EditorPhysicsSystem from './system/editor/Physics.js';
 
 let tick = 0;
 
@@ -45,8 +45,8 @@ const DEFAULT_COMPONENTS = {
 
 export default class Game extends three.EventDispatcher {
   canvas:HTMLCanvasElement;
-  loader:Object; // XXX: Need a real class here
-  renderer:three.WebGLRenderer = null;
+  loader:{ base: string }; // XXX: Need a real class here
+  renderer:three.WebGLRenderer|null = null;
   ecs:typeof bitecs;
 
   width:number = 0;
@@ -91,10 +91,10 @@ export default class Game extends three.EventDispatcher {
   texturePaths:{ [key:number]: string } = {};
   textureIds:{ [key:string]: number } = {};
   textures:three.Texture[] = [];
-  promises:{ [key:string]: Promise } = {};
+  promises:{ [key:string]: Promise<three.Texture> } = {};
 
   loadTexture( path:string ) {
-    if ( this.promises[path] ) {
+    if ( path in this.promises ) {
       return this.promises[path];
     }
     // XXX: Load the texture, and keep track of the promises we make
@@ -143,8 +143,10 @@ export default class Game extends three.EventDispatcher {
   stop() {
     this.dispatchEvent({ type: 'stop' });
     this.input.stop();
-    this.renderer.dispose();
-    this.renderer = null;
+    if ( this.renderer ) {
+      this.renderer.dispose();
+      this.renderer = null;
+    }
   }
 
   onResize() {
@@ -152,6 +154,9 @@ export default class Game extends three.EventDispatcher {
   }
 
   renderSize():three.Vector2 {
+    if ( !this.renderer ) {
+      return new three.Vector2(0, 0);
+    }
     const canvas = this.renderer.domElement;
     const pixelRatio = window.devicePixelRatio;
     const width  = canvas.clientWidth  * pixelRatio | 0;
@@ -161,6 +166,9 @@ export default class Game extends three.EventDispatcher {
   }
 
   resizeRendererToDisplaySize() {
+    if ( !this.renderer ) {
+      return;
+    }
     const canvas = this.renderer.domElement;
     const render = this.renderSize();
     const needResize = canvas.width !== render.width || canvas.height !== render.height;
@@ -178,16 +186,16 @@ export default class Game extends three.EventDispatcher {
 
     this.dispatchEvent({ type: 'beforeRender' });
     SCENES:
-    for ( const scene:Scene of this.scenes ) {
+    for ( const scene of this.scenes ) {
       switch (scene.state) {
-        case "START":
+        case SceneState.Start:
           scene.render();
-          scene.state = "RUN";
+          scene.state = SceneState.Run;
           continue SCENES;
-        case "RUN":
+        case SceneState.Run:
           scene.update( timeMilli );
           // fall-through to render
-        case "PAUSE":
+        case SceneState.Pause:
           scene.render();
           continue SCENES;
       }
@@ -197,11 +205,11 @@ export default class Game extends three.EventDispatcher {
     requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t-timeTotal, t) );
   }
 
-  registerComponent( name:string, component:( Scene, Object ) => Component ) {
+  registerComponent( name:string, component:typeof Component ) {
     this.components[name] = component;
   }
 
-  registerSystem( name:string, system:( Scene ) => System ) {
+  registerSystem( name:string, system:typeof System ) {
     this.systems[name] = system;
   }
 

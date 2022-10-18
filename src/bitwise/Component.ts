@@ -21,14 +21,14 @@ export default abstract class Component {
   removeEntity( eid:number ) {
     this.scene.game.ecs.removeComponent( this.world, this.store, eid );
   }
-  thawEntity( eid:number, data:{ [key:string]: number } ) {
+  thawEntity( eid:number, data:{ [key:string]: any } ):void {
     this.addEntity( eid );
     for ( const k in data ) {
       this.store[k][eid] = data[k];
     }
   }
-  freezeEntity( eid:number ):{ [key:string]: number } {
-    const data: { [key:string]: number } = {};
+  freezeEntity( eid:number ):{ [key:string]: any } {
+    const data: { [key:string]: any } = {};
     for ( const k in this.store ) {
       data[k] = this.store[k][eid];
     }

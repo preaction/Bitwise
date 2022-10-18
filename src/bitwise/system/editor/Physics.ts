@@ -1,19 +1,27 @@
 
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
+import Component from '../../Component.js';
 
 export default class Physics extends System {
   position:any;
-  collider:Object = {};
+  collider:{ box: Component };
 
-  bodies:Array = [];
+  bodies:Array<any> = [];
+
+  query:bitecs.Query;
+  enterQuery:bitecs.Query;
+  exitQuery:bitecs.Query;
 
   constructor( name:string, scene:Scene, data:Object ) {
     super(name, scene, data);
 
     this.position = scene.components[ "Position" ];
-    this.collider.box = scene.components[ "BoxCollider" ];
+    this.collider = {
+      box: scene.components[ "BoxCollider" ],
+    };
 
     this.query = scene.game.ecs.defineQuery([ this.position.store ]);
     this.enterQuery = scene.game.ecs.enterQuery( this.query );

@@ -1,5 +1,6 @@
 
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
 
@@ -10,7 +11,11 @@ export default class Render extends System {
   component:any;
   position:any;
 
-  constructor( name:string, scene:Scene, data:Object ) {
+  query:bitecs.Query;
+  enterQuery:bitecs.Query;
+  exitQuery:bitecs.Query;
+
+  constructor( name:string, scene:Scene, data:any ) {
     super(name, scene, data);
 
     this.position = scene.components[ "Position" ];
@@ -33,6 +38,8 @@ export default class Render extends System {
     scene.game.input.on( 'mousedown', this.onMouseDown.bind(this) );
     scene.game.input.on( 'mouseup', this.onMouseUp.bind(this) );
     scene.game.input.on( 'mousemove', this.onMouseMove.bind(this) );
+
+    this.camera = this.createCamera();
   }
 
   onWheel( event:WheelEvent ) {
@@ -112,9 +119,6 @@ export default class Render extends System {
   }
 
   render() {
-    if ( !this.camera ) {
-      this.createCamera();
-    }
     this.scene.game.renderer.render( this.scene._scene, this.camera );
   }
 
@@ -140,8 +144,7 @@ export default class Render extends System {
     );
     camera.zoom = this.zoom;
     camera.updateProjectionMatrix();
-    this.camera = camera;
-    console.log( this.camera );
+    return camera;
   }
 
   add( eid:number ) {

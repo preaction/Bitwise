@@ -14,23 +14,23 @@ export default class Input {
   // touchmove
   // touchcancel
   game:Game;
-  watchingKeys:Object;
-  watchingKeypresses:Object;
+  watchingKeys:{ [key:string]: Set<string> } = {};
+  watchingKeypresses:{ [key:string]: Set<string> } = {};
 
   /**
    * key holds the state of any keys added to the watch list. "true" if
    * the key is down, "false" if not.
    */
-  key:Object;
+  key:{ [key:string]: boolean } = {};
 
   /**
    * keypress holds the keys that have been pressed since the last
    * update cycle.
    */
-  keypress:Object;
+  keypress:{ [key:string]: boolean } = {};
 
-  _downHandler:Function;
-  _upHandler:Function;
+  _downHandler:null|((e:KeyboardEvent) => void) = null;
+  _upHandler:null|((e:KeyboardEvent) => void) = null;
 
   // The differences between key and keypress:
   //  Key is the up/down state of the key or key-combo
@@ -60,10 +60,10 @@ export default class Input {
   }
 
   keydown(e:KeyboardEvent) {
-    if ( this.watchKey[ e.key ] ) {
+    if ( e.key in this.watchingKeys ) {
       this.key[e.key] = true;
     }
-    if ( this.watchKeypress[ e.key ] ) {
+    if ( e.key in this.watchingKeypresses ) {
       this.keypress[ e.key ] = true;
     }
   }
@@ -80,17 +80,17 @@ export default class Input {
     this.game.canvas.removeEventListener( event, fn );
   }
 
-  watchKey( key:KeyCode, alias:string=null ) {
-    if ( !this.watchKey ) {
-      this.watchKey[key] = new Set();
+  watchKey( key:string, alias:string='' ) {
+    if ( !(key in this.watchingKeys) ) {
+      this.watchingKeys[key] = new Set();
     }
-    this.watchKey[key].add( alias || key );
+    this.watchingKeys[key].add( alias || key );
   }
-  watchKeypress( key:KeyCode, alias:string=null ) {
-    if ( !this.watchKeypress ) {
-      this.watchKeypress[key] = new Set();
+  watchKeypress( key:string, alias:string='' ) {
+    if ( !(key in this.watchingKeypresses) ) {
+      this.watchingKeypresses[key] = new Set();
     }
-    this.watchKeypress[key].add( alias || key );
+    this.watchingKeypresses[key].add( alias || key );
   }
   clearKeypresses() {
     this.keypress = {};

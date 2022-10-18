@@ -1,12 +1,17 @@
 
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import System from '../System.js';
-import Scene from './Scene.js';
+import Scene from '../Scene.js';
 
 export default class Render extends System {
   cameras:three.OrthographicCamera[] = [];
   component:any;
   position:any;
+
+  query:bitecs.Query;
+  enterQuery:bitecs.Query;
+  exitQuery:bitecs.Query;
 
   constructor( name:string, scene:Scene, data:Object ) {
     super(name, scene, data);

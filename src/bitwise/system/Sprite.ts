@@ -1,5 +1,6 @@
 
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import System from '../System.js';
 import Scene from '../Scene.js';
 
@@ -9,7 +10,11 @@ export default class Sprite extends System {
   component:any;
   position:any;
 
-  constructor( name:string, scene:Scene, data:Object ) {
+  query:bitecs.Query;
+  enterQuery:bitecs.Query;
+  exitQuery:bitecs.Query;
+
+  constructor( name:string, scene:Scene, data:any ) {
     super(name, scene, data);
     this.position = scene.components[ "Position" ];
     this.component = scene.components[ "Sprite" ];

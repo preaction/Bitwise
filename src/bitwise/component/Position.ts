@@ -1,6 +1,7 @@
 
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
+import Entity from '../Entity.js';
 
 export default class Position extends Component {
   get componentData() {
@@ -42,15 +43,15 @@ export default class Position extends Component {
     return data;
   }
 
-  thawEntity( eid:number, data:Object ) {
+  thawEntity( eid:number, data:{ [key:string]: any } ) {
     let pid = 2**32-1;
-    if ( data.path ) {
+    if ( data.path && typeof data.path === "string" ) {
       const parts = data.path.split("/");
       parts.pop(); // Pop off the object's name
       if ( parts.length ) {
         const parentName = parts.pop();
         const parentPath = parts.join("/");
-        var parent = Object.values( this.scene.entities ).find( e => ( !parentPath || e.path === parentPath ) && e.name === parentName );
+        var parent = Object.values( this.scene.entities ).find( (e:Entity) => ( !parentPath || e.path === parentPath ) && e.name === parentName );
         if ( parent ) {
           pid = parent.id;
         }
