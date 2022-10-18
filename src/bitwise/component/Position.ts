@@ -4,6 +4,20 @@ import Component from '../Component.js';
 import Entity from '../Entity.js';
 
 export default class Position extends Component {
+  declare store:{
+    x: number[],
+    y: number[],
+    z: number[],
+    rx: number[],
+    ry: number[],
+    rz: number[],
+    rw: number[],
+    sx: number[],
+    sy: number[],
+    sz: number[],
+    pid: number[],
+  }
+
   get componentData() {
     return {
       x: bitecs.Types.f32,

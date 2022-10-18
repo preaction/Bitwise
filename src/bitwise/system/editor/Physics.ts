@@ -4,9 +4,13 @@ import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
 import Component from '../../Component.js';
+import Position from '../../component/Position.js';
+import RigidBody from '../../component/RigidBody.js';
 
+// XXX: This should subclass the standard Physics system?
 export default class Physics extends System {
-  position:any;
+  rigidbody:RigidBody;
+  position:Position;
   collider:{ box: Component };
 
   bodies:Array<any> = [];
@@ -15,10 +19,12 @@ export default class Physics extends System {
   enterQuery:bitecs.Query;
   exitQuery:bitecs.Query;
 
-  constructor( name:string, scene:Scene, data:Object ) {
+  constructor( name:string, scene:Scene, data:any ) {
     super(name, scene, data);
 
-    this.position = scene.components[ "Position" ];
+    this.position = scene.getComponent(Position);
+    this.rigidbody = scene.getComponent(RigidBody);
+
     this.collider = {
       box: scene.components[ "BoxCollider" ],
     };
@@ -33,6 +39,8 @@ export default class Physics extends System {
 
     const add = this.enterQuery(this.scene.world);
     for ( const eid of add ) {
+      // XXX: RigidBodies should be a different color from collider-only
+      // objects
       if ( this.scene.game.ecs.hasComponent( this.scene.world, this.collider.box.store, eid ) ) {
         const box = this.collider.box.store;
         const geometry = new three.BoxGeometry(1, 1, 1);

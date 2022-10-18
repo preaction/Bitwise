@@ -3,6 +3,10 @@ import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
 export default class Sprite extends Component {
+  declare store:{
+    textureId: number[],
+  }
+
   get componentData() {
     return {
       textureId: bitecs.Types.ui8,

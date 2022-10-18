@@ -3,34 +3,31 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import System from '../System.js';
 import Scene from '../Scene.js';
+import Position from '../component/Position.js';
+import OrthographicCameraComponent from '../component/OrthographicCamera.js';
+import { ResizeEvent } from '../Game.js';
 
 export default class Render extends System {
-  cameras:three.OrthographicCamera[] = [];
-  component:any;
-  position:any;
+  cameras:Array<three.OrthographicCamera|undefined> = [];
+  component:OrthographicCameraComponent;
+  position:Position;
 
   query:bitecs.Query;
   enterQuery:bitecs.Query;
   exitQuery:bitecs.Query;
 
-  constructor( name:string, scene:Scene, data:Object ) {
+  constructor( name:string, scene:Scene, data:any ) {
     super(name, scene, data);
 
-    this.position = scene.components[ "Position" ];
-    if ( !this.position ) {
-      throw "Position component required";
-    }
-    this.component = scene.components[ "OrthographicCamera" ];
-    if ( !this.component ) {
-      throw "OrthographicCamera component required";
-    }
+    this.position = scene.getComponent(Position);
+    this.component = scene.getComponent(OrthographicCameraComponent);
 
     this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
     this.enterQuery = scene.game.ecs.enterQuery( this.query );
     this.exitQuery = scene.game.ecs.exitQuery( this.query );
 
-    scene.addEventListener( "resize", (e:Object) => {
-      this.onResize(e);
+    scene.addEventListener( "resize", (e:Event) => {
+      this.onResize(e as ResizeEvent);
     });
   }
 
@@ -55,6 +52,9 @@ export default class Render extends System {
     for ( const eid of update ) {
       // XXX: Object3d should be its own component somehow
       const camera = this.cameras[eid];
+      if ( !camera ) {
+        continue;
+      }
       camera.position.x = this.position.store.x[eid];
       camera.position.y = this.position.store.y[eid];
       camera.position.z = this.position.store.z[eid];
@@ -91,11 +91,14 @@ export default class Render extends System {
   }
 
   remove( eid:number ) {
-    this.scene._scene.remove( this.cameras[eid] );
-    this.cameras[eid] = null;
+    const camera = this.cameras[eid];
+    if ( camera ) {
+      this.scene._scene.remove( camera );
+      this.cameras[eid] = undefined;
+    }
   }
 
-  onResize(e:{width:number, height:number}) {
+  onResize(e:ResizeEvent) {
     // Fix camera settings to maintain exact size/aspect
     const { width, height } = e;
     const ratio = width / height;
@@ -103,6 +106,9 @@ export default class Render extends System {
     for ( const eid of update ) {
       const frustumSize = this.component.store.frustum[eid];
       const camera = this.cameras[eid];
+      if ( !camera ) {
+        continue;
+      }
       camera.left = frustumSize * ratio / -2;
       camera.right = frustumSize * ratio / 2;
       camera.top = frustumSize / 2;

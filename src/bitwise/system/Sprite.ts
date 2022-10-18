@@ -3,12 +3,15 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import System from '../System.js';
 import Scene from '../Scene.js';
+import Component from '../Component.js';
+import Position from '../component/Position.js';
+import SpriteComponent from '../component/Sprite.js';
 
 export default class Sprite extends System {
   sprites:three.Sprite[] = [];
   materials:three.SpriteMaterial[] = [];
-  component:any;
-  position:any;
+  component:SpriteComponent;
+  position:Position;
 
   query:bitecs.Query;
   enterQuery:bitecs.Query;
@@ -16,8 +19,8 @@ export default class Sprite extends System {
 
   constructor( name:string, scene:Scene, data:any ) {
     super(name, scene, data);
-    this.position = scene.components[ "Position" ];
-    this.component = scene.components[ "Sprite" ];
+    this.position = scene.getComponent(Position);
+    this.component = scene.getComponent(SpriteComponent);
 
     this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
     this.enterQuery = scene.game.ecs.enterQuery( this.query );

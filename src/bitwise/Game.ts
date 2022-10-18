@@ -43,6 +43,11 @@ const DEFAULT_COMPONENTS = {
   BoxCollider: BoxColliderComponent,
 };
 
+export interface ResizeEvent extends three.Event {
+  width: number;
+  height: number;
+};
+
 export default class Game extends three.EventDispatcher {
   canvas:HTMLCanvasElement;
   loader:{ base: string }; // XXX: Need a real class here

@@ -4,10 +4,13 @@ import * as bitecs from 'bitecs';
 import Ammo from 'ammo.js';
 import System from '../System.js';
 import Scene from '../Scene.js';
+import Component from '../Component.js';
+import Position from '../component/Position.js';
+import RigidBody from '../component/RigidBody.js';
 
 export default class Physics extends System {
-  rigidbody:any;
-  position:any;
+  rigidbody:RigidBody;
+  position:Position;
   collider:{ box: Component };
 
   universe:any;
@@ -20,8 +23,9 @@ export default class Physics extends System {
   constructor( name:string, scene:Scene, data:any ) {
     super( name, scene, data );
 
-    this.position = scene.components[ "Position" ];
-    this.rigidbody = scene.components[ "RigidBody" ];
+    this.position = scene.getComponent(Position);
+    this.rigidbody = scene.getComponent(RigidBody);
+
     this.collider = {
       box: scene.components[ "BoxCollider" ],
     };

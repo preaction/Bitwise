@@ -3,13 +3,16 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
+import Position from '../../component/Position.js';
+import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
+import { ResizeEvent } from '../../Game.js';
 
 export default class Render extends System {
   camera:three.OrthographicCamera;
 
-  sceneCameras:three.OrthographicCamera[] = [];
-  component:any;
-  position:any;
+  sceneCameras:Array<three.LineSegments|undefined> = [];
+  component:OrthographicCameraComponent;
+  position:Position;
 
   query:bitecs.Query;
   enterQuery:bitecs.Query;
@@ -18,21 +21,15 @@ export default class Render extends System {
   constructor( name:string, scene:Scene, data:any ) {
     super(name, scene, data);
 
-    this.position = scene.components[ "Position" ];
-    if ( !this.position ) {
-      throw "Position component required";
-    }
-    this.component = scene.components[ "OrthographicCamera" ];
-    if ( !this.component ) {
-      throw "OrthographicCamera component required";
-    }
+    this.position = scene.getComponent(Position);
+    this.component = scene.getComponent(OrthographicCameraComponent);
 
     this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
     this.enterQuery = scene.game.ecs.enterQuery( this.query );
     this.exitQuery = scene.game.ecs.exitQuery( this.query );
 
-    scene.addEventListener( "resize", (e:Object) => {
-      this.onResize(e);
+    scene.addEventListener( "resize", (e:three.Event) => {
+      this.onResize(e as ResizeEvent);
     });
     scene.game.input.on( 'wheel', this.onWheel.bind(this) );
     scene.game.input.on( 'mousedown', this.onMouseDown.bind(this) );
@@ -97,6 +94,10 @@ export default class Render extends System {
     for ( const eid of update ) {
       // XXX: Object3d should be its own component somehow
       const camera = this.sceneCameras[eid];
+      if ( !camera ) {
+        continue;
+      }
+
       camera.position.x = this.position.store.x[eid];
       camera.position.y = this.position.store.y[eid];
       camera.position.z = this.position.store.z[eid];
@@ -114,7 +115,7 @@ export default class Render extends System {
       const near = this.component.store.near[eid];
       const depth = far - near;
       console.log( `Wireframe scale ${width}, ${height}, ${depth} (ratio ${ratio})` );
-      this.sceneCameras[eid].scale.set( width, height, depth );
+      camera.scale.set( width, height, depth );
     }
   }
 
@@ -178,11 +179,14 @@ export default class Render extends System {
   }
 
   remove( eid:number ) {
-    this.scene._scene.remove( this.sceneCameras[eid] );
-    this.sceneCameras[eid] = null;
+    const camera = this.sceneCameras[eid];
+    if ( camera ) {
+      this.scene._scene.remove( camera );
+      this.sceneCameras[eid] = undefined;
+    }
   }
 
-  onResize(e:{width:number, height:number}) {
+  onResize(e:ResizeEvent) {
     // Fix camera settings to maintain exact size/aspect
     const { width, height } = e;
     const ratio = width / height;

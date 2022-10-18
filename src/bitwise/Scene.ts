@@ -113,6 +113,24 @@ export default class Scene extends three.EventDispatcher {
     this.dispatchEvent({ type: 'afterRender' });
   }
 
+  getSystem<T extends System>(sysType:(new (...args: any[]) => T)):T {
+    for ( const sys of this.systems ) {
+      if ( sys.constructor === sysType ) {
+        return sys as T;
+      }
+    }
+    throw `System ${sysType} is required`;
+  }
+
+  getComponent<T extends Component>(compType:(new (...args: any[]) => T)):T {
+    for ( const comp of Object.values(this.components) ) {
+      if ( comp.constructor === compType ) {
+        return comp as T;
+      }
+    }
+    throw `Component ${compType} is required`;
+  }
+
   freeze():SceneData {
     // XXX: Not using bitecs serialize/deserialize because I can't get
     // them to work...
