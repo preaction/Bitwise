@@ -133,10 +133,16 @@ export default class Game extends three.EventDispatcher {
     }
 
     this.renderer.setSize(this.width, this.height, false);
+
+    this.input.start();
+    this.dispatchEvent({ type: 'start' });
+
     this.render();
   }
 
   stop() {
+    this.dispatchEvent({ type: 'stop' });
+    this.input.stop();
     this.renderer.dispose();
     this.renderer = null;
   }
@@ -170,6 +176,7 @@ export default class Game extends three.EventDispatcher {
       return;
     }
 
+    this.dispatchEvent({ type: 'beforeRender' });
     SCENES:
     for ( const scene:Scene of this.scenes ) {
       switch (scene.state) {
@@ -185,6 +192,7 @@ export default class Game extends three.EventDispatcher {
           continue SCENES;
       }
     }
+    this.dispatchEvent({ type: 'afterRender' });
 
     requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t-timeTotal, t) );
   }

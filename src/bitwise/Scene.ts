@@ -73,20 +73,24 @@ export default class Scene extends three.EventDispatcher {
   // rendered. When the scene is ready, it should set its state to
   // "Start".
   async start() {
+    this.dispatchEvent({ type: 'start' });
     // XXX: Add entities to scene?
 
     this.state = SceneState.Start;
   }
 
   async pause() {
+    this.dispatchEvent({ type: 'pause' });
     this.state = SceneState.Pause;
   }
 
   async stop() {
+    this.dispatchEvent({ type: 'stop' });
     this.state = SceneState.Stop;
   }
 
   update( timeMs:DOMHighResTimeStamp ) {
+    this.dispatchEvent({ type: 'beforeUpdate' });
     for ( const system of this.systems ) {
       // XXX: Create inlined version of this function with only those
       // systems that have update methods
@@ -94,9 +98,11 @@ export default class Scene extends three.EventDispatcher {
         system.update( timeMs );
       }
     }
+    this.dispatchEvent({ type: 'afterUpdate' });
   }
 
   render() {
+    this.dispatchEvent({ type: 'beforeRender' });
     for ( const system of this.systems ) {
       // XXX: Create inlined version of this function with only those
       // systems that have render methods
@@ -104,6 +110,7 @@ export default class Scene extends three.EventDispatcher {
         system.render();
       }
     }
+    this.dispatchEvent({ type: 'afterRender' });
   }
 
   freeze():SceneData {
