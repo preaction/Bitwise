@@ -4,6 +4,10 @@ export default defineComponent({
   props: ['modelValue'],
   data() {
     return {
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      mass: 0,
       ...this.modelValue,
     }
   },
