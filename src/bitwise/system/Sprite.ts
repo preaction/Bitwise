@@ -78,6 +78,6 @@ export default class Sprite extends System {
 
   remove( eid:number ) {
     this.scene._scene.remove( this.sprites[eid] );
-    this.sprites[eid] = null;
+    delete this.sprites[eid];
   }
 }

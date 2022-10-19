@@ -26,7 +26,7 @@ export default class Render extends System {
     this.enterQuery = scene.game.ecs.enterQuery( this.query );
     this.exitQuery = scene.game.ecs.exitQuery( this.query );
 
-    scene.addEventListener( "resize", (e:Event) => {
+    scene.addEventListener( "resize", (e:any) => {
       this.onResize(e as ResizeEvent);
     });
   }

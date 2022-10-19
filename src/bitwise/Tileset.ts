@@ -1,6 +1,5 @@
 
 import * as three from 'three';
-import * as bitwise from '../Bitwise.js';
 
 type TileData = {
   x:number;
@@ -28,8 +27,8 @@ export default class Tileset {
   /**
    * The main texture, before any transformations.
    */
-  _texture:three.Texture;
-  _loadPromise:Promise;
+  _texture:three.Texture|null = null;
+  _loadPromise:Promise<three.Texture>|null = null;
 
   constructor( opts:TilesetOptions ) {
     if ( !opts.tileWidth ) {
@@ -45,21 +44,27 @@ export default class Tileset {
   }
 
   get imageWidth():number {
+    if ( !this._texture ) {
+      return 0;
+    }
     const img = this._texture.image;
     return img.naturalWidth || img.width;
   }
 
   get imageHeight():number {
+    if ( !this._texture ) {
+      return 0;
+    }
     const img = this._texture.image;
     return img.naturalHeight || img.height;
   }
 
-  load():Promise {
+  load():Promise<three.Texture> {
     if ( this._loadPromise ) {
       return this._loadPromise;
     }
     const loader = new three.TextureLoader();
-    this._loadPromise = new Promise(
+    return this._loadPromise = new Promise<three.Texture>(
       (resolve, reject) => {
         const after = ( t:three.Texture ) => {
           // Texture repeat should be the size of one tile.
@@ -73,6 +78,9 @@ export default class Tileset {
   }
 
   _buildTiles() {
+    if ( !this._texture ) {
+      return;
+    }
     for ( let py = 0; py < this.imageHeight; py += this.tileHeight ) {
       const y = py/this.tileHeight;
       const rowIdx = y*(this.imageWidth/this.tileWidth);

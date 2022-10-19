@@ -1,11 +1,11 @@
 
 import * as three from 'three';
-import * as bitwise from '../Bitwise.js';
+import Tileset from './Tileset.js';
 
 export class Tile extends three.Mesh {
-  tileset: bitwise.Tileset;
+  tileset: Tileset;
   tileIndex: number;
-  constructor( vec:three.Vector2, tileset:bitwise.Tileset, tileIndex:number ) {
+  constructor( vec:three.Vector2, tileset:Tileset, tileIndex:number ) {
     const geometry = new three.PlaneGeometry(tileset.tileWidth, tileset.tileHeight);
     // XXX: Should setting tileIndex update texture?
     const texture = tileset.tiles[tileIndex]._texture;
@@ -19,19 +19,19 @@ export class Tile extends three.Mesh {
 }
 
 export class Tilemap extends three.Object3D {
-  tileset:{ [key:string]:bitwise.Tileset } = {};
-  tileWidth:number;
-  tileHeight:number;
+  tileset:{ [key:string]:Tileset } = {};
+  tileWidth:number = 0;
+  tileHeight:number = 0;
   tiles:Tile[][] = [];
 
   // XXX: This will be for optimization later.
-  _planes:three.Mesh[][];
+  //_planes:three.Mesh[][];
 
   constructor() {
     super();
   }
 
-  addTileset( key:string, tileset:bitwise.Tileset ):bitwise.Tileset {
+  addTileset( key:string, tileset:Tileset ):Tileset {
     this.tileset[key] = tileset;
     return tileset;
   }
@@ -46,8 +46,7 @@ export class Tilemap extends three.Object3D {
       throw "Cannot replace tile (yet)";
     }
 
-    const pos = new three.Vector3( coords.x, coords.y, 0 );
-    const tile = new Tile(pos, tileset, tileIndex);
+    const tile = new Tile(coords, tileset, tileIndex);
     this.tiles[coords.x][coords.y] = tile;
     this.add(tile);
     return tile;
@@ -59,8 +58,8 @@ export class Tilemap extends three.Object3D {
           planeHeight = this.tileHeight * coords.height;
 
     // Create a target to render to
-    const scene = three.Scene();
-    const target = three.WebGLRenderTarget( planeWidth, planeHeight );
+    const scene = new three.Scene();
+    const target = new three.WebGLRenderTarget( planeWidth, planeHeight );
 
     // For each tile...
       // Create a sprite with the correct texture

@@ -6,6 +6,9 @@
 import * as Vue from 'vue';
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { loadModule } from 'vue3-sfc-loader';
+import Game from '../bitwise/Game.js';
+import Component from '../bitwise/Component.js';
+import System from '../bitwise/System.js';
 
 // Core Component Forms
 import PositionEdit from '../components/bitwise/Position.vue';
@@ -14,10 +17,30 @@ import SpriteEdit from '../components/bitwise/Sprite.vue';
 import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
 import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 
-function buildGameJs(config, moduleItems) {
+type GameConfig = {};
+
+type Tab = {
+  data: any,
+  edited: boolean,
+  src: string,
+  icon: string,
+  ext: string,
+  component: string,
+  name: string,
+}
+
+type DirectoryItem = {
+  name: string,
+  ext: string,
+  path: string,
+  icon: string,
+  children?: DirectoryItem[],
+};
+
+function buildGameJs(config:GameConfig, moduleItems:DirectoryItem[]) {
   // We only know plugins, not whether they are components or systems,
   // so we have to load them all and figure out which is what later...
-  const imports = {};
+  const imports: { [key:string]: { stmt: string, name: string } } = {};
   for ( const item of moduleItems ) {
     let varname = item.name;
     if ( imports[ varname ] ) {
@@ -34,9 +57,9 @@ function buildGameJs(config, moduleItems) {
   }
 
   const gameFile = `
-    import Game from 'bitwise/Game.ts';
-    import System from 'bitwise/System.ts';
-    import Component from 'bitwise/Component.ts';
+    import Game from 'bitwise/Game.js';
+    import System from 'bitwise/System.js';
+    import Component from 'bitwise/Component.js';
 
     // Import custom components and systems
     ${Object.keys(imports).sort().map( k => imports[k].stmt ).join("\n")}
@@ -71,20 +94,34 @@ const vueLoaderOptions = {
   moduleCache: {
     vue: Vue,
   },
-  async getFile(url) {
+  async getFile(url:string) {
     const res = await fetch(url);
     if ( !res.ok ) {
       throw Object.assign(new Error(res.statusText + ' ' + url), { res });
     }
     return {
-      getContentData: (asBinary) => asBinary ? res.arrayBuffer() : res.text(),
+      getContentData: (asBinary:boolean) => asBinary ? res.arrayBuffer() : res.text(),
     }
   },
-  addStyle(textContent) {
+  addStyle(textContent:string) {
     const style = Object.assign(document.createElement('style'), { textContent });
     const ref = document.head.getElementsByTagName('style')[0] || null;
     document.head.insertBefore(style, ref);
   },
+};
+
+type AppState = {
+  currentProject: null|string,
+  recentProjects: string[],
+  openTabs: Tab[],
+  currentTabIndex: number,
+  projectItems: DirectoryItem[],
+  icons: { [key:string]: string },
+  gameClass: null|typeof Game,
+  components: { [key:string]: typeof Component },
+  systems: { [key:string]: typeof System },
+  componentForms: { [key:string]: any },
+  _fsWatcher: any,
 };
 
 export const useAppStore = defineStore('app', {
@@ -112,14 +149,14 @@ export const useAppStore = defineStore('app', {
         "BoxCollider": BoxColliderEdit,
       }),
       systemForms: Vue.markRaw({}),
-    };
+    } as AppState;
   },
 
   getters: {
-    hasSessionState() {
+    hasSessionState():boolean {
       return !!sessionStorage.getItem('currentProject');
     },
-    hasStoredState() {
+    hasStoredState():boolean {
       return !!electron.store.get( 'app', 'savedState', false );
     },
     storedStateProject() {
@@ -129,27 +166,33 @@ export const useAppStore = defineStore('app', {
   },
 
   actions: {
-    saveSessionState() {
-      sessionStorage.setItem('currentProject', this.currentProject);
+    saveSessionState():void {
+      sessionStorage.setItem('currentProject', this.currentProject || '');
       sessionStorage.setItem('openTabs', JSON.stringify( this.openTabs ) );
-      sessionStorage.setItem('currentTabIndex', this.currentTabIndex);
+      sessionStorage.setItem('currentTabIndex', this.currentTabIndex.toString());
     },
 
-    async loadSessionState() {
+    async loadSessionState():Promise<void> {
       const currentProject = sessionStorage.getItem('currentProject');
-      const openTabs = JSON.parse( sessionStorage.getItem('openTabs') );
-      const currentTabIndex = sessionStorage.getItem('currentTabIndex');
 
       if ( !currentProject ) {
         return;
       }
 
       await this.openProject( currentProject );
-      this.openTabs = openTabs;
-      this.showTab( currentTabIndex );
+
+      const openTabs = sessionStorage.getItem('openTabs');
+      if ( openTabs ) {
+        this.openTabs = JSON.parse(openTabs);
+      }
+
+      const currentTabIndex = sessionStorage.getItem('currentTabIndex');
+      if ( currentTabIndex ) {
+        this.showTab( parseInt( currentTabIndex ) );
+      }
     },
 
-    async loadStoredState() {
+    async loadStoredState():Promise<void> {
       const state = electron.store.get( 'app', 'savedState', {} );
       if ( !state.currentProject ) {
         return;
@@ -161,7 +204,6 @@ export const useAppStore = defineStore('app', {
 
     saveStoredState() {
       const { currentProject, openTabs, currentTabIndex } = this;
-      console.log( Vue.toRaw(openTabs) );
       electron.store.set( 'app', 'savedState', {
         currentProject: Vue.toRaw(currentProject),
         openTabs: Vue.toRaw(openTabs),
@@ -196,7 +238,7 @@ export const useAppStore = defineStore('app', {
       this.saveStoredState();
     },
 
-    async openProject( path:string=null ) {
+    async openProject( path:string='' ) {
       if ( this._fsWatcher ) {
         electron.removeListener( 'watch', this._fsWatcher );
       }
@@ -227,7 +269,7 @@ export const useAppStore = defineStore('app', {
       electron.on( 'watch', this._fsWatcher );
     },
 
-    changeFile(event, {eventType, filename}) {
+    changeFile(event:any, {eventType, filename}:{eventType:string, filename:string}) {
       console.log( 'file changed', eventType, filename );
       this.readProject();
       if ( !filename.match(/^\./) && filename.match( /\.[tj]s$/ ) ) {
@@ -236,13 +278,16 @@ export const useAppStore = defineStore('app', {
     },
 
     async readProject() {
+      if ( !this.currentProject ) {
+        return;
+      }
       // XXX: Map component to icon class
       this.projectItems = await electron.readProject(this.currentProject)
         .then( async items => {
-          const ignore = item => {
+          const ignore = (item:DirectoryItem) => {
             return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
           };
-          const descend = async item => {
+          const descend = async (item:DirectoryItem) => {
             if ( item.children && item.children.length ) {
               // Descend
               item.children = await Promise.all( item.children.filter( ignore ).map(i => descend(i)) );
@@ -263,10 +308,13 @@ export const useAppStore = defineStore('app', {
     },
 
     async buildProject() {
+      if ( !this.currentProject ) {
+        return;
+      }
       // Build 'bitwise.js' file from the files read:
       //  - All systems and components found should be loaded
       //  - bitwise.config.json should be loaded and merged
-      const findModules = items => {
+      const findModules:((items:DirectoryItem[]) => DirectoryItem[]) = (items) => {
         const mods = [];
         for ( const i of items ) {
           if ( i.name.match(/^\./) ) {
@@ -334,15 +382,23 @@ export const useAppStore = defineStore('app', {
     },
 
     getFileUrl( path:string ):string {
-      console.log( 'getFileUrl', Vue.toRaw(path) );
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
       return 'bfile://' + this.currentProject + '/' + Vue.toRaw(path);
     },
 
     readFile( path:string ) {
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
       return electron.readFile( this.currentProject + '/' + path );
     },
 
     saveFile( path:string, data:Object ) {
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
       return electron.saveFile( this.currentProject + '/' + path, data )
         .then( res => {
           const tab = this.openTabs[ this.currentTabIndex ];
@@ -354,13 +410,17 @@ export const useAppStore = defineStore('app', {
     },
 
     newFile( name:string, ext:string, data:Object ) {
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
+      const project = this.currentProject;
       return electron.newFile( this.currentProject, name, ext, data )
         .then( res => {
           if ( !res.canceled ) {
-            const name = res.filePath.split('/').pop();
+            const name = res.filePath.split('/').pop() as string;
             const tab = this.openTabs[ this.currentTabIndex ];
             tab.name = name;
-            tab.src = res.filePath.replace( this.currentProject, '' );
+            tab.src = res.filePath.replace( project, '' );
             tab.edited = false;
 
             this.saveSessionState();
@@ -370,6 +430,9 @@ export const useAppStore = defineStore('app', {
     },
 
     deleteTree( path:string ) {
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
       // XXX: Pre-delete item from projectItems
       return electron.deleteTree( this.currentProject, path );
     },

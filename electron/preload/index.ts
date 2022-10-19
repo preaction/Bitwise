@@ -26,7 +26,6 @@ contextBridge.exposeInMainWorld('electron', {
     return ipcRenderer.invoke('bitwise-read-file', path);
   },
   newFile( path:string, name:string, ext:string, data:any ) {
-    console.log( 'newFile', path, name, ext, data );
     return ipcRenderer.invoke('bitwise-new-file', path, name, ext, data);
   },
   saveFile( path:string, data:any ) {
