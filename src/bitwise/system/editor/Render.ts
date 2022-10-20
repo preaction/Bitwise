@@ -80,7 +80,7 @@ export default class Render extends System {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
     const add = this.enterQuery(this.scene.world);
     for ( const eid of add ) {
-      this.add( eid ); 
+      this.add( eid );
     }
 
     // exitedQuery for cameraQuery: Remove Camera from Scene
@@ -197,6 +197,5 @@ export default class Render extends System {
     camera.bottom = this.frustumSize / -2
     camera.updateProjectionMatrix();
     this.render();
-    console.log( this.camera );
   }
 }
