@@ -61,15 +61,21 @@ export default class Input {
 
   keydown(e:KeyboardEvent) {
     if ( e.key in this.watchingKeys ) {
-      this.key[e.key] = true;
+      for ( const alias of this.watchingKeys[e.key] ) {
+        this.key[alias] = true;
+      }
     }
     if ( e.key in this.watchingKeypresses ) {
-      this.keypress[ e.key ] = true;
+      for ( const alias of this.watchingKeypresses[e.key] ) {
+        this.keypress[alias] = true;
+      }
     }
   }
   keyup(e:KeyboardEvent) {
-    if ( this.key[e.key] ) {
-      this.key[e.key] = false;
+    if ( e.key in this.watchingKeys ) {
+      for ( const alias of this.watchingKeys[e.key] ) {
+        this.key[alias] = false;
+      }
     }
   }
 
