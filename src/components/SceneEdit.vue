@@ -32,7 +32,7 @@ export default defineComponent({
     };
   },
 
-  async mounted() {
+  mounted() {
     const game = this.editGame = this.createEditorGame( 'edit-canvas' );
 
     // XXX: Scroll controls for zoom
@@ -65,9 +65,11 @@ export default defineComponent({
       this.update();
     }
 
-    this.editGame.start();
-    this.editScene.update(0);
-    this.editScene.render();
+    this.$nextTick( () => {
+      this.editGame.start();
+      this.editScene.update(0);
+      this.editScene.render();
+    } );
 
     this.updateSceneTree(scene);
   },

@@ -72,7 +72,7 @@ export default class Scene extends three.EventDispatcher {
   // start() should initialize the scene and get it ready to be
   // rendered. When the scene is ready, it should set its state to
   // "Start".
-  async start() {
+  start() {
     this.dispatchEvent({ type: 'start' });
     for ( const system of this.systems ) {
       system.start();
@@ -82,7 +82,7 @@ export default class Scene extends three.EventDispatcher {
     this.state = SceneState.Start;
   }
 
-  async pause() {
+  pause() {
     this.dispatchEvent({ type: 'pause' });
     for ( const system of this.systems ) {
       system.pause();
@@ -90,7 +90,7 @@ export default class Scene extends three.EventDispatcher {
     this.state = SceneState.Pause;
   }
 
-  async stop() {
+  stop() {
     this.dispatchEvent({ type: 'stop' });
     for ( const system of this.systems ) {
       system.stop();
