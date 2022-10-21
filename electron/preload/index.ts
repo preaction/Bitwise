@@ -43,6 +43,9 @@ contextBridge.exposeInMainWorld('electron', {
   buildProject( root:string, src:string, dest:string ) {
     return ipcRenderer.invoke('bitwise-build-project', root, src, dest);
   },
+  openEditor( root:string, file:string ) {
+    return ipcRenderer.invoke('bitwise-open-editor', root, file);
+  },
 });
 
 

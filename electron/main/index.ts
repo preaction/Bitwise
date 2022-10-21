@@ -247,42 +247,45 @@ ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {
 });
 
 ipcMain.handle('bitwise-build-project', (event, root, src, dest) => {
-    console.log( `Building project ${root}: ${src} -> ${dest}` );
-    return esbuild.build({
-      nodePaths: [
-        // This provides bundled libraries like 'bitecs', 'three', and
-        // 'Ammo'
-        path.resolve( __dirname, '../../../node_modules' ),
-        // This provides the 'bitwise' library. XXX: This should probably be
-        // put into node_modules or 'dist' or something...
-        path.resolve( __dirname, '../../../src' ),
-      ],
-      bundle: true,
-      define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
-      external: [
-        // Ammo.js can run in Node, but esbuild tries to resolve these
-        // Node modules even if we are going to run in the browser.
-        'fs', 'path',
-      ],
-      absWorkingDir: root,
-      entryPoints: [path.join( root, src )],
-      outfile: path.join( root, dest ),
-      outbase: root,
-      format: 'esm',
-      sourcemap: true,
-    })
-    // XXX: Dup new stdout/stderr to get errors from Typescript compiler
-    // XXX: Use `tsc` to type check with --noemit
-  // return new Promise( (resolve, reject) => {
-    // const tsc = path.resolve( __dirname, '../../../node_modules/typescript/bin/tsc' );
-    // const cp = fork( tsc, [], { cwd: root } );
-    // cp.on('error', (err) => { reject(err) } );
-    // cp.on('exit', (code, signal) => {
-    //   if ( code === 0 ) {
-    //     return resolve();
-    //   }
-    //   reject(`Exit status ${code} (Signal ${signal})`);
-    // } );
-  // } );
+  console.log( `Building project ${root}: ${src} -> ${dest}` );
+
+  // Check for typescript errors
+  const tsc = path.resolve( __dirname, '../../../node_modules/typescript/bin/tsc' );
+  const cp = fork( tsc, [ '--noEmit' ], {
+    cwd: root,
+    stdio: 'overlapped',
+  } );
+  cp.stderr.on( 'data', (buf) => win.webContents.send('error', buf.toString()) );
+  cp.stdout.on( 'data', (buf) => win.webContents.send('log', buf.toString()) );
+  cp.on('error', (err) => {
+    win.webContents.send( 'error', err );
+  } );
+
+  return esbuild.build({
+    nodePaths: [
+      // This provides bundled libraries like 'bitecs', 'three', and
+      // 'Ammo'
+      path.resolve( __dirname, '../../../node_modules' ),
+      // This provides the 'bitwise' library. XXX: This should probably be
+      // put into node_modules or 'dist' or something...
+      path.resolve( __dirname, '../../../src' ),
+    ],
+    bundle: true,
+    define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
+    external: [
+      // Ammo.js can run in Node, but esbuild tries to resolve these
+      // Node modules even if we are going to run in the browser.
+      'fs', 'path',
+    ],
+    absWorkingDir: root,
+    entryPoints: [path.join( root, src )],
+    outfile: path.join( root, dest ),
+    outbase: root,
+    format: 'esm',
+    sourcemap: true,
+  })
 });
 
+ipcMain.handle('bitwise-open-editor', (event, root, file) => {
+  return shell.openPath(path.join(root, file));
+});

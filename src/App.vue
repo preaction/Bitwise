@@ -23,6 +23,10 @@ export default defineComponent({
   },
   data() {
     return {
+      consoleLogs: [],
+      openConsole: false,
+      consoleErrors: 0,
+      consoleWarnings: 0,
     };
   },
   computed: {
@@ -93,6 +97,9 @@ export default defineComponent({
           edited: false,
         };
         this.appStore.openTab(tab);
+      }
+      else if ( ext.match( /\.([tj]s)$/ ) ) {
+        this.appStore.openEditor(item.path);
       }
     },
 
@@ -200,8 +207,41 @@ export default defineComponent({
         edited: false,
       });
     },
+
+    log( level:string, ...msg:any[] ) {
+      this.console[level](...msg);
+      this.consoleLogs.push( { level, msg } );
+      if ( level === "error" ) {
+        this.consoleErrors++;
+      }
+      else if ( level === "warn" ) {
+        this.consoleWarnings++;
+      }
+    },
+
+    toggleConsole() {
+      this.openConsole = this.openConsole ? false : true;
+      if ( this.openConsole === false ) {
+        this.consoleErrors = 0;
+        this.consoleWarnings = 0;
+      }
+    },
   },
   mounted() {
+    // Override console logging
+    this.console = {
+      log: console.log,
+      warn: console.warn,
+      error: console.error,
+      debug: console.debug,
+      info: console.info,
+    };
+    console.log = (...args:any[]) => this.log( 'log', ...args );
+    console.warn = (...args:any[]) => this.log( 'warn', ...args );
+    console.error = (...args:any[]) => this.log( 'error', ...args );
+    console.debug = (...args:any[]) => this.log( 'debug', ...args );
+    console.info = (...args:any[]) => this.log( 'info', ...args );
+
     if ( this.hasSessionState ) {
       this.loadSessionState();
     }
@@ -209,6 +249,8 @@ export default defineComponent({
       this.modal = new bootstrap.Modal( this.$refs.projectDialog, {} );
       this.modal.show();
     }
+    electron.on( 'error', (ev, err) => console.error(err) );
+    electron.on( 'log', (ev, msg) => console.log(msg) );
   },
 });
 </script>
@@ -284,19 +326,85 @@ export default defineComponent({
       @update:name="updateTabName"
       @save="saveTab"
     />
+
+    <div class="console" :style="openConsole ? 'top: -50vh' : ''">
+      <div class="console-top">
+        <span @click="toggleConsole">Console</span>
+        <span class="console-info">
+          <span v-if="consoleErrors > 0"><i class="fa fa-hexagon-xmark"></i>{{consoleErrors || 0}}</span>
+          <span v-if="consoleWarnings > 0"><i class="fa fa-triangle-exclamation"></i>{{consoleWarnings || 0}}</span>
+        </span>
+      </div>
+      <div class="console-bottom">
+        <p v-for="log in consoleLogs" :class="'log-' + log.level"><span v-for="msg in log.msg">{{msg}}</span></p>
+      </div>
+    </div>
   </div>
 </template>
 
 <style>
 html, body, #app { height: 100% }
 .app-container {
+  position: relative;
   height: 100%;
   overflow: hidden;
   display: grid;
   place-content: stretch;
-  grid-template-rows: 42px 1fr;
+  grid-template-rows: 24px 1fr minmax(32px, auto);
   grid-template-columns: minmax(0, auto) 1fr;
-  grid-template-areas: "sidebar tabbar" "sidebar main";
+  grid-template-areas: "sidebar tabbar" "sidebar main" "console console";
+}
+
+.console {
+  position: absolute;
+  grid-area: console;
+  overflow: scroll;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bs-body-bg);
+  border-top: 1px solid rgba(0, 0, 0, .1);
+  overflow: hidden;
+  display: flex;
+  flex-flow: column;
+}
+
+.console-top {
+  height: 32px;
+  padding: 0.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, .1);
+  display: flex;
+  align-items: center;
+}
+
+.console-top .console-info {
+  text-align: right;
+  flex: 1 1 100%;
+}
+
+.console-bottom {
+  overflow: scroll;
+  max-height: 100%;
+  background: rgba(var(--bs-light-rgb), var(--bs-bg-opacity));
+}
+
+.console-bottom p {
+  margin: 0;
+  padding: 0.25rem;
+  border-width: 0 0 1px 0;
+  border-style: solid;
+  border-color: rgba( 0, 0, 0, 0.1 );
+}
+
+.console-bottom .log-log {
+  background: var(--bs-bg-gray);
+}
+.console-bottom .log-error {
+  background: rgba(var(--bs-danger-rgb), 0.3);
+}
+.console-bottom .log-warn {
+  background: rgba(var(--bs-warning-rgb), 0.3);
 }
 
 .app-sidebar {
@@ -316,6 +424,7 @@ html, body, #app { height: 100% }
 
 .app-tabbar {
   grid-area: tabbar;
+  background: var(--bs-body-bg);
 }
 .app-tabbar :link {
   color: var(--bs-gray);

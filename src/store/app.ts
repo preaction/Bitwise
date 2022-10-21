@@ -429,6 +429,13 @@ export const useAppStore = defineStore('app', {
         });
     },
 
+    openEditor( path:string ) {
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
+      return electron.openEditor( this.currentProject, path );
+    },
+
     deleteTree( path:string ) {
       if ( !this.currentProject ) {
         throw "No current project";
