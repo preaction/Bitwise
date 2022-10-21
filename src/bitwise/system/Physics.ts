@@ -140,7 +140,6 @@ export default class Physics extends System {
         if ( motionState ) {
           motionState.getWorldTransform( xform );
           let pos = xform.getOrigin();
-          console.log( `${eid}: Position: ${pos.x()}, ${pos.y()}, ${pos.z()}` );
           position.x[eid] = pos.x();
           position.y[eid] = pos.y();
           position.z[eid] = pos.z();

@@ -16,4 +16,7 @@ export default class System {
   }
   update( timeMilli:number=0, timeTotal:number=0 ) { }
   render() { }
+  start() { }
+  pause() { }
+  stop() { }
 }

@@ -336,7 +336,7 @@ export const useAppStore = defineStore('app', {
         gameConf = JSON.parse(confJson);
       }
       catch (e) {
-        console.log( `Could not read project config: ${e}` );
+        console.warn( `Could not read project config: ${e}` );
       }
 
       const gameJs = buildGameJs( gameConf, modules );
@@ -347,7 +347,7 @@ export const useAppStore = defineStore('app', {
         await electron.buildProject( this.currentProject, '.bitwise.js', '.build/game.js' );
       }
       catch (e) {
-        console.log( `Could not build project: ${e}` );
+        console.error( `Could not build project: ${e}` );
       }
       try {
         const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/.build/game.js' );
@@ -355,7 +355,7 @@ export const useAppStore = defineStore('app', {
         console.log( 'Game class:', this.gameClass );
       }
       catch (e) {
-        console.log( `Could not load game class: ${e}` );
+        console.error( `Could not load game class: ${e}` );
       }
 
       if ( this.gameClass ) {

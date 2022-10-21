@@ -160,7 +160,7 @@ export default defineComponent({
       }
       const el = event.target.closest( '.dropdown' );
       if ( !el ) {
-        console.log( ".dropdown not found for ", event.target );
+        console.error( ".dropdown not found for ", event.target );
       }
       const dropdown = bootstrap.Dropdown.getInstance( el.querySelector('[data-bs-toggle]') );
       dropdown.show();
@@ -170,7 +170,7 @@ export default defineComponent({
     hideFileDropdown( event:MouseEvent ) {
       const el = event.target.closest( '.dropdown' );
       if ( !el ) {
-        console.log( ".dropdown not found for ", event.target );
+        console.error( ".dropdown not found for ", event.target );
       }
       const dropdown = bootstrap.Dropdown.getInstance(el.querySelector('[data-bs-toggle]'));
       if ( !dropdown ) {
@@ -194,7 +194,7 @@ export default defineComponent({
         data = JSON.parse( fileContent );
       }
       catch (err) {
-        console.log( `Error opening bitwise.config.json: ${err}` );
+        console.warn( `Error opening bitwise.config.json: ${err}` );
       }
 
       this.appStore.openTab({

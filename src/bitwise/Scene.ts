@@ -74,6 +74,9 @@ export default class Scene extends three.EventDispatcher {
   // "Start".
   async start() {
     this.dispatchEvent({ type: 'start' });
+    for ( const system of this.systems ) {
+      system.start();
+    }
     // XXX: Add entities to scene?
 
     this.state = SceneState.Start;
@@ -81,11 +84,17 @@ export default class Scene extends three.EventDispatcher {
 
   async pause() {
     this.dispatchEvent({ type: 'pause' });
+    for ( const system of this.systems ) {
+      system.pause();
+    }
     this.state = SceneState.Pause;
   }
 
   async stop() {
     this.dispatchEvent({ type: 'stop' });
+    for ( const system of this.systems ) {
+      system.stop();
+    }
     this.state = SceneState.Stop;
   }
 
