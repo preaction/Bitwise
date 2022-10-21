@@ -8,7 +8,7 @@ import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
 import { ResizeEvent } from '../../Game.js';
 
 export default class Render extends System {
-  camera:three.OrthographicCamera;
+  camera?:three.OrthographicCamera;
 
   sceneCameras:Array<three.LineSegments|undefined> = [];
   component:OrthographicCameraComponent;
@@ -35,12 +35,14 @@ export default class Render extends System {
     scene.game.input.on( 'mousedown', this.onMouseDown.bind(this) );
     scene.game.input.on( 'mouseup', this.onMouseUp.bind(this) );
     scene.game.input.on( 'mousemove', this.onMouseMove.bind(this) );
-
-    this.camera = this.createCamera();
   }
 
   onWheel( event:WheelEvent ) {
     event.preventDefault();
+    if ( !this.camera ) {
+      return;
+    }
+
     // XXX: Zoom when mouse is at coordinates other than 0,0 should move
     // the window to keep the pixel under the cursor in the same place
     this.camera.zoom += event.deltaY * 0.01;
@@ -66,6 +68,9 @@ export default class Render extends System {
 
   onMouseMove( event:MouseEvent ) {
     event.preventDefault();
+    if ( !this.camera ) {
+      return;
+    }
     // XXX: Mouse move with object selected moves object
     // XXX: Mouse move with button down moves camera
     if ( this.mouseIsDown ) {
@@ -120,6 +125,9 @@ export default class Render extends System {
   }
 
   render() {
+    if ( !this.camera ) {
+      this.camera = this.createCamera();
+    }
     this.scene.game.renderer.render( this.scene._scene, this.camera );
   }
 
@@ -191,6 +199,9 @@ export default class Render extends System {
     const { width, height } = e;
     const ratio = width / height;
     const camera = this.camera;
+    if ( !camera ) {
+      return;
+    }
     camera.left = this.frustumSize * (ratio/-2);
     camera.right = this.frustumSize * (ratio/2);
     camera.top = this.frustumSize / 2;
