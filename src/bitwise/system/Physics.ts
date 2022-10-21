@@ -135,23 +135,33 @@ export default class Physics extends System {
     for ( const [colliderName, query] of Object.entries(this.colliderQueries) ) {
       const update = query(this.scene.world);
       for ( const eid of update ) {
-        const xform = new Ammo.btTransform();
-        let motionState = this.bodies[eid].getMotionState();
-        if ( motionState ) {
-          motionState.getWorldTransform( xform );
-          let pos = xform.getOrigin();
-          position.x[eid] = pos.x();
-          position.y[eid] = pos.y();
-          position.z[eid] = pos.z();
+        const body = this.bodies[eid];
+        // Rigidbodies are moved by physics
+        if ( body instanceof Ammo.btRigidBody ) {
+          const xform = new Ammo.btTransform();
+          const motionState = body.getMotionState();
+          if ( motionState ) {
+            motionState.getWorldTransform( xform );
+            let pos = xform.getOrigin();
+            position.x[eid] = pos.x();
+            position.y[eid] = pos.y();
+            position.z[eid] = pos.z();
 
-          let rot = xform.getRotation();
-          position.rx[eid] = rot.x();
-          position.ry[eid] = rot.y();
-          position.rz[eid] = rot.z();
-          position.rw[eid] = rot.w();
-
-          // XXX: Detect collisions and do something with them
-
+            let rot = xform.getRotation();
+            position.rx[eid] = rot.x();
+            position.ry[eid] = rot.y();
+            position.rz[eid] = rot.z();
+            position.rw[eid] = rot.w();
+          }
+        }
+        // Ghost bodies are moved outside of physics
+        else if ( body instanceof Ammo.btGhostObject ) {
+          const xform = body.getWorldTransform();
+          const pos = new Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] );
+          const rot = new Ammo.btVector3( position.rx[eid], position.ry[eid], position.rz[eid] );
+          xform.setOrigin(pos);
+          xform.setRotation(rot);
+          body.setWorldTransform(xform);
         }
       }
     }
