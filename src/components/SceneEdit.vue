@@ -313,6 +313,7 @@ export default defineComponent({
         this.updateSceneTree(scene);
         this.playGame.start();
         this.playScene.start();
+        this.$refs['play-canvas'].focus();
       } );
     },
 
