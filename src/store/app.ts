@@ -174,6 +174,10 @@ export const useAppStore = defineStore('app', {
 
     async loadSessionState():Promise<void> {
       const currentProject = sessionStorage.getItem('currentProject');
+      // Fetch tab info before we open the project. Opening the project
+      // will reset the app tabs, so we have to set them after opening.
+      const openTabs = sessionStorage.getItem('openTabs');
+      const currentTabIndex = sessionStorage.getItem('currentTabIndex');
 
       if ( !currentProject ) {
         return;
@@ -181,12 +185,9 @@ export const useAppStore = defineStore('app', {
 
       await this.openProject( currentProject );
 
-      const openTabs = sessionStorage.getItem('openTabs');
       if ( openTabs ) {
         this.openTabs = JSON.parse(openTabs);
       }
-
-      const currentTabIndex = sessionStorage.getItem('currentTabIndex');
       if ( currentTabIndex ) {
         this.showTab( parseInt( currentTabIndex ) );
       }
