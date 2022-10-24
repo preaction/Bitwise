@@ -16,7 +16,6 @@ import System from './System.js';
 import Entity from './Entity.js';
 
 // SceneState is the current state of the scene.
-// XXX: This should be in a separate class so it can be exported
 export enum SceneState {
   // Stop means the scene is not rendering or updating.
   Stop = "STOP",
@@ -53,7 +52,6 @@ export default class Scene extends three.EventDispatcher {
   components:{ [key:string]: Component } = {};
 
   // entities are the bitecs entities in this scene.
-  // XXX: Store the entity name somewhere
   entities:{ [key:number]: Entity } = {};
   eids:number[] = [];
 

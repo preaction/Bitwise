@@ -35,7 +35,6 @@ export default defineComponent({
   mounted() {
     const game = this.editGame = this.createEditorGame( 'edit-canvas' );
 
-    // XXX: Scroll controls for zoom
     // XXX: Pinch controls for zoom
 
     const scene = this.editScene = game.addScene();
@@ -45,7 +44,6 @@ export default defineComponent({
     }
     else {
       // Create a new, blank scene
-      // XXX: Default components/systems should come from game settings
       scene.addComponent( 'Position' );
       scene.addComponent( 'Sprite' );
       scene.addComponent( 'OrthographicCamera' );
@@ -78,6 +76,7 @@ export default defineComponent({
     if ( this.playing ) {
       this.stop();
     }
+    this.editGame.stop();
   },
 
   computed: {

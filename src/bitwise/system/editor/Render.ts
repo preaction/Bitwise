@@ -10,7 +10,7 @@ import { ResizeEvent } from '../../Game.js';
 export default class Render extends System {
   camera?:three.OrthographicCamera;
 
-  sceneCameras:Array<three.LineSegments|undefined> = [];
+  sceneCameras:Array<three.LineSegments> = [];
   component:OrthographicCameraComponent;
   position:Position;
 
@@ -91,7 +91,8 @@ export default class Render extends System {
     // exitedQuery for cameraQuery: Remove Camera from Scene
     const remove = this.exitQuery(this.scene.world);
     for ( const eid of remove ) {
-      // XXX
+      this.scene._scene.remove( this.sceneCameras[eid] );
+      delete this.sceneCameras[eid];
     }
 
     // cameraQuery: Update camera properties and render if needed

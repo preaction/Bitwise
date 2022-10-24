@@ -22,13 +22,15 @@ export default class Physics extends System {
   position:Position;
   collider:ColliderMap = {};
 
-  universe:any;
+  universe:any; //Ammo.btCollisionWorld;
   bodies:Array<any> = [];
 
   colliderQueries:ColliderQueryMap = {};
   rigidbodyQuery:bitecs.Query;
   enterQueries:ColliderQueryMap = {};
   exitQueries:ColliderQueryMap = {};
+
+  watchQueries:Array<[ bitecs.Query, (...args:any) => void ]> = [];
 
   constructor( name:string, scene:Scene, data:any ) {
     super( name, scene, data );
@@ -92,6 +94,8 @@ export default class Physics extends System {
 
         // If the item has a rigidbody, it can have mass
         let body;
+        const group:number = 1; // XXX: Add group/mask to collider shapes
+        const mask:number = -1;
         if ( this.scene.game.ecs.hasComponent( this.scene.world, this.rigidbody.store, eid ) ) {
           // Calculate mass and initial inertia for dynamic bodies. Static
           // bodies have a mass of 0. Kinematic bodies collide but are not
@@ -112,14 +116,16 @@ export default class Physics extends System {
           // XXX: This should be a rigidbody component configuration
           body.setLinearFactor( new Ammo.btVector3(1,1,0) );
           body.setAngularFactor( new Ammo.btVector3(0,0,1) );
-          this.universe.addRigidBody( body );
+          this.universe.addRigidBody( body, group, mask );
         }
         else {
           // Create a ghost body for this collider
           body = new Ammo.btGhostObject();
           body.setCollisionShape(collider);
+          this.universe.addCollisionObject( body, group, mask );
         }
 
+        body.eid = eid;
         this.bodies[eid] = body;
       }
     }
@@ -127,11 +133,32 @@ export default class Physics extends System {
     for ( const [colliderName, query] of Object.entries(this.exitQueries) ) {
       const remove = query(this.scene.world);
       for ( const eid of remove ) {
-        // XXX: Remove body and collider
+        this.universe.removeCollisionObject( this.bodies[eid] );
+        delete this.bodies[eid];
       }
     }
 
     this.universe.stepSimulation( timeMilli, 10 );
+    // Detect all collisions
+    let dispatcher = this.universe.getDispatcher();
+    let numManifolds = dispatcher.getNumManifolds();
+    for ( let i = 0; i < numManifolds; i ++ ) {
+      let contactManifold = dispatcher.getManifoldByIndexInternal( i );
+      let numContacts = contactManifold.getNumContacts();
+      for ( let j = 0; j < numContacts; j++ ) {
+        let contactPoint = contactManifold.getContactPoint( j );
+        let distance = contactPoint.getDistance();
+        if ( distance > 0.0 ) {
+          continue;
+        }
+
+        // XXX: Create map of eid pairs that are colliding
+        // XXX: After update, below, loop through all collision queries
+        // and dispatch to the watcher function
+        console.log({manifoldIndex: i, contactIndex: j, distance: distance});
+      }
+    }
+
     for ( const [colliderName, query] of Object.entries(this.colliderQueries) ) {
       const update = query(this.scene.world);
       for ( const eid of update ) {

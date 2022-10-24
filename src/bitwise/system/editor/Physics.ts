@@ -60,7 +60,8 @@ export default class Physics extends System {
 
     const remove = this.exitQuery(this.scene.world);
     for ( const eid of remove ) {
-      // XXX
+      this.scene._scene.remove( this.bodies[eid] );
+      delete this.bodies[eid];
     }
 
     const update = this.query(this.scene.world);
