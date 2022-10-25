@@ -111,6 +111,7 @@ const vueLoaderOptions = {
 };
 
 type AppState = {
+  isBuilding: boolean,
   currentProject: null|string,
   recentProjects: string[],
   openTabs: Tab[],
@@ -137,6 +138,7 @@ export const useAppStore = defineStore('app', {
         SceneEdit: 'fa-film',
         TilesetEdit: 'fa-grid-2-plus',
       },
+      isBuilding: false,
       _fsWatcher: null,
       gameClass: null,
       components: Vue.markRaw({}),
@@ -312,6 +314,7 @@ export const useAppStore = defineStore('app', {
       if ( !this.currentProject ) {
         return;
       }
+      this.isBuilding = true;
       // Build 'bitwise.js' file from the files read:
       //  - All systems and components found should be loaded
       //  - bitwise.config.json should be loaded and merged
@@ -372,6 +375,8 @@ export const useAppStore = defineStore('app', {
           }
         }
       }
+
+      this.isBuilding = false;
     },
 
     saveProject() {

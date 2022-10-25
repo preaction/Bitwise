@@ -80,7 +80,7 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapState( useAppStore, ['gameClass', 'components', 'systems', 'componentForms', 'systemForms'] ),
+    ...mapState( useAppStore, ['gameClass', 'components', 'systems', 'componentForms', 'systemForms', 'isBuilding'] ),
     scene() {
       return this.playing ? this.playScene : this.editScene;
     },
@@ -89,6 +89,36 @@ export default defineComponent({
     },
     availableSystems() {
       return Object.keys( this.systems ).filter( s => !s.match(/^Editor/) );
+    },
+  },
+
+  watch: {
+    isBuilding(isBuilding) {
+      if ( isBuilding ) {
+        if ( this.playing ) {
+          this.playState = this.playScene.freeze();
+        }
+      }
+      else {
+        // Update the editor game
+        this.editGame.stop();
+        const game = this.editGame = this.createEditorGame( 'edit-canvas' );
+        const scene = this.editScene = game.addScene();
+        scene.thaw( toRaw( this.modelValue ) );
+        this.$nextTick( () => {
+          this.editGame.start();
+          this.editScene.update(0);
+          this.editScene.render();
+        } );
+
+        // Start the current pane again
+        if ( this.playing ) {
+          this.play( this.playState );
+        }
+        else {
+          this.updateSceneTree(scene);
+        }
+      }
     },
   },
 
@@ -299,8 +329,12 @@ export default defineComponent({
       this.scene.update(0);
       this.scene.render();
     },
-    play() {
-      const playState = this.editScene.freeze();
+    play(playState) {
+      this.playState = playState ||= this.editScene.freeze();
+
+      if ( this.playGame ) {
+        this.stop()
+      }
 
       this.playGame = this.createPlayerGame( 'play-canvas' );
       const scene = this.playScene = this.playGame.addScene();
@@ -406,7 +440,7 @@ export default defineComponent({
           </button>
           <button type="button" class="btn btn-sm"
             :class="playing && !paused ? 'btn-success' : 'btn-outline-success'"
-            :disabled="playing && !paused" @click="play"
+            :disabled="playing && !paused" @click="play()"
           >
             <i class="fa fa-play"></i>
           </button>
@@ -420,9 +454,11 @@ export default defineComponent({
       </div>
     </div>
     <div class="tab-main-edit">
+      <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
       <canvas ref="edit-canvas" v-show="playing == false" />
     </div>
     <div class="tab-main-play">
+      <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
       <canvas ref="play-canvas" v-show="playing == true" />
     </div>
     <div class="tab-sidebar">
@@ -540,6 +576,7 @@ export default defineComponent({
     overflow: hidden;
   }
   .tab-main-edit {
+    position: relative;
     grid-area: main;
     align-self: stretch;
     justify-self: stretch;
@@ -547,6 +584,7 @@ export default defineComponent({
     overflow: hidden;
   }
   .tab-main-play {
+    position: relative;
     grid-area: main;
     align-self: center;
     justify-self: center;
@@ -555,6 +593,21 @@ export default defineComponent({
     display: block;
     width: 100%;
     height: 100%;
+  }
+  .build-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba( 255, 255, 255, 0.5 );
+    display: flex;
+    align-items: center;
+    text-align: center;
+  }
+  .build-overlay > * {
+    flex: 1 1 100%;
+    color: var(--bs-light);
   }
   .scene-toolbar {
     flex: 0 0 auto;

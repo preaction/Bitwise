@@ -31,10 +31,28 @@ export default class Render extends System {
     scene.addEventListener( "resize", (e:three.Event) => {
       this.onResize(e as ResizeEvent);
     });
-    scene.game.input.on( 'wheel', this.onWheel.bind(this) );
-    scene.game.input.on( 'mousedown', this.onMouseDown.bind(this) );
-    scene.game.input.on( 'mouseup', this.onMouseUp.bind(this) );
-    scene.game.input.on( 'mousemove', this.onMouseMove.bind(this) );
+
+    const listeners:{ [key:string]: (e:any) => void } = {
+      wheel: this.onWheel.bind(this),
+      mousedown: this.onMouseDown.bind(this),
+      mouseup: this.onMouseUp.bind(this),
+      mousemove: this.onMouseMove.bind(this),
+    };
+    for ( const ev in listeners ) {
+      scene.game.input.on( ev, listeners[ev] );
+    }
+    scene.game.addEventListener( "stop", () => {
+      for ( const ev in listeners ) {
+        scene.game.input.off( ev, listeners[ev] );
+      }
+    });
+  }
+
+  stop() {
+    this.scene.game.input.removeEventListener( 'wheel' );
+    this.scene.game.input.removeEventListener( 'mousedown' );
+    this.scene.game.input.removeEventListener( 'mouseup' );
+    this.scene.game.input.removeEventListener( 'mousemove' );
   }
 
   onWheel( event:WheelEvent ) {
