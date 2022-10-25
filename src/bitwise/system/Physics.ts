@@ -17,6 +17,10 @@ const COLLIDER_SHAPES = {
   box: Ammo.btBoxShape,
 };
 
+const COLLISION_FLAGS = {
+  CF_NO_CONTACT_RESPONSE: 4,
+};
+
 export default class Physics extends System {
   rigidbody:RigidBody;
   position:Position;
@@ -51,6 +55,10 @@ export default class Physics extends System {
     this.rigidbodyQuery = scene.game.ecs.defineQuery([ this.position.store, this.rigidbody.store ]);
 
     this.initAmmo();
+  }
+
+  watchQuery( query:bitecs.Query, cb:(...args:any) => void ) {
+    this.watchQueries.push( [ query, cb ] );
   }
 
   initAmmo() {
@@ -96,34 +104,28 @@ export default class Physics extends System {
         let body;
         const group:number = 1; // XXX: Add group/mask to collider shapes
         const mask:number = -1;
-        if ( this.scene.game.ecs.hasComponent( this.scene.world, this.rigidbody.store, eid ) ) {
-          // Calculate mass and initial inertia for dynamic bodies. Static
-          // bodies have a mass of 0. Kinematic bodies collide but are not
-          // affected by dynamic bodies.
-          const mass = rigidBody.mass[eid];
-          let inertia = new Ammo.btVector3( 0, 0, 0 );
 
-          if ( mass > 0 ) {
-            console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
-            inertia = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
-            collider.calculateLocalInertia( mass, inertia );
-          }
-          // XXX: Is Kinematic?
+        // Calculate mass and initial inertia for dynamic bodies. Static
+        // bodies have a mass of 0. Kinematic bodies collide but are not
+        // affected by dynamic bodies.
+        const mass = rigidBody.mass[eid];
+        let inertia = new Ammo.btVector3( 0, 0, 0 );
 
-          let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
-          body = new Ammo.btRigidBody( rbodyInfo );
-          // XXX: Only allow x and y movement, and z rotation
-          // XXX: This should be a rigidbody component configuration
-          body.setLinearFactor( new Ammo.btVector3(1,1,0) );
-          body.setAngularFactor( new Ammo.btVector3(0,0,1) );
-          this.universe.addRigidBody( body, group, mask );
+        if ( mass > 0 ) {
+          console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
+          inertia = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
+          collider.calculateLocalInertia( mass, inertia );
         }
-        else {
-          // Create a ghost body for this collider
-          body = new Ammo.btGhostObject();
-          body.setCollisionShape(collider);
-          this.universe.addCollisionObject( body, group, mask );
-        }
+
+        let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
+        body = new Ammo.btRigidBody( rbodyInfo );
+        // XXX: Only allow x and y movement, and z rotation
+        // XXX: This should be a rigidbody component configuration
+        body.setLinearFactor( new Ammo.btVector3(1,1,0) );
+        body.setAngularFactor( new Ammo.btVector3(0,0,1) );
+        // XXX: If isTrigger
+        body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
+        this.universe.addRigidBody( body, group, mask );
 
         body.eid = eid;
         this.bodies[eid] = body;
@@ -140,8 +142,10 @@ export default class Physics extends System {
 
     this.universe.stepSimulation( timeMilli, 10 );
     // Detect all collisions
+    const collisions:{ [key:number]: Set<number> } = {};
     let dispatcher = this.universe.getDispatcher();
     let numManifolds = dispatcher.getNumManifolds();
+    MANIFOLDS:
     for ( let i = 0; i < numManifolds; i ++ ) {
       let contactManifold = dispatcher.getManifoldByIndexInternal( i );
       let numContacts = contactManifold.getNumContacts();
@@ -152,10 +156,25 @@ export default class Physics extends System {
           continue;
         }
 
-        // XXX: Create map of eid pairs that are colliding
-        // XXX: After update, below, loop through all collision queries
-        // and dispatch to the watcher function
-        console.log({manifoldIndex: i, contactIndex: j, distance: distance});
+        let rb0 = Ammo.castObject( contactManifold.getBody0(), Ammo.btRigidBody );
+        let rb1 = Ammo.castObject( contactManifold.getBody1(), Ammo.btRigidBody );
+        if ( !collisions[rb0.eid] ) {
+          collisions[rb0.eid] = new Set<number>();
+        }
+        if ( !collisions[rb1.eid] ) {
+          collisions[rb1.eid] = new Set<number>();
+        }
+        collisions[rb0.eid].add(rb1.eid);
+        collisions[rb1.eid].add(rb0.eid);
+        continue MANIFOLDS;
+      }
+    }
+
+    // Dispatch any collisions that we're watching
+    for ( const [ query, cb ] of this.watchQueries ) {
+      const eids = query(this.scene.world)
+      for ( const eid of eids.filter( eid => eid in collisions ) ) {
+        cb( eid, collisions[eid] )
       }
     }
 
