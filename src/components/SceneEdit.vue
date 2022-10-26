@@ -291,11 +291,12 @@ export default defineComponent({
 
     addEntity( ...components:string[] ) {
       const entity = this.editScene.addEntity();
-      this.sceneTree.children.push( { name: entity.name, entity: entity.id, children: [] } );
       for ( const c of components ) {
         entity.addComponent(c);
       }
-      this.selectEntity( entity );
+      this.updateSceneTree(this.editScene);
+      const entityItem = this.sceneTree.children[ this.sceneTree.children.length - 1 ];
+      this.select( entityItem );
       this.update();
     },
 
@@ -469,7 +470,7 @@ export default defineComponent({
             New Entity
           </button>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#" @click="addEntity()">Blank</a></li>
+            <li><a class="dropdown-item" href="#" @click="addEntity('Position')">Blank</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#" @click="addEntity('Position','Sprite')">Sprite</a></li>
             <li><a class="dropdown-item" href="#" @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</a></li>
