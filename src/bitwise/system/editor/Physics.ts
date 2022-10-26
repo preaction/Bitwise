@@ -42,13 +42,10 @@ export default class Physics extends System {
       // XXX: RigidBodies should be a different color from collider-only
       // objects
       if ( this.scene.game.ecs.hasComponent( this.scene.world, this.collider.box.store, eid ) ) {
-        const box = this.collider.box.store;
         const geometry = new three.BoxGeometry(1, 1, 1);
         const wireframe = new three.WireframeGeometry( geometry );
         const mat = new three.LineBasicMaterial( { color: 0x996633, linewidth: 2 } );
         const collider = new three.LineSegments( wireframe, mat );
-        collider.position.set( box.ox[eid] + position.x[eid], box.oy[eid] + position.y[eid], box.oz[eid] + position.z[eid] );
-        collider.scale.set(box.sx[eid] * position.sx[eid], box.sy[eid] * position.sy[eid], box.sz[eid] * position.sz[eid]);
         collider.material.depthTest = false;
         collider.material.transparent = true;
 
@@ -70,7 +67,10 @@ export default class Physics extends System {
       if ( !collider ) {
         continue;
       }
-      // XXX: Update collider dimensions and position
+      // Update collider dimensions and position
+      const box = this.collider.box.store;
+      collider.position.set( box.ox[eid] + position.x[eid], box.oy[eid] + position.y[eid], box.oz[eid] + position.z[eid] );
+      collider.scale.set(box.sx[eid] * position.sx[eid], box.sy[eid] * position.sy[eid], box.sz[eid] * position.sz[eid]);
     }
   }
 }
