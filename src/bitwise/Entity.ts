@@ -1,5 +1,6 @@
 
 import Scene from './Scene.js';
+import Position from './component/Position.js';
 
 export default class Entity {
   id:number;
@@ -57,5 +58,27 @@ export default class Entity {
       }
     }
     return names;
+  }
+
+  freeze():any {
+    const data:{[key:string]:any} = {
+      name: this.name,
+      type: this.type,
+    };
+    for ( const c of this.listComponents() ) {
+      data[c] = this.scene.components[c].freezeEntity(this.id);
+    }
+    // Also freeze descendants
+    const position = this.scene.getComponent(Position).store;
+    const childIds:number[] = [];
+    position.pid.forEach(
+      (pid, eid) => {
+        if ( pid === this.id ) {
+          childIds.push(eid)
+        }
+      },
+    );
+    data.children = childIds.map( cid => this.scene.entities[cid].freeze() );
+    return data
   }
 }

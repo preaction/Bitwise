@@ -294,7 +294,7 @@ export default defineComponent({
       <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems">
         <template #menu="{item}">
           <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
-            <i class="fa-solid fa-ellipsis-vertical" @click.prevent.stop="showFileDropdown"
+            <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu" @click.prevent.stop="showFileDropdown"
               data-bs-toggle="dropdown"
               data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
             <ul class="dropdown-menu">
@@ -456,4 +456,10 @@ html, body, #app { height: 100% }
   display: inline;
 }
 
+.project-tree-item-menu {
+  display: block;
+  height: 100%;
+  padding: 0 6px;
+  font-size: 1.3em;
+}
 </style>

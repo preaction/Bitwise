@@ -419,6 +419,15 @@ export default defineComponent({
       this.selectedEntity.name = this.selectedSceneItem.name;
       this.update();
     },
+
+    createPrefab( item ) {
+      // Create a new file with this entity's configuration, including
+      // children
+      console.log( item.entity );
+      console.log( this.scene.entities[ item.entity ].freeze() );
+
+      // Open a new tab on the prefab editor?
+    },
   },
 });
 </script>
@@ -480,7 +489,15 @@ export default defineComponent({
       <div class="scene-tree">
         <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select">
           <template #menu="{item}">
-            <i class="delete fa fa-circle-xmark align-self-center" @click.prevent.stop="deleteEntity(item)"></i>
+            <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
+              <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu" @click.prevent.stop="showFileDropdown"
+                data-bs-toggle="dropdown"
+                data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" @click="createPrefab(item)">Create Prefab</a></li>
+                <li><a class="dropdown-item" href="#" @click="deleteFile(item)">Delete</a></li>
+              </ul>
+            </div>
           </template>
         </ObjectTreeItem>
       </div>
@@ -645,5 +662,12 @@ export default defineComponent({
   }
   .system-form:hover .system-move {
     visibility: visible;
+  }
+
+  .scene-tree-item-menu {
+    display: block;
+    height: 100%;
+    padding: 0 6px;
+    font-size: 1.3em;
   }
 </style>
