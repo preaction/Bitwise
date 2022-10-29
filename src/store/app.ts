@@ -137,6 +137,7 @@ export const useAppStore = defineStore('app', {
       icons: {
         SceneEdit: 'fa-film',
         TilesetEdit: 'fa-grid-2-plus',
+        PrefabEdit: 'fa-cubes',
       },
       isBuilding: false,
       _fsWatcher: null,
@@ -407,6 +408,8 @@ export const useAppStore = defineStore('app', {
       }
       return electron.saveFile( this.currentProject + '/' + path, data )
         .then( res => {
+          // XXX: Oh, this is just absolutely wrong: We're not always
+          // saving only the current tab when we run saveFile()
           const tab = this.openTabs[ this.currentTabIndex ];
           tab.edited = false;
 

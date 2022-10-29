@@ -10,6 +10,7 @@ import ImageView from "./components/ImageView.vue";
 import TilesetEdit from "./components/TilesetEdit.vue";
 import SceneEdit from "./components/SceneEdit.vue";
 import GameConfig from "./components/GameConfig.vue";
+import PrefabEdit from "./components/PrefabEdit.vue";
 
 export default defineComponent({
   components: {
@@ -20,6 +21,7 @@ export default defineComponent({
     TilesetEdit,
     SceneEdit,
     GameConfig,
+    PrefabEdit,
   },
   data() {
     return {

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import { mapState, mapActions } from 'pinia';
+import { mapStores, mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 
@@ -36,6 +36,7 @@ export default defineComponent({
     }
   },
   computed: {
+    ...mapStores(useAppStore),
     ...mapState( useAppStore, ['components', 'systems', 'componentForms', 'systemForms'] ),
     availableComponents() {
       return Object.keys( this.components );
@@ -80,14 +81,15 @@ export default defineComponent({
           icon: 'fa-film',
           children: Object.values(tree),
         };
+        // Update the systems array
+        this.sceneSystems = scene.systems.map( s => ({ name: s.name, data: s.freeze() }) );
       }
 
-      // Update the systems array
-      this.sceneSystems = scene.systems.map( s => ({ name: s.name, data: s.freeze() }) );
+      this.select( this.sceneTree );
     },
 
     select(item) {
-      if ( this.sceneTree === item ) {
+      if ( !this.isPrefab && this.sceneTree === item ) {
         this.selectedEntity = null;
         this.selectedSceneItem = null;
         this.selectedComponents = {};
@@ -238,10 +240,23 @@ export default defineComponent({
     createPrefab( item ) {
       // Create a new file with this entity's configuration, including
       // children
-      console.log( item.entity );
-      console.log( this.scene.entities[ item.entity ].freeze() );
-
-      // Open a new tab on the prefab editor?
+      const eData = this.scene.entities[ item.entity ].freeze();
+      const filename = eData.name + '.json';
+      const suffix = 1;
+      while ( this.appStore.projectItems.includes( filename ) ) {
+        filename = eData.name + (suffix++) + '.json';
+      }
+      // Don't write the file yet, just open a new tab on the prefab
+      // editor
+      this.appStore.openTab({
+        src: filename,
+        name: filename.replace( '.json', '' ),
+        component: "PrefabEdit",
+        icon: this.appStore.icons["PrefabEdit"],
+        ext: '.json',
+        data: eData,
+        edited: true,
+      });
     },
   },
 });
