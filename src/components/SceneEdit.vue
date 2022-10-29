@@ -1,35 +1,22 @@
 <script lang="ts">
-import { defineComponent, toRaw, markRaw } from "vue";
+import { defineComponent, shallowReactive, toRaw, markRaw } from "vue";
 import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
-import ObjectTreeItem from './ObjectTreeItem.vue';
-import * as three from 'three';
-import * as bitecs from 'bitecs';
 import Game from '../bitwise/Game.ts';
+import ScenePanel from './ScenePanel.vue';
 
 export default defineComponent({
   components: {
-    ObjectTreeItem,
+    ScenePanel,
   },
   props: ['modelValue', 'name', 'edited'],
   data() {
-    return {
-      sceneTree: {
-        name: this.name || 'New Scene',
-        icon: 'fa-film',
-        children: [],
-      },
-      selectedSceneItem: null,
-      selectedEntity: null,
-      selectedComponents: {},
-      sceneSystems: [],
-      icons: {
-        "Camera": "fa-camera",
-        "Sprite": "fa-image-portrait",
-      },
+    return shallowReactive({
       playing: false,
       paused: false,
-    };
+      editScene: null,
+      playScene: null,
+    });
   },
 
   mounted() {
@@ -37,7 +24,7 @@ export default defineComponent({
 
     // XXX: Pinch controls for zoom
 
-    const scene = this.editScene = game.addScene();
+    const scene = markRaw(game.addScene());
 
     if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
       scene.thaw( toRaw( this.modelValue ) );
@@ -65,11 +52,10 @@ export default defineComponent({
 
     this.$nextTick( () => {
       this.editGame.start();
-      this.editScene.update(0);
-      this.editScene.render();
+      scene.update(0);
+      scene.render();
+      this.editScene = scene;
     } );
-
-    this.updateSceneTree(scene);
   },
 
   unmounted() {
@@ -80,15 +66,9 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapState( useAppStore, ['gameClass', 'components', 'systems', 'componentForms', 'systemForms', 'isBuilding'] ),
+    ...mapState( useAppStore, ['gameClass', 'isBuilding', 'systems', 'components'] ),
     scene() {
       return this.playing ? this.playScene : this.editScene;
-    },
-    availableComponents() {
-      return Object.keys( this.components );
-    },
-    availableSystems() {
-      return Object.keys( this.systems ).filter( s => !s.match(/^Editor/) );
     },
   },
 
@@ -103,20 +83,18 @@ export default defineComponent({
         // Update the editor game
         this.editGame.stop();
         const game = this.editGame = this.createEditorGame( 'edit-canvas' );
-        const scene = this.editScene = game.addScene();
+        const scene = markRaw(game.addScene());
         scene.thaw( toRaw( this.modelValue ) );
         this.$nextTick( () => {
           this.editGame.start();
-          this.editScene.update(0);
-          this.editScene.render();
+          scene.update(0);
+          scene.render();
+          this.editScene = scene;
         } );
 
         // Start the current pane again
         if ( this.playing ) {
           this.play( this.playState );
-        }
-        else {
-          this.updateSceneTree(scene);
         }
       }
     },
@@ -124,36 +102,6 @@ export default defineComponent({
 
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
-
-    updateSceneTree( scene:Scene ) {
-      // Find all the entities and build tree items for them
-      const tree = {};
-      for ( const id of scene.eids ) {
-        const entity = scene.entities[id];
-        console.log( `Treeing entity ${id}` );
-        if ( !tree[id] ) {
-          tree[id] = { entity: null, children: [] };
-        }
-        tree[id].entity = id;
-        tree[id].name = entity.name;
-        tree[id].icon = this.icons[ entity.type ];
-
-        const pid = scene.components.Position.store.pid[id];
-        if ( pid < 2**32-1 ) {
-          console.log( `Parenting to ${pid}` );
-          if ( !tree[pid] ) {
-            tree[pid] = { entity: null, children: [] };
-          }
-          tree[pid].children.push( tree[id] );
-          delete tree[id];
-        }
-      }
-      console.log( "Completed tree:", tree );
-      this.sceneTree.children = Object.values(tree);
-
-      // Update the systems array
-      this.sceneSystems = scene.systems.map( s => ({ name: s.name, data: s.freeze() }) );
-    },
 
     // The player game is sized according to the game settings and uses
     // the runtime systems
@@ -186,7 +134,7 @@ export default defineComponent({
         game.registerSystem( name, this.systems[name] );
       }
 
-      return game;
+      return markRaw(game);
     },
 
     // The editor game is sized to fit the screen and uses some custom
@@ -218,7 +166,7 @@ export default defineComponent({
         game.registerSystem( name, system );
       }
 
-      return game;
+      return markRaw(game);
     },
 
     update() {
@@ -237,99 +185,6 @@ export default defineComponent({
       this.$emit('save');
     },
 
-    select(item) {
-      if ( this.sceneTree === item ) {
-        this.selectedEntity = null;
-        this.selectedSceneItem = null;
-        this.selectedComponents = {};
-        return;
-      }
-      this.selectedSceneItem = item;
-      this.selectEntity( this.scene.entities[item.entity] );
-    },
-
-    selectEntity(entity) {
-      this.selectedEntity = entity;
-      // XXX: selectedComponents could be a computed property
-      this.selectedComponents = {};
-      for ( const c of this.selectedEntity.listComponents() ) {
-        this.selectedComponents[c] = this.selectedEntity.getComponent(c);
-      }
-    },
-
-    updateComponent( name:string, data:Object ) {
-      console.log( `Entity ${this.selectedEntity.id} Component ${name}`, data );
-      this.selectedEntity.setComponent(name, toRaw(data));
-      this.selectedComponents[name] = data;
-      this.update();
-      this.scene.update(0);
-      this.scene.render();
-    },
-
-    removeComponent( name:string ) {
-      if ( confirm( 'Are you sure?' ) ) {
-        this.selectedEntity.removeComponent(name);
-        this.scene.update(0);
-        this.scene.render();
-        this.update();
-      }
-    },
-
-    hasComponent( name:string ) {
-      return this.selectedEntity.listComponents().includes(name);
-    },
-
-    addComponent( name:string ) {
-      if ( this.hasComponent(name) ) {
-        return;
-      }
-      this.selectedEntity.addComponent(name);
-      this.scene.update(0);
-      this.scene.render();
-      this.update();
-    },
-
-    addEntity( ...components:string[] ) {
-      const entity = this.editScene.addEntity();
-      for ( const c of components ) {
-        entity.addComponent(c);
-      }
-      this.updateSceneTree(this.editScene);
-      const entityItem = this.sceneTree.children[ this.sceneTree.children.length - 1 ];
-      this.select( entityItem );
-      this.update();
-    },
-
-    updateName( event ) {
-      const name = event.target.value;
-      this.sceneTree.name = name;
-      this.modelValue.name = name;
-      this.$emit( 'update:name', name );
-    },
-
-    deleteEntity( item ) {
-      if ( confirm( `Are you sure you want to delete "${item.name}"?` ) ) {
-        const scene = this.scene;
-        const entity = scene.entities[ item.entity ];
-        if ( this.selectedEntity?.id === entity.id ) {
-          this.select( this.sceneTree );
-        }
-        scene.removeEntity( entity.id );
-        scene.update(0);
-        scene.render();
-        this.$refs.tree.removeItem(item);
-        this.update();
-      }
-    },
-
-    updateSystem( idx:number, data:Object ) {
-      this.sceneSystems[idx].data = data;
-      // XXX: Add freeze/thaw for systems
-      //this.scene.systems[idx].thaw( data );
-      this.update();
-      this.scene.update(0);
-      this.scene.render();
-    },
     play(playState) {
       this.playState = playState ||= this.editScene.freeze();
 
@@ -338,13 +193,12 @@ export default defineComponent({
       }
 
       this.playGame = this.createPlayerGame( 'play-canvas' );
-      const scene = this.playScene = this.playGame.addScene();
+      const scene = this.playScene = markRaw(this.playGame.addScene());
       scene.thaw( playState );
 
       this.playing = true;
       this.paused = false;
       this.$nextTick( () => {
-        this.updateSceneTree(scene);
         this.playGame.start();
         this.playScene.start();
         this.$refs['play-canvas'].focus();
@@ -365,68 +219,6 @@ export default defineComponent({
 
       this.playing = false;
       this.paused = false;
-
-      this.updateSceneTree(this.editScene);
-    },
-
-    startDragSystem(event, index) {
-      event.dataTransfer.setData("bitwise/system", index);
-    },
-
-    dragOverSystem(event, index) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-      // XXX: Show drop indicator
-    },
-
-    dropSystem(event, index) {
-      const data = event.dataTransfer.getData("bitwise/system");
-      if ( data ) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-        console.log( `Moving system ${data} to ${index}` );
-        const system = this.scene.systems.splice(data, 1);
-        this.scene.systems.splice( index, 0, ...system );
-        this.update();
-        this.updateSceneTree( this.scene );
-      }
-    },
-
-    hasSystem( name:string ) {
-      return !!this.sceneSystems.find( s => s.name === name );
-    },
-
-    addSystem( name:string ) {
-      if ( this.hasSystem(name) ) {
-        return;
-      }
-      this.scene.addSystem( name );
-      this.scene.update(0);
-      this.scene.render();
-      this.update();
-      this.updateSceneTree( this.scene );
-    },
-
-    removeSystem( idx ) {
-      this.scene.systems.splice( idx, 1 );
-      this.scene.update(0);
-      this.scene.render();
-      this.update();
-      this.updateSceneTree( this.scene );
-    },
-
-    updateEntityName() {
-      this.selectedEntity.name = this.selectedSceneItem.name;
-      this.update();
-    },
-
-    createPrefab( item ) {
-      // Create a new file with this entity's configuration, including
-      // children
-      console.log( item.entity );
-      console.log( this.scene.entities[ item.entity ].freeze() );
-
-      // Open a new tab on the prefab editor?
     },
   },
 });
@@ -472,96 +264,7 @@ export default defineComponent({
       <canvas ref="play-canvas" v-show="playing == true" />
     </div>
     <div class="tab-sidebar">
-      <div class="scene-toolbar">
-        <div class="dropdown">
-          <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa fa-file-circle-plus"></i>
-            New Entity
-          </button>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#" @click="addEntity('Position')">Blank</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#" @click="addEntity('Position','Sprite')">Sprite</a></li>
-            <li><a class="dropdown-item" href="#" @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="scene-tree">
-        <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select">
-          <template #menu="{item}">
-            <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
-              <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu" @click.prevent.stop="showFileDropdown"
-                data-bs-toggle="dropdown"
-                data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" @click="createPrefab(item)">Create Prefab</a></li>
-                <li><a class="dropdown-item" href="#" @click="deleteFile(item)">Delete</a></li>
-              </ul>
-            </div>
-          </template>
-        </ObjectTreeItem>
-      </div>
-      <div class="entity-pane" v-if="selectedEntity">
-        <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
-        <div class="d-flex justify-content-between align-items-center">
-          <label class="me-1">Name</label>
-          <input class="flex-fill text-end col-1" v-model="selectedSceneItem.name"
-            @keyup="updateEntityName" pattern="^[^/]+$"
-          />
-        </div>
-        <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
-          <div class="mb-1 d-flex justify-content-between align-items-center">
-            <h6 class="m-0">{{ c }}</h6>
-            <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
-          </div>
-          <div v-if="componentForms[c]" class="my-2 component-form">
-            <component :is="componentForms[c]" v-model="selectedComponents[c]"
-              :scene="scene" @update="updateComponent(c, $event)"
-            />
-          </div>
-        </div>
-        <div class="dropdown m-2 mt-4 text-center dropup">
-          <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Add Component...
-          </button>
-          <ul class="dropdown-menu">
-            <li v-for="c in availableComponents">
-              <a class="dropdown-item" :class="hasComponent(c) ? 'disabled' : ''" href="#" @click="addComponent(c)">{{c}}</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div v-else class="entity-pane">
-        <h5>Scene</h5>
-        <div class="d-flex justify-content-between align-items-center">
-          <label class="me-1">Name</label>
-          <input v-model="sceneTree.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
-        </div>
-        <div v-for="s, idx in sceneSystems" :key="s.name" class="system-form">
-          <div class="mb-1 d-flex justify-content-between align-items-center"
-            draggable="true" @dragstart="startDragSystem( $event, idx )"
-            @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"
-          >
-            <h6 class="m-0"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
-            <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
-          </div>
-          <div v-if="systemForms[s.name]" class="my-2">
-            <component :is="systemForms[s.name]" v-model="s.data"
-            @update="updateSystem(idx, $event)" />
-          </div>
-        </div>
-        <div class="dropdown m-2 mt-4 text-center dropup">
-          <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Add System...
-          </button>
-          <ul class="dropdown-menu">
-            <li v-for="s in availableSystems">
-              <a class="dropdown-item" :class="hasSystem(s) ? 'disabled' : ''" href="#" @click="addSystem(s)">{{s}}</a>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <ScenePanel :scene="scene" />
     </div>
   </div>
 </template>
@@ -626,48 +329,5 @@ export default defineComponent({
   .build-overlay > * {
     flex: 1 1 100%;
     color: var(--bs-light);
-  }
-  .scene-toolbar {
-    flex: 0 0 auto;
-  }
-  .scene-tree {
-    border-bottom: 1px solid rgb(0 0 0 / 10%);
-    margin-bottom: 2px;
-    overflow: scroll;
-    flex: 1 1 25%;
-  }
-  .entity-pane {
-    flex: 1 1 75%;
-    padding: 2px;
-    overflow: scroll;
-  }
-  .component-form {
-    padding-top: 2px;
-    border-top: 1px solid rgb(0 0 0 / 10%);
-    margin-top: 2px;
-  }
-  .icon-button {
-    cursor: pointer;
-  }
-
-  .object-tree-item .name i.delete {
-    visibility: hidden;
-  }
-  .object-tree-item .name:hover i.delete {
-    visibility: visible;
-  }
-
-  .system-form .system-move {
-    visibility: hidden;
-  }
-  .system-form:hover .system-move {
-    visibility: visible;
-  }
-
-  .scene-tree-item-menu {
-    display: block;
-    height: 100%;
-    padding: 0 6px;
-    font-size: 1.3em;
   }
 </style>
