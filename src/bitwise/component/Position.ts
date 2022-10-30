@@ -50,7 +50,7 @@ export default class Position extends Component {
     while ( parentId < 2**32-1 ) {
       const parent = this.scene.entities[ parentId ];
       data.path = [ parent.name, data.path ].join("/");
-      parentId = parent.id;
+      parentId = this.store.pid[ parent.id ];
     }
     delete data.pid;
     entity.path = data.path;

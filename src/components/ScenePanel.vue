@@ -18,6 +18,7 @@ export default defineComponent({
       selectedComponents: {},
       sceneSystems: [],
       icons: {
+        "default": "fa-cube",
         "Camera": "fa-camera",
         "Sprite": "fa-image-portrait",
       },
@@ -55,18 +56,19 @@ export default defineComponent({
         const entity = scene.entities[id];
         console.log( `Treeing entity ${id}` );
         if ( !tree[id] ) {
-          tree[id] = { entity: null, children: [] };
+          tree[id] = { entity: null, children: [], path: id };
         }
         tree[id].entity = id;
         tree[id].name = entity.name;
-        tree[id].icon = this.icons[ entity.type ];
+        tree[id].icon = this.icons[ entity.type ] || this.icons.default;
 
         const pid = scene.components.Position.store.pid[id];
         if ( pid < 2**32-1 ) {
           console.log( `Parenting to ${pid}` );
           if ( !tree[pid] ) {
-            tree[pid] = { entity: null, children: [] };
+            tree[pid] = { entity: null, children: [], path: pid };
           }
+          tree[id].path = [ pid, tree[id].path ].join('/');
           tree[pid].children.push( tree[id] );
           delete tree[id];
         }
@@ -80,6 +82,7 @@ export default defineComponent({
         this.sceneTree = {
           name: scene?.name || 'New Scene',
           icon: 'fa-film',
+          parent: 2**32-1,
           children: Object.values(tree),
         };
         // Update the systems array
@@ -170,6 +173,59 @@ export default defineComponent({
     updateSystem( idx:number, data:Object ) {
       this.scene.systems[idx].thaw( data );
       this.$emit('update');
+    },
+
+    dragOverEntity( event ) {
+      // Drag over left half, adjacent to over.
+      // Drag over right half, child of over.
+      //const targetLeft = event.target.getBoundingClientRect().left;
+      //const rowLeft = event.currentTarget.getBoundingClientRect().left;
+      //const rowWidth = event.currentTarget.clientWidth;
+      //const rowOffsetX = event.offsetX + ( targetLeft - rowLeft );
+      // XXX: Show indicator: Adjacent circle at left, child-of circle indented
+      //for ( const node of event.currentTarget.parentNode.querySelectorAll('.entity-drop-top,.entity-drop') ) {
+        //node.classList.remove('entity-drop');
+        //node.classList.remove('entity-drop-top');
+      //}
+      //const isChild = rowOffsetX > rowWidth / 2
+    },
+
+    dropEntity( event ) {
+      const data = event.dataTransfer.getData("bitwise/entity");
+      if ( data ) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        // Drag over left half, adjacent to over.
+        // Drag over right half, child of over.
+        const targetLeft = event.target.getBoundingClientRect().left;
+        const rowLeft = event.currentTarget.getBoundingClientRect().left;
+        const rowWidth = event.currentTarget.clientWidth;
+        const rowOffsetX = event.offsetX + ( targetLeft - rowLeft );
+        const isChild = rowOffsetX > rowWidth / 2
+
+        const dragPid = data.indexOf( '/' ) >= 0 ? data.split('/').pop() : data;
+        const dropPath = event.currentTarget.dataset.path;
+        let dropPid = 2**32-1;
+        if ( dropPath && dropPath.indexOf( '/' ) >= 0 ) {
+          if ( isChild ) {
+            dropPid = dropPath.split('/').pop();
+          }
+          else {
+            dropPid = dropPath.split('/').slice(-2, 1)[0];
+          }
+        }
+        else if ( typeof dropPath !== 'undefined' && isChild ) {
+          dropPid = dropPath;
+        }
+        console.log( 'dropping entity on parent', isChild, dragPid, dropPid );
+        this.scene.components.Position.store.pid[dragPid] = dropPid;
+        this.updateSceneTree(this.scene);
+        // XXX: Expand dropPid if not root
+        this.$emit('update');
+      }
+      else {
+        event.dataTransfer.dropEffect = "";
+      }
     },
 
     startDragSystem(event, index) {
@@ -264,7 +320,9 @@ export default defineComponent({
       </div>
     </div>
     <div class="scene-tree">
-      <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select">
+      <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select"
+        :ondragover="dragOverEntity" :ondropitem="dropEntity"
+      >
         <template #menu="{item}">
           <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
             <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu" @click.prevent.stop="showFileDropdown"
@@ -399,4 +457,31 @@ export default defineComponent({
     padding: 0 6px;
     font-size: 1.3em;
   }
+
+  .entity-drop, .entity-drop-top {
+    position: relative;
+  }
+  .entity-drop {
+    border-bottom: 3px dashed #69b6d5;
+  }
+  .entity-drop-top {
+    border-top: 3px dashed #69b6d5;
+  }
+  .entity-drop::before, .entity-drop-top::before {
+     content: '';
+     display: block;
+     width: 10px;
+     height: 10px;
+     border-radius: 5px;
+     background-color: #69b6d5;
+     position: absolute;
+     left: -2.5px;
+  }
+  .entity-drop::before {
+    top: 100%;
+  }
+  .entity-drop-top::before {
+    bottom: 100%;
+  }
+
 </style>

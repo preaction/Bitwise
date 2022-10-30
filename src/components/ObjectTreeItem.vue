@@ -4,7 +4,7 @@ const DBLCLICK_DELAY = 250;
 
 export default defineComponent({
   name: 'ObjectTreeItem',
-  props: ['item', 'expand', 'onclickitem', 'ondblclickitem', 'ondropitem', 'dragtype'],
+  props: ['item', 'expand', 'onclickitem', 'ondblclickitem', 'ondragover', 'ondropitem', 'dragtype'],
   data() {
     return {
       clickTimeout: null,
@@ -84,6 +84,9 @@ export default defineComponent({
       if ( this.ondropitem ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
+        if ( this.ondragover ) {
+          this.ondragover(event);
+        }
       }
     },
     drop( event ) {
@@ -135,7 +138,7 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in item.children">
-        <ObjectTreeItem ref="children" :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :ondropitem="ondropitem" :item="child" :dragtype="dragtype">
+        <ObjectTreeItem ref="children" :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :ondragover="ondragover" :ondropitem="ondropitem" :item="child" :dragtype="dragtype">
           <template #menu="{item}">
             <slot name="menu" :item="item" />
           </template>
