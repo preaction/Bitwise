@@ -7,6 +7,15 @@ import Position from '../component/Position.js';
 import RigidBody from '../component/RigidBody.js';
 import BoxCollider from '../component/BoxCollider.js';
 
+export enum Broadphase {
+  AxisSweep,
+  Dbvt,
+};
+const broadphaseClass = {
+  [Broadphase.AxisSweep]: "btAxisSweep3",
+  [Broadphase.Dbvt]: "btDbvtBroadphase",
+};
+
 type ColliderMap = {
   box?: BoxCollider,
 };
@@ -25,6 +34,8 @@ export default class Physics extends System {
   rigidbody:RigidBody;
   position:Position;
   collider:ColliderMap = {};
+  broadphase:Broadphase = Broadphase.AxisSweep;
+  gravity:any;
 
   universe:any; //Ammo.btCollisionWorld;
   bodies:Array<any> = [];
@@ -38,6 +49,7 @@ export default class Physics extends System {
 
   constructor( name:string, scene:Scene, data:any ) {
     super( name, scene, data );
+    this.thaw(data);
 
     this.position = scene.getComponent(Position);
     this.rigidbody = scene.getComponent(RigidBody);
@@ -57,6 +69,24 @@ export default class Physics extends System {
     this.initAmmo();
   }
 
+  freeze() {
+    const data = super.freeze();
+    data.gx = this.gravity?.x() || 0;
+    data.gy = this.gravity?.y() || 0;
+    data.gz = this.gravity?.z() || 0;
+    data.broadphase = this.broadphase || Broadphase.AxisSweep;
+    console.log( 'Standard Physics Frozen', data );
+    return data;
+  }
+
+  thaw( data:any ) {
+    super.thaw(data);
+    console.log( 'Standard Physics Thaw', data );
+    this.broadphase = data.broadphase || Broadphase.AxisSweep;
+    this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
+    console.log( 'Standard Physics Gravity', this.gravity );
+  }
+
   watchQuery( query:bitecs.Query, cb:(...args:any) => void ) {
     this.watchQueries.push( [ query, cb ] );
   }
@@ -64,11 +94,11 @@ export default class Physics extends System {
   initAmmo() {
     const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
     const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-    const overlappingPairCache = new Ammo.btDbvtBroadphase();
+    const broadphase = new Ammo[ broadphaseClass[ this.broadphase] ]();
     const solver = new Ammo.btSequentialImpulseConstraintSolver();
-    this.universe = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-    // XXX: Gravity should be configuration
-    this.universe.setGravity(new Ammo.btVector3(0, 0, 0));
+    this.universe = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    console.log( 'init gravity', this.gravity );
+    this.universe.setGravity(this.gravity);
   }
 
   update( timeMilli:number ) {

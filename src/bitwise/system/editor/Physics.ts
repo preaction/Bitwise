@@ -1,17 +1,21 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
+import * as Ammo from 'ammo.js';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
 import Component from '../../Component.js';
 import Position from '../../component/Position.js';
 import RigidBody from '../../component/RigidBody.js';
+import { Broadphase } from '../Physics.js';
 
-// XXX: This should subclass the standard Physics system?
+// XXX: This should subclass the standard Physics system
 export default class Physics extends System {
   rigidbody:RigidBody;
   position:Position;
   collider:{ box: Component };
+  gravity:any;
+  broadphase:Broadphase = Broadphase.AxisSweep;
 
   bodies:Array<any> = [];
 
@@ -21,6 +25,7 @@ export default class Physics extends System {
 
   constructor( name:string, scene:Scene, data:any ) {
     super(name, scene, data);
+    this.thaw(data);
 
     this.position = scene.getComponent(Position);
     this.rigidbody = scene.getComponent(RigidBody);
@@ -32,6 +37,23 @@ export default class Physics extends System {
     this.query = scene.game.ecs.defineQuery([ this.position.store ]);
     this.enterQuery = scene.game.ecs.enterQuery( this.query );
     this.exitQuery = scene.game.ecs.exitQuery( this.query );
+  }
+
+  freeze() {
+    const data = super.freeze();
+    data.gx = this.gravity?.x() || 0;
+    data.gy = this.gravity?.y() || 0;
+    data.gz = this.gravity?.z() || 0;
+    data.broadphase = this.broadphase || Broadphase.AxisSweep;
+    console.log( 'Editor Physics Frozen', data );
+    return data;
+  }
+
+  thaw( data:any ) {
+    console.log( 'Editor Physics Thaw', data );
+    this.broadphase = data.broadphase || Broadphase.AxisSweep;
+    this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
+    super.thaw(data);
   }
 
   update( timeMilli:number ) {

@@ -169,6 +169,14 @@ export default defineComponent({
       return markRaw(game);
     },
 
+    sceneChanged() {
+      this.scene.update(0);
+      this.scene.render();
+      if ( !this.playing ) {
+        this.update();
+      }
+    },
+
     update() {
       // update() always works with the edit scene
       // XXX: Editor scene should freeze camera settings
@@ -264,7 +272,7 @@ export default defineComponent({
       <canvas ref="play-canvas" v-show="playing == true" />
     </div>
     <div class="tab-sidebar">
-      <ScenePanel :scene="scene" />
+      <ScenePanel @update="sceneChanged" :scene="scene" />
     </div>
   </div>
 </template>

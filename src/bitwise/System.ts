@@ -7,12 +7,16 @@ export default class System {
   constructor( name:string, scene:Scene, data:Object ) {
     this.name = name;
     this.scene = scene;
+    // XXX: We can't thaw here because it comes before any defaults are
+    // initialized by the superclass...
+  }
+  static get editorComponent():string {
+    return '';
   }
   freeze() {
-    return {
-      name: this.name,
-      data: {},
-    };
+    return {};
+  }
+  thaw(data:any) {
   }
   update( timeMilli:number=0, timeTotal:number=0 ) { }
   render() { }

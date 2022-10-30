@@ -9,6 +9,7 @@ export default defineComponent({
     ObjectTreeItem,
   },
   props: ['scene', 'isPrefab'],
+  emits: ['update'],
   data() {
     return {
       sceneTree: {},
@@ -112,17 +113,13 @@ export default defineComponent({
       console.log( `Entity ${this.selectedEntity.id} Component ${name}`, data );
       this.selectedEntity.setComponent(name, toRaw(data));
       this.selectedComponents[name] = data;
-      this.update();
-      this.scene.update(0);
-      this.scene.render();
+      this.$emit('update');
     },
 
     removeComponent( name:string ) {
       if ( confirm( 'Are you sure?' ) ) {
         this.selectedEntity.removeComponent(name);
-        this.scene.update(0);
-        this.scene.render();
-        this.update();
+        this.$emit('update');
       }
     },
 
@@ -135,9 +132,7 @@ export default defineComponent({
         return;
       }
       this.selectedEntity.addComponent(name);
-      this.scene.update(0);
-      this.scene.render();
-      this.update();
+      this.$emit('update');
     },
 
     addEntity( ...components:string[] ) {
@@ -149,7 +144,7 @@ export default defineComponent({
       this.updateSceneTree(this.scene);
       const entityItem = this.sceneTree.children[ this.sceneTree.children.length - 1 ];
       this.select( entityItem );
-      this.update();
+      this.$emit('update');
     },
 
     updateName( event ) {
@@ -167,20 +162,14 @@ export default defineComponent({
           this.select( this.sceneTree );
         }
         scene.removeEntity( entity.id );
-        scene.update(0);
-        scene.render();
         this.$refs.tree.removeItem(item);
-        this.update();
+        this.$emit('update');
       }
     },
 
     updateSystem( idx:number, data:Object ) {
-      this.sceneSystems[idx].data = data;
-      // XXX: Add freeze/thaw for systems
-      //this.scene.systems[idx].thaw( data );
-      this.update();
-      this.scene.update(0);
-      this.scene.render();
+      this.scene.systems[idx].thaw( data );
+      this.$emit('update');
     },
 
     startDragSystem(event, index) {
@@ -201,7 +190,7 @@ export default defineComponent({
         console.log( `Moving system ${data} to ${index}` );
         const system = this.scene.systems.splice(data, 1);
         this.scene.systems.splice( index, 0, ...system );
-        this.update();
+        this.$emit('update');
         console.log( 'Dropped system, updating tree' );
         this.updateSceneTree( this.scene );
       }
@@ -216,25 +205,21 @@ export default defineComponent({
         return;
       }
       this.scene.addSystem( name );
-      this.scene.update(0);
-      this.scene.render();
-      this.update();
+      this.$emit('update');
       console.log( 'Added system, updating tree' );
       this.updateSceneTree( this.scene );
     },
 
     removeSystem( idx ) {
       this.scene.systems.splice( idx, 1 );
-      this.scene.update(0);
-      this.scene.render();
-      this.update();
+      this.$emit('update');
       console.log( 'Removed system, updating tree' );
       this.updateSceneTree( this.scene );
     },
 
     updateEntityName() {
       this.selectedEntity.name = this.selectedSceneItem.name;
-      this.update();
+      this.emit('update');
     },
 
     createPrefab( item ) {
@@ -263,94 +248,96 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="scene-toolbar">
-    <div class="dropdown">
-      <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="fa fa-file-circle-plus"></i>
-        New Entity
-      </button>
-      <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="#" @click="addEntity('Position')">Blank</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="#" @click="addEntity('Position','Sprite')">Sprite</a></li>
-        <li><a class="dropdown-item" href="#" @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="scene-tree">
-    <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select">
-      <template #menu="{item}">
-        <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
-          <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu" @click.prevent.stop="showFileDropdown"
-            data-bs-toggle="dropdown"
-            data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#" @click="createPrefab(item)">Create Prefab</a></li>
-            <li><a class="dropdown-item" href="#" @click="deleteFile(item)">Delete</a></li>
-          </ul>
-        </div>
-      </template>
-    </ObjectTreeItem>
-  </div>
-  <div class="entity-pane" v-if="selectedEntity">
-    <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
-    <div class="d-flex justify-content-between align-items-center">
-      <label class="me-1">Name</label>
-      <input class="flex-fill text-end col-1" v-model="selectedSceneItem.name"
-        @keyup="updateEntityName" pattern="^[^/]+$"
-      />
-    </div>
-    <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
-      <div class="mb-1 d-flex justify-content-between align-items-center">
-        <h6 class="m-0">{{ c }}</h6>
-        <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
+  <div class="scene-panel">
+    <div class="scene-toolbar">
+      <div class="dropdown">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fa fa-file-circle-plus"></i>
+          New Entity
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#" @click="addEntity('Position')">Blank</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="#" @click="addEntity('Position','Sprite')">Sprite</a></li>
+          <li><a class="dropdown-item" href="#" @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</a></li>
+        </ul>
       </div>
-      <div v-if="componentForms[c]" class="my-2 component-form">
-        <component :is="componentForms[c]" v-model="selectedComponents[c]"
-          :scene="scene" @update="updateComponent(c, $event)"
+    </div>
+    <div class="scene-tree">
+      <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select">
+        <template #menu="{item}">
+          <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
+            <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu" @click.prevent.stop="showFileDropdown"
+              data-bs-toggle="dropdown"
+              data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" @click="createPrefab(item)">Create Prefab</a></li>
+              <li><a class="dropdown-item" href="#" @click="deleteFile(item)">Delete</a></li>
+            </ul>
+          </div>
+        </template>
+      </ObjectTreeItem>
+    </div>
+    <div class="entity-pane" v-if="selectedEntity">
+      <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
+      <div class="d-flex justify-content-between align-items-center">
+        <label class="me-1">Name</label>
+        <input class="flex-fill text-end col-1" v-model="selectedSceneItem.name"
+          @keyup="updateEntityName" pattern="^[^/]+$"
         />
       </div>
+      <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
+        <div class="mb-1 d-flex justify-content-between align-items-center">
+          <h6 class="m-0">{{ c }}</h6>
+          <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
+        </div>
+        <div v-if="componentForms[c]" class="my-2 component-form">
+          <component :is="componentForms[c]" v-model="selectedComponents[c]"
+            :scene="scene" @update="updateComponent(c, $event)"
+          />
+        </div>
+      </div>
+      <div class="dropdown m-2 mt-4 text-center dropup">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Add Component...
+        </button>
+        <ul class="dropdown-menu">
+          <li v-for="c in availableComponents">
+            <a class="dropdown-item" :class="hasComponent(c) ? 'disabled' : ''" href="#" @click="addComponent(c)">{{c}}</a>
+          </li>
+        </ul>
+      </div>
     </div>
-    <div class="dropdown m-2 mt-4 text-center dropup">
-      <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Add Component...
-      </button>
-      <ul class="dropdown-menu">
-        <li v-for="c in availableComponents">
-          <a class="dropdown-item" :class="hasComponent(c) ? 'disabled' : ''" href="#" @click="addComponent(c)">{{c}}</a>
-        </li>
-      </ul>
-    </div>
-  </div>
 
-  <div v-else class="entity-pane">
-    <h5>Scene</h5>
-    <div class="d-flex justify-content-between align-items-center">
-      <label class="me-1">Name</label>
-      <input v-model="sceneTree.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
-    </div>
-    <div v-for="s, idx in sceneSystems" :key="s.name" class="system-form">
-      <div class="mb-1 d-flex justify-content-between align-items-center"
-        draggable="true" @dragstart="startDragSystem( $event, idx )"
-        @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"
-      >
-        <h6 class="m-0"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
-        <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
+    <div v-else class="entity-pane">
+      <h5>Scene</h5>
+      <div class="d-flex justify-content-between align-items-center">
+        <label class="me-1">Name</label>
+        <input v-model="sceneTree.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
       </div>
-      <div v-if="systemForms[s.name]" class="my-2">
-        <component :is="systemForms[s.name]" v-model="s.data"
-        @update="updateSystem(idx, $event)" />
+      <div v-for="s, idx in sceneSystems" :key="s.name" class="system-form">
+        <div class="mb-1 d-flex justify-content-between align-items-center"
+          draggable="true" @dragstart="startDragSystem( $event, idx )"
+          @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"
+        >
+          <h6 class="m-0"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
+          <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
+        </div>
+        <div v-if="systemForms[s.name]" class="my-2">
+          <component :is="systemForms[s.name]" v-model="s.data"
+            @update="updateSystem(idx, $event)" />
+        </div>
       </div>
-    </div>
-    <div class="dropdown m-2 mt-4 text-center dropup">
-      <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Add System...
-      </button>
-      <ul class="dropdown-menu">
-        <li v-for="s in availableSystems">
-          <a class="dropdown-item" :class="hasSystem(s) ? 'disabled' : ''" href="#" @click="addSystem(s)">{{s}}</a>
-        </li>
-      </ul>
+      <div class="dropdown m-2 mt-4 text-center dropup">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Add System...
+        </button>
+        <ul class="dropdown-menu">
+          <li v-for="s in availableSystems">
+            <a class="dropdown-item" :class="hasSystem(s) ? 'disabled' : ''" href="#" @click="addSystem(s)">{{s}}</a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>

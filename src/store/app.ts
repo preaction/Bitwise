@@ -17,6 +17,9 @@ import SpriteEdit from '../components/bitwise/Sprite.vue';
 import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
 import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 
+// Core System forms
+import PhysicsEdit from '../components/bitwise/system/Physics.vue';
+
 type GameConfig = {};
 
 type Tab = {
@@ -122,6 +125,7 @@ type AppState = {
   components: { [key:string]: typeof Component },
   systems: { [key:string]: typeof System },
   componentForms: { [key:string]: any },
+  systemForms: { [key:string]: any },
   _fsWatcher: any,
 };
 
@@ -151,7 +155,9 @@ export const useAppStore = defineStore('app', {
         "RigidBody": RigidBodyEdit,
         "BoxCollider": BoxColliderEdit,
       }),
-      systemForms: Vue.markRaw({}),
+      systemForms: Vue.markRaw({
+        "Physics": PhysicsEdit,
+      }),
     } as AppState;
   },
 
@@ -373,6 +379,15 @@ export const useAppStore = defineStore('app', {
             console.log( `Loading editor component ${name}: ${component.editorComponent}` );
             const path = this.currentProject + '/' + component.editorComponent;
             this.componentForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
+          }
+        }
+
+        for ( const name in game.systems ) {
+          const system = game.systems[name];
+          if ( system.editorComponent ) {
+            console.log( `Loading editor component ${name}: ${system.editorComponent}` );
+            const path = this.currentProject + '/' + system.editorComponent;
+            this.systemForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
           }
         }
       }

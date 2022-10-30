@@ -157,7 +157,7 @@ export default class Scene extends three.EventDispatcher {
     return {
       entities: data,
       components: Object.keys( this.components ),
-      systems: this.systems.map( s => s.freeze() ),
+      systems: this.systems.map( s => ({ name: s.name, data: s.freeze() }) ),
     };
   }
 
