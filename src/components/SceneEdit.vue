@@ -294,14 +294,7 @@ export default defineComponent({
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
   }
   .tab-sidebar {
-    display: flex;
-    flex-flow: column;
-    font-size: 0.9em;
-    grid-area: sidebar;
-    padding: 2px;
-    width: 200px;
-    background: var(--bs-light);
-    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
+    height: 100%;
     overflow: hidden;
   }
   .tab-main-edit {

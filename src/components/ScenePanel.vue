@@ -343,6 +343,19 @@ export default defineComponent({
 </template>
 
 <style>
+  .scene-panel {
+    display: flex;
+    flex-flow: column;
+    font-size: 0.9em;
+    grid-area: sidebar;
+    padding: 2px;
+    width: 200px;
+    background: var(--bs-light);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
+    overflow: hidden;
+    height: 100%;
+  }
+
   .scene-toolbar {
     flex: 0 0 auto;
   }
