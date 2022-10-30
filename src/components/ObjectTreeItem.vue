@@ -4,7 +4,7 @@ const DBLCLICK_DELAY = 250;
 
 export default defineComponent({
   name: 'ObjectTreeItem',
-  props: ['item', 'expand', 'onclickitem', 'ondblclickitem', 'dragtype'],
+  props: ['item', 'expand', 'onclickitem', 'ondblclickitem', 'ondropitem', 'dragtype'],
   data() {
     return {
       clickTimeout: null,
@@ -76,6 +76,25 @@ export default defineComponent({
     dragstart( event ) {
       console.log( `Dragging ${this.path}: bitwise/${this.dragtype}` );
       event.dataTransfer.setData('bitwise/' + this.dragtype, this.item.path);
+      if ( this.item.dragtype ) {
+        event.dataTransfer.setData('bitwise/' + this.item.dragtype, this.item.path);
+      }
+    },
+    dragover(event) {
+      if ( this.ondropitem ) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+      }
+    },
+    drop( event ) {
+      if ( this.ondropitem ) {
+        this.ondropitem(event);
+      }
+      else {
+        event.dataTransfer.dropEffect = "";
+      }
+    },
+    dragend( event ) {
     },
     removeItem( item ) {
       const idx = this.item.children.indexOf( item );
@@ -98,7 +117,9 @@ export default defineComponent({
 <template>
   <div class="object-tree-item">
     <div class="name ps-1 d-flex"
-      draggable="true" @dragstart="dragstart"
+      :data-path="item.path"
+      draggable="true" @dragstart="dragstart" @dragend="dragend"
+      @dragover="dragover" @drop="drop"
       @click="handleClick" @dblclick="handleDoubleClick"
       @mousedown="preventTextSelect"
     >
@@ -114,7 +135,7 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in item.children">
-        <ObjectTreeItem ref="children" :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="child" :dragtype="dragtype">
+        <ObjectTreeItem ref="children" :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :ondropitem="ondropitem" :item="child" :dragtype="dragtype">
           <template #menu="{item}">
             <slot name="menu" :item="item" />
           </template>

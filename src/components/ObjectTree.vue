@@ -3,7 +3,7 @@ import { defineComponent } from "vue";
 import ObjectTreeItem from "./ObjectTreeItem.vue";
 
 export default defineComponent({
-  props: ['items', 'onclickitem', 'ondblclickitem', 'dragtype'],
+  props: ['items', 'onclickitem', 'ondblclickitem', 'ondropitem', 'dragtype'],
   data() {
     return {
     };
@@ -33,7 +33,7 @@ export default defineComponent({
 <template>
   <div class="object-tree">
     <div v-for="item, i in items" class="text-start">
-      <ObjectTreeItem ref="children" :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :item="item" :dragtype="dragtype">
+      <ObjectTreeItem ref="children" :onclickitem="onclickitem" :ondblclickitem="ondblclickitem" :ondropitem="ondropitem" :dragtype="dragtype" :item="item">
         <template #menu="{item}">
           <slot name="menu" :item="item" />
         </template>

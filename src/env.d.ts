@@ -43,6 +43,7 @@ declare var electron: {
   on: ( channel:string, cb:Function ) => void;
   removeListener: ( channel:string, cb:Function ) => void;
   deleteTree: ( root:string, path:string ) => Promise<void>;
+  renamePath: ( root:string, path:string, dest:string ) => Promise<void>;
   buildProject: ( root:string, src:string, dest:string ) => Promise<string>;
   openEditor: ( root:string, file:string ) => Promise<string>;
 };

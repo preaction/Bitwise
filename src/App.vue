@@ -228,6 +228,30 @@ export default defineComponent({
         this.consoleWarnings = 0;
       }
     },
+
+    onDropFile( event ) {
+      const data = event.dataTransfer.getData("bitwise/file");
+      if ( data ) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        const dropPath = event.currentTarget.dataset.path;
+        // If the destination is a file, move to the parent folder
+        const parts = dropPath.split('/');
+        let destItem = this.projectItems.find( item => item.name + item.ext === parts[0] );
+        let parentPath = '';
+        for ( const part of parts.slice(1) ) {
+          parentPath += '/' + destItem.name;
+          destItem = destItem.children.find( item => item.name === part );
+        }
+        let destination = destItem.isDirectory ? destItem.path : parentPath;
+        destination += '/' + data.split('/').pop();
+        this.appStore.renamePath( data, destination );
+      }
+      else {
+        event.dataTransfer.dropEffect = "";
+      }
+    },
+
   },
   mounted() {
     // Override console logging
@@ -293,7 +317,7 @@ export default defineComponent({
           <i class="fa fa-gear"></i>
         </button>
       </div>
-      <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems">
+      <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile">
         <template #menu="{item}">
           <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
             <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu" @click.prevent.stop="showFileDropdown"

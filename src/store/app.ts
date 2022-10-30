@@ -495,6 +495,14 @@ export const useAppStore = defineStore('app', {
       // XXX: Pre-delete item from projectItems
       return electron.deleteTree( this.currentProject, path );
     },
+
+    renamePath( path:string, dest:string ) {
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
+      // XXX: Pre-move item in projectItems
+      return electron.renamePath( this.currentProject, path, dest );
+    },
   },
 });
 

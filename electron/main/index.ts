@@ -161,6 +161,7 @@ async function descend( filePath:string, root:string='' ) {
           path: path.join( filePath, p.name ),
         };
         if ( p.isDirectory() ) {
+          item.isDirectory = true;
           item.children = await descend( item.path, root );
         }
         return item;
@@ -244,6 +245,10 @@ ipcMain.handle('bitwise-read-file', (event, path) => {
 
 ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {
   return fs.rm( path.join( root, tree ), { recursive: true } );
+});
+
+ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
+  return fs.rename( path.join( root, from ), path.join( root, to ) );
 });
 
 ipcMain.handle('bitwise-build-project', (event, root, src, dest) => {
