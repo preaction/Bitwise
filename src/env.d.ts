@@ -33,6 +33,7 @@ declare var electron: {
     set: (file: string, key: string, val: any) => void;
     // any other methods you've defined...
   },
+  resourcesPath:() => Promise<string>,
   openProject: () => Promise<OpenDialog>;
   newProject: () => Promise<SaveDialog>;
   readProject: (path: string) => Promise<DirectoryItem[]>;

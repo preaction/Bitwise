@@ -1,6 +1,8 @@
 
 // Initialize electron-store
 const { contextBridge, ipcRenderer } = require('electron');
+const path = require('path');
+
 contextBridge.exposeInMainWorld('electron', {
   store: {
     get(file:string, val:string, def:any) {
@@ -10,6 +12,9 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('electron-store-set', file, property, val);
     },
     // Other method you want to add like has(), reset(), etc.
+  },
+  resourcesPath():Promise<string> {
+    return ipcRenderer.invoke('bitwise-resources-path');
   },
   // Any other methods you want to expose in the window object.
   // ...

@@ -40,6 +40,32 @@ type DirectoryItem = {
   children?: DirectoryItem[],
 };
 
+async function buildTsconfig():Promise<any> {
+  const resources = await electron.resourcesPath();
+  console.log( 'resources', resources );
+  return {
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "ESNext",
+      "moduleResolution": "node",
+      "importHelpers": true,
+      "jsx": "preserve",
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      "sourceMap": true,
+      "baseUrl": "./",
+      "strict": true,
+      "paths": {
+        "*": [ "*", ...([ "dist", "node_modules", "src"].map( f => `${resources}/${f}/*` )) ]
+      },
+      "allowSyntheticDefaultImports": true,
+      "skipLibCheck": true,
+      "outDir": ".build"
+    },
+    "include": [ `${resources}/src/env.d.ts`, "**/*" ]
+  }
+}
+
 function buildGameJs(config:GameConfig, moduleItems:DirectoryItem[]) {
   // We only know plugins, not whether they are components or systems,
   // so we have to load them all and figure out which is what later...
@@ -400,6 +426,8 @@ export const useAppStore = defineStore('app', {
 
     async newProject() {
       const res = await electron.newProject();
+      const tsconfig = await buildTsconfig();
+      await electron.saveFile( res.filePath + '/tsconfig.json', JSON.stringify(tsconfig) );
       this.openProject(res.filePath);
     },
 

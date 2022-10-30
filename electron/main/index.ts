@@ -289,3 +289,7 @@ ipcMain.handle('bitwise-build-project', (event, root, src, dest) => {
 ipcMain.handle('bitwise-open-editor', (event, root, file) => {
   return shell.openPath(path.join(root, file));
 });
+
+ipcMain.handle('bitwise-resources-path', (event) => {
+  return app.isPackaged ? app.resourcesPath : path.join(__dirname, '../../..');
+});
