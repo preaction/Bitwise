@@ -1,49 +1,46 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, toRaw } from "vue";
+import InputGameObject from '../InputGameObject.vue';
+
 export default defineComponent({
   props: ['modelValue', 'scene'],
+  components: {
+    InputGameObject,
+  },
   data() {
+    const textureId = this.modelValue.textureId ?? null;
+    const texturePath = this.scene.game.texturePaths[ textureId ];
     return {
-      ...this.modelValue,
-    }
+      textureId,
+      texturePath,
+    };
+  },
+  watch: {
+    texturePath(newPath) {
+      this.loadTexture(newPath);
+    },
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      const newModel = {
+        textureId: this.textureId,
+      };
+      this.$emit( 'update:modelValue', newModel );
+      this.$emit( 'update', newModel );
     },
-    dragover(event) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "link";
-    },
-    async drop(event) {
-      const data = event.dataTransfer.getData("bitwise/file");
-      console.log( `Dropping on sprite`, data );
-      if ( data ) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "link";
-        console.log( data );
-        await this.scene.game.loadTexture( data );
-        this.textureId = this.$data.textureId = this.scene.game.textureIds[ data ];
-        this.update();
-      }
-      else {
-        event.dataTransfer.dropEffect = "";
-      }
-    },
-  },
-  computed: {
-    textureName() {
-      return this.scene.game.texturePaths[ this.textureId ]?.split( '/' ).pop();
+    async loadTexture( path ) {
+      await this.scene.game.loadTexture( path );
+      this.textureId = this.$data.textureId = this.scene.game.textureIds[ path ];
+      this.update();
     },
   },
 });
 </script>
 <template>
   <div>
-    <div class="d-flex justify-content-between texture-field align-items-center" @dragover="dragover" @drop="drop">
+    <div class="d-flex justify-content-between texture-field align-items-center">
       <label class="me-1">Texture</label>
-      <input readonly class="flex-fill col-1 text-end" :value="textureName" placeholder="Drag/Drop Here" />
+      <InputGameObject v-model="texturePath" type="file" drop-effect="link" />
     </div>
   </div>
 </template>
