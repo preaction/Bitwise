@@ -47,9 +47,8 @@ export default class Physics extends System {
 
   watchQueries:Array<[ bitecs.Query, (...args:any) => void ]> = [];
 
-  constructor( name:string, scene:Scene, data:any ) {
-    super( name, scene, data );
-    this.thaw(data);
+  constructor( name:string, scene:Scene ) {
+    super( name, scene );
 
     this.position = scene.getComponent(Position);
     this.rigidbody = scene.getComponent(RigidBody);

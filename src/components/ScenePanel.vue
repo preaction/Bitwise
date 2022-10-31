@@ -27,7 +27,6 @@ export default defineComponent({
   watch: {
     scene(newScene:Scene) {
       if ( newScene ) {
-        console.log( 'Got a new scene, updating tree' );
         this.updateSceneTree(newScene);
       }
     }
@@ -54,26 +53,24 @@ export default defineComponent({
       const tree = {};
       for ( const id of scene.eids ) {
         const entity = scene.entities[id];
-        console.log( `Treeing entity ${id}` );
         if ( !tree[id] ) {
-          tree[id] = { entity: null, children: [], path: id };
+          tree[id] = { entity: null, children: [] };
         }
         tree[id].entity = id;
         tree[id].name = entity.name;
+        tree[id].path = entity.name;
         tree[id].icon = this.icons[ entity.type ] || this.icons.default;
 
         const pid = scene.components.Position.store.pid[id];
         if ( pid < 2**32-1 ) {
-          console.log( `Parenting to ${pid}` );
           if ( !tree[pid] ) {
-            tree[pid] = { entity: null, children: [], path: pid };
+            tree[pid] = { entity: null, children: [], path: scene.entities[ pid ].name };
           }
-          tree[id].path = [ pid, tree[id].path ].join('/');
+          tree[id].path = [ tree[pid].path, tree[id].path ].join('/');
           tree[pid].children.push( tree[id] );
           delete tree[id];
         }
       }
-      console.log( "Completed tree:", tree );
 
       if ( this.isPrefab ) {
         this.sceneTree = Object.values(tree)[0];
@@ -113,7 +110,6 @@ export default defineComponent({
     },
 
     updateComponent( name:string, data:Object ) {
-      console.log( `Entity ${this.selectedEntity.id} Component ${name}`, data );
       this.selectedEntity.setComponent(name, toRaw(data));
       this.selectedComponents[name] = data;
       this.$emit('update');
@@ -143,7 +139,6 @@ export default defineComponent({
       for ( const c of components ) {
         entity.addComponent(c);
       }
-      console.log( 'Added entity, updating tree' );
       this.updateSceneTree(this.scene);
       const entityItem = this.sceneTree.children[ this.sceneTree.children.length - 1 ];
       this.select( entityItem );
@@ -217,7 +212,6 @@ export default defineComponent({
         else if ( typeof dropPath !== 'undefined' && isChild ) {
           dropPid = dropPath;
         }
-        console.log( 'dropping entity on parent', isChild, dragPid, dropPid );
         this.scene.components.Position.store.pid[dragPid] = dropPid;
         this.updateSceneTree(this.scene);
         // XXX: Expand dropPid if not root
@@ -243,11 +237,9 @@ export default defineComponent({
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
-        console.log( `Moving system ${data} to ${index}` );
         const system = this.scene.systems.splice(data, 1);
         this.scene.systems.splice( index, 0, ...system );
         this.$emit('update');
-        console.log( 'Dropped system, updating tree' );
         this.updateSceneTree( this.scene );
       }
     },
@@ -262,14 +254,12 @@ export default defineComponent({
       }
       this.scene.addSystem( name );
       this.$emit('update');
-      console.log( 'Added system, updating tree' );
       this.updateSceneTree( this.scene );
     },
 
     removeSystem( idx ) {
       this.scene.systems.splice( idx, 1 );
       this.$emit('update');
-      console.log( 'Removed system, updating tree' );
       this.updateSceneTree( this.scene );
     },
 
@@ -382,7 +372,7 @@ export default defineComponent({
           <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="systemForms[s.name]" class="my-2">
-          <component :is="systemForms[s.name]" v-model="s.data"
+          <component :is="systemForms[s.name]" v-model="s.data" :scene="scene"
             @update="updateSystem(idx, $event)" />
         </div>
       </div>

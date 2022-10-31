@@ -16,8 +16,8 @@ export default class Render extends System {
   enterQuery:bitecs.Query;
   exitQuery:bitecs.Query;
 
-  constructor( name:string, scene:Scene, data:any ) {
-    super(name, scene, data);
+  constructor( name:string, scene:Scene ) {
+    super(name, scene);
 
     this.position = scene.getComponent(Position);
     this.component = scene.getComponent(OrthographicCameraComponent);

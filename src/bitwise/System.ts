@@ -4,20 +4,17 @@ import Scene from './Scene.js';
 export default class System {
   name:string;
   scene:Scene;
-  constructor( name:string, scene:Scene, data:Object ) {
+  constructor( name:string, scene:Scene ) {
     this.name = name;
     this.scene = scene;
-    // XXX: We can't thaw here because it comes before any defaults are
-    // initialized by the superclass...
   }
   static get editorComponent():string {
     return '';
   }
-  freeze() {
+  freeze():any {
     return {};
   }
-  thaw(data:any) {
-  }
+  thaw(data:any) { }
   update( timeMilli:number=0, timeTotal:number=0 ) { }
   render() { }
   start() { }

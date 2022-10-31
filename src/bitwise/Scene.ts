@@ -190,9 +190,9 @@ export default class Scene extends three.EventDispatcher {
   }
 
   addSystem( name:string, data:any={} ) {
-    const system = this.game.systems[ name ];
-    console.log( `Adding system to scene ${name}`, system );
-    this.systems.push( new system( name, this, data ) );
+    const system = new this.game.systems[ name ]( name, this );
+    system.thaw( data );
+    this.systems.push(system);
   }
 
   addComponent( name:string ) {

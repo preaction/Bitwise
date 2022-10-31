@@ -5,6 +5,7 @@ export default defineComponent({
   methods: {
     update(data) {
       this.$emit( 'update:modelValue', data );
+      this.$emit( 'update', data );
     },
     dragover(event) {
       event.preventDefault();
@@ -23,14 +24,14 @@ export default defineComponent({
     },
   },
   computed: {
-    name() {
+    displayName() {
       return this.modelValue ? this.modelValue.split('/').pop() : undefined;
     },
   },
 });
 </script>
 <template>
-  <input readonly class="gameobject-input flex-fill col-1 text-end" :value="name" placeholder="Drag/Drop Here"
+  <input readonly class="gameobject-input flex-fill col-1 text-end" :value="displayName" placeholder="Drag/Drop Here"
     @dragover="dragover" @drop="drop"
   />
 </template>

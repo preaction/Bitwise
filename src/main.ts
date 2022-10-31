@@ -10,11 +10,15 @@ import '@fortawesome/fontawesome-free/css/solid.css';
 
 import App from './App.vue';
 
+// Globally-registered components
+import InputGameObject from './components/InputGameObject.vue';
+
 const pinia = createPinia()
 
 createApp(App)
   .use(pinia)
   .use(BootstrapVue3)
+  .component( 'InputGameObject', InputGameObject )
   .mount('#app')
   .$nextTick(() => {
     postMessage({ payload: 'removeLoading' }, '*')

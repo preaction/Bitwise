@@ -18,8 +18,8 @@ export default class Render extends System {
   enterQuery:bitecs.Query;
   exitQuery:bitecs.Query;
 
-  constructor( name:string, scene:Scene, data:any ) {
-    super(name, scene, data);
+  constructor( name:string, scene:Scene ) {
+    super(name, scene);
 
     this.position = scene.getComponent(Position);
     this.component = scene.getComponent(OrthographicCameraComponent);
@@ -209,7 +209,7 @@ export default class Render extends System {
     const camera = this.sceneCameras[eid];
     if ( camera ) {
       this.scene._scene.remove( camera );
-      this.sceneCameras[eid] = undefined;
+      delete this.sceneCameras[eid];
     }
   }
 

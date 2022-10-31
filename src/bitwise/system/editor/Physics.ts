@@ -23,9 +23,8 @@ export default class Physics extends System {
   enterQuery:bitecs.Query;
   exitQuery:bitecs.Query;
 
-  constructor( name:string, scene:Scene, data:any ) {
-    super(name, scene, data);
-    this.thaw(data);
+  constructor( name:string, scene:Scene ) {
+    super(name, scene);
 
     this.position = scene.getComponent(Position);
     this.rigidbody = scene.getComponent(RigidBody);
@@ -39,7 +38,7 @@ export default class Physics extends System {
     this.exitQuery = scene.game.ecs.exitQuery( this.query );
   }
 
-  freeze() {
+  freeze():any {
     const data = super.freeze();
     data.gx = this.gravity?.x() || 0;
     data.gy = this.gravity?.y() || 0;
