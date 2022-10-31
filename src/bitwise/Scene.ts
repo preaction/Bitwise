@@ -32,12 +32,14 @@ export enum SceneState {
 }
 
 type SceneData = {
+  name: string,
   entities: Array<{[key:string]:any}>,
   components: string[],
   systems: any[],
 };
 
 export default class Scene extends three.EventDispatcher {
+  name:string = 'New Scene';
   game:any;
   state:SceneState = SceneState.Stop;
   _scene:three.Scene = new three.Scene();
@@ -155,6 +157,7 @@ export default class Scene extends three.EventDispatcher {
     }
 
     return {
+      name: this.name,
       entities: data,
       components: Object.keys( this.components ),
       systems: this.systems.map( s => ({ name: s.name, data: s.freeze() }) ),
@@ -162,7 +165,7 @@ export default class Scene extends three.EventDispatcher {
   }
 
   thaw( data:SceneData ) {
-    console.log( "Thawing scene from", data );
+    this.name = data.name;
     for ( const name of data.components ) {
       this.addComponent( name );
     }

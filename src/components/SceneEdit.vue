@@ -182,7 +182,9 @@ export default defineComponent({
       // XXX: Editor scene should freeze camera settings
       const sceneData = this.editScene.freeze();
       console.log( 'Frozen', sceneData );
-      this.$emit('update:name', this.name);
+      if ( this.name !== sceneData.name ) {
+        this.$emit('update:name', sceneData.name);
+      }
       this.$emit('update:modelValue', {
         ...sceneData,
         name: this.name,

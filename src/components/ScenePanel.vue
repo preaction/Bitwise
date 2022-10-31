@@ -148,8 +148,8 @@ export default defineComponent({
     updateName( event ) {
       const name = event.target.value;
       this.sceneTree.name = name;
-      this.modelValue.name = name;
-      this.$emit( 'update:name', name );
+      this.scene.name = name;
+      this.$emit('update');
     },
 
     deleteEntity( item ) {
@@ -265,7 +265,7 @@ export default defineComponent({
 
     updateEntityName() {
       this.selectedEntity.name = this.selectedSceneItem.name;
-      this.emit('update');
+      this.$emit('update');
     },
 
     createPrefab( item ) {
