@@ -165,6 +165,15 @@ export default defineComponent({
       }
     },
 
+    duplicateEntity( item ) {
+      const scene = this.scene;
+      const entity = scene.entities[ item.entity ];
+      const newEntity = scene.addEntity();
+      newEntity.thaw( entity.freeze() );
+      this.updateSceneTree( scene );
+      this.$emit('update');
+    },
+
     updateSystem( idx:number, data:Object ) {
       this.scene.systems[idx].thaw( data );
       this.$emit('update');
@@ -320,7 +329,8 @@ export default defineComponent({
               data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="#" @click="createPrefab(item)">Create Prefab</a></li>
-              <li><a class="dropdown-item" href="#" @click="deleteFile(item)">Delete</a></li>
+              <li><a class="dropdown-item" href="#" @click="duplicateEntity(item)">Duplicate</a></li>
+              <li><a class="dropdown-item" href="#" @click="deleteEntity(item)">Delete</a></li>
             </ul>
           </div>
         </template>
