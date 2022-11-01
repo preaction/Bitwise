@@ -24,7 +24,7 @@ export default defineComponent({
 
     // XXX: Pinch controls for zoom
 
-    const scene = markRaw(game.addScene());
+    const scene = this.editScene = markRaw(game.addScene());
 
     if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
       scene.thaw( toRaw( this.modelValue ) );
@@ -54,7 +54,6 @@ export default defineComponent({
       this.editGame.start();
       scene.update(0);
       scene.render();
-      this.editScene = scene;
     } );
   },
 
