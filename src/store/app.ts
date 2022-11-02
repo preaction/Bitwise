@@ -321,7 +321,7 @@ export const useAppStore = defineStore('app', {
       this.projectItems = await electron.readProject(this.currentProject)
         .then( async items => {
           const ignore = (item:DirectoryItem) => {
-            return !item.path.match( /^\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
+            return !item.path.match( /(?:^|\/)\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
           };
           const descend = async (item:DirectoryItem) => {
             if ( item.children && item.children.length ) {
