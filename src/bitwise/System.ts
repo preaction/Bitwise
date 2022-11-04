@@ -1,10 +1,12 @@
 
+import * as three from 'three';
 import Scene from './Scene.js';
 
-export default class System {
+export default class System extends three.EventDispatcher {
   name:string;
   scene:Scene;
   constructor( name:string, scene:Scene ) {
+    super();
     this.name = name;
     this.scene = scene;
   }

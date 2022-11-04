@@ -7,6 +7,10 @@ import Position from '../../component/Position.js';
 import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
 import { ResizeEvent } from '../../Game.js';
 
+const raycaster = new three.Raycaster();
+raycaster.layers.set(1);
+const pointer = new three.Vector2();
+
 export default class Render extends System {
   camera?:three.OrthographicCamera;
 
@@ -72,16 +76,79 @@ export default class Render extends System {
   }
 
   mouseIsDown:boolean = false;
+  mouseMoved:boolean = false;
   onMouseDown( event:MouseEvent ) {
     event.preventDefault();
+    this.mouseMoved = false;
     this.mouseIsDown = true;
     // XXX: Mouse down outside selected element de-selects
   }
 
+  selected:Array<three.Object3D> = [];
+
   onMouseUp( event:MouseEvent ) {
+    if ( !this.camera ) {
+      return;
+    }
     event.preventDefault();
     this.mouseIsDown = false;
-    // XXX: Mouse up without moving selects element
+    // Mouse up without moving selects element
+    if ( !this.mouseMoved ) {
+      const canvas = this.scene.game.canvas;
+      const scene = this.scene._scene;
+      pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
+      pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+
+      raycaster.setFromCamera( pointer, this.camera );
+      const intersects = raycaster.intersectObjects( scene.children, true );
+
+      if ( intersects.length > 0 ) {
+        const selected = intersects[0].object;
+        if ( this.selected.length === 1 && this.selected.find( obj => obj.userData.selected === selected ) ) {
+          this.deselectObject( selected );
+        }
+        else {
+          // Do not clear if shift is pressed
+          if ( !event.shiftKey ) {
+            this.clearSelected();
+          }
+          this.selectObject( selected );
+        }
+      }
+      else if ( !event.shiftKey ) {
+        this.clearSelected();
+      }
+
+      this.scene.update(0);
+      this.scene.render();
+    }
+  }
+
+  clearSelected() {
+    while ( this.selected.length ) {
+      const box = this.selected.pop();
+      if ( !box ) { break; }
+      box.removeFromParent();
+    }
+  }
+
+  selectObject( obj:three.Object3D ) {
+    const geometry = new three.BoxGeometry( obj.scale.x*1.2, obj.scale.y*1.2, obj.scale.z*1.2 );
+    const edges = new three.EdgesGeometry( geometry );
+    const line = new three.LineSegments( edges, new three.LineDashedMaterial( { color: 0xffffff, dashSize: 0.2, gapSize: 0.1 } ) );
+    line.position.add( obj.position );
+    line.userData.selected = obj;
+    this.scene._scene.add( line );
+    this.selected.push(line);
+
+    // Emit select event so editor can select the entity, too
+    this.dispatchEvent({ type: "select", object: obj });
+  }
+
+  deselectObject( selected:three.Object3D ) {
+    const i = this.selected.findIndex( obj => obj.userData.selected === selected );
+    this.scene._scene.remove( this.selected[i] );
+    this.selected.splice( i, 1 );
   }
 
   onMouseMove( event:MouseEvent ) {
@@ -92,6 +159,8 @@ export default class Render extends System {
     // XXX: Mouse move with object selected moves object
     // XXX: Mouse move with button down moves camera
     if ( this.mouseIsDown ) {
+      // Allow a bare bit of movement
+      this.mouseMoved = 1 < Math.abs(event.movementX) + Math.abs(event.movementY);
       const { movementX: x, movementY: y } = event;
       this.camera.position.x -= x / this.camera.zoom / 2.5;
       this.camera.position.y += y / this.camera.zoom / 2.5;
