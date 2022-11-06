@@ -252,6 +252,35 @@ export default defineComponent({
       }
     },
 
+    handleKeydown( event:KeyboardEvent ) {
+      // For MacOS, handle Cmd+*, for everything else, Ctrl+*
+      if ( ( electron.isMac && event.metaKey ) || ( !electron.isMac && event.ctrlKey ) ) {
+        switch ( event.key ) {
+          case "x":
+            this.$refs['currentTab'].oncut?.();
+            event.preventDefault();
+            return;
+          case "c":
+            this.$refs['currentTab'].oncopy?.();
+            event.preventDefault();
+            return;
+          case "v":
+            this.$refs['currentTab'].onpaste?.();
+            event.preventDefault();
+            return;
+        }
+      }
+      else {
+        switch ( event.key ) {
+          case "Backspace":
+          case "Delete":
+            this.$refs['currentTab'].ondelete?.();
+            event.preventDefault();
+            return;
+        }
+      }
+    },
+
   },
   mounted() {
     // Override console logging
@@ -277,6 +306,8 @@ export default defineComponent({
     }
     electron.on( 'error', (ev, err) => console.error(err) );
     electron.on( 'log', (ev, msg) => console.log(msg) );
+
+    window.addEventListener( 'keydown', this.handleKeydown.bind(this) );
   },
 });
 </script>
@@ -344,6 +375,7 @@ export default defineComponent({
     </header>
 
     <component class="app-main" v-if="currentTab"
+      ref="currentTab"
       :is="currentTab.component" :edited="currentTab.edited"
       :key="currentTab.src"
       v-model:name="currentTab.name"

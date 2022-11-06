@@ -14,6 +14,7 @@ import * as three from 'three';
 import Component from './Component.js';
 import System from './System.js';
 import Entity from './Entity.js';
+import Position from './component/Position';
 
 // SceneState is the current state of the scene.
 export enum SceneState {
@@ -128,7 +129,7 @@ export default class Scene extends three.EventDispatcher {
         return sys as T;
       }
     }
-    throw `System ${sysType} is required`;
+    throw `System ${sysType.name} is required`;
   }
 
   getComponent<T extends Component>(compType:(new (...args: any[]) => T)):T {
@@ -138,6 +139,30 @@ export default class Scene extends three.EventDispatcher {
       }
     }
     throw `Component ${compType} is required`;
+  }
+
+  getEntityById( eid:number ):Entity {
+    return this.entities[ eid ];
+  }
+
+  getEntityByPath( path:string ):Entity|null {
+    // XXX: Might want to keep a cache of entity by path
+    const parts = path.split( /\// );
+    const position = this.getComponent( Position );
+    let pid = 2**32-1;
+    let findName = '';
+    let entity = null;
+    while ( parts.length > 0 ) {
+      findName = parts.shift();
+      entity = Object.values( this.entities ).find( e => {
+        return position.store.pid[ e.id ] === pid && e.name === findName;
+      });
+      if ( !entity ) {
+        return null;
+      }
+      pid = entity.id;
+    }
+    return entity;
   }
 
   freeze():SceneData {

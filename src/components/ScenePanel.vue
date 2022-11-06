@@ -48,6 +48,9 @@ export default defineComponent({
   },
 
   methods: {
+    refresh() {
+      this.updateSceneTree( this.scene );
+    },
     updateSceneTree(scene:Scene) {
       // Find all the entities and build tree items for them
       const tree = {};

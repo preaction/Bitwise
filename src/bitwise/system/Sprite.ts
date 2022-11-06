@@ -66,6 +66,7 @@ export default class Sprite extends System {
     const texture = this.scene.game.textures[tid];
     const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
     const sprite = this.sprites[eid] = new three.Sprite( material );
+    sprite.userData.eid = eid;
     sprite.layers.enable(1);
     sprite.position.x = this.position.store.x[eid];
     sprite.position.y = this.position.store.y[eid];

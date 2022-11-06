@@ -1,8 +1,9 @@
 <script lang="ts">
 import { defineComponent, shallowReactive, toRaw, markRaw } from "vue";
 import { mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.ts";
-import Game from '../bitwise/Game.ts';
+import { useAppStore } from "../store/app.js";
+import Game from '../bitwise/Game.js';
+import Scene from '../bitwise/Scene.js';
 import ScenePanel from './ScenePanel.vue';
 
 export default defineComponent({
@@ -188,6 +189,7 @@ export default defineComponent({
         ...sceneData,
         name: this.name,
       });
+      this.$refs.scenePanel.refresh();
     },
 
     save() {
@@ -228,6 +230,83 @@ export default defineComponent({
 
       this.playing = false;
       this.paused = false;
+    },
+
+    ondelete( update:boolean=true ) {
+      if ( !this.editScene ) {
+        return;
+      }
+      const scene = this.editScene;
+      const editor = scene.getSystem( this.systems.EditorRender );
+      const eids:number[] = editor.getSelectedEntityIds();
+      eids.forEach( eid => scene.removeEntity(eid) );
+      editor.clearSelected();
+      if ( update ) {
+        scene.update(0);
+        scene.render();
+        this.update();
+      }
+    },
+
+    oncut() {
+      if ( !this.editScene ) {
+        return;
+      }
+      this.oncopy();
+      this.ondelete();
+    },
+
+    oncopy() {
+      if ( !this.editScene ) {
+        return;
+      }
+      const scene = this.editScene;
+      const editor = scene.getSystem( this.systems.EditorRender );
+      const eids:number[] = editor.getSelectedEntityIds();
+      const frozenEntities = eids.map( eid => scene.entities[eid].freeze() );
+      // Clear the path so they are put at the root
+      frozenEntities.forEach( e => delete e.Position.path );
+      const blob = new Blob(
+        [JSON.stringify({ type: 'bitwise/entity', items: frozenEntities }, null, 2)],
+        {
+          type: "text/plain",
+        },
+      );
+      navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
+    },
+
+    async onpaste() {
+      if ( !this.editScene ) {
+        return;
+      }
+      const scene = this.editScene;
+
+      const clipboardItems = await navigator.clipboard.read();
+      let frozenEntities = [];
+      for (const clipboardItem of clipboardItems) {
+        for (const type of clipboardItem.types) {
+          const blob = await clipboardItem.getType(type);
+          const clipItem = JSON.parse( await blob.text() );
+          frozenEntities = clipItem.items;
+        }
+      }
+
+      // If entities are selected, we are replacing them. Delete
+      // them first.
+      this.ondelete(false);
+      for ( const eData of frozenEntities ) {
+        while ( scene.getEntityByPath( eData.name ) ) {
+          const endNum = eData.name.match( /(\d+)$/ )?.[0];
+          const suffix = endNum >= 0 ? parseInt(endNum) + 1 : " 1";
+          const namePrefix = eData.name.replace( /\d+$/, "" );
+          eData.name = namePrefix + suffix;
+        }
+        const entity = scene.addEntity();
+        entity.thaw(eData);
+      }
+      scene.update(0);
+      scene.render();
+      this.update();
     },
   },
 });
@@ -273,7 +352,7 @@ export default defineComponent({
       <canvas ref="play-canvas" v-show="playing == true" />
     </div>
     <div class="tab-sidebar">
-      <ScenePanel @update="sceneChanged" :scene="scene" />
+      <ScenePanel ref="scenePanel" @update="sceneChanged" :scene="scene" />
     </div>
   </div>
 </template>

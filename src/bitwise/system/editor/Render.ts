@@ -22,6 +22,13 @@ export default class Render extends System {
   enterQuery:bitecs.Query;
   exitQuery:bitecs.Query;
 
+  frustumSize = 200;
+  zoom = 1;
+
+  selected:Array<three.Object3D> = [];
+  mouseIsDown:boolean = false;
+  mouseMoved:boolean = false;
+
   constructor( name:string, scene:Scene ) {
     super(name, scene);
 
@@ -75,16 +82,12 @@ export default class Render extends System {
     this.render();
   }
 
-  mouseIsDown:boolean = false;
-  mouseMoved:boolean = false;
   onMouseDown( event:MouseEvent ) {
     event.preventDefault();
     this.mouseMoved = false;
     this.mouseIsDown = true;
     // XXX: Mouse down outside selected element de-selects
   }
-
-  selected:Array<three.Object3D> = [];
 
   onMouseUp( event:MouseEvent ) {
     if ( !this.camera ) {
@@ -138,6 +141,7 @@ export default class Render extends System {
     const line = new three.LineSegments( edges, new three.LineDashedMaterial( { color: 0xffffff, dashSize: 0.2, gapSize: 0.1 } ) );
     line.position.add( obj.position );
     line.userData.selected = obj;
+    line.userData.eid = obj.userData.eid;
     this.scene._scene.add( line );
     this.selected.push(line);
 
@@ -149,6 +153,10 @@ export default class Render extends System {
     const i = this.selected.findIndex( obj => obj.userData.selected === selected );
     this.scene._scene.remove( this.selected[i] );
     this.selected.splice( i, 1 );
+  }
+
+  getSelectedEntityIds():number[] {
+    return this.selected.map( obj => obj.userData.eid );
   }
 
   onMouseMove( event:MouseEvent ) {
@@ -219,9 +227,6 @@ export default class Render extends System {
     this.scene.game.renderer.render( this.scene._scene, this.camera );
   }
 
-  frustumSize = 200;
-  zoom = 1;
-
   createCamera() {
     console.log( `Creating editor camera` );
     const { width, height } = this.scene.game;
@@ -260,6 +265,7 @@ export default class Render extends System {
     const wireframe = new three.WireframeGeometry( geometry );
     const mat = new three.LineBasicMaterial( { color: 0x00ccff, linewidth: 2 } );
     const camera = new three.LineSegments( wireframe, mat );
+    camera.userData.eid = eid;
     camera.material.depthTest = false;
     camera.material.transparent = true;
 
