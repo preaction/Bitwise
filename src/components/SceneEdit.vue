@@ -51,6 +51,9 @@ export default defineComponent({
       this.update();
     }
 
+    const editor = this.editScene.getSystem( this.systems.EditorRender );
+    editor.addEventListener( 'update', () => this.update() );
+
     this.$nextTick( () => {
       this.editGame.start();
       scene.update(0);

@@ -43,11 +43,15 @@ export default class Render extends System {
       this.onResize(e as ResizeEvent);
     });
 
+    // Allow canvas to have keyboard focus
+    scene.game.canvas.tabIndex = 1;
+
     const listeners:{ [key:string]: (e:any) => void } = {
       wheel: this.onWheel.bind(this),
       mousedown: this.onMouseDown.bind(this),
       mouseup: this.onMouseUp.bind(this),
       mousemove: this.onMouseMove.bind(this),
+      keydown: this.onKeyDown.bind(this),
     };
     for ( const ev in listeners ) {
       scene.game.input.on( ev, listeners[ev] );
@@ -60,10 +64,6 @@ export default class Render extends System {
   }
 
   stop() {
-    this.scene.game.input.removeEventListener( 'wheel' );
-    this.scene.game.input.removeEventListener( 'mousedown' );
-    this.scene.game.input.removeEventListener( 'mouseup' );
-    this.scene.game.input.removeEventListener( 'mousemove' );
   }
 
   onWheel( event:WheelEvent ) {
@@ -83,7 +83,6 @@ export default class Render extends System {
   }
 
   onMouseDown( event:MouseEvent ) {
-    event.preventDefault();
     this.mouseMoved = false;
     this.mouseIsDown = true;
     // XXX: Mouse down outside selected element de-selects
@@ -93,7 +92,6 @@ export default class Render extends System {
     if ( !this.camera ) {
       return;
     }
-    event.preventDefault();
     this.mouseIsDown = false;
     // Mouse up without moving selects element
     if ( !this.mouseMoved ) {
@@ -125,6 +123,49 @@ export default class Render extends System {
       this.scene.update(0);
       this.scene.render();
     }
+  }
+
+  onKeyDown( event:KeyboardEvent ) {
+    if ( !this.camera || this.selected.length <= 0 ) {
+      return;
+    }
+
+    const height = (this.camera.top - this.camera.bottom) / this.camera.zoom;
+    const width = (this.camera.left - this.camera.right) / this.camera.zoom;
+    let nudge = 0, dir:"x"|"y"|"" = '';
+
+    switch ( event.key ) {
+      case "ArrowUp":
+        nudge = event.shiftKey ? height/10 : event.altKey ? height/1000 : height/100;
+        dir = 'y';
+        break;
+      case "ArrowDown":
+        nudge = event.shiftKey ? -height/10 : event.altKey ? -height/1000 : -height/100;
+        dir = 'y';
+        break;
+      case "ArrowLeft":
+        nudge = event.shiftKey ? width/10 : event.altKey ? width/1000 : width/100;
+        dir = 'x';
+        break;
+      case "ArrowRight":
+        nudge = event.shiftKey ? -width/10 : event.altKey ? -width/1000 : -width/100;
+        dir = 'x';
+        break;
+    }
+
+    if ( !dir ) {
+      return;
+    }
+
+    const position = this.position.store;
+    for ( const obj of this.selected ) {
+      obj.position[dir] += nudge;
+      const eid = obj.userData.eid;
+      position[dir][eid] += nudge;
+    }
+    this.scene.update(0);
+    this.scene.render();
+    this.dispatchEvent({ type: "update" });
   }
 
   clearSelected() {
@@ -160,7 +201,6 @@ export default class Render extends System {
   }
 
   onMouseMove( event:MouseEvent ) {
-    event.preventDefault();
     if ( !this.camera ) {
       return;
     }
@@ -215,7 +255,6 @@ export default class Render extends System {
       const far = this.component.store.far[eid];
       const near = this.component.store.near[eid];
       const depth = far - near;
-      console.log( `Wireframe scale ${width}, ${height}, ${depth} (ratio ${ratio})` );
       camera.scale.set( width, height, depth );
     }
   }
@@ -228,7 +267,6 @@ export default class Render extends System {
   }
 
   createCamera() {
-    console.log( `Creating editor camera` );
     const { width, height } = this.scene.game;
     const ratio = width / height;
     // Point a camera at 0, 0
@@ -250,7 +288,6 @@ export default class Render extends System {
   }
 
   add( eid:number ) {
-    console.log( `Adding wireframe for camera ${eid}` );
     const { gameWidth, gameHeight } = this.scene.game.data;
     const ratio = gameWidth / gameHeight;
 
@@ -269,7 +306,6 @@ export default class Render extends System {
     camera.material.depthTest = false;
     camera.material.transparent = true;
 
-    console.log( `Wireframe scale ${width}, ${height}, ${depth} (ratio ${ratio})` );
     camera.scale.set( width, height, depth );
 
     camera.position.x = this.position.store.x[eid];
