@@ -9,7 +9,7 @@ import { ResizeEvent } from '../../Game.js';
 
 const raycaster = new three.Raycaster();
 raycaster.layers.set(1);
-const pointer = new three.Vector2();
+const pointer = new three.Vector3();
 
 export default class Render extends System {
   camera?:three.OrthographicCamera;
@@ -28,6 +28,9 @@ export default class Render extends System {
   selected:Array<three.Object3D> = [];
   mouseIsDown:boolean = false;
   mouseMoved:boolean = false;
+  moveSelected:boolean = false;
+  moveRatio:{x: number, y: number} = {x: 0, y: 0};
+  moveObject:three.Object3D|null = null;
 
   constructor( name:string, scene:Scene ) {
     super(name, scene);
@@ -83,9 +86,32 @@ export default class Render extends System {
   }
 
   onMouseDown( event:MouseEvent ) {
+    if ( !this.camera ) {
+      return;
+    }
     this.mouseMoved = false;
     this.mouseIsDown = true;
-    // XXX: Mouse down outside selected element de-selects
+
+    // Mouse down on a selected entity means we're moving it
+    const canvas = this.scene.game.canvas;
+    const scene = this.scene._scene;
+    pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
+    pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+
+    raycaster.setFromCamera( pointer, this.camera );
+    const intersects = raycaster.intersectObjects( scene.children, true );
+
+    if ( intersects.length > 0 ) {
+      const selected = intersects[0].object;
+      const ray = intersects[0].point;
+      if ( this.selected.find( obj => obj.userData.selected === selected ) ) {
+        const camera = this.camera;
+        this.moveSelected = true;
+        this.moveObject = selected;
+        // XXX: This always moves the object center to the mouse
+        // position. We need to find the offset onMouseDown.
+      }
+    }
   }
 
   onMouseUp( event:MouseEvent ) {
@@ -93,6 +119,7 @@ export default class Render extends System {
       return;
     }
     this.mouseIsDown = false;
+    this.moveSelected = false;
     // Mouse up without moving selects element
     if ( !this.mouseMoved ) {
       const canvas = this.scene.game.canvas;
@@ -122,6 +149,9 @@ export default class Render extends System {
 
       this.scene.update(0);
       this.scene.render();
+    }
+    else if ( this.moveSelected ) {
+      this.dispatchEvent({ type: "update" });
     }
   }
 
@@ -157,15 +187,21 @@ export default class Render extends System {
       return;
     }
 
+    this.nudgeSelected({ [dir]: nudge });
+    this.dispatchEvent({ type: "update" });
+  }
+
+  nudgeSelected({ x, y }:{x?:number, y?:number}) {
     const position = this.position.store;
     for ( const obj of this.selected ) {
-      obj.position[dir] += nudge;
+      obj.position.x += x || 0;
+      obj.position.y += y || 0;
       const eid = obj.userData.eid;
-      position[dir][eid] += nudge;
+      position.x[eid] += x || 0;
+      position.y[eid] += y || 0;
     }
     this.scene.update(0);
     this.scene.render();
-    this.dispatchEvent({ type: "update" });
   }
 
   clearSelected() {
@@ -208,10 +244,21 @@ export default class Render extends System {
     // XXX: Mouse move with button down moves camera
     if ( this.mouseIsDown ) {
       // Allow a bare bit of movement
-      this.mouseMoved = 1 < Math.abs(event.movementX) + Math.abs(event.movementY);
-      const { movementX: x, movementY: y } = event;
-      this.camera.position.x -= x / this.camera.zoom / 2.5;
-      this.camera.position.y += y / this.camera.zoom / 2.5;
+      this.mouseMoved ||= 1 < Math.abs(event.movementX) + Math.abs(event.movementY);
+      if ( this.moveSelected ) {
+        const canvas = this.scene.game.canvas;
+        const scene = this.scene._scene;
+        pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
+        pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+        pointer.unproject( this.camera );
+        // XXX: This always moves the object center to the mouse
+        // position. We need to find the offset onMouseDown.
+        this.nudgeSelected({ x: pointer.x-this.moveObject.position.x, y: pointer.y-this.moveObject.position.y });
+      }
+      else {
+        this.camera.position.x -= event.movementX / this.camera.zoom / 2.5;
+        this.camera.position.y += event.movementY / this.camera.zoom / 2.5;
+      }
       this.render();
     }
   }
