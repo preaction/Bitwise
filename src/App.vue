@@ -68,6 +68,10 @@ export default defineComponent({
       });
     },
 
+    newModule( name:string, template:string ) {
+      this.appStore.newModuleFromTemplate( name, template );
+    },
+
     async openTab( item ) {
       // Determine what kind of component to use
       const ext = item.ext;
@@ -341,7 +345,11 @@ export default defineComponent({
             <!-- <li><a class="dropdown-item" href="#" @click="newFolder()">Folder...</a></li> -->
             <!-- <li><hr class="dropdown-divider"></li> -->
             <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
-            <li><a class="dropdown-item" href="#" @click="newTab('New Tileset', 'TilesetEdit')">Tileset</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" @click="newModule('NewComponent', 'Component.ts')">Component</a></li>
+            <li><a class="dropdown-item" href="#" @click="newModule('NewComponentForm', 'Component.vue')">Component Form</a></li>
+            <li><a class="dropdown-item" href="#" @click="newModule('NewSystem', 'System.ts')">System</a></li>
+            <li><a class="dropdown-item" href="#" @click="newModule('NewSystemForm', 'Component.vue')">System Form</a></li>
           </ul>
         </div>
         <button class="btn btn-secondary btn-sm me-2" type="button" @click="showGameConfigTab">

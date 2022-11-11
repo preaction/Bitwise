@@ -3,7 +3,7 @@ import { defineComponent } from "vue";
 import { Broadphase } from '../../../bitwise/system/Physics.js';
 
 export default defineComponent({
-  props: ['modelValue'],
+  props: ['modelValue', 'scene'],
   data() {
     const data = {
       broadphaseOptions: Broadphase,

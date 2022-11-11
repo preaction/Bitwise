@@ -217,7 +217,7 @@ ipcMain.handle('bitwise-new-file', ( event, root, name, ext, data ) => {
   // XXX: Ensure extension on filename
   return dialog.showSaveDialog(win, {
     defaultPath: path.join( root, name ),
-    filters: [ { name: 'json', extensions: ['json'] } ],
+    filters: [ { name: ext, extensions: [ext] } ],
     properties: [ 'createDirectory' ],
   })
   .then(

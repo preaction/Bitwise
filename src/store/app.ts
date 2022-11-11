@@ -119,6 +119,84 @@ function buildGameJs(config:GameConfig, moduleItems:DirectoryItem[]) {
   return gameFile.replaceAll(/\n {4}/g, "\n");
 }
 
+const templates:{ [key:string]: (name:string) => string } = {
+  'Component.ts': (name:string):string => {
+    return `
+import * as bitecs from 'bitecs';
+import Component from 'bitwise/Component.js';
+
+export default class ${name} extends Component {
+  get componentData() {
+    return {
+      // fieldName: bitecs.Types.f32
+    };
+  }
+
+  declare store: {
+    // fieldName: number[],
+  }
+
+  static get editorComponent():string {
+    // Path to the .vue component, if any
+    return '';
+  }
+}
+`;
+  },
+  'System.ts': (name:string):string => {
+    return `
+import * as three from 'three';
+import * as bitecs from 'bitecs';
+import System from 'bitwise/System.js';
+import Scene from 'bitwise/Scene.js';
+
+export default class ${name} extends System {
+  init() {
+    // Get references to Components and Systems from this.scene
+    // Create queries with bitecs.Query
+    // Add event handlers
+  }
+
+  update( timeMilli:number ) {
+    // Perform updates
+  }
+
+  static get editorComponent():string {
+    // Path to the .vue component, if any
+    return '';
+  }
+}
+`;
+  },
+  'Component.vue': (name:string):string => {
+    return `<script lang="ts">
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  props: ['modelValue', 'scene'],
+  data() {
+    return {
+      ...this.modelValue,
+    };
+  },
+  methods: {
+    update() {
+      this.$emit( 'update:modelValue', this.$data );
+      this.$emit( 'update', this.$data );
+    },
+  },
+});
+</script>
+<template>
+  <div>
+  </div>
+</template>
+<style>
+</style>
+`;
+  },
+};
+
 const vueLoaderOptions = {
   moduleCache: {
     vue: Vue,
@@ -399,6 +477,7 @@ export const useAppStore = defineStore('app', {
         const game = new this.gameClass({});
         this.components = game.components;
         this.systems = game.systems;
+        console.log( `Components: ${Object.keys(this.components).join(", ")}; Systems: ${Object.keys(this.systems).join(", ")}` );
         for ( const name in game.components ) {
           const component = game.components[name];
           if ( component.editorComponent ) {
@@ -477,6 +556,28 @@ export const useAppStore = defineStore('app', {
 
             this.saveSessionState();
             this.saveStoredState();
+          }
+        });
+    },
+
+    async newModuleFromTemplate( name:string, templateName:string ) {
+      if ( !this.currentProject ) {
+        throw "No current project";
+      }
+      const ext = templateName.substring( templateName.lastIndexOf( '.' )+1 );
+      const project = this.currentProject;
+      return electron.newFile( this.currentProject, name, ext, '' )
+        .then( async res => {
+          if ( !res.canceled ) {
+            const path = res.filePath.replace( project, '' );
+            const fileName = path.split('/').pop();
+            if ( !fileName ) {
+              return;
+            }
+            const name = fileName.substring( 0, fileName.indexOf('.') );
+            const template = templates[ templateName ](name);
+            await electron.saveFile( this.currentProject + '/' + path, template );
+            this.openEditor(path);
           }
         });
     },
