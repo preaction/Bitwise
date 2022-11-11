@@ -11,6 +11,7 @@
  * may have corresponding Physics components on Entities.
  */
 import * as three from 'three';
+import * as bitecs from 'bitecs';
 import Component from './Component.js';
 import System from './System.js';
 import Entity from './Entity.js';
@@ -46,7 +47,7 @@ export default class Scene extends three.EventDispatcher {
   _scene:three.Scene = new three.Scene();
 
   // world is the bitecs World object. Each scene has its own.
-  world:any;
+  world:bitecs.IWorld;
 
   // systems are added to the scene to make the game go.
   systems:System[] = [];
