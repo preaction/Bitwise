@@ -212,8 +212,10 @@ export default defineComponent({
 
       this.playing = true;
       this.paused = false;
-      this.$nextTick( () => {
+      this.$nextTick( async () => {
         this.playGame.start();
+        // XXX: Show a rudimentary loading screen during init
+        await this.playScene.init();
         this.playScene.start();
         this.$refs['play-canvas'].focus();
       } );

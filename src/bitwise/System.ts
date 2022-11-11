@@ -23,15 +23,14 @@ export default class System extends three.EventDispatcher {
     return this.scene.world;
   }
 
-  freeze():any {
-    return {};
-  }
-  thaw(data:any) { }
+  init() { }
+  start() { }
+  stop() { }
+  pause() { }
+  resume() { }
+
   update( timeMilli:number=0, timeTotal:number=0 ) { }
   render() { }
-  start() { }
-  pause() { }
-  stop() { }
 
   /**
    * Define a query for one or more Components.
@@ -62,6 +61,11 @@ export default class System extends three.EventDispatcher {
   removeQuery( query:bitecs.Query ) {
     // XXX: Track queries automatically and clean them up when the scene
     // stops
-    return this.scene.game.ecs.removeQuery(query);
+    return this.scene.game.ecs.removeQuery(this.scene.world, query);
   }
+
+  freeze():any {
+    return {};
+  }
+  thaw(data:any) { }
 }

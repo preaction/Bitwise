@@ -3,12 +3,20 @@
  * a BitECS World, contains the Entities, and holds on to the BitECS
  * systems.
  *
- * Scene can be extended to create more specialized APIs. For example,
- * a UIScene could have methods to manipulate UI components layout, or
- * a Scene2D could have methods to change parts of the map.
- *
  * Scene Systems are re-usable components for Scenes. A Physics System
  * may have corresponding Physics components on Entities.
+ *
+ * Scene lifecycle:
+ *
+ *  thaw   - First, a scene's data is thawed. This loads the entity data
+ *           and attaches Systems and Components.
+ *  init   - Next, init() is called on all Systems. This lets Systems
+ *           load anything necessary.
+ *  load   - After init, the loader is invoked to load any pending
+ *           assets from thaw or init.
+ *  start  - This starts the scene. start() is called on all Systems,
+ *           and the scene begins recieving update() calls.
+ *  stop   - This stops the scene.
  */
 import * as three from 'three';
 import * as bitecs from 'bitecs';
@@ -71,7 +79,16 @@ export default class Scene extends three.EventDispatcher {
     this.components = {};
   }
 
-  // start() should initialize the scene and get it ready to be
+  // init() should load external assets and do one-time initialization.
+  async init() {
+    this.dispatchEvent({ type: 'init' });
+    for ( const system of this.systems ) {
+      // XXX: init() should be async
+      system.init();
+    }
+  }
+
+  // start() should build the scene and get it ready to be
   // rendered. When the scene is ready, it should set its state to
   // "Start".
   start() {
