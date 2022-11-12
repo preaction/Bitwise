@@ -225,6 +225,7 @@ type AppState = {
   currentTabIndex: number,
   projectItems: DirectoryItem[],
   icons: { [key:string]: string },
+  gameFile: string,
   gameClass: null|typeof Game,
   components: { [key:string]: typeof Component },
   systems: { [key:string]: typeof System },
@@ -249,6 +250,7 @@ export const useAppStore = defineStore('app', {
       },
       isBuilding: false,
       _fsWatcher: null,
+      gameFile: '',
       gameClass: null,
       components: Vue.markRaw({}),
       systems: Vue.markRaw({}),
@@ -460,16 +462,21 @@ export const useAppStore = defineStore('app', {
       await electron.saveFile( this.currentProject + '/.bitwise.js', gameJs );
 
       // Build and load project game class
+      const rand = Math.floor( Math.random() * 999999999 );
+      const gameFile = `.build/game.${rand}.js`;
       try {
-        await electron.buildProject( this.currentProject, '.bitwise.js', '.build/game.js' );
+        await electron.buildProject( this.currentProject, '.bitwise.js', gameFile );
       }
       catch (e) {
         console.error( `Could not build project: ${e}` );
       }
       try {
-        const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/.build/game.js' );
+        const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/' + gameFile );
+        if ( this.gameFile ) {
+          electron.deleteTree( this.currentProject, this.gameFile );
+        }
+        this.gameFile = gameFile;
         this.gameClass = mod.default;
-        console.log( 'Game class:', this.gameClass );
       }
       catch (e) {
         console.error( `Could not load game class: ${e}` );
