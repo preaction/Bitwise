@@ -56,11 +56,11 @@ async function buildTsconfig():Promise<any> {
       "baseUrl": "./",
       "strict": true,
       "paths": {
-        "*": [ "*", ...([ "dist", "node_modules", "src"].map( f => `${resources}/${f}/*` )) ]
+        "*": [ "*", ...([ "dist", "node_modules", "node_modules/@types", "src"].map( f => `${resources}/${f}/*` )) ],
       },
       "allowSyntheticDefaultImports": true,
       "skipLibCheck": true,
-      "outDir": ".build"
+      "outDir": ".build",
     },
     "include": [ `${resources}/src/env.d.ts`, "**/*" ]
   }
@@ -399,7 +399,9 @@ export const useAppStore = defineStore('app', {
       this.projectItems = await electron.readProject(this.currentProject)
         .then( async items => {
           const ignore = (item:DirectoryItem) => {
-            return !item.path.match( /(?:^|\/)\./ ) && !item.path.match(/^(tsconfig|bitwise\.config)\.json$/);
+            return !item.path.match( /(?:^|\/)\./ ) &&
+              !item.path.match(/(?:^|\/)node_modules(?:$|\/)/) &&
+              !item.path.match(/^(tsconfig|bitwise\.config|package(-lock)?)\.json$/);
           };
           const descend = async (item:DirectoryItem) => {
             if ( item.children && item.children.length ) {
