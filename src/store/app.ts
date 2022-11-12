@@ -95,7 +95,7 @@ function buildGameJs(config:GameConfig, moduleItems:DirectoryItem[]) {
     const mods = [ ${Object.keys(imports).sort().join(', ')} ];
     const modNames = [ ${Object.keys(imports).sort().map( k => `"${imports[k].name}"` ).join(', ')} ];
 
-    const config = ${JSON.stringify( config )};
+    const config = ${JSON.stringify( config, null, 2 )};
     config.components = {};
     config.systems = {};
 
@@ -281,7 +281,7 @@ export const useAppStore = defineStore('app', {
   actions: {
     saveSessionState():void {
       sessionStorage.setItem('currentProject', this.currentProject || '');
-      sessionStorage.setItem('openTabs', JSON.stringify( this.openTabs ) );
+      sessionStorage.setItem('openTabs', JSON.stringify( this.openTabs, null, 2 ) );
       sessionStorage.setItem('currentTabIndex', this.currentTabIndex.toString());
     },
 
@@ -506,7 +506,7 @@ export const useAppStore = defineStore('app', {
     async newProject() {
       const res = await electron.newProject();
       const tsconfig = await buildTsconfig();
-      await electron.saveFile( res.filePath + '/tsconfig.json', JSON.stringify(tsconfig) );
+      await electron.saveFile( res.filePath + '/tsconfig.json', JSON.stringify(tsconfig, null, 2) );
       this.openProject(res.filePath);
     },
 

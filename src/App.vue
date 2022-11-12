@@ -128,7 +128,7 @@ export default defineComponent({
         await this.appStore.newFile(
           tab.name,
           'json',
-          JSON.stringify( toRaw( tab.data ) ),
+          JSON.stringify( toRaw( tab.data ), null, 2 ),
         );
         return;
       }
@@ -149,14 +149,14 @@ export default defineComponent({
           // File does not exist, continue...
         }
         tab.src = newSrc;
-        await this.appStore.saveFile( tab.src, JSON.stringify( tab.data ) );
+        await this.appStore.saveFile( tab.src, JSON.stringify( tab.data, null, 2 ) );
         await this.appStore.deleteTree( oldSrc );
         return;
       }
       // Otherwise, just write the data!
       await this.appStore.saveFile(
         tab.src,
-        JSON.stringify( tab.data ),
+        JSON.stringify( tab.data, null, 2 ),
       );
     },
 
