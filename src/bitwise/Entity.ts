@@ -18,7 +18,6 @@ export default class Entity {
     if ( !this.scene.components[name] ) {
       this.scene.addComponent( name );
     }
-    console.log( `Adding component ${name} to ${this.id}` );
     const component = this.scene.components[name];
     component.addEntity( this.id );
     this.setComponent(name, data);
@@ -27,7 +26,6 @@ export default class Entity {
   setComponent( name:string, data:{ [key:string]: number } ) {
     const component = this.scene.components[name].store;
     for ( let key in data ) {
-      console.log( `Setting ${name} ${key} to ${data[key]}` );
       component[key][this.id] = data[key];
     }
   }

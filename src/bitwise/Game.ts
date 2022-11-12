@@ -117,7 +117,6 @@ export default class Game extends three.EventDispatcher {
         this.textures.push( texture );
         this.texturePaths[this.textures.indexOf(texture)] = path;
         this.textureIds[ path ] = this.textures.indexOf(texture);
-        console.log( `Loading texture ${path} (${this.textureIds[path]})` );
       },
     );
     promise.then( () => this.scenes.forEach( s => s.render() ) );

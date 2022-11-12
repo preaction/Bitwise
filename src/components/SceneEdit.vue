@@ -123,7 +123,6 @@ export default defineComponent({
       });
 
       for ( const name in this.components ) {
-        console.log( `Registering player game component ${name}` );
         game.registerComponent( name, this.components[name] );
       }
       for ( const name in this.systems ) {
@@ -133,7 +132,6 @@ export default defineComponent({
         if ( name.match(/^Editor/) ) {
           continue;
         }
-        console.log( `Registering player game system ${name}` );
         game.registerSystem( name, this.systems[name] );
       }
 
@@ -157,14 +155,12 @@ export default defineComponent({
       });
 
       for ( const name in this.components ) {
-        console.log( `Registering editor game component ${name}` );
         game.registerComponent( name, this.components[name] );
       }
       for ( const name in this.systems ) {
         if ( name.match(/^Editor/) ) {
           continue;
         }
-        console.log( `Registering editor game system ${name}` );
         let system = this.systems[ "Editor" + name ] || this.systems[name];
         game.registerSystem( name, system );
       }
