@@ -413,6 +413,15 @@ export const useAppStore = defineStore('app', {
             else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
               item.icon = 'fa-image';
             }
+            else if ( item.ext.match( /\.(?:md|markdown)$/ ) ) {
+              item.icon = 'fa-file-lines';
+            }
+            else if ( item.ext.match( /\.[jt]s$/ ) ) {
+              item.icon = 'fa-file-code';
+            }
+            else if ( item.ext.match( /\.vue$/ ) ) {
+              item.icon = 'fa-file-edit';
+            }
             else if ( item.ext.match( /\.json$/ ) ) {
               const json = await this.readFile( item.path );
               const data = JSON.parse( json );
