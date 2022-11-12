@@ -91,6 +91,10 @@ export default class Game extends three.EventDispatcher {
       ...conf.systems,
       ...opt.systems,
     };
+
+    // Set up loaders
+    three.Cache.enabled = true;
+    three.DefaultLoadingManager.setURLModifier( url => this.loader.base + url );
   }
 
   texturePaths:{ [key:number]: string } = {};
@@ -109,7 +113,7 @@ export default class Game extends three.EventDispatcher {
     const loader = new three.TextureLoader();
     const promise = this.promises[path] = new Promise(
       (resolve, reject) => {
-        const texture = loader.load( this.loader.base + path, resolve, undefined, reject ) 
+        const texture = loader.load( path, resolve, undefined, reject ) 
         this.textures.push( texture );
         this.texturePaths[this.textures.indexOf(texture)] = path;
         this.textureIds[ path ] = this.textures.indexOf(texture);
