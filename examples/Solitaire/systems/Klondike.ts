@@ -104,6 +104,7 @@ export default class Klondike extends System {
     for ( let suit = 0; suit < suits.length; suit++ ) {
       for ( let rank = 0; rank < ranks.length; rank++ ) {
         const entity = this.scene.addEntity();
+        entity.name = `${suits[suit]}_${ranks[rank]}`;
         entity.addComponent( "Position", {
           sx: drawPosition.sx,
           sy: drawPosition.sy,

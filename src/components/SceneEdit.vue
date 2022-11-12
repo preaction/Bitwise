@@ -218,6 +218,8 @@ export default defineComponent({
         await this.playScene.init();
         this.playScene.start();
         this.$refs['play-canvas'].focus();
+        // Get any entities created by scene start
+        this.$refs.scenePanel.refresh();
       } );
     },
 

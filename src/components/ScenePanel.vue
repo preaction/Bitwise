@@ -28,12 +28,14 @@ export default defineComponent({
     scene(newScene:Scene) {
       if ( newScene ) {
         this.updateSceneTree(newScene);
+        this.select( this.sceneTree );
       }
     }
   },
   mounted() {
     if ( this.scene ) {
       this.updateSceneTree( this.scene );
+      this.select( this.sceneTree );
     }
   },
   computed: {
@@ -88,8 +90,6 @@ export default defineComponent({
         // Update the systems array
         this.sceneSystems = scene.systems.map( s => ({ name: s.name, data: s.freeze() }) );
       }
-
-      this.select( this.sceneTree );
     },
 
     select(item) {
@@ -276,8 +276,11 @@ export default defineComponent({
     },
 
     updateEntityName() {
-      this.selectedEntity.name = this.selectedSceneItem.name;
-      this.$emit('update');
+      const newName = this.selectedSceneItem.name;
+      if ( newName != this.selectedEntity.name ) {
+        this.selectedEntity.name = newName;
+        this.$emit('update');
+      }
     },
 
     createPrefab( item ) {
