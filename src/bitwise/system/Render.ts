@@ -75,7 +75,7 @@ export default class Render extends System {
     // orthographic camera, which makes sense
     const cameraData = this.component.store;
     const frustumSize = cameraData.frustum[eid] || 20;
-    const far = cameraData.far[eid] || 10;
+    const far = cameraData.far[eid] || 2000;
     const near = cameraData.near[eid] || 0;
     const camera = new three.OrthographicCamera(
       frustumSize * (ratio/-2),

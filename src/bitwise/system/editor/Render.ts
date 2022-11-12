@@ -320,7 +320,7 @@ export default class Render extends System {
     // Frustum size appears to work the same as zoom for an
     // orthographic camera, which makes sense
     const frustumSize = this.frustumSize;
-    const far = 10;
+    const far = 2000;
     const near = 0;
     const camera = new three.OrthographicCamera(
       frustumSize * (ratio/-2),
@@ -330,6 +330,9 @@ export default class Render extends System {
       near, far,
     );
     camera.zoom = this.zoom;
+    // Position the camera so that Sprites can have a maximum Z value of
+    // the camera's "far" setting
+    camera.position.z = far;
     camera.updateProjectionMatrix();
     return camera;
   }
