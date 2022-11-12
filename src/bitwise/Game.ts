@@ -102,7 +102,7 @@ export default class Game extends three.EventDispatcher {
   textures:three.Texture[] = [];
   promises:{ [key:string]: Promise<three.Texture> } = {};
 
-  loadTexture( path:string ) {
+  loadTexture( path:string ):Promise<three.Texture> {
     if ( path in this.promises ) {
       return this.promises[path];
     }

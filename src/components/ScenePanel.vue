@@ -284,8 +284,8 @@ export default defineComponent({
       // Create a new file with this entity's configuration, including
       // children
       const eData = this.scene.entities[ item.entity ].freeze();
-      const filename = eData.name + '.json';
-      const suffix = 1;
+      let filename = eData.name + '.json';
+      let suffix = 1;
       while ( this.appStore.projectItems.includes( filename ) ) {
         filename = eData.name + (suffix++) + '.json';
       }
