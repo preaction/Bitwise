@@ -7,6 +7,7 @@ import NewTab from "./components/NewTab.vue";
 import ObjectTree from "./components/ObjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
+import MarkdownView from "./components/MarkdownView.vue";
 import TilesetEdit from "./components/TilesetEdit.vue";
 import SceneEdit from "./components/SceneEdit.vue";
 import GameConfig from "./components/GameConfig.vue";
@@ -18,6 +19,7 @@ export default defineComponent({
     ObjectTree,
     ProjectSelect,
     ImageView,
+    MarkdownView,
     TilesetEdit,
     SceneEdit,
     GameConfig,
@@ -100,6 +102,18 @@ export default defineComponent({
           src: item.path,
           component: "ImageView",
           data: item.path,
+          edited: false,
+        };
+        this.appStore.openTab(tab);
+      }
+      else if ( ext.match( /\.(md|markdown)$/ ) ) {
+        const tab = {
+          name: item.name.replace( /\.(md|markdown)$/, '' ),
+          ext,
+          icon: 'fa-file-lines',
+          src: item.path,
+          component: "MarkdownView",
+          data: await this.appStore.readFile(item.path),
           edited: false,
         };
         this.appStore.openTab(tab);
