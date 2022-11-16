@@ -19,8 +19,8 @@ export default class Render extends System {
   position:Position;
 
   query:bitecs.Query;
-  enterQuery:bitecs.Query;
-  exitQuery:bitecs.Query;
+  cameraEnterQuery:bitecs.Query;
+  cameraExitQuery:bitecs.Query;
 
   frustumSize = 200;
   zoom = 1;
@@ -39,8 +39,8 @@ export default class Render extends System {
     this.component = scene.getComponent(OrthographicCameraComponent);
 
     this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
-    this.enterQuery = scene.game.ecs.enterQuery( this.query );
-    this.exitQuery = scene.game.ecs.exitQuery( this.query );
+    this.cameraEnterQuery = scene.game.ecs.enterQuery( this.query );
+    this.cameraExitQuery = scene.game.ecs.exitQuery( this.query );
 
     scene.addEventListener( "resize", (e:three.Event) => {
       this.onResize(e as ResizeEvent);
@@ -267,13 +267,13 @@ export default class Render extends System {
 
   update( timeMilli:number ) {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
-    const add = this.enterQuery(this.scene.world);
+    const add = this.cameraEnterQuery(this.scene.world);
     for ( const eid of add ) {
       this.add( eid );
     }
 
     // exitedQuery for cameraQuery: Remove Camera from Scene
-    const remove = this.exitQuery(this.scene.world);
+    const remove = this.cameraExitQuery(this.scene.world);
     for ( const eid of remove ) {
       this.scene._scene.remove( this.sceneCameras[eid] );
       delete this.sceneCameras[eid];

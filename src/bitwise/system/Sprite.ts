@@ -13,35 +13,35 @@ export default class Sprite extends System {
   component:SpriteComponent;
   position:Position;
 
-  query:bitecs.Query;
-  enterQuery:bitecs.Query;
-  exitQuery:bitecs.Query;
+  spriteQuery:bitecs.Query;
+  spriteEnterQuery:bitecs.Query;
+  spriteExitQuery:bitecs.Query;
 
   constructor( name:string, scene:Scene ) {
     super(name, scene);
     this.position = scene.getComponent(Position);
     this.component = scene.getComponent(SpriteComponent);
 
-    this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
-    this.enterQuery = scene.game.ecs.enterQuery( this.query );
-    this.exitQuery = scene.game.ecs.exitQuery( this.query );
+    this.spriteQuery = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
+    this.spriteEnterQuery = scene.game.ecs.enterQuery( this.spriteQuery );
+    this.spriteExitQuery = scene.game.ecs.exitQuery( this.spriteQuery );
   }
 
   update( timeMilli:number ) {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
-    const add = this.enterQuery(this.scene.world);
+    const add = this.spriteEnterQuery(this.scene.world);
     for ( const eid of add ) {
       this.add( eid ); 
     }
 
     // exitedQuery for cameraQuery: Remove Camera from Scene
-    const remove = this.exitQuery(this.scene.world);
+    const remove = this.spriteExitQuery(this.scene.world);
     for ( const eid of remove ) {
       this.remove(eid);
     }
 
     // cameraQuery: Update camera properties and render if needed
-    const update = this.query(this.scene.world);
+    const update = this.spriteQuery(this.scene.world);
     for ( const eid of update ) {
       const sprite = this.sprites[eid];
       sprite.position.x = this.position.store.x[eid];

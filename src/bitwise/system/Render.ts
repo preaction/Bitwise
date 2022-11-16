@@ -12,9 +12,9 @@ export default class Render extends System {
   component:OrthographicCameraComponent;
   position:Position;
 
-  query:bitecs.Query;
-  enterQuery:bitecs.Query;
-  exitQuery:bitecs.Query;
+  cameraQuery:bitecs.Query;
+  cameraEnterQuery:bitecs.Query;
+  cameraExitQuery:bitecs.Query;
 
   constructor( name:string, scene:Scene ) {
     super(name, scene);
@@ -22,9 +22,9 @@ export default class Render extends System {
     this.position = scene.getComponent(Position);
     this.component = scene.getComponent(OrthographicCameraComponent);
 
-    this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
-    this.enterQuery = scene.game.ecs.enterQuery( this.query );
-    this.exitQuery = scene.game.ecs.exitQuery( this.query );
+    this.cameraQuery = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
+    this.cameraEnterQuery = scene.game.ecs.enterQuery( this.cameraQuery );
+    this.cameraExitQuery = scene.game.ecs.exitQuery( this.cameraQuery );
 
     scene.addEventListener( "resize", (e:any) => {
       this.onResize(e as ResizeEvent);
@@ -36,19 +36,19 @@ export default class Render extends System {
 
   render() {
     // enteredQuery for cameraQuery: Create Camera and add to Scene
-    const add = this.enterQuery(this.scene.world);
+    const add = this.cameraEnterQuery(this.scene.world);
     for ( const eid of add ) {
       this.add( eid ); 
     }
 
     // exitedQuery for cameraQuery: Remove Camera from Scene
-    const remove = this.exitQuery(this.scene.world);
+    const remove = this.cameraExitQuery(this.scene.world);
     for ( const eid of remove ) {
       delete this.cameras[eid];
     }
 
     // cameraQuery: Update camera properties and render if needed
-    const update = this.query(this.scene.world);
+    const update = this.cameraQuery(this.scene.world);
     for ( const eid of update ) {
       // XXX: Object3d should be its own component somehow
       const camera = this.cameras[eid];
@@ -102,7 +102,7 @@ export default class Render extends System {
     // Fix camera settings to maintain exact size/aspect
     const { width, height } = e;
     const ratio = width / height;
-    const update = this.query(this.scene.world);
+    const update = this.cameraQuery(this.scene.world);
     for ( const eid of update ) {
       const frustumSize = this.component.store.frustum[eid];
       const camera = this.cameras[eid];

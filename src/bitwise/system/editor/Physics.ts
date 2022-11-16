@@ -19,9 +19,9 @@ export default class Physics extends System {
 
   bodies:Array<any> = [];
 
-  query:bitecs.Query;
-  enterQuery:bitecs.Query;
-  exitQuery:bitecs.Query;
+  rigidBodyQuery:bitecs.Query;
+  rigidBodyEnterQuery:bitecs.Query;
+  rigidBodyExitQuery:bitecs.Query;
 
   constructor( name:string, scene:Scene ) {
     super(name, scene);
@@ -33,9 +33,9 @@ export default class Physics extends System {
       box: scene.components[ "BoxCollider" ],
     };
 
-    this.query = scene.game.ecs.defineQuery([ this.position.store ]);
-    this.enterQuery = scene.game.ecs.enterQuery( this.query );
-    this.exitQuery = scene.game.ecs.exitQuery( this.query );
+    this.rigidBodyQuery = scene.game.ecs.defineQuery([ this.position.store ]);
+    this.rigidBodyEnterQuery = scene.game.ecs.enterQuery( this.rigidBodyQuery );
+    this.rigidBodyExitQuery = scene.game.ecs.exitQuery( this.rigidBodyQuery );
   }
 
   freeze():any {
@@ -58,7 +58,7 @@ export default class Physics extends System {
   update( timeMilli:number ) {
     const position = this.position.store;
 
-    const add = this.enterQuery(this.scene.world);
+    const add = this.rigidBodyEnterQuery(this.scene.world);
     for ( const eid of add ) {
       // XXX: RigidBodies should be a different color from collider-only
       // objects
@@ -76,13 +76,13 @@ export default class Physics extends System {
       }
     }
 
-    const remove = this.exitQuery(this.scene.world);
+    const remove = this.rigidBodyExitQuery(this.scene.world);
     for ( const eid of remove ) {
       this.scene._scene.remove( this.bodies[eid] );
       delete this.bodies[eid];
     }
 
-    const update = this.query(this.scene.world);
+    const update = this.rigidBodyQuery(this.scene.world);
     for ( const eid of update ) {
       let collider = this.bodies[eid];
       if ( !collider ) {
