@@ -63,6 +63,7 @@ export default class Input {
     this.game.canvas.onpointercancel = this.pointerend.bind(this);
     this.game.canvas.onpointerout = this.pointerend.bind(this);
     this.game.canvas.onpointerleave = this.pointerend.bind(this);
+    this.game.canvas.style.touchAction = "none";
   }
 
   stop() {
@@ -82,6 +83,7 @@ export default class Input {
     this.game.canvas.onpointercancel = null;
     this.game.canvas.onpointerout = null;
     this.game.canvas.onpointerleave = null;
+    this.game.canvas.style.touchAction = "unset";
   }
 
   keydown(e:KeyboardEvent) {
@@ -128,7 +130,14 @@ export default class Input {
   }
 
   pointers:Pointer[] = [];
-  watchPointer( count:number=navigator.maxTouchPoints ) {
+  watchPointer( count:number=0 ) {
+    if ( !count ) {
+      count = navigator.maxTouchPoints;
+      // Add mouse if detected
+      if ( matchMedia('(pointer:fine)').matches ) {
+        count++;
+      }
+    }
     // Pre-create enough pointer objects
     for ( let i = this.pointers.length; i < count; i++ ) {
       this.pointers.push({
