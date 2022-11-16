@@ -12,6 +12,7 @@ export default class Render extends System {
   component:OrthographicCameraComponent;
   position:Position;
 
+  mainCamera:number = -1;
   cameraQuery:bitecs.Query;
   cameraEnterQuery:bitecs.Query;
   cameraExitQuery:bitecs.Query;
@@ -29,6 +30,11 @@ export default class Render extends System {
     scene.addEventListener( "resize", (e:any) => {
       this.onResize(e as ResizeEvent);
     });
+  }
+
+  start() {
+    // XXX: We should set this in a System form
+    this.mainCamera = this.cameraQuery(this.scene.world)[0];
   }
 
   update( timeMilli:number ) {

@@ -1,6 +1,7 @@
 
 import * as three from 'three';
 import System from 'bitwise/System.js';
+import Render from 'bitwise/system/Render.js';
 import Position from 'bitwise/component/Position.js';
 import Sprite from 'bitwise/component/Sprite.js';
 import Entity from 'bitwise/Entity.js';
@@ -28,8 +29,13 @@ type Card = {
   entity:number,
 };
 
+const raycaster = new three.Raycaster();
+raycaster.layers.set(1); // XXX: Make this face-up cards
+const pointer = new three.Vector3();
+
 export default class Klondike extends System {
   Position!:Position;
+  Render!:Render;
   Foundation!:Foundation;
   Stack!:Stack;
   Sprite!:Sprite;
@@ -64,6 +70,7 @@ export default class Klondike extends System {
     this.Foundation = this.scene.getComponent(Foundation);
     this.Stack = this.scene.getComponent(Stack);
     this.Sprite = this.scene.getComponent(Sprite);
+    this.Render = this.scene.getSystem(Render);
 
     // Create queries with bitecs.Query
     const foundationQuery = this.defineQuery([ this.Foundation ]);
@@ -122,6 +129,8 @@ export default class Klondike extends System {
         });
       }
     }
+
+    this.scene.game.input.watchPointer();
   }
 
   start() {
@@ -164,11 +173,47 @@ export default class Klondike extends System {
     }
   }
 
+  _camera!:three.OrthographicCamera;
+  get camera():three.OrthographicCamera {
+    if ( !this._camera ) {
+      const camera = this.Render.cameras[this.Render.mainCamera];
+      if ( !camera ) {
+        throw "No main camera found";
+      }
+      this._camera = camera;
+    }
+    return this._camera;
+  }
+
+  dragCard:Card|null = null;
   update( timeMilli:number ) {
     // Perform updates
-    // Check for mouse down
-    // Check for mouse up
-    // Check for mouse move
+    const p = this.scene.game.input.pointers[0];
+    if ( p.active ) {
+      // Check for mouse down
+      if ( p.buttons & 1 ) {
+        if ( this.dragCard ) {
+          // Move the card being dragged
+        }
+        else {
+          // Check for a card under the cursor and start dragging it
+          pointer.x = p.x;
+          pointer.y = p.y;
+          raycaster.setFromCamera( pointer, this.camera );
+          const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
+          if ( intersects.length > 0 ) {
+            const selected = intersects[0].object;
+            const eid = selected.userData.eid;
+            console.log( `Click card ${eid}` );
+          }
+        }
+      }
+      // Otherwise, mouse up
+      else if ( this.dragCard ) {
+        // Try to drop the card where we are
+        // Otherwise, return the card to where it was
+      }
+    }
   }
 
   static get editorComponent():string {
