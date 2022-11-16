@@ -1,6 +1,14 @@
 
 import Game from './Game.js';
 
+type Pointer = {
+  id: number,
+  active: boolean,
+  x: number,
+  y: number,
+  buttons: number,
+};
+
 export default class Input {
   // Event types
   // keyup
@@ -47,7 +55,16 @@ export default class Input {
     this.game.canvas.tabIndex = 1;
     this.game.canvas.addEventListener( 'keydown', this._downHandler = this.keydown.bind(this) );
     this.game.canvas.addEventListener( 'keyup', this._upHandler = this.keyup.bind(this) );
+    this.game.canvas.onpointerover = this.pointerbegin.bind(this);
+    this.game.canvas.onpointerenter = this.pointerbegin.bind(this);
+    this.game.canvas.onpointerdown = this.pointerchange.bind(this);
+    this.game.canvas.onpointermove = this.pointerchange.bind(this);
+    this.game.canvas.onpointerup = this.pointerchange.bind(this);
+    this.game.canvas.onpointercancel = this.pointerend.bind(this);
+    this.game.canvas.onpointerout = this.pointerend.bind(this);
+    this.game.canvas.onpointerleave = this.pointerend.bind(this);
   }
+
   stop() {
     if ( this._downHandler ) {
       this.game.canvas.removeEventListener( 'keydown', this._downHandler );
@@ -57,6 +74,14 @@ export default class Input {
       this.game.canvas.removeEventListener( 'keyup', this._upHandler );
       this._upHandler = null;
     }
+    this.game.canvas.onpointerover = null;
+    this.game.canvas.onpointerenter = null;
+    this.game.canvas.onpointerdown = null;
+    this.game.canvas.onpointermove = null;
+    this.game.canvas.onpointerup = null;
+    this.game.canvas.onpointercancel = null;
+    this.game.canvas.onpointerout = null;
+    this.game.canvas.onpointerleave = null;
   }
 
   keydown(e:KeyboardEvent) {
@@ -101,4 +126,53 @@ export default class Input {
   clearKeypresses() {
     this.keypress = {};
   }
+
+  pointers:Pointer[] = [];
+  watchPointer( count:number=navigator.maxTouchPoints ) {
+    // Pre-create enough pointer objects
+    for ( let i = this.pointers.length; i < count; i++ ) {
+      this.pointers.push({
+        id: 0,
+        active: false,
+        x: 0,
+        y: 0,
+        buttons: 0,
+      });
+    }
+  }
+
+  // pointerover / pointerenter
+  pointerbegin( ev:PointerEvent ) {
+    let pointer = this.pointers.find( p => p.id === ev.pointerId || !p.active );
+    if ( !pointer ) {
+      // No more pointers to track
+      return;
+    }
+    pointer.id = ev.pointerId;
+    pointer.active = true;
+  }
+
+  // pointerdown / up / move - Update pointer buttons, position
+  pointerchange( ev:PointerEvent ) {
+    let pointer = this.pointers.find( p => p.id === ev.pointerId && p.active );
+    if ( !pointer ) {
+      // Not tracking this pointer
+      return;
+    }
+    pointer.buttons = ev.buttons;
+    pointer.x = ( ev.offsetX / this.game.canvas.clientWidth ) * 2 - 1;
+    pointer.y = -( ev.offsetY / this.game.canvas.clientHeight ) * 2 + 1;
+  }
+
+  // pointer out/leave/cancel - deactivate pointer
+  pointerend( ev:PointerEvent ) {
+    let pointer = this.pointers.find( p => p.id === ev.pointerId );
+    if ( !pointer ) {
+      // Not tracking pointer
+      return;
+    }
+    pointer.id = 0;
+    pointer.active = false;
+  }
+
 }

@@ -64,6 +64,8 @@ export default class Render extends System {
         scene.game.input.off( ev, listeners[ev] );
       }
     });
+
+    scene.game.input.watchPointer();
   }
 
   stop() {
