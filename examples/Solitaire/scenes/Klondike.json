@@ -324,19 +324,19 @@
   ],
   "systems": [
     {
+      "name": "Klondike",
+      "data": {
+        "drawEntityPath": "Foundation 4",
+        "discardEntityPath": "Deck"
+      }
+    },
+    {
       "name": "Sprite",
       "data": {}
     },
     {
       "name": "Render",
       "data": {}
-    },
-    {
-      "name": "Klondike",
-      "data": {
-        "drawEntityPath": "Foundation 4",
-        "discardEntityPath": "Deck"
-      }
     }
   ],
   "component": "SceneEdit"

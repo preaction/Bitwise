@@ -6,7 +6,8 @@ type Pointer = {
   active: boolean,
   x: number,
   y: number,
-  buttons: number,
+  button: number,
+  buttonPress: number,
 };
 
 export default class Input {
@@ -49,6 +50,7 @@ export default class Input {
   constructor( game:Game ) {
     this.game = game;
     game.addEventListener( 'afterRender', this.clearKeypresses.bind(this) );
+    game.addEventListener( 'afterRender', this.clearButtonPresses.bind(this) );
   }
 
   start() {
@@ -57,7 +59,7 @@ export default class Input {
     this.game.canvas.addEventListener( 'keyup', this._upHandler = this.keyup.bind(this) );
     this.game.canvas.onpointerover = this.pointerbegin.bind(this);
     this.game.canvas.onpointerenter = this.pointerbegin.bind(this);
-    this.game.canvas.onpointerdown = this.pointerchange.bind(this);
+    this.game.canvas.onpointerdown = this.pointerdown.bind(this);
     this.game.canvas.onpointermove = this.pointerchange.bind(this);
     this.game.canvas.onpointerup = this.pointerchange.bind(this);
     this.game.canvas.onpointercancel = this.pointerend.bind(this);
@@ -145,7 +147,8 @@ export default class Input {
         active: false,
         x: 0,
         y: 0,
-        buttons: 0,
+        button: 0,
+        buttonPress: 0,
       });
     }
   }
@@ -161,6 +164,17 @@ export default class Input {
     pointer.active = true;
   }
 
+  // pointerdown - handle button presses
+  pointerdown( ev:PointerEvent ) {
+    let pointer = this.pointers.find( p => p.id === ev.pointerId && p.active );
+    if ( !pointer ) {
+      // Not tracking this pointer
+      return;
+    }
+    pointer.buttonPress |= ev.buttons;
+    this.pointerchange( ev );
+  }
+
   // pointerdown / up / move - Update pointer buttons, position
   pointerchange( ev:PointerEvent ) {
     let pointer = this.pointers.find( p => p.id === ev.pointerId && p.active );
@@ -168,7 +182,7 @@ export default class Input {
       // Not tracking this pointer
       return;
     }
-    pointer.buttons = ev.buttons;
+    pointer.button = ev.buttons;
     pointer.x = ( ev.offsetX / this.game.canvas.clientWidth ) * 2 - 1;
     pointer.y = -( ev.offsetY / this.game.canvas.clientHeight ) * 2 + 1;
   }
@@ -182,6 +196,12 @@ export default class Input {
     }
     pointer.id = 0;
     pointer.active = false;
+  }
+
+  clearButtonPresses() {
+    for ( const p of this.pointers ) {
+      p.buttonPress = 0;
+    }
   }
 
 }

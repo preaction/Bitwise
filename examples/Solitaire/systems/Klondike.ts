@@ -27,6 +27,8 @@ type Card = {
   faceUp:boolean,
   faceImage:number, // Texture ID
   entity:number,
+  stack:number,
+  foundation:number,
 };
 
 const raycaster = new three.Raycaster();
@@ -40,11 +42,19 @@ export default class Klondike extends System {
   Stack!:Stack;
   Sprite!:Sprite;
 
+  /**
+   * An array of foundation base entity IDs, from left to right.
+   */
   foundations:number[] = [];
   foundationCards:Card[][] = [];
+
+  /**
+   * An array of stack base entity IDs, from left to right.
+   */
   stacks:number[] = [];
   stackCards:Card[][] = [];
 
+  cards:{ [key:number]: Card } = {};
   deckCards:Card[] = [];
   discardCards:Card[] = [];
 
@@ -120,15 +130,20 @@ export default class Klondike extends System {
         entity.addComponent( "Sprite", {
           textureId: this.scene.game.textureIds[ cardBackImage ],
         } );
-        this.deckCards.push({
+        const card = {
           entity: entity.id,
           suit,
           rank,
           faceImage: this.scene.game.textureIds[ `cards/card_${suits[suit]}_${ranks[rank]}.png` ],
           faceUp: false,
-        });
+          stack: -1,
+          foundation: -1,
+        };
+        this.deckCards.push(card);
+        this.cards[entity.id] = card;
       }
     }
+    console.log( `Card eids: ${Object.keys(this.cards)}` );
 
     this.scene.game.input.watchPointer();
   }
@@ -155,9 +170,10 @@ export default class Klondike extends System {
           card.faceUp = true;
           this.Sprite.store.textureId[card.entity] = card.faceImage;
         }
+        card.stack = stackIdx;
         this.Position.store.x[card.entity] = stackPosition.x;
         this.Position.store.y[card.entity] = stackPosition.y - row * this.rowHeight;
-        this.Position.store.z[card.entity] = stackPosition.z + row;
+        this.Position.store.z[card.entity] = stackPosition.z + row + 1;
         this.Position.store.sx[card.entity] = stackPosition.sx;
         this.Position.store.sy[card.entity] = stackPosition.sy;
       }
@@ -169,7 +185,7 @@ export default class Klondike extends System {
       const card = this.deckCards[i];
       this.Position.store.x[card.entity] = drawPosition.x;
       this.Position.store.y[card.entity] = drawPosition.y;
-      this.Position.store.z[card.entity] = drawPosition.z + (this.deckCards.length - i);
+      this.Position.store.z[card.entity] = drawPosition.z + (this.deckCards.length - i + 1);
     }
   }
 
@@ -185,33 +201,86 @@ export default class Klondike extends System {
     return this._camera;
   }
 
-  dragCard:Card|null = null;
+  dragEntity:number = -1;
   update( timeMilli:number ) {
     // Perform updates
     const p = this.scene.game.input.pointers[0];
     if ( p.active ) {
+      pointer.x = p.x;
+      pointer.y = p.y;
+      pointer.z = 0;
       // Check for mouse down
-      if ( p.buttons & 1 ) {
-        if ( this.dragCard ) {
-          // Move the card being dragged
-        }
-        else {
-          // Check for a card under the cursor and start dragging it
-          pointer.x = p.x;
-          pointer.y = p.y;
-          raycaster.setFromCamera( pointer, this.camera );
-          const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
-          if ( intersects.length > 0 ) {
-            const selected = intersects[0].object;
-            const eid = selected.userData.eid;
-            console.log( `Click card ${eid}` );
+      if ( p.buttonPress & 1 ) {
+        // Check for a card under the cursor and start dragging it
+        raycaster.setFromCamera( pointer, this.camera );
+        const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
+        if ( intersects.length > 0 ) {
+          const selected = intersects[0].object;
+          const eid = selected.userData.eid;
+          const card = this.cards[eid];
+          if ( card ) {
+            // Card face down in deck gets flipped face up on discard
+            if ( !card.faceUp && card.stack < 0 ) {
+              this.deckCards.shift();
+              this.discardCards.unshift(card);
+
+              card.faceUp = true;
+              this.Sprite.store.textureId[eid] = card.faceImage;
+
+              this.Position.store.x[eid] = this.Position.store.x[this.discardEntity.id];
+              this.Position.store.y[eid] = this.Position.store.y[this.discardEntity.id];
+              this.Position.store.z[eid] = this.Position.store.z[this.discardEntity.id] + this.discardCards.length;
+            }
+            // Any face up card is going to be dragged
+            else if ( card.faceUp ) {
+              if ( card.stack >= 0 ) {
+                // XXX: Card can only be dragged if it's part of a run
+                this.dragEntity = eid;
+              }
+              else if ( card.foundation >= 0 ) {
+                // Cards on foundations can be pulled back into the
+                // tableau
+                this.dragEntity = eid;
+              }
+              else {
+                // Card must be on the discard stack
+                this.dragEntity = eid;
+              }
+            }
           }
         }
       }
+      else if ( p.button & 1 && this.dragEntity >= 0 ) {
+        // Move the card being dragged
+        pointer.unproject( this.camera );
+        this.Position.store.x[this.dragEntity] = pointer.x;
+        this.Position.store.y[this.dragEntity] = pointer.y;
+        this.Position.store.z[this.dragEntity] = 2000;
+      }
       // Otherwise, mouse up
-      else if ( this.dragCard ) {
+      else if ( this.dragEntity >= 0 ) {
         // Try to drop the card where we are
+        raycaster.setFromCamera( pointer, this.camera );
+        const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
+        if ( intersects.length > 0 ) {
+          const eid = intersects[0].object.userData.eid;
+          const card = this.cards[eid];
+          // Are we over a card?
+          if ( card ) {
+            if ( card.stack >= 0 ) {
+              // If our new card is alternate suit and one rank lower
+              // Otherwise, return to sender
+            }
+            else if ( card.foundation >= 0 ) {
+              // If our new card is same suit and one rank higher
+              // Otherwise, return to sender
+            }
+          }
+          // Are we over an empty stack?
+          // Are we over an empty foundation?
+        }
         // Otherwise, return the card to where it was
+        this.dragEntity = -1;
       }
     }
   }
