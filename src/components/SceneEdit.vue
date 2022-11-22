@@ -28,7 +28,12 @@ export default defineComponent({
     const scene = this.editScene = markRaw(game.addScene());
 
     if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
-      scene.thaw( toRaw( this.modelValue ) );
+      try {
+        scene.thaw( toRaw( this.modelValue ) );
+      }
+      catch (e) {
+        console.log( `Error thawing scene: ${e}` );
+      }
     }
     else {
       // Create a new, blank scene
@@ -180,7 +185,6 @@ export default defineComponent({
       // update() always works with the edit scene
       // XXX: Editor scene should freeze camera settings
       const sceneData = this.editScene.freeze();
-      console.log( 'Frozen', sceneData );
       if ( this.name !== sceneData.name ) {
         this.$emit('update:name', sceneData.name);
       }

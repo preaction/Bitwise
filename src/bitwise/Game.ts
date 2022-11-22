@@ -15,7 +15,6 @@ import SpriteComponent from './component/Sprite.js';
 import RigidBodyComponent from './component/RigidBody.js';
 import BoxColliderComponent from './component/BoxCollider.js';
 
-import SpriteSystem from './system/Sprite.js';
 import RenderSystem from './system/Render.js';
 import PhysicsSystem from './system/Physics.js';
 
@@ -25,7 +24,6 @@ import EditorPhysicsSystem from './system/editor/Physics.js';
 let tick = 0;
 
 const DEFAULT_SYSTEMS = {
-  Sprite: SpriteSystem,
   Render: RenderSystem,
   Physics: PhysicsSystem,
   // XXX: Default systems should load their own editor system if they
@@ -117,6 +115,7 @@ export default class Game extends three.EventDispatcher {
         this.textures.push( texture );
         this.texturePaths[this.textures.indexOf(texture)] = path;
         this.textureIds[ path ] = this.textures.indexOf(texture);
+        console.log( `Loaded texture ${path}` );
       },
     );
     promise.then( () => this.scenes.forEach( s => s.render() ) );

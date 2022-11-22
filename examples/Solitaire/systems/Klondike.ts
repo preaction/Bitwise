@@ -133,6 +133,9 @@ export default class Klondike extends System {
         const entity = this.scene.addEntity();
         entity.name = `${suits[suit]}_${ranks[rank]}`;
         entity.addComponent( "Position", {
+          x: 0,
+          y: 0,
+          z: 0,
           sx: drawPosition.sx,
           sy: drawPosition.sy,
           sz: 1,
@@ -159,6 +162,7 @@ export default class Klondike extends System {
   }
 
   start() {
+    console.log( `Klondike start` );
     // Shuffle the deck
     const deck = this.deckCards;
     for (let i = deck.length - 1; i > 0; i--) {
@@ -213,37 +217,37 @@ export default class Klondike extends System {
   }
 
   moveToFoundation( card:Card, foundationIdx:number ) {
-    const foundation = this.scene.getEntityById( this.foundations[foundationIdx] );
+    const foundationId = this.foundations[foundationIdx];
     let foundationCards = this.foundationCards[foundationIdx];
     if ( !foundationCards ) {
       foundationCards = this.foundationCards[foundationIdx] = [];
     }
-    const foundationPosition = foundation.getComponent( "Position" );
     card.stack = -1;
     card.foundation = foundationIdx;
     foundationCards.unshift(card);
-    this.Position.store.x[card.entity] = foundationPosition.x;
-    this.Position.store.y[card.entity] = foundationPosition.y - foundationCards.length * this.rowHeight;
-    this.Position.store.z[card.entity] = foundationPosition.z + foundationCards.length + 1;
-    this.Position.store.sx[card.entity] = foundationPosition.sx;
-    this.Position.store.sy[card.entity] = foundationPosition.sy;
+    this.Position.store.x[card.entity] = this.Position.store.x[foundationId];
+    this.Position.store.y[card.entity] = this.Position.store.y[foundationId];
+    this.Position.store.z[card.entity] = this.Position.store.z[foundationId] + foundationCards.length;
+    this.Position.store.sx[card.entity] = this.Position.store.sx[foundationId];
+    this.Position.store.sy[card.entity] = this.Position.store.sy[foundationId];
   }
 
   moveToStack( card:Card, stackIdx:number ) {
-    const stack = this.scene.getEntityById( this.stacks[stackIdx] );
+    const stackId = this.stacks[stackIdx];
     let stackCards = this.stackCards[stackIdx];
     if ( !stackCards ) {
       stackCards = this.stackCards[stackIdx] = [];
     }
-    const stackPosition = stack.getComponent( "Position" );
     card.stack = stackIdx;
     card.foundation = -1;
     stackCards.unshift(card);
-    this.Position.store.x[card.entity] = stackPosition.x;
-    this.Position.store.y[card.entity] = stackPosition.y - stackCards.length * this.rowHeight;
-    this.Position.store.z[card.entity] = stackPosition.z + stackCards.length + 1;
-    this.Position.store.sx[card.entity] = stackPosition.sx;
-    this.Position.store.sy[card.entity] = stackPosition.sy;
+    const position = this.Position.store;
+    position.x[card.entity] = position.x[stackId];
+    position.y[card.entity] = position.y[stackId] - (stackCards.length - 1) * this.rowHeight;
+    position.z[card.entity] = position.z[stackId] + stackCards.length;
+    position.sx[card.entity] = position.sx[stackId];
+    position.sy[card.entity] = position.sy[stackId];
+    console.log( `Moving card ${card.rank} ${card.suit} to ${position.x[card.entity]}, ${position.y[card.entity]}, ${position.z[card.entity]}` );
   }
 
   returnDragCard() {
@@ -261,8 +265,6 @@ export default class Klondike extends System {
     else {
       this.moveToDiscard( dragCard );
     }
-    this.dragEntity = -1;
-    this.followEntities = [];
   }
 
   _camera!:three.OrthographicCamera;
@@ -277,10 +279,54 @@ export default class Klondike extends System {
     return this._camera;
   }
 
+  startDragCard( card:Card ) {
+    if ( card.stack >= 0 ) {
+      // Card can only be dragged if it's part of a run
+      const cardIdx = this.stackCards[ card.stack ].indexOf( card );
+      const moveCards = this.stackCards[ card.stack ].splice( 0, cardIdx + 1 );
+      this.dragEntity = card.entity;
+      this.followEntities = moveCards.slice(0, -1).map( card => card.entity );
+    }
+    else if ( card.foundation >= 0 ) {
+      // Cards on foundations can be pulled back into the
+      // tableau
+      this.dragEntity = card.entity;
+      this.followEntities = [];
+      this.foundationCards[ card.foundation ].shift();
+    }
+    else {
+      // Card must be on the discard stack
+      this.dragEntity = card.entity;
+      this.followEntities = [];
+    }
+
+    // Update layer settings so cards are invisible when dropping
+    for ( const eid of [ this.dragEntity, ...this.followEntities ] ) {
+      const sprite = this.Render.getRenderObject(eid);
+      if ( !sprite ) {
+        continue;
+      }
+      sprite.layers.disable(1);
+    }
+  }
+
+  endDragCard() {
+    // Update layer settings so cards can be selected again
+    for ( const eid of [ this.dragEntity, ...this.followEntities ] ) {
+      const sprite = this.Render.getRenderObject(eid);
+      if ( !sprite ) {
+        continue;
+      }
+      sprite.layers.enable(1);
+    }
+    this.dragEntity = -1;
+    this.followEntities = [];
+  }
+
   update( timeMilli:number ) {
     // Perform updates
     const p = this.scene.game.input.pointers[0];
-    if ( p.active ) {
+    if ( p?.active ) {
       pointer.x = p.x;
       pointer.y = p.y;
       pointer.z = 0;
@@ -301,25 +347,7 @@ export default class Klondike extends System {
             }
             // Any face up card is going to be dragged
             else if ( card.faceUp ) {
-              if ( card.stack >= 0 ) {
-                // Card can only be dragged if it's part of a run
-                const cardIdx = this.stackCards[ card.stack ].indexOf( card );
-                const moveCards = this.stackCards[ card.stack ].splice( 0, cardIdx + 1 );
-                this.dragEntity = eid;
-                this.followEntities = moveCards.slice(0, -1).map( card => card.entity );
-              }
-              else if ( card.foundation >= 0 ) {
-                // Cards on foundations can be pulled back into the
-                // tableau
-                this.dragEntity = eid;
-                this.followEntities = [];
-                this.foundationCards[ card.foundation ].shift();
-              }
-              else {
-                // Card must be on the discard stack
-                this.dragEntity = eid;
-                this.followEntities = [];
-              }
+              this.startDragCard( card );
             }
           }
           else if ( eid === this.drawEntity && this.deckCards.length === 0 ) {
@@ -403,6 +431,7 @@ export default class Klondike extends System {
         else {
           this.returnDragCard();
         }
+        this.endDragCard();
       }
     }
   }

@@ -5,6 +5,7 @@ export default abstract class Component {
   world:any;
   store:{ [key:string]: Array<number> }
   scene:Scene;
+  isNull:boolean = false;
   get componentData():Object { return {} };
 
   constructor( scene:Scene, world:any ) {

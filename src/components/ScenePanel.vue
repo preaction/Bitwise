@@ -42,10 +42,10 @@ export default defineComponent({
     ...mapStores(useAppStore),
     ...mapState( useAppStore, ['components', 'systems', 'componentForms', 'systemForms'] ),
     availableComponents() {
-      return Object.keys( this.components );
+      return Object.keys( this.components ).filter( c => !this.components[c].isNull );
     },
     availableSystems() {
-      return Object.keys( this.systems ).filter( s => !s.match(/^Editor/) );
+      return Object.keys( this.systems ).filter( s => !this.systems[s].isNull && !s.match(/^Editor/) );
     },
   },
 
@@ -352,7 +352,7 @@ export default defineComponent({
       </div>
       <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
         <div class="mb-1 d-flex justify-content-between align-items-center">
-          <h6 class="m-0">{{ c }}</h6>
+          <h6 class="m-0" :class="selectedComponents[c].isNull ? 'null-component' : ''">{{ c }}</h6>
           <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="componentForms[c]" class="my-2 component-form">
@@ -384,7 +384,7 @@ export default defineComponent({
           draggable="true" @dragstart="startDragSystem( $event, idx )"
           @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"
         >
-          <h6 class="m-0"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
+          <h6 class="m-0" :class="s.isNull ? 'null-system' : ''"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
           <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="systemForms[s.name]" class="my-2">
@@ -488,6 +488,13 @@ export default defineComponent({
   }
   .entity-drop-top::before {
     bottom: 100%;
+  }
+
+  .null-system {
+    background: var(--bs-bg-danger);
+  }
+  .null-component {
+    background: var(--bs-bg-danger);
   }
 
 </style>

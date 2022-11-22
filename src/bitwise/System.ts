@@ -7,6 +7,7 @@ import Component from './Component.js';
 export default class System extends three.EventDispatcher {
   name:string;
   scene:Scene;
+  isNull:boolean = false;
   constructor( name:string, scene:Scene ) {
     super();
     this.name = name;

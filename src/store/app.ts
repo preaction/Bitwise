@@ -492,12 +492,18 @@ export const useAppStore = defineStore('app', {
       }
 
       if ( this.gameClass ) {
-        const game = new this.gameClass({});
-        this.components = game.components;
-        this.systems = game.systems;
+        try {
+          const game = new this.gameClass({});
+          this.components = game.components;
+          this.systems = game.systems;
+        }
+        catch (e) {
+          console.log( `Could not create new game: ${e}` );
+        }
+
         console.log( `Components: ${Object.keys(this.components).join(", ")}; Systems: ${Object.keys(this.systems).join(", ")}` );
-        for ( const name in game.components ) {
-          const component = game.components[name];
+        for ( const name in this.components ) {
+          const component = this.components[name];
           if ( component.editorComponent ) {
             console.log( `Loading editor component ${name}: ${component.editorComponent}` );
             const path = this.currentProject + '/' + component.editorComponent;
@@ -505,8 +511,8 @@ export const useAppStore = defineStore('app', {
           }
         }
 
-        for ( const name in game.systems ) {
-          const system = game.systems[name];
+        for ( const name in this.systems ) {
+          const system = this.systems[name];
           if ( system.editorComponent ) {
             console.log( `Loading editor component ${name}: ${system.editorComponent}` );
             const path = this.currentProject + '/' + system.editorComponent;

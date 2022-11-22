@@ -3,6 +3,7 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
+import RenderSystem from '../Render.js';
 import Position from '../../component/Position.js';
 import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
 import { ResizeEvent } from '../../Game.js';
@@ -11,7 +12,7 @@ const raycaster = new three.Raycaster();
 raycaster.layers.set(1);
 const pointer = new three.Vector3();
 
-export default class Render extends System {
+export default class Render extends RenderSystem {
   camera?:three.OrthographicCamera;
 
   sceneCameras:Array<three.LineSegments> = [];
@@ -69,6 +70,7 @@ export default class Render extends System {
   }
 
   stop() {
+    super.stop();
   }
 
   onWheel( event:WheelEvent ) {
@@ -266,6 +268,8 @@ export default class Render extends System {
   }
 
   update( timeMilli:number ) {
+    super.update(timeMilli);
+
     // enteredQuery for cameraQuery: Create Camera and add to Scene
     const add = this.cameraEnterQuery(this.scene.world);
     for ( const eid of add ) {

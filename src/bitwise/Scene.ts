@@ -22,6 +22,8 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Component from './Component.js';
 import System from './System.js';
+import NullSystem from './system/Null.js';
+import NullComponent from './component/Null.js';
 import Entity from './Entity.js';
 import Position from './component/Position';
 
@@ -171,7 +173,7 @@ export default class Scene extends three.EventDispatcher {
     let findName = '';
     let entity = null;
     while ( parts.length > 0 ) {
-      findName = parts.shift();
+      findName = parts.shift() || '';
       entity = Object.values( this.entities ).find( e => {
         return position.store.pid[ e.id ] === pid && e.name === findName;
       });
@@ -236,14 +238,23 @@ export default class Scene extends three.EventDispatcher {
   }
 
   addSystem( name:string, data:any={} ) {
-    const system = new this.game.systems[ name ]( name, this );
+    let cons = this.game.systems[ name ];
+    if ( !cons ) {
+      console.log( `Could not find system ${name}` );
+      cons = NullSystem;
+    }
+    const system = new cons( name, this );
     system.thaw( data );
     this.systems.push(system);
   }
 
   addComponent( name:string ) {
-    const component = this.game.components[ name ];
-    this.components[name] = new component( this, this.world );
+    let cons = this.game.components[ name ];
+    if ( !cons ) {
+      console.log( `Could not find component ${name}` );
+      cons = NullComponent;
+    }
+    this.components[name] = new cons( this, this.world );
   }
 
   addEntity() {
