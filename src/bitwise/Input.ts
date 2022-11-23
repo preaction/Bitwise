@@ -173,6 +173,7 @@ export default class Input {
     }
     pointer.buttonPress |= ev.buttons;
     this.pointerchange( ev );
+    this.game.canvas.setPointerCapture(ev.pointerId);
   }
 
   // pointerdown / up / move - Update pointer buttons, position
@@ -182,6 +183,7 @@ export default class Input {
       // Not tracking this pointer
       return;
     }
+    ev.preventDefault();
     pointer.button = ev.buttons;
     pointer.x = ( ev.offsetX / this.game.canvas.clientWidth ) * 2 - 1;
     pointer.y = -( ev.offsetY / this.game.canvas.clientHeight ) * 2 + 1;
