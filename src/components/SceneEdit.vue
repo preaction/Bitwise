@@ -239,10 +239,12 @@ export default defineComponent({
       this.paused = false;
     },
 
-    ondelete( update:boolean=true ) {
-      if ( !this.editScene ) {
+    ondelete( event:KeyboardEvent, update:boolean=true ) {
+      console.log( event.target );
+      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
         return;
       }
+      event.preventDefault();
       const scene = this.editScene;
       const editor = scene.getSystem( this.systems.EditorRender );
       const eids:number[] = editor.getSelectedEntityIds();
@@ -255,18 +257,20 @@ export default defineComponent({
       }
     },
 
-    oncut() {
-      if ( !this.editScene ) {
+    oncut( event:KeyboardEvent ) {
+      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
         return;
       }
+      event.preventDefault();
       this.oncopy();
-      this.ondelete();
+      this.ondelete(event);
     },
 
-    oncopy() {
-      if ( !this.editScene ) {
+    oncopy( event:KeyboardEvent ) {
+      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
         return;
       }
+      event.preventDefault();
       const scene = this.editScene;
       const editor = scene.getSystem( this.systems.EditorRender );
       const eids:number[] = editor.getSelectedEntityIds();
@@ -282,10 +286,11 @@ export default defineComponent({
       navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
     },
 
-    async onpaste() {
-      if ( !this.editScene ) {
+    async onpaste( event:KeyboardEvent ) {
+      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
         return;
       }
+      event.preventDefault();
       const scene = this.editScene;
 
       const clipboardItems = await navigator.clipboard.read();
@@ -300,7 +305,7 @@ export default defineComponent({
 
       // If entities are selected, we are replacing them. Delete
       // them first.
-      this.ondelete(false);
+      this.ondelete(event, false);
       for ( const eData of frozenEntities ) {
         while ( scene.getEntityByPath( eData.name ) ) {
           const endNum = eData.name.match( /(\d+)$/ )?.[0];

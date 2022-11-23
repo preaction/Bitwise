@@ -271,16 +271,13 @@ export default defineComponent({
       if ( ( electron.isMac && event.metaKey ) || ( !electron.isMac && event.ctrlKey ) ) {
         switch ( event.key ) {
           case "x":
-            this.$refs['currentTab'].oncut?.();
-            event.preventDefault();
+            this.$refs['currentTab'].oncut?.(event);
             return;
           case "c":
-            this.$refs['currentTab'].oncopy?.();
-            event.preventDefault();
+            this.$refs['currentTab'].oncopy?.(event);
             return;
           case "v":
-            this.$refs['currentTab'].onpaste?.();
-            event.preventDefault();
+            this.$refs['currentTab'].onpaste?.(event);
             return;
         }
       }
@@ -288,8 +285,7 @@ export default defineComponent({
         switch ( event.key ) {
           case "Backspace":
           case "Delete":
-            this.$refs['currentTab'].ondelete?.();
-            event.preventDefault();
+            this.$refs['currentTab'].ondelete?.(event);
             return;
         }
       }

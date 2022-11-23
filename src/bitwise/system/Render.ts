@@ -182,6 +182,7 @@ export default class Render extends System {
   remove( eid:number ) {
     this.scene._scene.remove( this.objects[eid] );
     delete this.objects[eid];
+    delete this.materials[eid];
   }
 
   onResize(e:ResizeEvent) {
