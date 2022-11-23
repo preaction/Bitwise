@@ -45,7 +45,6 @@ export default defineComponent({
   methods: {
     ...mapActions(useAppStore, ['loadSessionState']),
     updateTab(data:Object) {
-      console.log( 'updated', data );
       this.currentTab.data = data;
       this.currentTab.edited = true;
     },
@@ -80,7 +79,6 @@ export default defineComponent({
       const ext = item.ext;
       if ( ext === '.json' ) {
         // JSON files are game objects
-        console.log( 'open component', item );
         // Fetch the file to decide which tab component to use
         const fileContent = await this.appStore.readFile(item.path);
         const data = JSON.parse( fileContent );
@@ -151,7 +149,6 @@ export default defineComponent({
       if ( tab.src != tab.name + tab.ext && !tab.src.endsWith('/' + tab.name + tab.ext) ) {
         const oldSrc = tab.src;
         const newSrc = oldSrc.replace( oldSrc.substring( oldSrc.lastIndexOf( '/' ) + 1 ), tab.name + tab.ext );
-        console.log( `Rename file ${oldSrc} to ${newSrc}` );
         try {
           await this.appStore.readFile( newSrc );
           // If we've got a file, the file exists.
@@ -238,17 +235,6 @@ export default defineComponent({
       });
     },
 
-    log( level:string, ...msg:any[] ) {
-      this.console[level](...msg);
-      this.consoleLogs.push( { level, msg } );
-      if ( level === "error" ) {
-        this.consoleErrors++;
-      }
-      else if ( level === "warn" ) {
-        this.consoleWarnings++;
-      }
-    },
-
     toggleConsole() {
       this.openConsole = this.openConsole ? false : true;
       if ( this.openConsole === false ) {
@@ -311,20 +297,6 @@ export default defineComponent({
 
   },
   mounted() {
-    // Override console logging
-    this.console = {
-      log: console.log,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug,
-      info: console.info,
-    };
-    console.log = (...args:any[]) => this.log( 'log', ...args );
-    console.warn = (...args:any[]) => this.log( 'warn', ...args );
-    console.error = (...args:any[]) => this.log( 'error', ...args );
-    console.debug = (...args:any[]) => this.log( 'debug', ...args );
-    console.info = (...args:any[]) => this.log( 'info', ...args );
-
     if ( this.hasSessionState ) {
       this.loadSessionState();
     }
