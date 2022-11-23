@@ -11,6 +11,7 @@ import MarkdownView from "./components/MarkdownView.vue";
 import TilesetEdit from "./components/TilesetEdit.vue";
 import SceneEdit from "./components/SceneEdit.vue";
 import GameConfig from "./components/GameConfig.vue";
+import Export from "./components/Export.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
 
 export default defineComponent({
@@ -228,6 +229,15 @@ export default defineComponent({
       });
     },
 
+    showExportTab() {
+      this.appStore.openTab({
+        name: "Export",
+        component: "Export",
+        icon: 'fa-file-export',
+        edited: false,
+      });
+    },
+
     log( level:string, ...msg:any[] ) {
       this.console[level](...msg);
       this.consoleLogs.push( { level, msg } );
@@ -366,9 +376,6 @@ export default defineComponent({
             <li><a class="dropdown-item" href="#" @click="newModule('NewSystemForm', 'Component.vue')">System Form</a></li>
           </ul>
         </div>
-        <button class="btn btn-secondary btn-sm me-2" type="button" @click="showGameConfigTab">
-          <i class="fa fa-gear"></i>
-        </button>
       </div>
       <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile">
         <template #menu="{item}">
@@ -384,8 +391,8 @@ export default defineComponent({
       </ObjectTree>
     </div>
 
-    <header class="app-tabbar">
-      <nav class="px-2">
+    <header class="app-tabbar d-flex justify-content-between">
+      <nav class="px-1 flex-fill">
         <a v-for="tab, i in openTabs" href="#"
           @click.prevent="showTab(i)" :key="tab.src"
           :aria-current="i === currentTabIndex ? 'true' : ''"
@@ -394,6 +401,18 @@ export default defineComponent({
           <i class="delete fa fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
         </a>
       </nav>
+      <div class="dropdown m-2">
+        <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fa fa-gear"></i>
+        </button>
+        <ul class="dropdown-menu">
+          <!-- <li><a class="dropdown-item" href="#" @click="newFolder()">Folder...</a></li> -->
+          <!-- <li><hr class="dropdown-divider"></li> -->
+          <li><a class="dropdown-item" href="#" @click="showGameConfigTab">Game Config</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="#" @click="showExportTab">Export...</a></li>
+        </ul>
+      </div>
     </header>
 
     <component class="app-main" v-if="currentTab"
@@ -506,7 +525,7 @@ html, body, #app { height: 100% }
   grid-area: tabbar;
   background: var(--bs-body-bg);
 }
-.app-tabbar :link {
+.app-tabbar nav :link {
   color: var(--bs-gray);
   text-decoration: none;
   border: 1px solid black;
@@ -515,15 +534,15 @@ html, body, #app { height: 100% }
   margin: 0 2px 0 0;
 }
 
-.app-tabbar :link[aria-current=true] {
+.app-tabbar nav :link[aria-current=true] {
   color: var(--bs-light);
   background: var(--bs-primary);
 }
 
-.app-tabbar :link i.delete {
+.app-tabbar nav :link i.delete {
   visibility: hidden;
 }
-.app-tabbar :link:hover i.delete {
+.app-tabbar nav :link:hover i.delete {
   visibility: visible;
 }
 

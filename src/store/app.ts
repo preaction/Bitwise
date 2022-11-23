@@ -434,11 +434,11 @@ export const useAppStore = defineStore('app', {
         });
     },
 
-    async buildProject() {
+    async buildGameFile():Promise<string> {
       if ( !this.currentProject ) {
-        return;
+        throw "No current project";
       }
-      this.isBuilding = true;
+
       // Build 'bitwise.js' file from the files read:
       //  - All systems and components found should be loaded
       //  - bitwise.config.json should be loaded and merged
@@ -479,6 +479,16 @@ export const useAppStore = defineStore('app', {
       catch (e) {
         console.error( `Could not build project: ${e}` );
       }
+      return gameFile;
+    },
+
+    async buildProject() {
+      if ( !this.currentProject ) {
+        return;
+      }
+      this.isBuilding = true;
+      const gameFile = await this.buildGameFile();
+
       try {
         const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/' + gameFile );
         if ( this.gameFile ) {
