@@ -156,13 +156,11 @@ export default class Klondike extends System {
         this.cards[entity.id] = card;
       }
     }
-    console.log( `Card eids: ${Object.keys(this.cards)}` );
 
     this.scene.game.input.watchPointer();
   }
 
   start() {
-    console.log( `Klondike start` );
     // Shuffle the deck
     const deck = this.deckCards;
     for (let i = deck.length - 1; i > 0; i--) {
@@ -247,24 +245,37 @@ export default class Klondike extends System {
     position.z[card.entity] = position.z[stackId] + stackCards.length;
     position.sx[card.entity] = position.sx[stackId];
     position.sy[card.entity] = position.sy[stackId];
-    console.log( `Moving card ${card.rank} ${card.suit} to ${position.x[card.entity]}, ${position.y[card.entity]}, ${position.z[card.entity]}` );
   }
 
-  returnDragCard() {
+  dropCard() {
     const dragCard = this.cards[ this.dragEntity ];
     if ( dragCard.stack >= 0 ) {
       this.moveToStack( dragCard, dragCard.stack );
-      for ( let i = this.followEntities.length - 1; i > 0; i-- ) {
+      for ( let i = this.followEntities.length - 1; i >= 0; i-- ) {
         const eid = this.followEntities[i];
         this.moveToStack( this.cards[ eid ], dragCard.stack );
       }
     }
     else if ( dragCard.foundation >= 0 ) {
       this.moveToFoundation( dragCard, dragCard.foundation );
+      if ( !this.foundations.find( (f, i) => this.foundationCards[i][0].rank != ranks.indexOf("K") ) ) {
+        console.log( "WIN!" );
+      }
     }
     else {
       this.moveToDiscard( dragCard );
     }
+
+    // Update layer settings so cards can be selected again
+    for ( const eid of [ this.dragEntity, ...this.followEntities ] ) {
+      const sprite = this.Render.getRenderObject(eid);
+      if ( !sprite ) {
+        continue;
+      }
+      sprite.layers.enable(1);
+    }
+    this.dragEntity = -1;
+    this.followEntities = [];
   }
 
   _camera!:three.OrthographicCamera;
@@ -296,6 +307,7 @@ export default class Klondike extends System {
     }
     else {
       // Card must be on the discard stack
+      this.discardCards.shift();
       this.dragEntity = card.entity;
       this.followEntities = [];
     }
@@ -308,19 +320,6 @@ export default class Klondike extends System {
       }
       sprite.layers.disable(1);
     }
-  }
-
-  endDragCard() {
-    // Update layer settings so cards can be selected again
-    for ( const eid of [ this.dragEntity, ...this.followEntities ] ) {
-      const sprite = this.Render.getRenderObject(eid);
-      if ( !sprite ) {
-        continue;
-      }
-      sprite.layers.enable(1);
-    }
-    this.dragEntity = -1;
-    this.followEntities = [];
   }
 
   update( timeMilli:number ) {
@@ -350,7 +349,7 @@ export default class Klondike extends System {
               this.startDragCard( card );
             }
           }
-          else if ( eid === this.drawEntity && this.deckCards.length === 0 ) {
+          else if ( eid === this.drawEntity.id && this.deckCards.length === 0 ) {
             // Clicked the bottom under the deck, so move the discard
             // back
             this.deckCards = this.discardCards.reverse();
@@ -364,13 +363,13 @@ export default class Klondike extends System {
         pointer.unproject( this.camera );
         this.Position.store.x[this.dragEntity] = pointer.x;
         this.Position.store.y[this.dragEntity] = pointer.y;
-        this.Position.store.z[this.dragEntity] = 2000;
+        this.Position.store.z[this.dragEntity] = 1000;
         for ( let i = 0; i < this.followEntities.length; i++ ) {
           const eid = this.followEntities[i];
           const row = this.followEntities.length - i;
           this.Position.store.x[eid] = pointer.x;
-          this.Position.store.y[eid] = pointer.y + row * this.rowHeight;
-          this.Position.store.z[eid] = 2000 + row;
+          this.Position.store.y[eid] = pointer.y - row * this.rowHeight;
+          this.Position.store.z[eid] = 1000 + row;
         }
       }
       // Otherwise, mouse up
@@ -378,7 +377,6 @@ export default class Klondike extends System {
         // Try to drop the card where we are
         const dragCard = this.cards[ this.dragEntity ];
         const fromStack = dragCard.stack;
-        let dropped = false;
         raycaster.setFromCamera( pointer, this.camera );
         const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
         if ( intersects.length > 0 ) {
@@ -393,45 +391,40 @@ export default class Klondike extends System {
                 dragCard.suit % 2 !== stackCard.suit % 2 &&
                 dragCard.rank === stackCard.rank - 1
               ) {
-                this.moveToStack( dragCard, stackCard.stack );
-                dropped = true;
+                dragCard.stack = stackCard.stack;
+                dragCard.foundation = -1;
               }
             }
-            else if ( overCard.foundation >= 0 ) {
+            else if ( this.followEntities.length === 0 && overCard.foundation >= 0 ) {
               const foundationCard = this.foundationCards[ overCard.foundation ][0];
               // If our new card is same suit and one rank higher
               if ( dragCard.suit === foundationCard.suit && dragCard.rank === foundationCard.rank + 1 ) {
-                this.moveToFoundation( dragCard, overCard.foundation );
-                // XXX: Check if we win the game
-                dropped = true;
+                dragCard.stack = -1;
+                dragCard.foundation = foundationCard.foundation;
               }
             }
           }
           // Are we over an empty stack?
           else if ( this.stacks.indexOf( overEid ) >= 0 ) {
             if ( ranks[ dragCard.rank ] === "K" ) {
-              this.moveToStack( dragCard, this.stacks.indexOf( overEid ) );
-              dropped = true;
+              dragCard.stack = this.stacks.indexOf( overEid );
+              dragCard.foundation = -1;
             }
           }
           // Are we over an empty foundation?
           else if ( this.foundations.indexOf( overEid ) >= 0 ) {
             if ( ranks[ dragCard.rank ] === "A" ) {
-              this.moveToFoundation( dragCard, this.foundations.indexOf( overEid ) );
-              dropped = true;
+              dragCard.stack = -1;
+              dragCard.foundation = this.foundations.indexOf( overEid );
             }
           }
         }
-        if ( dropped ) {
-          // Flip up the next card in the stack, if needed
-          if ( fromStack >= 0 && this.stackCards[fromStack].length ) {
-            this.faceUpCard( this.stackCards[fromStack][0] );
-          }
+
+        // Flip up the next card in the stack, if needed
+        if ( fromStack >= 0 && dragCard.stack != fromStack && this.stackCards[fromStack].length ) {
+          this.faceUpCard( this.stackCards[fromStack][0] );
         }
-        else {
-          this.returnDragCard();
-        }
-        this.endDragCard();
+        this.dropCard();
       }
     }
   }
