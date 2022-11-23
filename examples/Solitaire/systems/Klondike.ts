@@ -258,7 +258,7 @@ export default class Klondike extends System {
     }
     else if ( dragCard.foundation >= 0 ) {
       this.moveToFoundation( dragCard, dragCard.foundation );
-      if ( !this.foundations.find( (f, i) => this.foundationCards[i][0].rank != ranks.indexOf("K") ) ) {
+      if ( !this.foundations.find( (f, i) => this.foundationCards[i]?.[0]?.rank != ranks.indexOf("K") ) ) {
         console.log( "WIN!" );
       }
     }
