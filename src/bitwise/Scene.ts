@@ -188,6 +188,7 @@ export default class Scene extends three.EventDispatcher {
   freeze():SceneData {
     // XXX: Not using bitecs serialize/deserialize because I can't get
     // them to work...
+    const seenComponents = new Set<string>();
     const data = [];
     for ( const id of this.eids ) {
       const entity = this.entities[id];
@@ -196,6 +197,7 @@ export default class Scene extends three.EventDispatcher {
         type: entity.type,
       };
       for ( const c of entity.listComponents() ) {
+        seenComponents.add(c);
         eData[c] = this.components[c].freezeEntity(id);
       }
       data.push( eData );
@@ -204,7 +206,7 @@ export default class Scene extends three.EventDispatcher {
     return {
       name: this.name,
       entities: data,
-      components: Object.keys( this.components ),
+      components: Array.from(seenComponents),
       systems: this.systems.map( s => ({ name: s.name, data: s.freeze() }) ),
     };
   }

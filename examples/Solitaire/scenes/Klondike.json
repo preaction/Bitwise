@@ -315,14 +315,10 @@
   ],
   "components": [
     "Position",
-    "Sprite",
     "OrthographicCamera",
-    "RigidBody",
-    "BoxCollider",
+    "Sprite",
     "Foundation",
-    "Stack",
-    "Blurp",
-    "Pluerp"
+    "Stack"
   ],
   "systems": [
     {
