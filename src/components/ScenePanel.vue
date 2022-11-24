@@ -15,7 +15,6 @@ export default defineComponent({
       sceneTree: {},
       selectedSceneItem: null,
       selectedEntity: null,
-      selectedComponents: {},
       sceneSystems: [],
       icons: {
         "default": "fa-cube",
@@ -46,6 +45,16 @@ export default defineComponent({
     },
     availableSystems() {
       return Object.keys( this.systems ).filter( s => !this.systems[s].isNull && !s.match(/^Editor/) );
+    },
+    selectedComponents() {
+      if ( !this.selectedEntity ) {
+        return {};
+      }
+      const components = {};
+      for ( const c of this.selectedEntity.listComponents() ) {
+        components[c] = this.selectedEntity.getComponent(c);
+      }
+      return components;
     },
   },
 
@@ -96,7 +105,6 @@ export default defineComponent({
       if ( !this.isPrefab && this.sceneTree === item ) {
         this.selectedEntity = null;
         this.selectedSceneItem = null;
-        this.selectedComponents = {};
         return;
       }
       this.selectedSceneItem = item;
@@ -105,16 +113,10 @@ export default defineComponent({
 
     selectEntity(entity) {
       this.selectedEntity = entity;
-      // XXX: selectedComponents could be a computed property
-      this.selectedComponents = {};
-      for ( const c of this.selectedEntity.listComponents() ) {
-        this.selectedComponents[c] = this.selectedEntity.getComponent(c);
-      }
     },
 
     updateComponent( name:string, data:Object ) {
       this.selectedEntity.setComponent(name, toRaw(data));
-      this.selectedComponents[name] = data;
       this.$emit('update');
     },
 
@@ -352,7 +354,10 @@ export default defineComponent({
       </div>
       <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
         <div class="mb-1 d-flex justify-content-between align-items-center">
-          <h6 class="m-0" :class="selectedComponents[c].isNull ? 'null-component' : ''">{{ c }}</h6>
+          <div class="d-flex align-items-center">
+            <h6 class="m-0">{{ c }}</h6>
+            <i v-if="!components[c]" class="ms-1 fa fa-file-circle-question" title="Component not found" ></i>
+          </div>
           <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="componentForms[c]" class="my-2 component-form">
@@ -384,7 +389,10 @@ export default defineComponent({
           draggable="true" @dragstart="startDragSystem( $event, idx )"
           @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"
         >
-          <h6 class="m-0" :class="s.isNull ? 'null-system' : ''"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
+          <div class="d-flex align-items-center">
+            <h6 class="m-0"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
+            <i v-if="s.isNull" class="ms-1 fa fa-file-circle-question" title="System not found" ></i>
+          </div>
           <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="systemForms[s.name]" class="my-2">
@@ -488,13 +496,6 @@ export default defineComponent({
   }
   .entity-drop-top::before {
     bottom: 100%;
-  }
-
-  .null-system {
-    background: var(--bs-bg-danger);
-  }
-  .null-component {
-    background: var(--bs-bg-danger);
   }
 
 </style>

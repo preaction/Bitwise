@@ -231,6 +231,7 @@ type AppState = {
   systems: { [key:string]: typeof System },
   componentForms: { [key:string]: any },
   systemForms: { [key:string]: any },
+  buildTimeout: any,
   _fsWatcher: any,
 };
 
@@ -264,6 +265,7 @@ export const useAppStore = defineStore('app', {
       systemForms: Vue.markRaw({
         "Physics": PhysicsEdit,
       }),
+      buildTimeout: null,
     } as AppState;
   },
 
@@ -389,7 +391,11 @@ export const useAppStore = defineStore('app', {
       console.log( 'file changed', eventType, filename );
       this.readProject();
       if ( !filename.match(/^\./) && filename.match( /\.[tj]s$/ ) ) {
-        this.buildProject();
+        this.isBuilding = true;
+        if ( this.buildTimeout ) {
+          clearTimeout( this.buildTimeout );
+        }
+        this.buildTimeout = setTimeout( () => { this.buildProject(); this.buildTimeout = null }, 4000 );
       }
     },
 
@@ -627,7 +633,18 @@ export const useAppStore = defineStore('app', {
       if ( !this.currentProject ) {
         throw "No current project";
       }
-      // XXX: Pre-delete item from projectItems
+      // Pre-delete item from projectItems
+      const pathParts = path.split( '/' );
+      let items = this.projectItems;
+      while ( pathParts.length ) {
+        const findName = pathParts.shift();
+        const i = items.findIndex( (item:DirectoryItem) => item.name === findName );
+        if ( !pathParts.length ) {
+          items.splice( i, 1 );
+          break;
+        }
+        items = items[i].children;
+      }
       return electron.deleteTree( this.currentProject, path );
     },
 
