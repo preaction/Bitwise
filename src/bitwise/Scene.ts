@@ -98,8 +98,6 @@ export default class Scene extends three.EventDispatcher {
     for ( const system of this.systems ) {
       system.start();
     }
-    // XXX: Add entities to scene?
-
     this.state = SceneState.Start;
   }
 
@@ -109,6 +107,14 @@ export default class Scene extends three.EventDispatcher {
       system.pause();
     }
     this.state = SceneState.Pause;
+  }
+
+  resume() {
+    this.dispatchEvent({ type: 'resume' });
+    for ( const system of this.systems ) {
+      system.resume();
+    }
+    this.state = SceneState.Run;
   }
 
   stop() {

@@ -1,5 +1,6 @@
 
 import * as three from 'three';
+import * as shifty from 'shifty';
 import System from 'bitwise/System.js';
 import Render from 'bitwise/system/Render.js';
 import Position from 'bitwise/component/Position.js';
@@ -41,6 +42,8 @@ export default class Klondike extends System {
   Foundation!:Foundation;
   Stack!:Stack;
   Sprite!:Sprite;
+
+  tweens!:shifty.Scene;
 
   /**
    * An array of foundation base entity IDs, from left to right.
@@ -133,9 +136,9 @@ export default class Klondike extends System {
         const entity = this.scene.addEntity();
         entity.name = `${suits[suit]}_${ranks[rank]}`;
         entity.addComponent( "Position", {
-          x: 0,
-          y: 0,
-          z: 0,
+          x: drawPosition.x,
+          y: drawPosition.y,
+          z: drawPosition.z,
           sx: drawPosition.sx,
           sy: drawPosition.sy,
           sz: 1,
@@ -158,6 +161,7 @@ export default class Klondike extends System {
     }
 
     this.scene.game.input.watchPointer();
+    this.tweens = new shifty.Scene();
   }
 
   start() {
@@ -183,15 +187,23 @@ export default class Klondike extends System {
       }
     }
 
+    this.tweens.play();
     this.positionDeck();
+  }
+
+  pause() {
+    this.tweens.pause();
+  }
+
+  resume() {
+    this.tweens.resume();
   }
 
   positionDeck() {
     const drawPosition = this.drawEntity.getComponent( "Position" );
     for ( let i = this.deckCards.length - 1; i >= 0; i-- ) {
       const card = this.deckCards[i];
-      card.faceUp = false;
-      this.Sprite.store.textureId[card.entity] = this.scene.game.textureIds[ cardBackImage ];
+      this.faceDownCard( card );
       this.Position.store.x[card.entity] = drawPosition.x;
       this.Position.store.y[card.entity] = drawPosition.y;
       this.Position.store.z[card.entity] = drawPosition.z + (this.deckCards.length - i + 1);
@@ -200,18 +212,52 @@ export default class Klondike extends System {
 
   faceUpCard( card:Card ) {
     card.faceUp = true;
+    // XXX: Rotating sprites doesn't work. We would have to use Plane instead
+    // const position = this.Position.store;
+    // const tween = shifty.tween({
+    //   from: {
+    //     ry: 0,
+    //   },
+    //   to: { ry: 1 },
+    //   duration: 250,
+    //   render: ( state:{ry: number} ) => {
+    //     position.ry[card.entity] = state.ry;
+    //   },
+    // });
+    // tween.then( () => { this.tweens.remove( tween ) } );
+    // this.tweens.add(tween);
     this.Sprite.store.textureId[card.entity] = card.faceImage;
+  }
+
+  faceDownCard( card:Card ) {
+    card.faceUp = false;
+    // XXX: Rotating sprites doesn't work. We would have to use Plane instead
+    // const position = this.Position.store;
+    // const tween = shifty.tween({
+    //   from: {
+    //     ry: 0,
+    //   },
+    //   to: { ry: 1 },
+    //   duration: 250,
+    //   render: ( state:{ry: number} ) => {
+    //     position.ry[card.entity] = state.ry;
+    //   },
+    // });
+    // tween.then( () => { this.tweens.remove( tween ) } );
+    // this.tweens.add(tween);
+    this.Sprite.store.textureId[card.entity] = this.scene.game.textureIds[ cardBackImage ];
   }
 
   moveToDiscard( card:Card ) {
     const eid = card.entity;
     this.discardCards.unshift(card);
-
     this.faceUpCard( card );
-
-    this.Position.store.x[eid] = this.Position.store.x[this.discardEntity.id];
-    this.Position.store.y[eid] = this.Position.store.y[this.discardEntity.id];
-    this.Position.store.z[eid] = this.Position.store.z[this.discardEntity.id] + this.discardCards.length;
+    this.tweenTo(
+      card.entity,
+      this.Position.store.x[this.discardEntity.id],
+      this.Position.store.y[this.discardEntity.id],
+      this.Position.store.z[this.discardEntity.id] + this.discardCards.length,
+    );
   }
 
   moveToFoundation( card:Card, foundationIdx:number ) {
@@ -223,11 +269,12 @@ export default class Klondike extends System {
     card.stack = -1;
     card.foundation = foundationIdx;
     foundationCards.unshift(card);
-    this.Position.store.x[card.entity] = this.Position.store.x[foundationId];
-    this.Position.store.y[card.entity] = this.Position.store.y[foundationId];
-    this.Position.store.z[card.entity] = this.Position.store.z[foundationId] + foundationCards.length;
-    this.Position.store.sx[card.entity] = this.Position.store.sx[foundationId];
-    this.Position.store.sy[card.entity] = this.Position.store.sy[foundationId];
+    this.tweenTo(
+      card.entity,
+      this.Position.store.x[foundationId],
+      this.Position.store.y[foundationId],
+      this.Position.store.z[foundationId] + foundationCards.length,
+    );
   }
 
   moveToStack( card:Card, stackIdx:number ) {
@@ -239,12 +286,34 @@ export default class Klondike extends System {
     card.stack = stackIdx;
     card.foundation = -1;
     stackCards.unshift(card);
+    this.tweenTo(
+      card.entity,
+      this.Position.store.x[stackId],
+      this.Position.store.y[stackId] - (stackCards.length - 1) * this.rowHeight,
+      this.Position.store.z[stackId] + stackCards.length,
+    );
+  }
+
+  tweenTo( eid:number, x:number, y:number, z:number ) {
     const position = this.Position.store;
-    position.x[card.entity] = position.x[stackId];
-    position.y[card.entity] = position.y[stackId] - (stackCards.length - 1) * this.rowHeight;
-    position.z[card.entity] = position.z[stackId] + stackCards.length;
-    position.sx[card.entity] = position.sx[stackId];
-    position.sy[card.entity] = position.sy[stackId];
+    position.z[eid] = 1000 + z;
+    const tween = shifty.tween({
+      from: {
+        x: position.x[eid],
+        y: position.y[eid],
+      },
+      to: { x, y },
+      duration: 250,
+      render: ( state:{x: number, y:number} ) => {
+        position.x[eid] = state.x;
+        position.y[eid] = state.y;
+      },
+    })
+    tween.then( () => {
+      position.z[eid] = z;
+      this.tweens.remove(tween);
+    });
+    this.tweens.add(tween);
   }
 
   dropCard() {

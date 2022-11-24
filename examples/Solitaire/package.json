@@ -1,0 +1,14 @@
+{
+  "name": "@bitwise/example-solitaire",
+  "version": "0.0.1",
+  "description": "An example Solitaire card game written with Bitwise",
+  "main": ".bitwise.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "shifty": "^2.19.1"
+  }
+}
