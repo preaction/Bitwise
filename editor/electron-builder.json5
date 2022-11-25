@@ -5,11 +5,31 @@
   "appId": "YourAppID",
   "asar": true,
   "directories": {
-    "output": "release/${version}"
+    "output": "../release/${version}"
   },
   "files": [
     "dist",
-    "node_modules"
+    "!node_modules/esbuild/${/*}",
+    "!node_modules/typescript/${/*}"
+  ],
+  /**
+   * XXX: We do not need all of the node_modules here. We only need the
+   * ones that are needed to compile the games (bytewise, three, bitecs,
+   * ammo.js, esbuild, typescript, and anything else relied upon by
+   * those) and package the games (electron, electron-builder, and
+   * anything else relied upon by those).
+   */
+  "extraResources": [
+    "node_modules",
+    {
+      "from": "../examples",
+      "to": "examples",
+      "filter": [
+        "**/*",
+        "!*/.build/${/*}",
+        "!*/.bytewise.js",
+      ],
+    },
   ],
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",

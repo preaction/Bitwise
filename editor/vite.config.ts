@@ -11,7 +11,7 @@ rmSync('dist', { recursive: true, force: true }) // v14.14.0
 export default defineConfig({
   build: {
     rollupOptions: {
-      external: [ 'esbuild' ],
+      external: ['esbuild'],
     },
   },
   plugins: [

@@ -251,11 +251,11 @@ ipcMain.handle('bytewise-rename-path', (event, root, from, to) => {
   return fs.rename( path.join( root, from ), path.join( root, to ) );
 });
 
-ipcMain.handle('bytewise-build-project', (event, root, src, dest) => {
-  console.log( `Building project ${root}: ${src} -> ${dest}` );
+ipcMain.handle('bytewise-build-project', async (event, root, src, dest) => {
+  const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
 
   // Check for typescript errors
-  const tsc = path.resolve( __dirname, '../../../node_modules/typescript/bin/tsc' );
+  const tsc = path.resolve( modulesDir, 'typescript/bin/tsc' );
   const cp = fork( tsc, [ '--noEmit' ], {
     cwd: root,
     stdio: 'overlapped',
@@ -270,10 +270,7 @@ ipcMain.handle('bytewise-build-project', (event, root, src, dest) => {
     nodePaths: [
       // This provides bundled libraries like 'bitecs', 'three', and
       // 'Ammo'
-      path.resolve( __dirname, '../../../node_modules' ),
-      // This provides the 'bytewise' library. XXX: This should probably be
-      // put into node_modules or 'dist' or something...
-      path.resolve( __dirname, '../../../src' ),
+      modulesDir,
     ],
     bundle: true,
     define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
@@ -283,12 +280,14 @@ ipcMain.handle('bytewise-build-project', (event, root, src, dest) => {
       'fs', 'path',
     ],
     absWorkingDir: root,
-    entryPoints: [path.join( root, src )],
-    outfile: path.join( root, dest ),
+    entryPoints: [src],
+    outfile: dest,
     outbase: root,
     format: 'esm',
     sourcemap: true,
-  })
+  });
+
+  return;
 });
 
 ipcMain.handle('bytewise-open-editor', (event, root, file) => {
