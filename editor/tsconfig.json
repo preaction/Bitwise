@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [ "electron/**/*" ],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
+}

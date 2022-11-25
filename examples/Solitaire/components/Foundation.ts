@@ -1,6 +1,6 @@
 
 import * as bitecs from 'bitecs';
-import Component from 'bitwise/Component.js';
+import { Component } from '@bytewise/game';
 
 export default class Foundation extends Component {
   get componentData() {

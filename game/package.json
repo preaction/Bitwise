@@ -1,0 +1,28 @@
+{
+  "name": "@bytewise/game",
+  "version": "0.0.1",
+  "description": "Bytewise game framework",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./system": "./dist/system/index.js",
+    "./component": "./dist/component/index.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [
+    "gamedev"
+  ],
+  "author": "Doug Bell",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/three": "^0.144.0",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "ammo.js": "^0.0.10",
+    "bitecs": "^0.3.38",
+    "three": "^0.144.0"
+  }
+}

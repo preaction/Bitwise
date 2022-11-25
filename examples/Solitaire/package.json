@@ -1,8 +1,8 @@
 {
-  "name": "@bitwise/example-solitaire",
+  "name": "@bytewise/example-solitaire",
   "version": "0.0.1",
-  "description": "An example Solitaire card game written with Bitwise",
-  "main": ".bitwise.js",
+  "description": "An example Solitaire card game written with Bytewise",
+  "main": ".bytewise.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
