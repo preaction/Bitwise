@@ -145,7 +145,15 @@ ipcMain.handle('bytewise-new-project', event => {
   );
 });
 
-async function descend( filePath:string, root:string='' ) {
+type projectFile = {
+  name: string,
+  ext: string,
+  path: string,
+  isDirectory: boolean,
+  children?: projectFile[],
+};
+
+async function descend( filePath:string, root:string='' ):Promise<projectFile[]> {
   if ( root == '' ) {
     root = filePath;
     filePath = '';
@@ -155,10 +163,11 @@ async function descend( filePath:string, root:string='' ) {
     return Promise.all(
       paths.map( async p => {
         const ext = p.isFile() ? p.name.substring( p.name.lastIndexOf( '.' ) ) : '';
-        const item = {
+        const item:projectFile = {
           name: p.name.substring( 0, p.name.length - ext.length ),
           ext,
           path: path.join( filePath, p.name ),
+          isDirectory: false,
         };
         if ( p.isDirectory() ) {
           item.isDirectory = true;
@@ -170,7 +179,7 @@ async function descend( filePath:string, root:string='' ) {
   });
 }
 
-let aborter;
+let aborter:AbortController;
 ipcMain.handle('bytewise-read-project', (event, path) => {
   if ( !win ) {
     return;
@@ -188,7 +197,7 @@ ipcMain.handle('bytewise-read-project', (event, path) => {
         win.webContents.send( 'watch', event );
       }
     }
-    catch (err) {
+    catch ( err:any ) {
       if (err.name === 'AbortError') {
         return;
       }
@@ -252,6 +261,10 @@ ipcMain.handle('bytewise-rename-path', (event, root, from, to) => {
 });
 
 ipcMain.handle('bytewise-build-project', async (event, root, src, dest) => {
+  if ( !win ) {
+    return;
+  }
+  const webwin = win;
   const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
 
   // Check for typescript errors
@@ -260,10 +273,10 @@ ipcMain.handle('bytewise-build-project', async (event, root, src, dest) => {
     cwd: root,
     stdio: 'overlapped',
   } );
-  cp.stderr.on( 'data', (buf) => win.webContents.send('error', buf.toString()) );
-  cp.stdout.on( 'data', (buf) => win.webContents.send('log', buf.toString()) );
+  cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
+  cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
   cp.on('error', (err) => {
-    win.webContents.send( 'error', err );
+    webwin.webContents.send( 'error', err );
   } );
 
   return esbuild.build({
@@ -295,5 +308,6 @@ ipcMain.handle('bytewise-open-editor', (event, root, file) => {
 });
 
 ipcMain.handle('bytewise-resources-path', (event) => {
-  return app.isPackaged ? app.resourcesPath : path.join(__dirname, '../../..');
+  const resourcesPath = path.resolve( __dirname.replace( 'app.asar', '' ), '../../..' );
+  return resourcesPath;
 });

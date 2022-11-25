@@ -40,10 +40,10 @@ contextBridge.exposeInMainWorld('electron', {
   saveFile( path:string, data:any ) {
     return ipcRenderer.invoke('bytewise-save-file', path, data);
   },
-  on( channel:string, cb:Function ) {
+  on( channel:string, cb:(...args:any[])=>void ) {
     return ipcRenderer.on( channel, cb );
   },
-  removeListener( channel:string, cb:Function ) {
+  removeListener( channel:string, cb:(...args:any[])=>void ) {
     return ipcRenderer.removeListener( channel, cb );
   },
   deleteTree( root:string, path:string ) {
