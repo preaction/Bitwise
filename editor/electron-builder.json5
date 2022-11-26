@@ -31,6 +31,10 @@
       ],
     },
   ],
+  "linux": {
+    "executableName": "bytewise-editor",
+    "artifactName": "${productName}-${version}.${ext}",
+  },
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
     "target": [
