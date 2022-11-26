@@ -47,8 +47,9 @@ declare var electron: {
   removeListener: ( channel:string, cb:Function ) => void;
   deleteTree: ( root:string, path:string ) => Promise<void>;
   renamePath: ( root:string, path:string, dest:string ) => Promise<void>;
-  buildProject: ( root:string, src:string, dest:string ) => Promise<string>;
+  buildProject: ( root:string, src:string ) => Promise<string>;
   openEditor: ( root:string, file:string ) => Promise<string>;
+  listExamples: () => Promise<string[]>;
 };
 
 declare module 'vue3-sfc-loader' {

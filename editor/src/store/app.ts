@@ -469,18 +469,17 @@ export const useAppStore = defineStore('app', {
       }
 
       const gameJs = buildGameJs( gameConf, modules );
+      // The game file must be written to the root of the project
+      // directory for `import` directives to work correctly.
       await electron.saveFile( this.currentProject + '/.bytewise.js', gameJs );
 
-      // Build and load project game class
-      const rand = Math.floor( Math.random() * 999999999 );
-      const gameFile = `.build/game.${rand}.js`;
+      // Bundle up all the files needed to run the game
       try {
-        await electron.buildProject( this.currentProject, '.bytewise.js', gameFile );
+        return await electron.buildProject( this.currentProject, '.bytewise.js' );
       }
       catch (e) {
         console.error( `Could not build project: ${e}` );
       }
-      return gameFile;
     },
 
     async buildProject() {
@@ -491,7 +490,7 @@ export const useAppStore = defineStore('app', {
       const gameFile = await this.buildGameFile();
 
       try {
-        const mod = await import( /* @vite-ignore */ 'bfile://' + this.currentProject + '/' + gameFile );
+        const mod = await import( /* @vite-ignore */ 'bfile://' + gameFile );
         if ( this.gameFile ) {
           electron.deleteTree( this.currentProject, this.gameFile );
         }

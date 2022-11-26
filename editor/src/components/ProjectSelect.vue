@@ -7,15 +7,17 @@ export default defineComponent({
   data() {
     return {
       recentProjects: [],
+      examples: [],
     };
   },
   emits: [ 'select' ],
   components: {
   },
-  mounted() {
+  async mounted() {
     // Create a copy of the recent projects list so that it doesn't
     // immediately change when we select one
     this.recentProjects = this.appStore.recentProjects.slice();
+    this.examples = await electron.listExamples();
   },
   computed: {
     ...mapStores(useAppStore),
@@ -27,7 +29,7 @@ export default defineComponent({
       this.$emit('select');
     },
     projectName( path:string ) {
-      return path.split('/').pop();
+      return path?.split('/').pop();
     },
     async newProject() {
       await this.appStore.newProject();
@@ -35,6 +37,10 @@ export default defineComponent({
     },
     async openProject( project?:string ) {
       await this.appStore.openProject( project );
+      this.$emit('select');
+    },
+    async openExample( path:string ) {
+      await this.appStore.openProject( path );
       this.$emit('select');
     },
   },
@@ -47,6 +53,16 @@ export default defineComponent({
     <div class="project-buttons px-2 d-flex flex-column align-items-stretch">
       <button class="btn btn-outline-dark text-start mb-2" @click="newProject">Create Project...</button>
       <button class="btn btn-outline-dark text-start mb-2" @click="openProject()">Open Project...</button>
+      <div class="dropdown mb-2">
+        <button class="btn btn-outline-dark text-start w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          View Example...
+        </button>
+        <ul class="dropdown-menu">
+          <li v-for="example, i in examples">
+            <a class="dropdown-item" href="#" @click="openExample(example.path)">{{example.name}}</a>
+          </li>
+        </ul>
+      </div>
     </div>
     <h4 class="recent-heading px-2 mt-2">Recent Projects</h4>
     <div class="recent-buttons px-2 d-flex flex-column align-items-stretch">

@@ -52,11 +52,14 @@ contextBridge.exposeInMainWorld('electron', {
   renamePath( root:string, path:string, to:string ) {
     return ipcRenderer.invoke('bytewise-rename-path', root, path, to);
   },
-  buildProject( root:string, src:string, dest:string ) {
-    return ipcRenderer.invoke('bytewise-build-project', root, src, dest);
+  buildProject( root:string, src:string ):Promise<string> {
+    return ipcRenderer.invoke('bytewise-build-project', root, src );
   },
   openEditor( root:string, file:string ) {
     return ipcRenderer.invoke('bytewise-open-editor', root, file);
+  },
+  listExamples() {
+    return ipcRenderer.invoke('bytewise-list-examples');
   },
 });
 

@@ -1,7 +1,7 @@
-import * as fs from 'node:fs/promises';
+import { Stats, promises as fs } from 'node:fs';
 import { fork } from 'node:child_process';
 import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
-import { release } from 'os'
+import { release, tmpdir } from 'os'
 import * as path from 'path'
 import * as esbuild from 'esbuild';
 
@@ -193,7 +193,6 @@ ipcMain.handle('bytewise-read-project', (event, path) => {
   (async () => {
     try {
       for await (const event of watcher) {
-        console.log( 'got watcher event', event );
         win.webContents.send( 'watch', event );
       }
     }
@@ -222,7 +221,6 @@ ipcMain.handle('bytewise-new-file', ( event, root, name, ext, data ) => {
   if ( !win ) {
     return;
   }
-  console.log( 'bytewise-new-file', root, name, ext, data );
   // XXX: Ensure extension on filename
   return dialog.showSaveDialog(win, {
     defaultPath: path.join( root, name ),
@@ -260,47 +258,52 @@ ipcMain.handle('bytewise-rename-path', (event, root, from, to) => {
   return fs.rename( path.join( root, from ), path.join( root, to ) );
 });
 
-ipcMain.handle('bytewise-build-project', async (event, root, src, dest) => {
+ipcMain.handle('bytewise-build-project', async (event, root, src) => {
   if ( !win ) {
     return;
   }
   const webwin = win;
-  const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
+  return fs.mkdtemp( path.join(tmpdir(), 'bytewise-') ).then( destDir => {
+    const dest = path.join( destDir, 'game.js' );
+    const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
 
-  // Check for typescript errors
-  const tsc = path.resolve( modulesDir, 'typescript/bin/tsc' );
-  const cp = fork( tsc, [ '--noEmit' ], {
-    cwd: root,
-    stdio: 'overlapped',
-  } );
-  cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
-  cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
-  cp.on('error', (err) => {
-    webwin.webContents.send( 'error', err );
-  } );
+    // Check for typescript errors
+    const tsc = path.resolve( modulesDir, 'typescript/bin/tsc' );
+    const cp = fork( tsc, [ '--noEmit' ], {
+      cwd: root,
+      stdio: 'overlapped',
+    } );
+    cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
+    cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
+    cp.on('error', (err) => {
+      webwin.webContents.send( 'error', err );
+    } );
 
-  return esbuild.build({
-    nodePaths: [
-      // This provides bundled libraries like 'bitecs', 'three', and
-      // 'Ammo'
-      modulesDir,
-    ],
-    bundle: true,
-    define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
-    external: [
-      // Ammo.js can run in Node, but esbuild tries to resolve these
-      // Node modules even if we are going to run in the browser.
-      'fs', 'path',
-    ],
-    absWorkingDir: root,
-    entryPoints: [src],
-    outfile: dest,
-    outbase: root,
-    format: 'esm',
-    sourcemap: true,
+    esbuild.buildSync({
+      nodePaths: [
+        // This provides bundled libraries like 'bitecs', 'three', and
+        // 'Ammo'
+        modulesDir,
+      ],
+      bundle: true,
+      define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
+      external: [
+        // Ammo.js can run in Node, but esbuild tries to resolve these
+        // Node modules even if we are going to run in the browser.
+        'fs', 'path',
+      ],
+      absWorkingDir: root,
+      entryPoints: [src],
+      outfile: dest,
+      outbase: root,
+      format: 'esm',
+      sourcemap: true,
+      logLevel: 'info',
+      logLimit: 0,
+    });
+
+    return dest;
   });
-
-  return;
 });
 
 ipcMain.handle('bytewise-open-editor', (event, root, file) => {
@@ -310,4 +313,23 @@ ipcMain.handle('bytewise-open-editor', (event, root, file) => {
 ipcMain.handle('bytewise-resources-path', (event) => {
   const resourcesPath = path.resolve( __dirname.replace( 'app.asar', '' ), '../../..' );
   return resourcesPath;
+});
+
+ipcMain.handle('bytewise-list-examples', async ():Promise<{name:string, path:string}[]> => {
+  const resourcesPath = path.resolve(
+    __dirname.replace( 'app.asar', '' ),
+    app.isPackaged ? '../../..' : '../../../..',
+  );
+  return fs.readdir( path.join( resourcesPath, 'examples' ) )
+    .then( (names) => {
+      const promises = [];
+      for ( const name of names ) {
+        const fullPath = path.join(resourcesPath, 'examples', name);
+        promises.push( fs.stat(fullPath).then( stat => ({ name, path: fullPath, stat }) ) );
+      }
+      return Promise.all( promises );
+    })
+    .then( (infos:{name:string, path:string, stat:Stats}[]) => {
+      return infos.filter( i => i.stat.isDirectory() ).map( i => ({ name: i.name, path: i.path }) );
+    });
 });
