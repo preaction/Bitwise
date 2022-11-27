@@ -1,12 +1,12 @@
 {
-  "name": "@bytewise/editor",
-  "productName": "Bytewise Editor",
+  "name": "@fourstar/bitwise-editor",
+  "productName": "Bitwise Editor",
   "version": "0.0.1",
   "main": "dist/electron/main/index.js",
-  "description": "Editor for the Bytewise game framework",
+  "description": "Editor for the Bitwise game framework",
   "author": "Doug Bell",
   "license": "MIT",
-  "repository": "https://github.com/preaction/bytewise",
+  "repository": "https://github.com/preaction/bitwise",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
@@ -30,10 +30,10 @@
   },
   "keywords": [
     "gamedev",
-    "bytewise"
+    "bitwise"
   ],
   "dependencies": {
-    "@bytewise/game": "^0.0.2",
+    "@fourstar/bitwise": "^0.0.1",
     "@fortawesome/fontawesome-free": "^6.2.0",
     "@popperjs/core": "^2.11.5",
     "@rollup/plugin-node-resolve": "^15.0.1",
