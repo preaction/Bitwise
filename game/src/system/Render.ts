@@ -74,9 +74,7 @@ export default class Render extends System {
   }
 
   start() {
-    // Add all root render objects to the scene
-    // XXX: Track only root objects. Every other object should already
-    // be added to its parent.
+    // Add all render objects to the scene
     const spriteEids = this.spriteQuery(this.scene.world);
     const cameraEids = this.cameraQuery(this.scene.world);
     for ( const eid of this.positionQuery(this.scene.world) ) {
@@ -88,6 +86,21 @@ export default class Render extends System {
       }
       else {
         this.addGroup( eid );
+      }
+    }
+  }
+
+  stop() {
+    // Remove all render objects from the scene
+    for ( const eid of this.positionQuery(this.scene.world) ) {
+      this.remove( eid );
+      if ( this.materials[eid] ) {
+        this.materials[eid].dispose();
+        delete this.materials[eid];
+        if ( this.textures[eid] ) {
+          this.textures[eid].dispose();
+          delete this.textures[eid];
+        }
       }
     }
   }
