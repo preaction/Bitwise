@@ -5,6 +5,7 @@
 import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene, { SceneState } from './Scene.js';
+import Load from './Load.js';
 import Input from './Input.js';
 import Component from './Component.js';
 import System from './System.js';
@@ -48,7 +49,7 @@ export interface ResizeEvent extends three.Event {
 
 export default class Game extends three.EventDispatcher {
   canvas:HTMLCanvasElement;
-  loader:{ base: string }; // XXX: Need a real class here
+  load:Load;
   renderer:three.WebGLRenderer|null = null;
   ecs:typeof bitecs;
 
@@ -71,7 +72,7 @@ export default class Game extends three.EventDispatcher {
     // XXX: Config should be merged with options
     this.ecs = bitecs;
     this.canvas = opt.canvas;
-    this.loader = opt.loader;
+    this.load = new Load( opt.loader );
     this.width = opt.renderer?.width || conf.renderer?.width;
     this.height = opt.renderer?.height || conf.renderer?.height;
     this.data = opt.data || {};
@@ -89,37 +90,6 @@ export default class Game extends three.EventDispatcher {
       ...conf.systems,
       ...opt.systems,
     };
-
-    // Set up loaders
-    three.Cache.enabled = true;
-    three.DefaultLoadingManager.setURLModifier( url => this.loader.base + url );
-  }
-
-  texturePaths:{ [key:number]: string } = {};
-  textureIds:{ [key:string]: number } = {};
-  textures:three.Texture[] = [];
-  promises:{ [key:string]: Promise<three.Texture> } = {};
-
-  loadTexture( path:string ):Promise<three.Texture> {
-    if ( path in this.promises ) {
-      return this.promises[path];
-    }
-    // XXX: Load the texture, and keep track of the promises we make
-    // for loading purposes.
-    // XXX: We may want to make a general "loader" object that can be used
-    // for progress reporting.
-    const loader = new three.TextureLoader();
-    const promise = this.promises[path] = new Promise(
-      (resolve, reject) => {
-        const texture = loader.load( path, resolve, undefined, reject ) 
-        this.textures.push( texture );
-        this.texturePaths[this.textures.indexOf(texture)] = path;
-        this.textureIds[ path ] = this.textures.indexOf(texture);
-        console.log( `Loaded texture ${path}` );
-      },
-    );
-    promise.then( () => this.scenes.forEach( s => s.render() ) );
-    return promise;
   }
 
   start() {
@@ -150,6 +120,9 @@ export default class Game extends three.EventDispatcher {
   stop() {
     this.dispatchEvent({ type: 'stop' });
     this.input.stop();
+    for ( const scene of this.scenes ) {
+      scene.stop();
+    }
     if ( this.renderer ) {
       this.renderer.dispose();
       this.renderer = null;

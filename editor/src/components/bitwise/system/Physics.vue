@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { Physics } from '@bytewise/game/system';
+import { Physics } from '@fourstar/bitwise/system';
 
 export default defineComponent({
   props: ['modelValue', 'scene'],

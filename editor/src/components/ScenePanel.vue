@@ -200,7 +200,7 @@ export default defineComponent({
     },
 
     dropEntity( event ) {
-      const data = event.dataTransfer.getData("bytewise/entity");
+      const data = event.dataTransfer.getData("bitwise/entity");
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
@@ -237,7 +237,7 @@ export default defineComponent({
     },
 
     startDragSystem(event, index) {
-      event.dataTransfer.setData("bytewise/system", index);
+      event.dataTransfer.setData("bitwise/system", index);
     },
 
     dragOverSystem(event, index) {
@@ -247,7 +247,7 @@ export default defineComponent({
     },
 
     dropSystem(event, index) {
-      const data = event.dataTransfer.getData("bytewise/system");
+      const data = event.dataTransfer.getData("bitwise/system");
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";

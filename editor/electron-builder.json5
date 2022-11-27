@@ -14,7 +14,7 @@
   ],
   /**
    * XXX: We do not need all of the node_modules here. We only need the
-   * ones that are needed to compile the games (bytewise, three, bitecs,
+   * ones that are needed to compile the games (bitwise, three, bitecs,
    * ammo.js, esbuild, typescript, and anything else relied upon by
    * those) and package the games (electron, electron-builder, and
    * anything else relied upon by those).
@@ -27,12 +27,12 @@
       "filter": [
         "**/*",
         "!*/.build/${/*}",
-        "!*/.bytewise.js",
+        "!*/.bitwise.js",
       ],
     },
   ],
   "linux": {
-    "executableName": "bytewise-editor",
+    "executableName": "bitwise-editor",
     "artifactName": "${productName}-${version}.${ext}",
   },
   "mac": {

@@ -24,7 +24,7 @@ export default class System extends three.EventDispatcher {
     return this.scene.world;
   }
 
-  init() { }
+  async init() { }
   start() { }
   stop() { }
   pause() { }

@@ -74,10 +74,10 @@ export default defineComponent({
       }
     },
     dragstart( event ) {
-      console.log( `Dragging ${this.path}: bytewise/${this.dragtype}` );
-      event.dataTransfer.setData('bytewise/' + this.dragtype, this.item.path);
+      console.log( `Dragging ${this.path}: bitwise/${this.dragtype}` );
+      event.dataTransfer.setData('bitwise/' + this.dragtype, this.item.path);
       if ( this.item.dragtype ) {
-        event.dataTransfer.setData('bytewise/' + this.item.dragtype, this.item.path);
+        event.dataTransfer.setData('bitwise/' + this.item.dragtype, this.item.path);
       }
     },
     dragover(event) {

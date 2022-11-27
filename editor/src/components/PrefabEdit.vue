@@ -6,7 +6,7 @@ import ObjectTreeItem from './ObjectTreeItem.vue';
 import ScenePanel from './ScenePanel.vue';
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import { Game, Scene } from '@bytewise/game';
+import { Game, Scene } from '@fourstar/bitwise';
 
 export default defineComponent({
   components: {

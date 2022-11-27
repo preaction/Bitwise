@@ -31,7 +31,7 @@ export default defineComponent({
       event.dataTransfer.dropEffect = "link";
     },
     drop(event) {
-      const data = event.dataTransfer.getData("bytewise/file");
+      const data = event.dataTransfer.getData("bitwise/file");
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "link";

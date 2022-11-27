@@ -1,6 +1,6 @@
 {
   "name": "@fourstar/bitwise",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "Bitwise game framework",
   "files": [ "dist/*" ],
   "main": "./dist/index.js",

@@ -23,6 +23,7 @@ export default class Render extends System {
   cameras:Array<three.OrthographicCamera|undefined> = [];
   mainCamera:number = -1;
   objects:three.Object3D[] = [];
+  textures:three.Texture[] = [];
   materials:three.Material[] = [];
 
   constructor( name:string, scene:Scene ) {
@@ -44,9 +45,51 @@ export default class Render extends System {
     });
   }
 
-  start() {
+  async init():Promise<any> {
+    const promises = [];
+    const loader = new three.TextureLoader();
+
+    const spriteEids = this.spriteQuery(this.scene.world);
+    const cameraEids = this.cameraQuery(this.scene.world);
+    for ( const eid of spriteEids ) {
+      const textureId = this.spriteComponent.store.textureId[eid];
+      const path = this.scene.game.texturesPaths[ textureId ];
+      promises.push(
+        new Promise(
+          (resolve, reject) => {
+            const texture = loader.load( path, resolve, undefined, reject ) 
+            this.textures[textureId] = texture;
+          },
+        )
+      );
+      this.createSprite( eid );
+    }
+    for ( const eid of cameraEids ) {
+      this.createCamera( eid );
+    }
+
     // XXX: We should set this in a System form
-    this.mainCamera = this.cameraQuery(this.scene.world)[0];
+    this.mainCamera = cameraEids[0];
+    return Promise.all( promises );
+  }
+
+  start() {
+    // Add all root render objects to the scene
+    // XXX: Track only root objects. Every other object should already
+    // be added to its parent.
+    const spriteEids = this.spriteQuery(this.scene.world);
+    const cameraEids = this.cameraQuery(this.scene.world);
+    for ( const eid of this.positionQuery(this.scene.world) ) {
+      if ( spriteEids.indexOf(eid) >= 0 ) {
+        this.addSprite( eid );
+      }
+      else if ( cameraEids.indexOf(eid) >= 0 ) {
+        this.addCamera( eid );
+      }
+      else {
+        this.addGroup( eid );
+      }
+    }
   }
 
   /**
@@ -80,40 +123,18 @@ export default class Render extends System {
 
     // Objects changing their position
     for ( const eid of this.positionQuery( this.scene.world ) ) {
-      const obj = this.objects[eid];
-      if ( !obj ) {
-        continue;
-      }
-      obj.position.x = this.positionComponent.store.x[eid];
-      obj.position.y = this.positionComponent.store.y[eid];
-      obj.position.z = this.positionComponent.store.z[eid];
-      obj.scale.x = this.positionComponent.store.sx[eid];
-      obj.scale.y = this.positionComponent.store.sy[eid];
-      obj.scale.z = this.positionComponent.store.sz[eid];
+      this.updatePosition( eid );
     }
 
     // Sprites changing their texture
     for ( const eid of spriteEids ) {
-      const tid = this.spriteComponent.store.textureId[eid];
-      const texture = this.scene.game.textures[tid];
-      if ( !this.materials[eid] || (this.materials[eid] as three.SpriteMaterial).map !== texture ) {
-        const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
-        (this.objects[eid] as three.Sprite).material = material;
-      }
+      this.updateSprite( eid );
     }
 
     // Cameras changing their properties
     for ( const eid of cameraEids ) {
-      const camera = this.objects[eid] as three.OrthographicCamera;
-      if ( !camera ) {
-        continue;
-      }
-      camera.far = this.cameraComponent.store.far[eid];
-      camera.near = this.cameraComponent.store.near[eid];
-      camera.zoom = this.cameraComponent.store.zoom[eid];
-      camera.updateProjectionMatrix();
+      this.updateCamera( eid );
     }
-
   }
 
   render() {
@@ -128,7 +149,20 @@ export default class Render extends System {
     }
   }
 
-  addCamera( eid:number ) {
+  updatePosition( eid:number ) {
+    const obj = this.objects[eid];
+    if ( !obj ) {
+      continue;
+    }
+    obj.position.x = this.positionComponent.store.x[eid];
+    obj.position.y = this.positionComponent.store.y[eid];
+    obj.position.z = this.positionComponent.store.z[eid];
+    obj.scale.x = this.positionComponent.store.sx[eid];
+    obj.scale.y = this.positionComponent.store.sy[eid];
+    obj.scale.z = this.positionComponent.store.sz[eid];
+  }
+
+  createCamera( eid:number ):three.OrthographicCamera {
     const { width, height } = this.scene.game;
     const ratio = width / height;
     // Point a camera at 0, 0
@@ -146,8 +180,24 @@ export default class Render extends System {
       near, far,
     );
     this.cameras[eid] = this.objects[eid] = camera;
-    camera.zoom = cameraData.zoom[eid] || 4;
+    this.updatePosition( eid );
+    this.updateCamera( eid );
+    return camera;
+  }
 
+  updateCamera( eid:number ) {
+    const camera = this.objects[eid] as three.OrthographicCamera;
+    if ( !camera ) {
+      continue;
+    }
+    camera.far = this.cameraComponent.store.far[eid];
+    camera.near = this.cameraComponent.store.near[eid];
+    camera.zoom = this.cameraComponent.store.zoom[eid];
+    camera.updateProjectionMatrix();
+  }
+
+  addCamera( eid:number ) {
+    const camera = this.cameras[eid] || this.createCamera(eid);
     // XXX: If entity has a parent, add it to that instead
     this.scene._scene.add( camera );
   }
@@ -161,20 +211,45 @@ export default class Render extends System {
     }
   }
 
-  addGroup( eid:number ) {
+  createGroup( eid:number ):three.Group {
     const group = this.objects[eid] = new three.Group();
+    this.updatePosition( eid );
+    return group;
+  }
+
+  addGroup( eid:number ) {
+    const group = this.objects[eid] || this.createGroup( eid );
     // XXX: If entity has a parent, add it to that instead
     this.scene._scene.add( group );
   }
 
-  addSprite( eid:number ) {
+  createSprite( eid:number ):three.Sprite {
     // Find the sprite's texture
     const tid = this.spriteComponent.store.textureId[eid];
-    const texture = this.scene.game.textures[tid];
+    const texture = this.textures[tid];
     const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
     const sprite = this.objects[eid] = new three.Sprite( material );
     sprite.userData.eid = eid;
     sprite.layers.enable(1);
+    this.updatePosition( eid );
+    return sprite;
+  }
+
+  updateSprite( eid:number ) {
+    const sprite = this.objects[eid] as three.Sprite;
+    if ( !sprite ) {
+      continue;
+    }
+    const tid = this.spriteComponent.store.textureId[eid];
+    const texture = this.textures[tid];
+    if ( !this.materials[eid] || (this.materials[eid] as three.SpriteMaterial).map !== texture ) {
+      const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
+      sprite.material = material;
+    }
+  }
+
+  addSprite( eid:number ) {
+    const sprite = this.objects[eid] || this.createSprite( eid );
     // XXX: If entity has a parent, add it to that instead
     this.scene._scene.add( sprite );
   }

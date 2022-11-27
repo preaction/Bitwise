@@ -2,7 +2,7 @@
 import { defineComponent, shallowReactive, toRaw, markRaw } from "vue";
 import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.js";
-import { Game, Scene } from '@bytewise/game';
+import { Game, Scene } from '@fourstar/bitwise';
 import ScenePanel from './ScenePanel.vue';
 
 export default defineComponent({
@@ -277,7 +277,7 @@ export default defineComponent({
       // Clear the path so they are put at the root
       frozenEntities.forEach( e => delete e.Position.path );
       const blob = new Blob(
-        [JSON.stringify({ type: 'bytewise/entity', items: frozenEntities }, null, 2)],
+        [JSON.stringify({ type: 'bitwise/entity', items: frozenEntities }, null, 2)],
         {
           type: "text/plain",
         },

@@ -115,7 +115,7 @@ ipcMain.handle('open-win', (event, arg) => {
   }
 })
 
-ipcMain.handle('bytewise-open-project', event => {
+ipcMain.handle('bitwise-open-project', event => {
   if ( !win ) {
     return;
   }
@@ -125,7 +125,7 @@ ipcMain.handle('bytewise-open-project', event => {
   });
 });
 
-ipcMain.handle('bytewise-new-project', event => {
+ipcMain.handle('bitwise-new-project', event => {
   if ( !win ) {
     return;
   }
@@ -180,7 +180,7 @@ async function descend( filePath:string, root:string='' ):Promise<projectFile[]>
 }
 
 let aborter:AbortController;
-ipcMain.handle('bytewise-read-project', (event, path) => {
+ipcMain.handle('bitwise-read-project', (event, path) => {
   if ( !win ) {
     return;
   }
@@ -217,7 +217,7 @@ app.whenReady().then(() => {
   })
 })
 
-ipcMain.handle('bytewise-new-file', ( event, root, name, ext, data ) => {
+ipcMain.handle('bitwise-new-file', ( event, root, name, ext, data ) => {
   if ( !win ) {
     return;
   }
@@ -241,29 +241,29 @@ ipcMain.handle('bytewise-new-file', ( event, root, name, ext, data ) => {
   );
 });
 
-ipcMain.handle('bytewise-save-file', (event, path, data) => {
+ipcMain.handle('bitwise-save-file', (event, path, data) => {
   // XXX: Write to new file then rename to avoid losing data
   return fs.writeFile( path, data );
 });
 
-ipcMain.handle('bytewise-read-file', (event, path) => {
+ipcMain.handle('bitwise-read-file', (event, path) => {
   return fs.readFile( path, { encoding: 'utf8' } );
 });
 
-ipcMain.handle('bytewise-delete-tree', (event, root, tree) => {
+ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {
   return fs.rm( path.join( root, tree ), { recursive: true } );
 });
 
-ipcMain.handle('bytewise-rename-path', (event, root, from, to) => {
+ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
   return fs.rename( path.join( root, from ), path.join( root, to ) );
 });
 
-ipcMain.handle('bytewise-build-project', async (event, root, src) => {
+ipcMain.handle('bitwise-build-project', async (event, root, src) => {
   if ( !win ) {
     return;
   }
   const webwin = win;
-  return fs.mkdtemp( path.join(tmpdir(), 'bytewise-') ).then( destDir => {
+  return fs.mkdtemp( path.join(tmpdir(), 'bitwise-') ).then( destDir => {
     const dest = path.join( destDir, 'game.js' );
     const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
 
@@ -306,16 +306,16 @@ ipcMain.handle('bytewise-build-project', async (event, root, src) => {
   });
 });
 
-ipcMain.handle('bytewise-open-editor', (event, root, file) => {
+ipcMain.handle('bitwise-open-editor', (event, root, file) => {
   return shell.openPath(path.join(root, file));
 });
 
-ipcMain.handle('bytewise-resources-path', (event) => {
+ipcMain.handle('bitwise-resources-path', (event) => {
   const resourcesPath = path.resolve( __dirname.replace( 'app.asar', '' ), '../../..' );
   return resourcesPath;
 });
 
-ipcMain.handle('bytewise-list-examples', async ():Promise<{name:string, path:string}[]> => {
+ipcMain.handle('bitwise-list-examples', async ():Promise<{name:string, path:string}[]> => {
   const resourcesPath = path.resolve(
     __dirname.replace( 'app.asar', '' ),
     app.isPackaged ? '../../..' : '../../../..',

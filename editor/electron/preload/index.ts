@@ -18,27 +18,27 @@ contextBridge.exposeInMainWorld('electron', {
     // Other method you want to add like has(), reset(), etc.
   },
   resourcesPath():Promise<string> {
-    return ipcRenderer.invoke('bytewise-resources-path');
+    return ipcRenderer.invoke('bitwise-resources-path');
   },
   // Any other methods you want to expose in the window object.
   // ...
   openProject() {
-    return ipcRenderer.invoke('bytewise-open-project');
+    return ipcRenderer.invoke('bitwise-open-project');
   },
   newProject() {
-    return ipcRenderer.invoke('bytewise-new-project');
+    return ipcRenderer.invoke('bitwise-new-project');
   },
   readProject( path:string ) {
-    return ipcRenderer.invoke('bytewise-read-project', path);
+    return ipcRenderer.invoke('bitwise-read-project', path);
   },
   readFile( path:string ) {
-    return ipcRenderer.invoke('bytewise-read-file', path);
+    return ipcRenderer.invoke('bitwise-read-file', path);
   },
   newFile( path:string, name:string, ext:string, data:any ) {
-    return ipcRenderer.invoke('bytewise-new-file', path, name, ext, data);
+    return ipcRenderer.invoke('bitwise-new-file', path, name, ext, data);
   },
   saveFile( path:string, data:any ) {
-    return ipcRenderer.invoke('bytewise-save-file', path, data);
+    return ipcRenderer.invoke('bitwise-save-file', path, data);
   },
   on( channel:string, cb:(...args:any[])=>void ) {
     return ipcRenderer.on( channel, cb );
@@ -47,19 +47,19 @@ contextBridge.exposeInMainWorld('electron', {
     return ipcRenderer.removeListener( channel, cb );
   },
   deleteTree( root:string, path:string ) {
-    return ipcRenderer.invoke('bytewise-delete-tree', root, path);
+    return ipcRenderer.invoke('bitwise-delete-tree', root, path);
   },
   renamePath( root:string, path:string, to:string ) {
-    return ipcRenderer.invoke('bytewise-rename-path', root, path, to);
+    return ipcRenderer.invoke('bitwise-rename-path', root, path, to);
   },
   buildProject( root:string, src:string ):Promise<string> {
-    return ipcRenderer.invoke('bytewise-build-project', root, src );
+    return ipcRenderer.invoke('bitwise-build-project', root, src );
   },
   openEditor( root:string, file:string ) {
-    return ipcRenderer.invoke('bytewise-open-editor', root, file);
+    return ipcRenderer.invoke('bitwise-open-editor', root, file);
   },
   listExamples() {
-    return ipcRenderer.invoke('bytewise-list-examples');
+    return ipcRenderer.invoke('bitwise-list-examples');
   },
 });
 

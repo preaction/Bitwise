@@ -20,8 +20,7 @@ export default class Sprite extends Component {
     return data;
   }
   thawEntity( eid:number, data:{ [key:string]:any } ) {
-    this.scene.game.loadTexture( data.texturePath );
-    const textureId = this.scene.game.textureIds[ data.texturePath ];
+    const textureId = this.scene.game.load.texture( data.texturePath );
     super.thawEntity( eid, {textureId} );
   }
 }

@@ -81,18 +81,27 @@ export default class Scene extends three.EventDispatcher {
     this.components = {};
   }
 
-  // init() should load external assets and do one-time initialization.
+  /**
+   * init() is the final step of scene setup, after contruction and
+   * thaw(). At this point, Systems can assume all entities' data is
+   * loaded. This method should load external assets into memory and
+   * pre-allocate needed objects.
+   */
   async init() {
+    const promises = [];
     this.dispatchEvent({ type: 'init' });
     for ( const system of this.systems ) {
       // XXX: init() should be async
-      system.init();
+      promises.push( system.init() );
     }
+    return Promise.all( promises );
   }
 
-  // start() should build the scene and get it ready to be
-  // rendered. When the scene is ready, it should set its state to
-  // "Start".
+  /**
+   * start() is the first step of scene runtime. This method should
+   * enable the scene, start tracking input, and add objects to the
+   * Render and Physics systems.
+   */
   start() {
     this.dispatchEvent({ type: 'start' });
     for ( const system of this.systems ) {

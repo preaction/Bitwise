@@ -6,17 +6,17 @@
 import * as Vue from 'vue';
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { loadModule } from 'vue3-sfc-loader';
-import { Game, Component, System } from '@bytewise/game';
+import { Game, Component, System } from '@fourstar/bitwise';
 
 // Core Component Forms
-import PositionEdit from '../components/bytewise/Position.vue';
-import OrthographicCameraEdit from '../components/bytewise/OrthographicCamera.vue';
-import SpriteEdit from '../components/bytewise/Sprite.vue';
-import RigidBodyEdit from '../components/bytewise/RigidBody.vue';
-import BoxColliderEdit from '../components/bytewise/BoxCollider.vue';
+import PositionEdit from '../components/bitwise/Position.vue';
+import OrthographicCameraEdit from '../components/bitwise/OrthographicCamera.vue';
+import SpriteEdit from '../components/bitwise/Sprite.vue';
+import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
+import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 
 // Core System forms
-import PhysicsEdit from '../components/bytewise/system/Physics.vue';
+import PhysicsEdit from '../components/bitwise/system/Physics.vue';
 
 type GameConfig = {};
 
@@ -84,7 +84,7 @@ function buildGameJs(config:GameConfig, moduleItems:DirectoryItem[]) {
   }
 
   const gameFile = `
-    import { Game, System, Component } from '@bytewise/game';
+    import { Game, System, Component } from '@fourstar/bitwise';
 
     // Import custom components and systems
     ${Object.keys(imports).sort().map( k => imports[k].stmt ).join("\n")}
@@ -119,7 +119,7 @@ const templates:{ [key:string]: (name:string) => string } = {
   'Component.ts': (name:string):string => {
     return `
 import * as bitecs from 'bitecs';
-import { Component } from '@bytewise/game';
+import { Component } from '@fourstar/bitwise';
 
 export default class ${name} extends Component {
   get componentData() {
@@ -143,7 +143,7 @@ export default class ${name} extends Component {
     return `
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import { Scene, System } from '@bytewise/game';
+import { Scene, System } from '@fourstar/bitwise';
 
 export default class ${name} extends System {
   init() {
@@ -404,7 +404,7 @@ export const useAppStore = defineStore('app', {
           const ignore = (item:DirectoryItem) => {
             return !item.path.match( /(?:^|\/)\./ ) &&
               !item.path.match(/(?:^|\/)node_modules(?:$|\/)/) &&
-              !item.path.match(/^(tsconfig|bytewise\.config|package(-lock)?)\.json$/);
+              !item.path.match(/^(tsconfig|bitwise\.config|package(-lock)?)\.json$/);
           };
           const descend = async (item:DirectoryItem) => {
             if ( item.children && item.children.length ) {
@@ -440,9 +440,9 @@ export const useAppStore = defineStore('app', {
         throw "No current project";
       }
 
-      // Build 'bytewise.js' file from the files read:
+      // Build 'bitwise.js' file from the files read:
       //  - All systems and components found should be loaded
-      //  - bytewise.config.json should be loaded and merged
+      //  - bitwise.config.json should be loaded and merged
       const findModules:((items:DirectoryItem[]) => DirectoryItem[]) = (items) => {
         const mods = [];
         for ( const i of items ) {
@@ -461,7 +461,7 @@ export const useAppStore = defineStore('app', {
       const modules = findModules( this.projectItems );
       let gameConf = {};
       try {
-        const confJson = await electron.readFile( this.currentProject + '/bytewise.config.json' );
+        const confJson = await electron.readFile( this.currentProject + '/bitwise.config.json' );
         gameConf = JSON.parse(confJson);
       }
       catch (e) {
@@ -471,11 +471,11 @@ export const useAppStore = defineStore('app', {
       const gameJs = buildGameJs( gameConf, modules );
       // The game file must be written to the root of the project
       // directory for `import` directives to work correctly.
-      await electron.saveFile( this.currentProject + '/.bytewise.js', gameJs );
+      await electron.saveFile( this.currentProject + '/.bitwise.js', gameJs );
 
       // Bundle up all the files needed to run the game
       try {
-        return await electron.buildProject( this.currentProject, '.bytewise.js' );
+        return await electron.buildProject( this.currentProject, '.bitwise.js' );
       }
       catch (e) {
         console.error( `Could not build project: ${e}` );

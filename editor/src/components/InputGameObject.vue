@@ -12,7 +12,7 @@ export default defineComponent({
       event.dataTransfer.dropEffect = this.dropEffect;
     },
     async drop(event) {
-      const data = event.dataTransfer.getData(`bytewise/${this.type}`);
+      const data = event.dataTransfer.getData(`bitwise/${this.type}`);
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = this.dropEffect;

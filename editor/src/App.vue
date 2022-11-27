@@ -208,11 +208,11 @@ export default defineComponent({
       let data = {};
 
       try {
-        const fileContent = await this.appStore.readFile('bytewise.config.json');
+        const fileContent = await this.appStore.readFile('bitwise.config.json');
         data = JSON.parse( fileContent );
       }
       catch (err) {
-        console.warn( `Error opening bytewise.config.json: ${err}` );
+        console.warn( `Error opening bitwise.config.json: ${err}` );
       }
 
       this.appStore.openTab({
@@ -220,7 +220,7 @@ export default defineComponent({
         component: "GameConfig",
         ext: 'json',
         icon: 'fa-gear',
-        src: 'bytewise.config.json',
+        src: 'bitwise.config.json',
         data: data,
         edited: false,
       });
@@ -244,7 +244,7 @@ export default defineComponent({
     },
 
     onDropFile( event ) {
-      const data = event.dataTransfer.getData("bytewise/file");
+      const data = event.dataTransfer.getData("bitwise/file");
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
