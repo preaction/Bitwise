@@ -18,8 +18,6 @@ import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 // Core System forms
 import PhysicsEdit from '../components/bitwise/system/Physics.vue';
 
-type GameConfig = {};
-
 type Tab = {
   data: any,
   edited: boolean,
@@ -37,83 +35,6 @@ type DirectoryItem = {
   icon: string,
   children?: DirectoryItem[],
 };
-
-async function buildTsconfig():Promise<any> {
-  const resources = await electron.resourcesPath();
-  console.log( 'resources', resources );
-  return {
-    "compilerOptions": {
-      "target": "ESNext",
-      "module": "ESNext",
-      "moduleResolution": "node",
-      "importHelpers": true,
-      "jsx": "preserve",
-      "esModuleInterop": true,
-      "resolveJsonModule": true,
-      "sourceMap": true,
-      "baseUrl": "./",
-      "strict": true,
-      "paths": {
-        "*": [ "*", ...([ "dist", "node_modules", "node_modules/@types", "src"].map( f => `${resources}/${f}/*` )) ],
-      },
-      "allowSyntheticDefaultImports": true,
-      "skipLibCheck": true,
-      "outDir": ".build",
-    },
-    "include": [ `${resources}/src/env.d.ts`, "**/*" ]
-  }
-}
-
-function buildGameJs(config:GameConfig, moduleItems:DirectoryItem[]) {
-  // We only know plugins, not whether they are components or systems,
-  // so we have to load them all and figure out which is what later...
-  const imports: { [key:string]: { stmt: string, name: string } } = {};
-  for ( const item of moduleItems ) {
-    let varname = item.name;
-    if ( imports[ varname ] ) {
-      let idx = 1;
-      while ( imports[ varname + idx ] ) {
-        idx++;
-      }
-      varname = varname + idx;
-    }
-    imports[varname] = {
-      stmt: `import ${varname} from './${item.path}';`,
-      name: item.name,
-    };
-  }
-
-  const gameFile = `
-    import { Game, System, Component } from '@fourstar/bitwise';
-
-    // Import custom components and systems
-    ${Object.keys(imports).sort().map( k => imports[k].stmt ).join("\n")}
-    const mods = [ ${Object.keys(imports).sort().join(', ')} ];
-    const modNames = [ ${Object.keys(imports).sort().map( k => `"${imports[k].name}"` ).join(', ')} ];
-
-    const config = ${JSON.stringify( config, null, 2 )};
-    config.components = {};
-    config.systems = {};
-
-    mods.forEach( (p, i) => {
-      const name = modNames[i];
-      if ( p.prototype instanceof Component ) {
-        config.components[name] = p;
-      }
-      if ( p.prototype instanceof System ) {
-        config.systems[name] = p;
-      }
-    } );
-
-    export default class MyGame extends Game {
-      get config() {
-        return config;
-      }
-    };
-  `;
-
-  return gameFile.replaceAll(/\n {4}/g, "\n");
-}
 
 const templates:{ [key:string]: (name:string) => string } = {
   'Component.ts': (name:string):string => {
@@ -435,59 +356,15 @@ export const useAppStore = defineStore('app', {
         });
     },
 
-    async buildGameFile():Promise<string> {
-      if ( !this.currentProject ) {
-        throw "No current project";
-      }
-
-      // Build 'bitwise.js' file from the files read:
-      //  - All systems and components found should be loaded
-      //  - bitwise.config.json should be loaded and merged
-      const findModules:((items:DirectoryItem[]) => DirectoryItem[]) = (items) => {
-        const mods = [];
-        for ( const i of items ) {
-          if ( i.name.match(/^\./) ) {
-            continue;
-          }
-          if ( i.path.match(/\.[tj]s$/) ) {
-            mods.push(i);
-          }
-          if ( i.children ) {
-            mods.push( ...findModules( i.children ) );
-          }
-        }
-        return mods;
-      };
-      const modules = findModules( this.projectItems );
-      let gameConf = {};
-      try {
-        const confJson = await electron.readFile( this.currentProject + '/bitwise.config.json' );
-        gameConf = JSON.parse(confJson);
-      }
-      catch (e) {
-        console.warn( `Could not read project config: ${e}` );
-      }
-
-      const gameJs = buildGameJs( gameConf, modules );
-      // The game file must be written to the root of the project
-      // directory for `import` directives to work correctly.
-      await electron.saveFile( this.currentProject + '/.bitwise.js', gameJs );
-
-      // Bundle up all the files needed to run the game
-      try {
-        return await electron.buildProject( this.currentProject, '.bitwise.js' );
-      }
-      catch (e) {
-        console.error( `Could not build project: ${e}` );
-      }
-    },
-
     async buildProject() {
       if ( !this.currentProject ) {
         return;
       }
       this.isBuilding = true;
-      const gameFile = await this.buildGameFile();
+      const gameFile = await electron.buildProject( this.currentProject );
+      if ( !gameFile ) {
+        throw 'Error building project';
+      }
 
       try {
         const mod = await import( /* @vite-ignore */ 'bfile://' + gameFile );
@@ -539,8 +416,6 @@ export const useAppStore = defineStore('app', {
 
     async newProject() {
       const res = await electron.newProject();
-      const tsconfig = await buildTsconfig();
-      await electron.saveFile( res.filePath + '/tsconfig.json', JSON.stringify(tsconfig, null, 2) );
       this.openProject(res.filePath);
     },
 

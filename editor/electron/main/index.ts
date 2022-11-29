@@ -1,9 +1,9 @@
 import { Stats, promises as fs } from 'node:fs';
-import { fork } from 'node:child_process';
 import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
 import { release, tmpdir } from 'os'
 import * as path from 'path'
-import * as esbuild from 'esbuild';
+import { init } from '../bitwise-build/init';
+import { check, build } from '../bitwise-build/build';
 
 // Initialize electron-store
 import Store from 'electron-store'
@@ -136,9 +136,13 @@ ipcMain.handle('bitwise-new-project', event => {
   })
   .then(
     (res) => {
-      if ( res.filePath ) {
+      const projectRoot = res.filePath;
+      if ( projectRoot ) {
         // XXX: What to do if directory exists?
-        return fs.mkdir(res.filePath).then(() => res);
+        return fs.mkdir(projectRoot).then(() => {
+          return init(projectRoot, resourcesPath);
+        })
+        .then( () => res );
       }
       return res
     },
@@ -258,51 +262,45 @@ ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
   return fs.rename( path.join( root, from ), path.join( root, to ) );
 });
 
-ipcMain.handle('bitwise-build-project', async (event, root, src) => {
+ipcMain.handle('bitwise-build-project', async (event, root) => {
   if ( !win ) {
     return;
   }
   const webwin = win;
-  return fs.mkdtemp( path.join(tmpdir(), 'bitwise-') ).then( destDir => {
+  return fs.mkdtemp( path.join(tmpdir(), 'bitwise-') ).then( async destDir => {
     const dest = path.join( destDir, 'game.js' );
-    const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
 
-    // Check for typescript errors
-    const tsc = path.resolve( modulesDir, 'typescript/bin/tsc' );
-    const cp = fork( tsc, [ '--noEmit' ], {
-      cwd: root,
-      stdio: 'overlapped',
-    } );
+    // Make sure the project has all necessary dependencies linked in
+    const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
+    await fs.mkdir( path.join( root, 'node_modules', '@fourstar' ), { recursive: true } );
+    await fs.mkdir( path.join( root, 'node_modules', '@types' ), { recursive: true } );
+    for ( const dep of [ '@fourstar/bitwise', 'three', '@types/three', 'bitecs', 'ammo.js', 'typescript', 'tslib' ] ) {
+      const linkPath = path.join( root, 'node_modules', dep );
+      await fs.stat( linkPath ).then( () => {}, () => {
+        console.log( `Adding link to ${dep} in ${root}` );
+        return fs.symlink( path.join( modulesDir, dep ), path.join( root, 'node_modules', dep ) );
+      } );
+    }
+
+    const cp = check( root );
     cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
     cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
     cp.on('error', (err) => {
       webwin.webContents.send( 'error', err );
     } );
 
-    esbuild.buildSync({
-      nodePaths: [
-        // This provides bundled libraries like 'bitecs', 'three', and
-        // 'Ammo'
-        modulesDir,
-      ],
-      bundle: true,
-      define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
-      external: [
-        // Ammo.js can run in Node, but esbuild tries to resolve these
-        // Node modules even if we are going to run in the browser.
-        'fs', 'path',
-      ],
-      absWorkingDir: root,
-      entryPoints: [src],
-      outfile: dest,
-      outbase: root,
-      format: 'esm',
-      sourcemap: true,
-      logLevel: 'info',
-      logLimit: 0,
+    return build( root, dest ).then( res => {
+      if ( !res ) {
+        return null;
+      }
+      if ( res.errors.length > 0 ) {
+        res.errors.map( err => webwin.webContents.send( 'error', err ) );
+      }
+      if ( res.warnings.length > 0 ) {
+        res.warnings.map( warn => webwin.webContents.send( 'info', `Warning: ${warn}` ) );
+      }
+      return res.errors.length > 0 ? null : dest;
     });
-
-    return dest;
   });
 });
 
@@ -310,8 +308,8 @@ ipcMain.handle('bitwise-open-editor', (event, root, file) => {
   return shell.openPath(path.join(root, file));
 });
 
+const resourcesPath = path.resolve( __dirname.replace( 'app.asar', '' ), '../../..' );
 ipcMain.handle('bitwise-resources-path', (event) => {
-  const resourcesPath = path.resolve( __dirname.replace( 'app.asar', '' ), '../../..' );
   return resourcesPath;
 });
 
@@ -332,4 +330,11 @@ ipcMain.handle('bitwise-list-examples', async ():Promise<{name:string, path:stri
     .then( (infos:{name:string, path:string, stat:Stats}[]) => {
       return infos.filter( i => i.stat.isDirectory() ).map( i => ({ name: i.name, path: i.path }) );
     });
+});
+
+ipcMain.handle('bitwise-export-project', (event, root, type) => {
+  switch ( type ) {
+    case "zip":
+      break;
+  }
 });

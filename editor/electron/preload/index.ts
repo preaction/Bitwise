@@ -61,6 +61,9 @@ contextBridge.exposeInMainWorld('electron', {
   listExamples() {
     return ipcRenderer.invoke('bitwise-list-examples');
   },
+  exportProject( root:string, type:string ) {
+    return ipcRenderer.invoke('bitwise-export-project', root, type);
+  },
 });
 
 

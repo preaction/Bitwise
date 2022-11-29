@@ -1,9 +1,9 @@
 
 import * as three from 'three';
 import * as shifty from 'shifty';
-import { System, Entity } from '@bytewise/game';
-import { Render } from '@bytewise/game/system';
-import { Position, Sprite } from '@bytewise/game/component';
+import { System, Entity } from '@fourstar/bitwise';
+import { Render } from '@fourstar/bitwise/system';
+import { Position, Sprite } from '@fourstar/bitwise/component';
 import Foundation from '../components/Foundation.js';
 import Stack from '../components/Stack.js';
 
