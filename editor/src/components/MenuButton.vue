@@ -70,13 +70,6 @@ export default defineComponent({
 </template>
 
 <style>
-  .menu-button {
-    border: 1px solid var(--bw-color);
-    color: var(--bw-color);
-    background: var(--bw-border-color);
-    border-radius: 5px;
-  }
-
   .menu {
     display: none;
     position: absolute;
@@ -88,7 +81,7 @@ export default defineComponent({
     border: 3px solid var(--bw-border-color);
     color: var(--bw-color);
     z-index: 10000;
-    box-shadow: 5px 5px 15px 5px #66666666;
+    box-shadow: var(--bw-box-shadow);
   }
 
   .menu ul {

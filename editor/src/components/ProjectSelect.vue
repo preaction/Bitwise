@@ -2,6 +2,7 @@
 import { defineComponent } from "vue";
 import { mapStores, mapState, mapGetters, mapActions } from 'pinia';
 import { useAppStore } from '../store/app.ts';
+import MenuButton from './MenuButton.vue';
 
 export default defineComponent({
   data() {
@@ -12,6 +13,7 @@ export default defineComponent({
   },
   emits: [ 'select' ],
   components: {
+    MenuButton,
   },
   async mounted() {
     // Create a copy of the recent projects list so that it doesn't
@@ -49,24 +51,19 @@ export default defineComponent({
 
 <template>
   <div class="project-select">
-    <button v-if="hasStoredState" class="resume-project mx-2 btn btn-primary text-start mb-2" @click="loadStoredState">Resume {{storedStateProject}}</button>
-    <div class="project-buttons px-2 d-flex flex-column align-items-stretch">
-      <button class="btn btn-outline-dark text-start mb-2" @click="newProject">Create Project...</button>
-      <button class="btn btn-outline-dark text-start mb-2" @click="openProject()">Open Project...</button>
-      <div class="dropdown mb-2">
-        <button class="btn btn-outline-dark text-start w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          View Example...
-        </button>
-        <ul class="dropdown-menu">
-          <li v-for="example, i in examples">
-            <a class="dropdown-item" href="#" @click="openExample(example.path)">{{example.name}}</a>
-          </li>
+    <button v-if="hasStoredState" class="primary resume-project" @click="loadStoredState">Resume {{storedStateProject}}</button>
+    <div class="project-buttons">
+      <button @click="newProject">Create Project...</button>
+      <button @click="openProject()">Open Project...</button>
+      <MenuButton title="View Example...">
+        <ul>
+          <li v-for="example, i in examples" @click="openExample(example.path)">{{example.name}}</li>
         </ul>
-      </div>
+      </MenuButton>
     </div>
-    <h4 class="recent-heading px-2 mt-2">Recent Projects</h4>
-    <div class="recent-buttons px-2 d-flex flex-column align-items-stretch">
-      <button v-for="project in recentProjects" class="btn btn-outline-dark text-start mb-2" @click="openProject(project)">
+    <h4 class="recent-heading">Recent Projects</h4>
+    <div class="recent-buttons">
+      <button v-for="project in recentProjects" @click="openProject(project)">
         {{ projectName(project) }}
       </button>
     </div>
@@ -80,6 +77,7 @@ export default defineComponent({
     grid-template-rows: auto 1fr;
     grid-template-columns: 1fr 1fr;
     grid-template-areas: "restore recent-heading" "buttons recent";
+    gap: 0.3em;
   }
   .resume-project {
     grid-area: restore;
@@ -92,5 +90,15 @@ export default defineComponent({
   }
   .recent-buttons {
     grid-area: recent;
+  }
+  .project-buttons button, .recent-buttons button, .resume-project {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 0.3em;
+    padding: 0.3em;
+  }
+  .resume-project, .project-buttons :last-child, .recent-buttons :last-child {
+    margin-bottom: 0;
   }
 </style>

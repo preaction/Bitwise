@@ -63,13 +63,15 @@ export default defineComponent({
   }
 
   .modal__container {
-    background-color: #fff;
+    background-color: var(--bw-background-color);
+    border: 2px outset var(--bw-border-color);
     padding: 30px;
     max-width: 500px;
     max-height: 100vh;
     border-radius: 4px;
     overflow-y: auto;
     box-sizing: border-box;
+    box-shadow: var(--bw-box-shadow);
   }
 
   .modal__header {
@@ -84,7 +86,6 @@ export default defineComponent({
     font-weight: 600;
     font-size: 1.25rem;
     line-height: 1.25;
-    color: #00449e;
     box-sizing: border-box;
   }
 
@@ -99,6 +100,5 @@ export default defineComponent({
     margin-top: 2rem;
     margin-bottom: 2rem;
     line-height: 1.5;
-    color: rgba(0,0,0,.8);
   }
 </style>

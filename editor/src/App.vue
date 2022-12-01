@@ -402,9 +402,15 @@ body {
   --bw-color: #9CAEB4;
   --bw-color-disabled: #5C6E74;
   --bw-background-color-hover: #1613d4;
+  --bw-background-color-primary: #0909ed;
   --bw-color-hover: #cccccc;
+  --bw-box-shadow: 5px 5px 15px 5px #66666666;
   color: var(--bw-color);
   background: var(--bw-background-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--bw-color);
 }
 
 input {
@@ -420,6 +426,16 @@ input:focus {
   border-color: var(--bw-border-color-focus);
   border-style: solid;
   outline: none;
+}
+
+button {
+  border: 1px solid var(--bw-color);
+  color: var(--bw-color);
+  background: var(--bw-border-color);
+  border-radius: 5px;
+}
+button.primary {
+  background: var(--bw-background-color-primary);
 }
 
 .app-container {
@@ -473,21 +489,10 @@ input:focus {
   border-color: rgba( 0, 0, 0, 0.1 );
 }
 
-.console-bottom .log-log {
-  background: var(--bs-bg-gray);
-}
-.console-bottom .log-error {
-  background: rgba(var(--bs-danger-rgb), 0.3);
-}
-.console-bottom .log-warn {
-  background: rgba(var(--bs-warning-rgb), 0.3);
-}
-
 .app-sidebar {
   /* XXX: Allow changing sidebar width */
   --sidebar-width: auto;
   grid-area: sidebar;
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
   width: 17vw;
   max-width: 17vw;
   transition: width 0.2s;
