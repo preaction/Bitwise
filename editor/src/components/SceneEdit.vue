@@ -363,7 +363,7 @@ export default defineComponent({
       <canvas ref="play-canvas" v-show="playing == true" />
     </div>
     <div class="tab-sidebar">
-      <ScenePanel ref="scenePanel" @update="sceneChanged" :scene="scene" />
+      <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged" :scene="scene" />
     </div>
   </div>
 </template>
@@ -372,7 +372,7 @@ export default defineComponent({
   .scene-edit {
     display: grid;
     place-content: stretch;
-    grid-template-rows: 42px 1fr;
+    grid-template-rows: auto 1fr;
     grid-template-columns: 1fr minmax(0, auto);
     grid-template-areas: "toolbar toolbar" "main sidebar";
     height: 100%;
@@ -380,14 +380,33 @@ export default defineComponent({
   }
   .tab-toolbar {
     grid-area: toolbar;
-    padding: 2px;
-    background: var(--bs-gray-100);
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
+    color: var(--bw-color);
+    background: var(--bw-border-color);
+    border: 2px outset var(--bw-color);
+    border-radius: 4px;
+    padding: 0.1em;
   }
+
   .tab-sidebar {
+    /* XXX: Allow changing sidebar width */
+    --tab-sidebar-width: auto;
+    grid-area: sidebar;
+    width: 17vw;
+    max-width: 17vw;
+    transition: width 0.2s;
+    display: flex;
+    flex-flow: column;
+    background: var(--bw-border-color);
+    padding: 0.3em;
     height: 100%;
     overflow: hidden;
   }
+
+  .tab-sidebar-item {
+    background: var(--bw-background-color);
+    color: var(--bw-color);
+  }
+
   .tab-main-edit {
     position: relative;
     grid-area: main;

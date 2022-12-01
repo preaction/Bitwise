@@ -46,7 +46,6 @@ export default defineComponent({
   .object-tree {
     font-size: 0.9em;
     height: 100%;
-    margin: 0 0.2em;
     overflow-y: scroll;
   }
 </style>

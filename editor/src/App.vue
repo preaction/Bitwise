@@ -11,6 +11,8 @@ import MarkdownView from "./components/MarkdownView.vue";
 import TilesetEdit from "./components/TilesetEdit.vue";
 import SceneEdit from "./components/SceneEdit.vue";
 import GameConfig from "./components/GameConfig.vue";
+import Modal from "./components/Modal.vue";
+import MenuButton from "./components/MenuButton.vue";
 import Export from "./components/Export.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
 
@@ -25,6 +27,8 @@ export default defineComponent({
     SceneEdit,
     GameConfig,
     PrefabEdit,
+    Modal,
+    MenuButton,
   },
   data() {
     return {
@@ -56,7 +60,7 @@ export default defineComponent({
       this.appStore.showTab( index );
     },
     load() {
-      this.modal.hide();
+      this.$refs['projectDialog'].close();
     },
 
     newTab( name:string, component ) {
@@ -297,8 +301,7 @@ export default defineComponent({
       this.loadSessionState();
     }
     if ( !this.currentProject ) {
-      this.modal = new bootstrap.Modal( this.$refs.projectDialog, {} );
-      this.modal.show();
+      this.$refs['projectDialog'].open();
     }
     electron.on( 'error', (ev, err) => console.error(err) );
     electron.on( 'log', (ev, msg) => console.log(msg) );
@@ -310,57 +313,49 @@ export default defineComponent({
 
 <template>
   <div class="app-container">
-    <div ref="projectDialog" class="modal fade modal-lg" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="welcomeDialogTitle" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 class="modal-title" id="welcomeDialogTitle">
-              Welcome to Bitwise
-            </h3>
-          </div>
-          <div class="modal-body">
-            <ProjectSelect @select="load" />
-          </div>
-          <div class="modal-footer">
-          </div>
-        </div>
-      </div>
-    </div>
+    <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise">
+      <ProjectSelect @select="load" />
+    </Modal>
 
-    <div class="app-sidebar bg-light">
-      <div class="d-flex align-items-center justify-content-between">
-        <div class="dropdown m-2 flex-fill">
-          <button class="btn btn-secondary btn-sm w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Add...
-          </button>
-          <ul class="dropdown-menu">
-            <!-- <li><a class="dropdown-item" href="#" @click="newFolder()">Folder...</a></li> -->
-            <!-- <li><hr class="dropdown-divider"></li> -->
-            <li><a class="dropdown-item" href="#" @click="newTab('New Scene', 'SceneEdit')">Scene</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#" @click="newModule('NewComponent', 'Component.ts')">Component</a></li>
-            <li><a class="dropdown-item" href="#" @click="newModule('NewComponentForm', 'Component.vue')">Component Form</a></li>
-            <li><a class="dropdown-item" href="#" @click="newModule('NewSystem', 'System.ts')">System</a></li>
-            <li><a class="dropdown-item" href="#" @click="newModule('NewSystemForm', 'Component.vue')">System Form</a></li>
+    <div class="app-sidebar">
+      <div class="d-flex justify-content-between">
+        <MenuButton title="Add...">
+          <ul>
+            <li @click="newTab('New Scene', 'SceneEdit')">Scene</li>
+            <li class="hr"><hr></li>
+            <li @click="newModule('NewComponent', 'Component.ts')">Component</li>
+            <li @click="newModule('NewComponentForm', 'Component.vue')">Component Form</li>
+            <li @click="newModule('NewSystem', 'System.ts')">System</li>
+            <li @click="newModule('NewSystemForm', 'Component.vue')">System Form</li>
           </ul>
-        </div>
+        </MenuButton>
+        <MenuButton>
+          <template #title>
+            <i class="fa fa-gear"></i>
+          </template>
+          <ul>
+            <li @click="showGameConfigTab">Game Config</li>
+            <li class="hr"><hr></li>
+            <li @click="showExportTab">Export...</li>
+          </ul>
+        </MenuButton>
       </div>
-      <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile">
+      <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile" class="app-sidebar-item">
         <template #menu="{item}">
-          <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
-            <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu" @click.prevent.stop="showFileDropdown"
-              data-bs-toggle="dropdown"
-              data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#" @click="deleteFile(item)">Delete</a></li>
+          <MenuButton>
+            <template #button>
+              <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu-button"></i>
+            </template>
+            <ul>
+              <li @click="deleteFile(item)">Delete</li>
             </ul>
-          </div>
+          </MenuButton>
         </template>
       </ObjectTree>
     </div>
 
-    <header class="app-tabbar d-flex justify-content-between">
-      <nav class="px-1 flex-fill">
+    <header class="app-tabbar">
+      <nav>
         <a v-for="tab, i in openTabs" href="#"
           @click.prevent="showTab(i)" :key="tab.src"
           :aria-current="i === currentTabIndex ? 'true' : ''"
@@ -369,18 +364,6 @@ export default defineComponent({
           <i class="delete fa fa-circle-xmark" @click.prevent.stop="closeTab(i)"></i>
         </a>
       </nav>
-      <div class="dropdown m-2">
-        <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="fa fa-gear"></i>
-        </button>
-        <ul class="dropdown-menu">
-          <!-- <li><a class="dropdown-item" href="#" @click="newFolder()">Folder...</a></li> -->
-          <!-- <li><hr class="dropdown-divider"></li> -->
-          <li><a class="dropdown-item" href="#" @click="showGameConfigTab">Game Config</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#" @click="showExportTab">Export...</a></li>
-        </ul>
-      </div>
     </header>
 
     <component class="app-main" v-if="currentTab"
@@ -411,13 +394,41 @@ export default defineComponent({
 
 <style>
 html, body, #app { height: 100% }
+
+body {
+  --bw-background-color: #2C373F;
+  --bw-border-color: #445157;
+  --bw-border-color-focus: #748187;
+  --bw-color: #9CAEB4;
+  --bw-color-disabled: #5C6E74;
+  --bw-background-color-hover: #1613d4;
+  --bw-color-hover: #cccccc;
+  color: var(--bw-color);
+  background: var(--bw-background-color);
+}
+
+input {
+  color: var(--bw-color);
+  background: var(--bw-background-color);
+  border-color: var(--bw-border-color);
+  border-width: 1px;
+  border-radius: 3px;
+}
+input:focus {
+  color: var(--bw-color-hover);
+  background: var(--bw-background-color-hover);
+  border-color: var(--bw-border-color-focus);
+  border-style: solid;
+  outline: none;
+}
+
 .app-container {
   position: relative;
   height: 100%;
   overflow: hidden;
   display: grid;
   place-content: stretch;
-  grid-template-rows: 24px 1fr minmax(32px, auto);
+  grid-template-rows: auto 1fr minmax(32px, auto);
   grid-template-columns: minmax(0, auto) 1fr;
   grid-template-areas: "sidebar tabbar" "sidebar main" "console console";
 }
@@ -430,8 +441,7 @@ html, body, #app { height: 100% }
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--bs-body-bg);
-  border-top: 1px solid rgba(0, 0, 0, .1);
+  background: var(--bw-border-color);
   overflow: hidden;
   display: flex;
   flex-flow: column;
@@ -440,7 +450,6 @@ html, body, #app { height: 100% }
 .console-top {
   height: 32px;
   padding: 0.25rem;
-  border-bottom: 1px solid rgba(0, 0, 0, .1);
   display: flex;
   align-items: center;
 }
@@ -453,7 +462,7 @@ html, body, #app { height: 100% }
 .console-bottom {
   overflow: scroll;
   max-height: 100%;
-  background: rgba(var(--bs-light-rgb), var(--bs-bg-opacity));
+  background: var(--bw-background-color);
 }
 
 .console-bottom p {
@@ -475,14 +484,23 @@ html, body, #app { height: 100% }
 }
 
 .app-sidebar {
+  /* XXX: Allow changing sidebar width */
   --sidebar-width: auto;
   grid-area: sidebar;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-  width: var(--sidebar-width);
-  max-width: var(--sidebar-width);
+  width: 17vw;
+  max-width: 17vw;
   transition: width 0.2s;
   display: flex;
   flex-flow: column;
+  background: var(--bw-border-color);
+  padding: 0.3em;
+}
+
+.app-sidebar-item {
+  background: var(--bw-background-color);
+  color: var(--bw-color);
+  margin: 0.3em 0;
 }
 
 .app-main {
@@ -491,20 +509,31 @@ html, body, #app { height: 100% }
 
 .app-tabbar {
   grid-area: tabbar;
-  background: var(--bs-body-bg);
+  background: var(--bw-background-color);
+  padding: 0.2em;
+}
+.app-tabbar nav {
+  margin: 0;
+  padding: 0;
+  display: flex;
 }
 .app-tabbar nav :link {
-  color: var(--bs-gray);
+  flex-basis: 20%;
+  color: var(--bw-color);
   text-decoration: none;
-  border: 1px solid black;
-  background: var(--bs-body-bg);
-  padding: 2px;
-  margin: 0 2px 0 0;
+  border: 1px solid var(--bw-border-color);
+  background: var(--bw-border-color);
+  padding: 0 0.2em;
+  margin-right: 0.2em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .app-tabbar nav :link[aria-current=true] {
-  color: var(--bs-light);
-  background: var(--bs-primary);
+  color: var(--bw-color-hover);
+  background: var(--bw-background-color-hover);
+  border-color: var(--bw-border-color-focus);
 }
 
 .app-tabbar nav :link i.delete {
@@ -514,19 +543,11 @@ html, body, #app { height: 100% }
   visibility: visible;
 }
 
-.filetree-dropdown > i {
-  display: none;
-  padding: 0 2px;
-}
-.object-tree-item .name:hover .filetree-dropdown > i,
-.object-tree-item .name .filetree-dropdown > i.show {
-  display: inline;
-}
-
-.project-tree-item-menu {
-  display: block;
+.project-tree-item-menu-button {
+  display: inline-block;
   height: 100%;
-  padding: 0 6px;
+  padding: 0 0.25em;
   font-size: 1.3em;
+  vertical-align: middle;
 }
 </style>

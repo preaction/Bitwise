@@ -3,10 +3,12 @@ import { defineComponent, toRaw, markRaw } from "vue";
 import { mapStores, mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.ts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
+import MenuButton from "./MenuButton.vue";
 
 export default defineComponent({
   components: {
     ObjectTreeItem,
+    MenuButton,
   },
   props: ['scene', 'isPrefab'],
   emits: ['update'],
@@ -313,34 +315,34 @@ export default defineComponent({
 <template>
   <div class="scene-panel">
     <div class="scene-toolbar">
-      <div class="dropdown">
-        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <MenuButton placement="left-start">
+        <template #title>
           <i class="fa fa-file-circle-plus"></i>
           New Entity
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#" @click="addEntity('Position')">Blank</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#" @click="addEntity('Position','Sprite')">Sprite</a></li>
-          <li><a class="dropdown-item" href="#" @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</a></li>
+        </template>
+        <ul>
+          <li @click="addEntity('Position')">Blank</li>
+          <li class="hr"><hr></li>
+          <li @click="addEntity('Position','Sprite')">Sprite</li>
+          <li @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</li>
         </ul>
-      </div>
+      </MenuButton>
     </div>
     <div class="scene-tree">
       <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select"
         :ondragover="dragOverEntity" :ondropitem="dropEntity"
       >
         <template #menu="{item}">
-          <div class="dropdown dropend filetree-dropdown" @click.prevent.stop="hideFileDropdown">
-            <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu" @click.prevent.stop="showFileDropdown"
-              data-bs-toggle="dropdown"
-              data-bs-config='{ "popperConfig": { "strategy": "fixed" }}'></i>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#" @click="createPrefab(item)">Create Prefab</a></li>
-              <li><a class="dropdown-item" href="#" @click="duplicateEntity(item)">Duplicate</a></li>
-              <li><a class="dropdown-item" href="#" @click="deleteEntity(item)">Delete</a></li>
+          <MenuButton>
+            <template #button>
+              <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu-button"></i>
+            </template>
+            <ul>
+              <li @click="createPrefab(item)">Create Prefab</li>
+              <li @click="duplicateEntity(item)">Duplicate</li>
+              <li @click="deleteEntity(item)">Delete</li>
             </ul>
-          </div>
+          </MenuButton>
         </template>
       </ObjectTreeItem>
     </div>
@@ -352,7 +354,7 @@ export default defineComponent({
           @keyup="updateEntityName" pattern="^[^/]+$"
         />
       </div>
-      <div v-for="c in selectedEntity.listComponents()" :key="selectedEntity.id + c">
+      <div v-for="c in selectedEntity.listComponents()" class="component-form" :key="selectedEntity.id + c">
         <div class="mb-1 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
             <h6 class="m-0">{{ c }}</h6>
@@ -360,22 +362,17 @@ export default defineComponent({
           </div>
           <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
         </div>
-        <div v-if="componentForms[c]" class="my-2 component-form">
+        <div v-if="componentForms[c]" class="component-form__body">
           <component :is="componentForms[c]" v-model="selectedComponents[c]"
             :scene="scene" @update="updateComponent(c, $event)"
           />
         </div>
       </div>
-      <div class="dropdown m-2 mt-4 text-center dropup">
-        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          Add Component...
-        </button>
-        <ul class="dropdown-menu">
-          <li v-for="c in availableComponents">
-            <a class="dropdown-item" :class="hasComponent(c) ? 'disabled' : ''" href="#" @click="addComponent(c)">{{c}}</a>
-          </li>
+      <MenuButton class="button-center" title="Add Component...">
+        <ul>
+          <li v-for="c in availableComponents" :class="hasComponent(c) ? 'disabled' : ''" @click="addComponent(c)">{{c}}</li>
         </ul>
-      </div>
+      </MenuButton>
     </div>
 
     <div v-else class="entity-pane">
@@ -390,86 +387,75 @@ export default defineComponent({
           @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"
         >
           <div class="d-flex align-items-center">
-            <h6 class="m-0"><i class="fa fa-arrows-up-down system-move"></i> {{ s.name }}</h6>
+            <h6 class="m-0"><i class="fa fa-ellipsis-vertical system-move"></i><i class="fa fa-ellipsis-vertical system-move"></i> {{ s.name }}</h6>
             <i v-if="s.isNull" class="ms-1 fa fa-file-circle-question" title="System not found" ></i>
           </div>
           <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
         </div>
-        <div v-if="systemForms[s.name]" class="my-2">
+        <div v-if="systemForms[s.name]" class="system-form__body">
           <component :is="systemForms[s.name]" v-model="s.data" :scene="scene"
             @update="updateSystem(idx, $event)" />
         </div>
       </div>
-      <div class="dropdown m-2 mt-4 text-center dropup">
-        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          Add System...
-        </button>
-        <ul class="dropdown-menu">
-          <li v-for="s in availableSystems">
-            <a class="dropdown-item" :class="hasSystem(s) ? 'disabled' : ''" href="#" @click="addSystem(s)">{{s}}</a>
-          </li>
+      <MenuButton class="button-center" title="Add System...">
+        <ul>
+          <li v-for="s in availableSystems" :class="hasSystem(s) ? 'disabled' : ''" @click="addSystem(s)">{{s}}</li>
         </ul>
-      </div>
+      </MenuButton>
     </div>
   </div>
 </template>
 
 <style>
-  .scene-panel {
+  body .scene-panel {
     display: flex;
     flex-flow: column;
     font-size: 0.9em;
     grid-area: sidebar;
-    padding: 2px;
-    width: 200px;
-    background: var(--bs-light);
-    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
+    width: 100%;
+    background: var(--bw-border-color);
     overflow: hidden;
     height: 100%;
   }
 
   .scene-toolbar {
     flex: 0 0 auto;
+    background: var(--bw-border-color);
   }
+
   .scene-tree {
-    border-bottom: 1px solid rgb(0 0 0 / 10%);
-    margin-bottom: 2px;
+    background: var(--bw-background-color);
+    margin: 0.3em 0;
     overflow: scroll;
     flex: 1 1 25%;
   }
   .entity-pane {
     flex: 1 1 75%;
-    padding: 2px;
     overflow: scroll;
   }
-  .component-form {
-    padding-top: 2px;
-    border-top: 1px solid rgb(0 0 0 / 10%);
-    margin-top: 2px;
+
+  .component-form__body {
+    padding: 0.2em;
+    background: var(--bw-background-color);
+  }
+  .system-form__body {
+    padding: 0.2em;
+    background: var(--bw-background-color);
+  }
+
+  .system-move {
+    cursor: move;
   }
   .icon-button {
     cursor: pointer;
   }
 
-  .object-tree-item .name i.delete {
-    visibility: hidden;
-  }
-  .object-tree-item .name:hover i.delete {
-    visibility: visible;
-  }
-
-  .system-form .system-move {
-    visibility: hidden;
-  }
-  .system-form:hover .system-move {
-    visibility: visible;
-  }
-
-  .scene-tree-item-menu {
-    display: block;
+  .scene-tree-item-menu-button {
+    display: inline-block;
     height: 100%;
-    padding: 0 6px;
+    padding: 0 0.25em;
     font-size: 1.3em;
+    vertical-align: middle;
   }
 
   .entity-drop, .entity-drop-top {
@@ -496,6 +482,13 @@ export default defineComponent({
   }
   .entity-drop-top::before {
     bottom: 100%;
+  }
+
+  .button-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
   }
 
 </style>

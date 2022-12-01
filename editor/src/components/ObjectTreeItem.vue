@@ -134,7 +134,9 @@ export default defineComponent({
         <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-folder-open' : 'fa-folder'"></i>
       </span>
       <span class="flex-fill">{{ item.name }}</span>
-      <slot name="menu" :item="item" />
+      <span class="object-tree-item__menu">
+        <slot name="menu" :item="item" />
+      </span>
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in item.children">
@@ -152,13 +154,23 @@ export default defineComponent({
   .object-tree-item .name {
     cursor: pointer;
     padding: 2px;
-    margin: 0 0 0 -2px;
+    margin: 0;
   }
   .object-tree-item:hover > .name {
-    background: #ddd;
+    color: var(--bw-color-hover);
+    background: var(--bw-background-color-hover);
   }
   .object-tree-item .children {
-    border-left: 2px solid var(--bs-gray-300);
+    border-left: 1px dotted var(--bw-color);
     margin-left: 2px;
   }
+
+  .object-tree-item__menu {
+    display: none;
+  }
+
+  .object-tree-item .name:hover .object-tree-item__menu {
+    display: block;
+  }
+
 </style>

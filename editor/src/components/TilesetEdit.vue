@@ -60,7 +60,7 @@ export default defineComponent({
 
 <template>
   <div class="tileset-edit">
-    <div class="tab-toolbar">
+    <div class="tileset-tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Tileset editor toolbar">
         <div class="btn-group" role="group" aria-label="File actions">
           <button type="button" class="btn btn-outline-dark btn-sm"
@@ -71,13 +71,13 @@ export default defineComponent({
         </div>
       </div>
     </div>
-    <div class="tab-main" @dragover="dragover" @drop="drop">
+    <div class="tileset-tab-main" @dragover="dragover" @drop="drop">
       <!-- XXX: Center -->
       <img v-if="imageSrc" :src="getFileUrl( imageSrc )" />
       <div v-else>Drag/drop an image here</div>
       <!-- XXX: Grid overlay -->
     </div>
-    <div class="tab-sidebar">
+    <div class="tileset-tab-sidebar">
       <div @dragover="dragover" @drop="drop">
         <span v-if="imageSrc">{{ imageSrc }}</span>
         <span v-else>Image Select</span>
@@ -106,17 +106,17 @@ export default defineComponent({
     grid-template-columns: 1fr minmax(0, auto);
     grid-template-areas: "toolbar toolbar" "main sidebar";
   }
-  .tab-toolbar {
+  .tileset-tab-toolbar {
     grid-area: toolbar;
     padding: 2px;
     background: var(--bs-gray-100);
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
   }
-  .tab-sidebar {
+  .tileset-tab-sidebar {
     grid-area: sidebar;
     padding: 2px;
   }
-  .tab-main {
+  .tileset-tab-main {
     grid-area: main;
     padding: 2px;
     align-self: center;
