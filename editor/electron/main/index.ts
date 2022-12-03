@@ -1,9 +1,10 @@
 import { Stats, promises as fs } from 'node:fs';
 import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
-import { release, tmpdir } from 'os'
+import * as os from 'os'
 import * as path from 'path'
 import { init } from '../bitwise-build/init';
 import { check, build } from '../bitwise-build/build';
+import { release } from '../bitwise-build/release';
 
 // Initialize electron-store
 import Store from 'electron-store'
@@ -17,7 +18,7 @@ ipcMain.on('electron-store-set', async (event, file, key, val) => {
 });
 
 // Disable GPU Acceleration for Windows 7
-if (release().startsWith('6.1')) app.disableHardwareAcceleration()
+if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
 
 // Set application name for Windows 10+ notifications
 if (process.platform === 'win32') app.setAppUserModelId(app.getName())
@@ -262,25 +263,29 @@ ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
   return fs.rename( path.join( root, from ), path.join( root, to ) );
 });
 
+async function linkModules( root:string ) {
+  // Make sure the project has all necessary dependencies linked in
+  const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
+  await fs.mkdir( path.join( root, 'node_modules', '@fourstar' ), { recursive: true } );
+  await fs.mkdir( path.join( root, 'node_modules', '@types' ), { recursive: true } );
+  for ( const dep of [ '@fourstar/bitwise', 'three', '@types/three', 'bitecs', 'ammo.js', 'typescript', 'tslib' ] ) {
+    const linkPath = path.join( root, 'node_modules', dep );
+    await fs.stat( linkPath ).then( () => {}, () => {
+      console.log( `Adding link to ${dep} in ${root}` );
+      return fs.symlink( path.join( modulesDir, dep ), path.join( root, 'node_modules', dep ) );
+    } );
+  }
+}
+
 ipcMain.handle('bitwise-build-project', async (event, root) => {
   if ( !win ) {
     return;
   }
   const webwin = win;
-  return fs.mkdtemp( path.join(tmpdir(), 'bitwise-') ).then( async destDir => {
+  return fs.mkdtemp( path.join(os.tmpdir(), 'bitwise-') ).then( async destDir => {
     const dest = path.join( destDir, 'game.js' );
 
-    // Make sure the project has all necessary dependencies linked in
-    const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
-    await fs.mkdir( path.join( root, 'node_modules', '@fourstar' ), { recursive: true } );
-    await fs.mkdir( path.join( root, 'node_modules', '@types' ), { recursive: true } );
-    for ( const dep of [ '@fourstar/bitwise', 'three', '@types/three', 'bitecs', 'ammo.js', 'typescript', 'tslib' ] ) {
-      const linkPath = path.join( root, 'node_modules', dep );
-      await fs.stat( linkPath ).then( () => {}, () => {
-        console.log( `Adding link to ${dep} in ${root}` );
-        return fs.symlink( path.join( modulesDir, dep ), path.join( root, 'node_modules', dep ) );
-      } );
-    }
+    await linkModules(root);
 
     const cp = check( root );
     cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
@@ -332,9 +337,28 @@ ipcMain.handle('bitwise-list-examples', async ():Promise<{name:string, path:stri
     });
 });
 
-ipcMain.handle('bitwise-export-project', (event, root, type) => {
-  switch ( type ) {
-    case "zip":
-      break;
+ipcMain.handle('bitwise-release-project', async (event, root, type) => {
+  if ( !win ) {
+    return;
   }
+  const webwin = win;
+
+  const name = path.basename( root ) + '.' + type;
+  return dialog.showSaveDialog(webwin, {
+    defaultPath: path.join( root, name ),
+    filters: [ { name: type, extensions: [type] } ],
+    properties: [ 'createDirectory' ],
+  }).then( async (res) => {
+    const dest = res.filePath;
+    if ( !dest ) {
+      return;
+    }
+    const gameFile = path.join( root, '.build', 'game.js' );
+    await linkModules(root);
+    const buildResult = await build( root, gameFile, { sourcemap: false } );
+    if ( !buildResult ) {
+      return;
+    }
+    return release( root, type, gameFile, dest );
+  });
 });

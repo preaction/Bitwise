@@ -2,14 +2,14 @@
 // XXX: This should eventually be in its own package so we can build
 // a CLI tool
 
-import * as path from 'path';
+import * as path from 'node:path';
 import { promises as fs } from 'node:fs';
 import * as esbuild from 'esbuild';
 import { fork, ChildProcess } from 'node:child_process';
 
 type GameConfig = {};
 
-export async function build( root:string, dest:string ):Promise<esbuild.BuildResult|undefined> {
+export async function build( root:string, dest:string, opt:{ [key:string]:any }={} ):Promise<esbuild.BuildResult|undefined> {
   const src = await buildGameFile(root);
   if ( !src ) {
     return;
@@ -30,6 +30,7 @@ export async function build( root:string, dest:string ):Promise<esbuild.BuildRes
     sourcemap: true,
     logLevel: 'info',
     logLimit: 0,
+    ...opt,
   });
 }
 
@@ -58,7 +59,7 @@ async function buildGameFile( projectRoot:string ):Promise<string|undefined> {
   }
 
   const modules = await findModules( projectRoot );
-  const confPath = path.join( projectRoot, 'bitwise.config.json' );
+  const confPath = path.join( projectRoot, 'bitwise.json' );
   let gameConf = {};
   try {
     const confJson = await fs.readFile( confPath, { encoding: 'utf8' } );

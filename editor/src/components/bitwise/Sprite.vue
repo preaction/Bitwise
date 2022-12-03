@@ -9,7 +9,7 @@ export default defineComponent({
   },
   data() {
     const textureId = this.modelValue.textureId ?? null;
-    const texturePath = this.scene.game.texturePaths[ textureId ];
+    const texturePath = this.scene.game.load.texturePaths[ textureId ];
     return {
       textureId,
       texturePath,
@@ -29,8 +29,8 @@ export default defineComponent({
       this.$emit( 'update', newModel );
     },
     async loadTexture( path ) {
-      await this.scene.game.loadTexture( path );
-      this.textureId = this.$data.textureId = this.scene.game.textureIds[ path ];
+      await this.scene.game.load.texture( path );
+      this.textureId = this.$data.textureId = this.scene.game.load.textureIds[ path ];
       this.update();
     },
   },

@@ -57,6 +57,7 @@ export default class Game extends three.EventDispatcher {
   height:number = 0;
   autoSize:boolean = true;
 
+  initialScenePath:string = '';
   scenes:Scene[] = [];
   data:Object;
   input:Input;
@@ -72,7 +73,7 @@ export default class Game extends three.EventDispatcher {
     // XXX: Config should be merged with options
     this.ecs = bitecs;
     this.canvas = opt.canvas;
-    this.load = new Load( opt.loader );
+    this.load = new Load( opt.loader || {} );
     this.width = opt.renderer?.width || conf.renderer?.width;
     this.height = opt.renderer?.height || conf.renderer?.height;
     this.data = opt.data || {};
@@ -80,6 +81,7 @@ export default class Game extends three.EventDispatcher {
     if ( this.width > 0 || this.height > 0 ) {
       this.autoSize = false;
     }
+    this.initialScenePath = opt.scene || '';
     this.components = {
       ...DEFAULT_COMPONENTS,
       ...conf.components,
@@ -92,7 +94,7 @@ export default class Game extends three.EventDispatcher {
     };
   }
 
-  start() {
+  async start() {
     // Create the renderer after the <canvas> exists
     const renderer = new three.WebGLRenderer({
       canvas: this.canvas,
@@ -113,6 +115,12 @@ export default class Game extends three.EventDispatcher {
 
     this.input.start();
     this.dispatchEvent({ type: 'start' });
+
+    if ( this.initialScenePath ) {
+      const scene = await this.loadScene( this.initialScenePath );
+      await scene.init();
+      scene.start();
+    }
 
     this.render();
   }
@@ -196,6 +204,14 @@ export default class Game extends three.EventDispatcher {
   addScene() {
     const scene = new Scene( this );
     this.scenes.push( scene );
+    return scene;
+  }
+
+  async loadScene( path:string ):Promise<Scene> {
+    const res = await fetch(path);
+    const sceneData = await res.json();
+    const scene = this.addScene();
+    scene.thaw( sceneData );
     return scene;
   }
 }

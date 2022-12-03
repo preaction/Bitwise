@@ -33,6 +33,7 @@ type DirectoryItem = {
   ext: string,
   path: string,
   icon: string,
+  dragtype: string,
   children?: DirectoryItem[],
 };
 
@@ -141,8 +142,10 @@ type AppState = {
   currentTabIndex: number,
   projectItems: DirectoryItem[],
   icons: { [key:string]: string },
+  dragtypes: { [key:string]: string },
   gameFile: string,
   gameClass: null|typeof Game,
+  gameConfig: any,
   components: { [key:string]: typeof Component },
   systems: { [key:string]: typeof System },
   componentForms: { [key:string]: any },
@@ -165,10 +168,16 @@ export const useAppStore = defineStore('app', {
         TilesetEdit: 'fa-grid-2-plus',
         PrefabEdit: 'fa-cubes',
       },
+      dragtypes: {
+        SceneEdit: 'scene',
+        TilesetEdit: 'tileset',
+        PrefabEdit: 'prefab',
+      },
       isBuilding: false,
       _fsWatcher: null,
       gameFile: '',
       gameClass: null,
+      gameConfig: {},
       components: Vue.markRaw({}),
       systems: Vue.markRaw({}),
       componentForms: Vue.markRaw({
@@ -319,13 +328,22 @@ export const useAppStore = defineStore('app', {
       if ( !this.currentProject ) {
         return;
       }
+
+      try {
+        const fileContent = await this.readFile('bitwise.json');
+        this.gameConfig = JSON.parse( fileContent );
+      }
+      catch (err) {
+        console.warn( `Error opening bitwise.json: ${err}` );
+      }
+
       // XXX: Map component to icon class
       this.projectItems = await electron.readProject(this.currentProject)
         .then( async items => {
           const ignore = (item:DirectoryItem) => {
             return !item.path.match( /(?:^|\/)\./ ) &&
               !item.path.match(/(?:^|\/)node_modules(?:$|\/)/) &&
-              !item.path.match(/^(tsconfig|bitwise\.config|package(-lock)?)\.json$/);
+              !item.path.match(/^(tsconfig|bitwise|package(-lock)?)\.json$/);
           };
           const descend = async (item:DirectoryItem) => {
             if ( item.children && item.children.length ) {
@@ -334,21 +352,26 @@ export const useAppStore = defineStore('app', {
             }
             else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
               item.icon = 'fa-image';
+              item.dragtype = 'image';
             }
             else if ( item.ext.match( /\.(?:md|markdown)$/ ) ) {
               item.icon = 'fa-file-lines';
+              item.dragtype = 'markdown';
             }
             else if ( item.ext.match( /\.[jt]s$/ ) ) {
               item.icon = 'fa-file-code';
+              item.dragtype = 'module';
             }
             else if ( item.ext.match( /\.vue$/ ) ) {
               item.icon = 'fa-file-edit';
+              item.dragtype = 'vue';
             }
             else if ( item.ext.match( /\.json$/ ) ) {
               const json = await this.readFile( item.path );
               const data = JSON.parse( json );
               const comp = data.component;
               item.icon = this.icons[ comp ];
+              item.dragtype = this.dragtypes[ comp ];
             }
             return item;
           };
@@ -417,6 +440,10 @@ export const useAppStore = defineStore('app', {
     async newProject() {
       const res = await electron.newProject();
       this.openProject(res.filePath);
+    },
+
+    async releaseProject( type:string ):Promise<void> {
+      return electron.releaseProject( this.currentProject, type );
     },
 
     getFileUrl( path:string ):string {

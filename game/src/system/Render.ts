@@ -25,6 +25,7 @@ export default class Render extends System {
   objects:three.Object3D[] = [];
   textures:three.Texture[] = [];
   materials:three.Material[] = [];
+  loader = new three.TextureLoader();
 
   constructor( name:string, scene:Scene ) {
     super(name, scene);
@@ -47,21 +48,19 @@ export default class Render extends System {
 
   async init():Promise<any> {
     const promises = [];
-    const loader = new three.TextureLoader();
+
+    // XXX: Should we preload textures like this, or will we load too
+    // many textures that we don't later use?
+    for ( const path in this.scene.game.load.textureIds ) {
+      const textureId = this.scene.game.load.textureIds[path];
+      promises.push( this.loadTexture( textureId ) );
+    }
 
     const spriteEids = this.spriteQuery(this.scene.world);
     const cameraEids = this.cameraQuery(this.scene.world);
     for ( const eid of spriteEids ) {
       const textureId = this.spriteComponent.store.textureId[eid];
-      const path = this.scene.game.texturesPaths[ textureId ];
-      promises.push(
-        new Promise(
-          (resolve, reject) => {
-            const texture = loader.load( path, resolve, undefined, reject ) 
-            this.textures[textureId] = texture;
-          },
-        )
-      );
+      promises.push( this.loadTexture( textureId ) );
       this.createSprite( eid );
     }
     for ( const eid of cameraEids ) {
@@ -110,6 +109,19 @@ export default class Render extends System {
    */
   getRenderObject<T extends three.Object3D>( eid:number ):T|null {
     return this.objects[eid] as T || null;
+  }
+
+  /**
+   * Load the texture and prepare it to be rendered.
+   */
+  async loadTexture( textureId:number ):Promise<three.Texture> {
+    const path = this.scene.game.load.texturePaths[textureId];
+    return new Promise(
+      (resolve, reject) => {
+        const texture = this.loader.load( path, resolve, undefined, reject ) 
+        this.textures[textureId] = texture;
+      },
+    )
   }
 
   update( timeMilli:number ) {
@@ -165,7 +177,7 @@ export default class Render extends System {
   updatePosition( eid:number ) {
     const obj = this.objects[eid];
     if ( !obj ) {
-      continue;
+      return;
     }
     obj.position.x = this.positionComponent.store.x[eid];
     obj.position.y = this.positionComponent.store.y[eid];
@@ -201,7 +213,7 @@ export default class Render extends System {
   updateCamera( eid:number ) {
     const camera = this.objects[eid] as three.OrthographicCamera;
     if ( !camera ) {
-      continue;
+      return;
     }
     camera.far = this.cameraComponent.store.far[eid];
     camera.near = this.cameraComponent.store.near[eid];
@@ -251,10 +263,14 @@ export default class Render extends System {
   updateSprite( eid:number ) {
     const sprite = this.objects[eid] as three.Sprite;
     if ( !sprite ) {
-      continue;
+      return;
     }
     const tid = this.spriteComponent.store.textureId[eid];
-    const texture = this.textures[tid];
+    let texture = this.textures[tid];
+    if ( !texture ) {
+      this.loadTexture( tid ).then( () => this.render() );
+      texture = this.textures[tid];
+    }
     if ( !this.materials[eid] || (this.materials[eid] as three.SpriteMaterial).map !== texture ) {
       const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
       sprite.material = material;

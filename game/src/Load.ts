@@ -7,9 +7,9 @@ export default class Load extends three.EventDispatcher {
   textureIds:{ [key:string]: number } = {};
   texturePaths:string[] = [];
 
-  constructor( {base}:{base:string} ) {
+  constructor( opt:{base:string} ) {
     super();
-    this.base = base;
+    this.base = opt.base || '';
 
     // Set up loaders
     three.Cache.enabled = true;

@@ -249,7 +249,7 @@ export default class Render extends RenderSystem {
     if ( this.mouseIsDown ) {
       // Allow a bare bit of movement
       this.mouseMoved ||= 1 < Math.abs(event.movementX) + Math.abs(event.movementY);
-      if ( this.moveSelected ) {
+      if ( this.moveSelected && this.moveObject ) {
         const canvas = this.scene.game.canvas;
         const scene = this.scene._scene;
         pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;

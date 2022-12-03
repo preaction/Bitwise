@@ -58,6 +58,7 @@ export default class Klondike extends System {
   cards:{ [key:number]: Card } = {};
   deckCards:Card[] = [];
   discardCards:Card[] = [];
+  cardBackTextureId:number = -1;
 
   drawEntity!:Entity;
   drawEntityPath:string = "";
@@ -85,7 +86,7 @@ export default class Klondike extends System {
     return { drawEntityPath: this.drawEntityPath, discardEntityPath: this.discardEntityPath };
   }
 
-  init() {
+  async init() {
     // Get references to Components and Systems from this.scene
     this.Position = this.scene.getComponent(Position);
     this.Foundation = this.scene.getComponent(Foundation);
@@ -123,15 +124,22 @@ export default class Klondike extends System {
     this.discardEntity = discardEntity;
 
     // Load the Deck prefab textures and materials
-    cardFaceImages.forEach( cardFaceImage => {
-      this.scene.game.loadTexture( cardFaceImage );
-    } );
-    this.scene.game.loadTexture( cardBackImage );
+    this.cardBackTextureId = this.scene.game.load.texture( cardBackImage );
 
     const drawPosition = this.drawEntity.getComponent( "Position" );
     for ( let suit = 0; suit < suits.length; suit++ ) {
       for ( let rank = 0; rank < ranks.length; rank++ ) {
         const entity = this.scene.addEntity();
+        const card = {
+          entity: entity.id,
+          suit,
+          rank,
+          faceImage: this.scene.game.load.texture( `cards/card_${suits[suit]}_${ranks[rank]}.png` ),
+          faceUp: false,
+          stack: -1,
+          foundation: -1,
+        };
+
         entity.name = `${suits[suit]}_${ranks[rank]}`;
         entity.addComponent( "Position", {
           x: drawPosition.x,
@@ -142,17 +150,8 @@ export default class Klondike extends System {
           sz: 1,
         } );
         entity.addComponent( "Sprite", {
-          textureId: this.scene.game.textureIds[ cardBackImage ],
+          textureId: this.cardBackTextureId,
         } );
-        const card = {
-          entity: entity.id,
-          suit,
-          rank,
-          faceImage: this.scene.game.textureIds[ `cards/card_${suits[suit]}_${ranks[rank]}.png` ],
-          faceUp: false,
-          stack: -1,
-          foundation: -1,
-        };
         this.deckCards.push(card);
         this.cards[entity.id] = card;
       }
@@ -243,7 +242,7 @@ export default class Klondike extends System {
     // });
     // tween.then( () => { this.tweens.remove( tween ) } );
     // this.tweens.add(tween);
-    this.Sprite.store.textureId[card.entity] = this.scene.game.textureIds[ cardBackImage ];
+    this.Sprite.store.textureId[card.entity] = this.cardBackTextureId;
   }
 
   moveToDiscard( card:Card ) {

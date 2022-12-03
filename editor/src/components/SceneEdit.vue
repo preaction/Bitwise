@@ -354,13 +354,13 @@ export default defineComponent({
         </div>
       </div>
     </div>
-    <div class="tab-main-edit">
+    <div class="tab-main-edit" v-show="playing == false">
       <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
-      <canvas ref="edit-canvas" v-show="playing == false" />
+      <canvas ref="edit-canvas"/>
     </div>
-    <div class="tab-main-play">
+    <div class="tab-main-play" v-show="playing == true">
       <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
-      <canvas ref="play-canvas" v-show="playing == true" />
+      <canvas ref="play-canvas"/>
     </div>
     <div class="tab-sidebar">
       <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged" :scene="scene" />

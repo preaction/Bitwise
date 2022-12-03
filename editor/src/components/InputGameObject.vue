@@ -3,23 +3,24 @@ import { defineComponent } from "vue";
 export default defineComponent({
   props: ['modelValue', 'type', 'dropEffect'],
   methods: {
-    update(data) {
+    update(data:any) {
       this.$emit( 'update:modelValue', data );
       this.$emit( 'update', data );
     },
-    dragover(event) {
+    dragover(event:DragEvent) {
       event.preventDefault();
-      event.dataTransfer.dropEffect = this.dropEffect;
+      event.dataTransfer.dropEffect = this.dropEffect || "link";
     },
-    async drop(event) {
+    async drop(event:DragEvent) {
       const data = event.dataTransfer.getData(`bitwise/${this.type}`);
+      console.log( `Drop data "bitwise/${this.type}": `, data );
       if ( data ) {
         event.preventDefault();
-        event.dataTransfer.dropEffect = this.dropEffect;
+        event.dataTransfer.dropEffect = this.dropEffect || "link";
         this.update(data);
       }
       else {
-        event.dataTransfer.dropEffect = "";
+        event.dataTransfer.dropEffect = "none";
       }
     },
   },

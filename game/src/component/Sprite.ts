@@ -15,7 +15,7 @@ export default class Sprite extends Component {
 
   freezeEntity( eid:number ) {
     const data = super.freezeEntity(eid);
-    data.texturePath = this.scene.game.texturePaths[data.textureId];
+    data.texturePath = this.scene.game.load.texturePaths[data.textureId];
     delete data.textureId;
     return data;
   }

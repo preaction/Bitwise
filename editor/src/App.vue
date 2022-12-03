@@ -13,7 +13,7 @@ import SceneEdit from "./components/SceneEdit.vue";
 import GameConfig from "./components/GameConfig.vue";
 import Modal from "./components/Modal.vue";
 import MenuButton from "./components/MenuButton.vue";
-import Export from "./components/Export.vue";
+import Release from "./components/Release.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
 
 export default defineComponent({
@@ -29,6 +29,7 @@ export default defineComponent({
     PrefabEdit,
     Modal,
     MenuButton,
+    Release,
   },
   data() {
     return {
@@ -209,33 +210,25 @@ export default defineComponent({
     },
 
     async showGameConfigTab() {
-      let data = {};
-
-      try {
-        const fileContent = await this.appStore.readFile('bitwise.config.json');
-        data = JSON.parse( fileContent );
-      }
-      catch (err) {
-        console.warn( `Error opening bitwise.config.json: ${err}` );
-      }
-
       this.appStore.openTab({
         name: "Game Config",
         component: "GameConfig",
         ext: 'json',
         icon: 'fa-gear',
-        src: 'bitwise.config.json',
-        data: data,
+        src: 'bitwise.json',
+        data: toRaw(this.appStore.gameConfig),
         edited: false,
       });
     },
 
-    showExportTab() {
+    showReleaseTab() {
       this.appStore.openTab({
-        name: "Export",
-        component: "Export",
+        name: "Release",
+        component: "Release",
         icon: 'fa-file-export',
         edited: false,
+        src: 'bitwise.json',
+        data: toRaw(this.appStore.gameConfig),
       });
     },
 
@@ -336,7 +329,7 @@ export default defineComponent({
           <ul>
             <li @click="showGameConfigTab">Game Config</li>
             <li class="hr"><hr></li>
-            <li @click="showExportTab">Export...</li>
+            <li @click="showReleaseTab">Release...</li>
           </ul>
         </MenuButton>
       </div>

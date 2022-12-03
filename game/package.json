@@ -10,7 +10,8 @@
     "./component": "./dist/component/index.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "watch": "tsc --watch"
   },
   "keywords": [
     "gamedev"
@@ -24,6 +25,6 @@
   "dependencies": {
     "ammo.js": "^0.0.10",
     "bitecs": "^0.3.38",
-    "three": "^0.144.0"
+    "three": "^0.146.0"
   }
 }
