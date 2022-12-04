@@ -218,7 +218,7 @@ protocol.registerSchemesAsPrivileged([
 app.whenReady().then(() => {
   protocol.registerFileProtocol('bfile', (request, callback) => {
     const url = request.url.substr(8);
-    callback({ path: path.normalize(`${url}`) });
+    callback({ path: path.normalize(`${decodeURIComponent(url)}`) });
   })
 })
 

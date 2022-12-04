@@ -1,6 +1,6 @@
 
 import * as bitecs from 'bitecs';
-import Component from 'bitwise/Component.js';
+import { Component } from '@fourstar/bitwise';
 
 export default class Enemy extends Component {
   static editorComponent = 'editor/Enemy.vue';

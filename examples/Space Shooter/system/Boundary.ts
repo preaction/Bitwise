@@ -1,7 +1,7 @@
 
 import * as bitecs from 'bitecs';
-import System from 'bitwise/System.js';
-import Physics from 'bitwise/system/Physics.js';
+import { System } from '@fourstar/bitwise';
+import { Physics } from '@fourstar/bitwise/system';
 import Enemy from '../component/Enemy.js';
 
 export default class Boundary extends System {
@@ -24,14 +24,12 @@ export default class Boundary extends System {
   boundaryPath:string = "";
 
   thaw( data:any ) {
-    console.log( `Thawing Boundary system ${data.boundaryPath}` );
     this.boundaryPath = data.boundaryPath;
   }
 
   freeze():any {
     const data = super.freeze();
     data.boundaryPath = this.boundaryPath;
-    console.log( `Freezing Boundary system ${data.boundaryPath}` );
     return data;
   }
 
@@ -44,10 +42,9 @@ export default class Boundary extends System {
   update( timeMilli:number ) {
     for ( const q of this.queries ) {
       const entities = q( this.scene.world );
-      console.log( `Checking bounds for ${Array.from(entities).join(', ')}` );
       for ( const eid of entities ) {
         if ( !this.seen.has( eid ) ) {
-          console.log( `${eid} is out of bounds` );
+          //console.log( `${eid} is out of bounds` );
         }
       }
     }

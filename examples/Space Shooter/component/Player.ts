@@ -1,5 +1,5 @@
 
-import Component from 'bitwise/Component.js';
+import { Component } from '@fourstar/bitwise';
 
 export default class Player extends Component {
   get componentData() {

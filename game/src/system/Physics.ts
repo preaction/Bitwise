@@ -7,15 +7,6 @@ import Position from '../component/Position.js';
 import RigidBody from '../component/RigidBody.js';
 import BoxCollider from '../component/BoxCollider.js';
 
-export enum Broadphase {
-  AxisSweep,
-  Dbvt,
-};
-const broadphaseClass = {
-  [Broadphase.AxisSweep]: "btAxisSweep3",
-  [Broadphase.Dbvt]: "btDbvtBroadphase",
-};
-
 type ColliderMap = {
   box?: BoxCollider,
 };
@@ -31,24 +22,33 @@ const COLLISION_FLAGS = {
 };
 
 export default class Physics extends System {
-  rigidbody:RigidBody;
-  position:Position;
+  static Broadphase = {
+    AxisSweep: 0,
+    Dbvt: 1,
+  };
+  static broadphaseClass = {
+    [Physics.Broadphase.AxisSweep]: "btAxisSweep3",
+    [Physics.Broadphase.Dbvt]: "btDbvtBroadphase",
+  };
+
+  rigidbody!:RigidBody;
+  position!:Position;
   collider:ColliderMap = {};
-  broadphase:Broadphase = Broadphase.AxisSweep;
+  broadphase:number = Physics.Broadphase.AxisSweep;
   gravity:any;
 
   universe:any; //Ammo.btCollisionWorld;
   bodies:Array<any> = [];
 
   colliderQueries:ColliderQueryMap = {};
-  rigidbodyQuery:bitecs.Query;
+  rigidbodyQuery!:bitecs.Query;
   enterQueries:ColliderQueryMap = {};
   exitQueries:ColliderQueryMap = {};
 
   watchQueries:Array<[ bitecs.Query, (...args:any) => void ]> = [];
 
-  constructor( name:string, scene:Scene ) {
-    super( name, scene );
+  start() {
+    const scene = this.scene;
 
     this.position = scene.getComponent(Position);
     this.rigidbody = scene.getComponent(RigidBody);
@@ -73,17 +73,14 @@ export default class Physics extends System {
     data.gx = this.gravity?.x() || 0;
     data.gy = this.gravity?.y() || 0;
     data.gz = this.gravity?.z() || 0;
-    data.broadphase = this.broadphase || Broadphase.AxisSweep;
-    console.log( 'Standard Physics Frozen', data );
+    data.broadphase = this.broadphase || Physics.Broadphase.AxisSweep;
     return data;
   }
 
   thaw( data:any ) {
     super.thaw(data);
-    console.log( 'Standard Physics Thaw', data );
-    this.broadphase = data.broadphase || Broadphase.AxisSweep;
+    this.broadphase = data.broadphase || Physics.Broadphase.AxisSweep;
     this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
-    console.log( 'Standard Physics Gravity', this.gravity );
   }
 
   watchQuery( query:bitecs.Query, cb:(...args:any) => void ) {
@@ -93,10 +90,9 @@ export default class Physics extends System {
   initAmmo() {
     const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
     const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-    const broadphase = new Ammo[ broadphaseClass[ this.broadphase] ]();
+    const broadphase = new Ammo[ Physics.broadphaseClass[ this.broadphase] ]();
     const solver = new Ammo.btSequentialImpulseConstraintSolver();
     this.universe = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-    console.log( 'init gravity', this.gravity );
     this.universe.setGravity(this.gravity);
   }
 
@@ -152,8 +148,9 @@ export default class Physics extends System {
         // XXX: This should be a rigidbody component configuration
         body.setLinearFactor( new Ammo.btVector3(1,1,0) );
         body.setAngularFactor( new Ammo.btVector3(0,0,1) );
+        body.setActivationState(4); // disable deactivation
         // XXX: If isTrigger
-        body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
+        //body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
         this.universe.addRigidBody( body, group, mask );
 
         body.eid = eid;
@@ -169,7 +166,7 @@ export default class Physics extends System {
       }
     }
 
-    this.universe.stepSimulation( timeMilli, 10 );
+    this.universe.stepSimulation( timeMilli/1000, 1 );
     // Detect all collisions
     const collisions:{ [key:number]: Set<number> } = {};
     let dispatcher = this.universe.getDispatcher();

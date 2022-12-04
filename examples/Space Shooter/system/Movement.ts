@@ -1,10 +1,9 @@
 
 import * as bitecs from 'bitecs';
 import * as Ammo from 'ammo.js';
-import System from 'bitwise/System.js';
-import Physics from 'bitwise/system/Physics.js';
-import Position from 'bitwise/component/Position.js';
-import Input from 'bitwise/Input.js';
+import { System, Input } from '@fourstar/bitwise';
+import { Physics } from '@fourstar/bitwise/system';
+import { Position } from '@fourstar/bitwise/component';
 import Player from '../component/Player.js';
 
 export default class Movement extends System {
@@ -32,7 +31,7 @@ export default class Movement extends System {
   }
 
   onCollide( eid:number, hits:Set<number> ) {
-    console.log( `${eid} hit ${Array.from(hits).join(', ')}` );
+    //console.log( `${eid} hit ${Array.from(hits).join(', ')}` );
   }
 
   update( timeMilli:number ) {
@@ -57,7 +56,7 @@ export default class Movement extends System {
     let vec = new Ammo.btVector3(x, y, z);
     if ( vec.length() > 0 ) {
       vec.normalize();
-      vec.op_mul( timeMilli * speed );
+      vec = vec.op_mul( timeMilli * speed );
     }
 
     const update = this.query(this.scene.world);
@@ -66,8 +65,9 @@ export default class Movement extends System {
       if ( !rb ) {
         continue;
       }
-      rb.setLinearVelocity(vec);
+      console.log( `${eid}: Setting velocity: ${vec.x()}, ${vec.y()}, ${vec.z()}` );
       rb.activate();
+      rb.setLinearVelocity(vec);
     }
   }
 

@@ -2,20 +2,21 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "importHelpers": true,
-    "jsx": "preserve",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "sourceMap": true,
     "baseUrl": "./",
     "strict": true,
     "paths": {
-      "*": [ "*", "/Users/doug/games/bitwise/dist/*", "/Users/doug/games/bitwise/node_modules/*", "/Users/doug/games/bitwise/src/*" ]
+      "*": [
+        "*", "node_modules/*"
+      ]
     },
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "outDir": ".build"
   },
-  "include": [ "/Users/doug/games/bitwise/src/env.d.ts", "**/*" ]
+  "include": [ "**/*" ]
 }

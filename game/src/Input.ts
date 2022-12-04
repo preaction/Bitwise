@@ -89,6 +89,7 @@ export default class Input {
   }
 
   keydown(e:KeyboardEvent) {
+    console.log( `Keydown: ${e.key}` );
     if ( e.key in this.watchingKeys ) {
       for ( const alias of this.watchingKeys[e.key] ) {
         this.key[alias] = true;
@@ -101,6 +102,7 @@ export default class Input {
     }
   }
   keyup(e:KeyboardEvent) {
+    console.log( `Keyup: ${e.key}` );
     if ( e.key in this.watchingKeys ) {
       for ( const alias of this.watchingKeys[e.key] ) {
         this.key[alias] = false;
