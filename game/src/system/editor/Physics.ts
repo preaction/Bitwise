@@ -15,7 +15,8 @@ export default class Physics extends System {
   position:Position;
   collider:{ box: Component };
   gravity:any;
-  broadphase:number = PhysicsSystem.Broadphase.AxisSweep;
+  broadphase:number = 0;
+  //broadphase:number = PhysicsSystem.Broadphase.AxisSweep;
 
   bodies:Array<any> = [];
 
@@ -43,12 +44,12 @@ export default class Physics extends System {
     data.gx = this.gravity?.x() || 0;
     data.gy = this.gravity?.y() || 0;
     data.gz = this.gravity?.z() || 0;
-    data.broadphase = this.broadphase || PhysicsSystem.Broadphase.AxisSweep;
+    data.broadphase = this.broadphase //|| PhysicsSystem.Broadphase.AxisSweep;
     return data;
   }
 
   thaw( data:any ) {
-    this.broadphase = data.broadphase || PhysicsSystem.Broadphase.AxisSweep;
+    this.broadphase = data.broadphase //|| PhysicsSystem.Broadphase.AxisSweep;
     this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
     super.thaw(data);
   }

@@ -1,16 +1,16 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { Physics } from '@fourstar/bitwise/system';
+//import { Physics } from '@fourstar/bitwise/system';
 
 export default defineComponent({
   props: ['modelValue', 'scene'],
   data() {
     const data = {
-      broadphaseOptions: Physics.Broadphase,
+      broadphaseOptions: { AxisSweep: 0, Dbvt: 1 },
       gx: 0,
       gy: 0,
       gz: 0,
-      broadphase: Physics.Broadphase.AxisSweep,
+      broadphase: 0,
       ...this.modelValue,
     };
     console.log( 'System form init', data );

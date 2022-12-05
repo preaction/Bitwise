@@ -1,1 +1,13 @@
-{ "type": "module" }
+{
+  "devDependencies": {
+    "@types/three": "file:../../editor/node_modules/@types/three",
+    "tslib": "file:../../editor/node_modules/tslib",
+    "typescript": "file:../../editor/node_modules/typescript"
+  },
+  "dependencies": {
+    "@fourstar/bitwise": "file:../../game",
+    "ammo.js": "file:../../game/node_modules/ammo.js",
+    "bitecs": "file:../../game/node_modules/bitecs",
+    "three": "file:../../game/node_modules/three"
+  }
+}

@@ -1,5 +1,6 @@
 import { Stats, promises as fs } from 'node:fs';
 import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
+import { fork, ChildProcess } from 'node:child_process';
 import * as os from 'os'
 import * as path from 'path'
 import { init } from '../bitwise-build/init';
@@ -141,7 +142,7 @@ ipcMain.handle('bitwise-new-project', event => {
       if ( projectRoot ) {
         // XXX: What to do if directory exists?
         return fs.mkdir(projectRoot).then(() => {
-          return init(projectRoot, resourcesPath);
+          return init(projectRoot);
         })
         .then( () => res );
       }
@@ -264,17 +265,34 @@ ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
 });
 
 async function linkModules( root:string ) {
-  // Make sure the project has all necessary dependencies linked in
+  // Make sure the project has all necessary dependencies linked in,
+  // because Ammo.js breaks completely if it is loaded more than once,
+  // and Three complains.
+  // We do "npm link --force" to make absolutely sure that the game and
+  // the framework rely on the exact same file, so esbuild will not
+  // bundle it twice.
   const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
-  await fs.mkdir( path.join( root, 'node_modules', '@fourstar' ), { recursive: true } );
-  await fs.mkdir( path.join( root, 'node_modules', '@types' ), { recursive: true } );
-  for ( const dep of [ '@fourstar/bitwise', 'three', '@types/three', 'bitecs', 'ammo.js', 'typescript', 'tslib' ] ) {
-    const linkPath = path.join( root, 'node_modules', dep );
-    await fs.stat( linkPath ).then( () => {}, () => {
-      console.log( `Adding link to ${dep} in ${root}` );
-      return fs.symlink( path.join( modulesDir, dep ), path.join( root, 'node_modules', dep ) );
-    } );
-  }
+  const dependencies:string[] = [
+    '@types/three',
+    'typescript',
+    'tslib',
+    '@fourstar/bitwise',
+    '@fourstar/bitwise/node_modules/three',
+    '@fourstar/bitwise/node_modules/bitecs',
+    '@fourstar/bitwise/node_modules/ammo.js',
+  ];
+  const p = new Promise( (resolve, reject) => {
+    const cp = fork(
+      require.resolve("npm"),
+      [ "link", "--force", ...dependencies.map( dep => path.join( modulesDir, dep ) ) ],
+      {
+        cwd: root,
+      },
+    );
+    cp.on( 'exit', resolve );
+    cp.on( 'error', reject );
+  } );
+  await p;
 }
 
 ipcMain.handle('bitwise-build-project', async (event, root) => {
