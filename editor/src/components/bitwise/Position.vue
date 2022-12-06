@@ -7,12 +7,15 @@ export default defineComponent({
       sx: 1,
       sy: 1,
       sz: 1,
+      rx: 0,
+      ry: 0,
+      rz: 0,
+      rw: 0,
       ...this.modelValue,
     }
   },
   methods: {
     update() {
-      this.$data.rw = 1;
       this.$emit( 'update:modelValue', this.$data );
       this.$emit( 'update', this.$data );
     },
@@ -37,6 +40,8 @@ export default defineComponent({
       <input @change="update" v-model="$data.ry">
       <label>Z</label>
       <input @change="update" v-model="$data.rz">
+      <label>W</label>
+      <input @change="update" v-model="$data.rw">
     </div>
     <div class="d-flex position align-items-center">
       <span>Scale</span>

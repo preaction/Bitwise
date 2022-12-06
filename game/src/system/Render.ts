@@ -182,6 +182,9 @@ export default class Render extends System {
     obj.position.x = this.positionComponent.store.x[eid];
     obj.position.y = this.positionComponent.store.y[eid];
     obj.position.z = this.positionComponent.store.z[eid];
+    // obj.rotation.x = this.positionComponent.store.rx[eid];
+    // obj.rotation.y = this.positionComponent.store.ry[eid];
+    // obj.rotation.z = this.positionComponent.store.rz[eid];
     obj.scale.x = this.positionComponent.store.sx[eid];
     obj.scale.y = this.positionComponent.store.sy[eid];
     obj.scale.z = this.positionComponent.store.sz[eid];

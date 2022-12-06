@@ -114,7 +114,7 @@ export default class Physics extends System {
         transform.setOrigin( new Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] ) );
         console.log( `${eid}: Initial position: ${position.x[eid]}, ${position.y[eid]}, ${position.z[eid]}` );
 
-        transform.setRotation( new Ammo.btQuaternion( position.rx[eid], position.ry[eid], position.rz[eid], position.rw[eid] ) );
+        //transform.setRotation( new Ammo.btQuaternion( position.rx[eid], position.ry[eid], position.rz[eid], position.rw[eid] ) );
         let motionState = new Ammo.btDefaultMotionState( transform );
 
         // Scale should be adjusted by object scale
@@ -141,13 +141,18 @@ export default class Physics extends System {
         }
 
         console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
-        let velocity = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
+        console.log( `${eid}: RigidBody Lin Factor: ${rigidBody.lx[eid]}, ${rigidBody.ly[eid]}, ${rigidBody.lz[eid]}; Ang Factor: ${rigidBody.ax[eid]}, ${rigidBody.ay[eid]}, ${rigidBody.az[eid]}` );
 
         let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
         body = new Ammo.btRigidBody( rbodyInfo );
         body.setLinearFactor( new Ammo.btVector3( rigidBody.lx[eid], rigidBody.ly[eid], rigidBody.lz[eid] ) );
         body.setAngularFactor( new Ammo.btVector3( rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid] ) );
+
+        const velocity = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
         body.applyImpulse( velocity );
+
+        const torque = new Ammo.btVector3( rigidBody.rx[eid], rigidBody.ry[eid], rigidBody.rz[eid] );
+        body.applyTorqueImpulse( torque );
 
         if ( colliderData.trigger[eid] ) {
           body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
@@ -199,6 +204,7 @@ export default class Physics extends System {
     }
 
     // Dispatch any collisions that we're watching
+    // XXX: Only dispatch when entering and exiting
     for ( const [ query, cb ] of this.watchQueries ) {
       const eids = query(this.scene.world)
       for ( const eid of eids.filter( eid => eid in collisions ) ) {

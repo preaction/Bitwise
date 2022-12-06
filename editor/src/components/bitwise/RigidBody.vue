@@ -55,20 +55,20 @@ export default defineComponent({
     <div class="d-flex position align-items-center">
       <span>Freeze Position</span>
       <label>X</label>
-      <BinaryToggle @change="update" v-model="$data.lx" on="0" off="1">
+      <BinaryToggle @change="update" v-model="$data.lx" on="0" off="1" />
       <label>Y</label>
-      <BinaryToggle @change="update" v-model="$data.ly" on="0" off="1">
+      <BinaryToggle @change="update" v-model="$data.ly" on="0" off="1" />
       <label>Z</label>
-      <BinaryToggle @change="update" v-model="$data.lz" on="0" off="1">
+      <BinaryToggle @change="update" v-model="$data.lz" on="0" off="1" />
     </div>
     <div class="d-flex position align-items-center">
       <span>Freeze Rotation</span>
       <label>X</label>
-      <BinaryToggle @change="update" v-model="$data.ax" on="0" off="1">
+      <BinaryToggle @change="update" v-model="$data.ax" on="0" off="1" />
       <label>Y</label>
-      <BinaryToggle @change="update" v-model="$data.ay" on="0" off="1">
+      <BinaryToggle @change="update" v-model="$data.ay" on="0" off="1" />
       <label>Z</label>
-      <BinaryToggle @change="update" v-model="$data.az" on="0" off="1">
+      <BinaryToggle @change="update" v-model="$data.az" on="0" off="1" />
     </div>
   </div>
 </template>
