@@ -12,6 +12,7 @@ import App from './App.vue';
 
 // Globally-registered components
 import InputGameObject from './components/InputGameObject.vue';
+import BinaryToggle from './components/BinaryToggle.vue';
 
 const pinia = createPinia()
 
@@ -19,6 +20,7 @@ createApp(App)
   .use(pinia)
   .use(BootstrapVue3)
   .component( 'InputGameObject', InputGameObject )
+  .component( 'BinaryToggle', BinaryToggle )
   .mount('#app')
   .$nextTick(() => {
     postMessage({ payload: 'removeLoading' }, '*')

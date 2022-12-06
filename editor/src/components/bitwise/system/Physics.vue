@@ -36,9 +36,9 @@ export default defineComponent({
       <label>Z</label>
       <input @change="update" v-model="$data.gz">
     </div>
-    <div class="d-flex position align-items-center">
+    <div class="d-flex position align-items-center justify-content-between">
       <span>Broadphase</span>
-      <select class="form-control" v-model="$data.broadphase" @change="update">
+      <select v-model="$data.broadphase" @change="update">
         <option :value="broadphaseOptions.AxisSweep">Axis Sweep</option>
         <option :value="broadphaseOptions.Dbvt">DBVT</option>
       </select>

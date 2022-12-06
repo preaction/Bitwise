@@ -406,14 +406,14 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--bw-color);
 }
 
-input {
+input, select {
   color: var(--bw-color);
   background: var(--bw-background-color);
   border-color: var(--bw-border-color);
   border-width: 1px;
   border-radius: 3px;
 }
-input:focus {
+input:focus, select:focus {
   color: var(--bw-color-hover);
   background: var(--bw-background-color-hover);
   border-color: var(--bw-border-color-focus);

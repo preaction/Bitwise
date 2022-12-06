@@ -48,9 +48,19 @@
         "mass": 1,
         "vx": 0,
         "vy": 0,
-        "vz": 0
+        "vz": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1
       },
       "BoxCollider": {
+        "trigger": 1,
         "ox": 0,
         "oy": 0,
         "oz": 0,
@@ -79,6 +89,7 @@
         "texturePath": "meteorBrown_big1.png"
       },
       "BoxCollider": {
+        "trigger": 0,
         "ox": 0,
         "oy": 0,
         "oz": 0,
@@ -110,6 +121,7 @@
         "texturePath": "meteorBrown_big1.png"
       },
       "BoxCollider": {
+        "trigger": 0,
         "ox": 0,
         "oy": 0,
         "oz": 0,
@@ -158,6 +170,7 @@
         "texturePath": "laserBlue03.png"
       },
       "BoxCollider": {
+        "trigger": 1,
         "ox": 0,
         "oy": 0,
         "oz": 0,
@@ -168,8 +181,17 @@
       "RigidBody": {
         "mass": 1,
         "vx": 0,
-        "vy": 1,
-        "vz": 0
+        "vy": 10,
+        "vz": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1
       }
     }
   ],

@@ -4,6 +4,7 @@ import Component from '../Component.js';
 
 export default class BoxCollider extends Component {
   declare store:{
+    trigger: number[],
     ox: number[],
     oy: number[],
     oz: number[],
@@ -13,6 +14,7 @@ export default class BoxCollider extends Component {
   }
   get componentData() {
     return {
+      trigger: bitecs.Types.ui8,
       ox: bitecs.Types.f32,
       oy: bitecs.Types.f32,
       oz: bitecs.Types.f32,

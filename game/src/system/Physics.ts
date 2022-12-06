@@ -104,8 +104,8 @@ export default class Physics extends System {
     for ( const [colliderName, query] of Object.entries(this.enterQueries) ) {
       const add = query(this.scene.world);
       for ( const eid of add ) {
-        const component = this.collider[colliderName as keyof ColliderMap]?.store;
-        if ( !component ) {
+        const colliderData = this.collider[colliderName as keyof ColliderMap]?.store;
+        if ( !colliderData ) {
           throw `Unknown collider ${colliderName}`;
         }
 
@@ -118,11 +118,11 @@ export default class Physics extends System {
         let motionState = new Ammo.btDefaultMotionState( transform );
 
         // Scale should be adjusted by object scale
-        console.log( `${eid}: Collider ${colliderName} scale: ${component.sx[eid] * position.sx[eid]}, ${component.sy[eid] * position.sy[eid]}, ${component.sz[eid] * position.sz[eid]}` );
-        const scale = new Ammo.btVector3(component.sx[eid] * position.sx[eid] / 2, component.sy[eid] * position.sy[eid] / 2, component.sz[eid] * position.sz[eid] / 2);
+        console.log( `${eid}: Collider ${colliderName} scale: ${colliderData.sx[eid] * position.sx[eid]}, ${colliderData.sy[eid] * position.sy[eid]}, ${colliderData.sz[eid] * position.sz[eid]}` );
+        const scale = new Ammo.btVector3(colliderData.sx[eid] * position.sx[eid] / 2, colliderData.sy[eid] * position.sy[eid] / 2, colliderData.sz[eid] * position.sz[eid] / 2);
         const collider = new COLLIDER_SHAPES[colliderName as keyof ColliderMap](scale);
         collider.setMargin( 0 );
-        const origin = new Ammo.btVector3( component.ox[eid], component.oy[eid], component.oz[eid] );
+        const origin = new Ammo.btVector3( colliderData.ox[eid], colliderData.oy[eid], colliderData.oz[eid] );
         transform.setOrigin( transform.getOrigin() + origin );
 
         // If the item has a rigidbody, it can have mass
@@ -134,23 +134,25 @@ export default class Physics extends System {
         // bodies have a mass of 0. Kinematic bodies collide but are not
         // affected by dynamic bodies.
         const mass = rigidBody.mass[eid];
-        let inertia = new Ammo.btVector3( 0, 0, 0 );
 
+        let inertia = new Ammo.btVector3( 0, 0, 0 );
         if ( mass > 0 ) {
-          console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
-          inertia = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
           collider.calculateLocalInertia( mass, inertia );
         }
 
+        console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
+        let velocity = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
+
         let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
         body = new Ammo.btRigidBody( rbodyInfo );
-        // XXX: Only allow x and y movement, and z rotation
-        // XXX: This should be a rigidbody component configuration
-        body.setLinearFactor( new Ammo.btVector3(1,1,0) );
-        body.setAngularFactor( new Ammo.btVector3(0,0,1) );
-        body.setActivationState(4); // disable deactivation
-        // XXX: If isTrigger
-        //body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
+        body.setLinearFactor( new Ammo.btVector3( rigidBody.lx[eid], rigidBody.ly[eid], rigidBody.lz[eid] ) );
+        body.setAngularFactor( new Ammo.btVector3( rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid] ) );
+        body.applyImpulse( velocity );
+
+        if ( colliderData.trigger[eid] ) {
+          body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
+        }
+
         this.universe.addRigidBody( body, group, mask );
 
         body.eid = eid;
