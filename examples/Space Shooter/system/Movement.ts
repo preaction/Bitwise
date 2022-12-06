@@ -39,19 +39,10 @@ export default class Movement extends System {
       return;
     }
     const key = this.input.key;
-    let x = 0, y = 0, z = 0, speed = 0.05;
-    if ( key.left ) {
-      x = key.up || key.down ? -Math.pow(2, .5) : -1;
-    }
-    else if ( key.right ) {
-      x = key.up || key.down ? Math.pow(2, .5) : 1;
-    }
-    if ( key.up ) {
-      y = key.left || key.right ? Math.pow(2, .5) : 1;
-    }
-    else if ( key.down ) {
-      y = key.left || key.right ? -Math.pow(2, .5) : -1;
-    }
+    const x = key.left ? -1 : key.right ? 1 : 0;
+    const y = key.down ? -1 : key.up ? 1 : 0;
+    const z = 0;
+    const speed = 0.5;
 
     let vec = new Ammo.btVector3(x, y, z);
     if ( vec.length() > 0 ) {
