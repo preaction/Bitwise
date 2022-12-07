@@ -19,7 +19,7 @@ export default class Movement extends System {
     const query = this.query = scene.game.ecs.defineQuery([ player.store ]);
 
     this.physics = scene.getSystem( Physics );
-    this.physics.watchQuery( query, this.onCollide.bind(this) );
+    this.physics.watchEnterByQuery( query, this.onCollide.bind(this) );
 
     this.input = scene.game.input;
     if ( this.input ) {
@@ -31,7 +31,7 @@ export default class Movement extends System {
   }
 
   onCollide( eid:number, hits:Set<number> ) {
-    //console.log( `${eid} hit ${Array.from(hits).join(', ')}` );
+    console.log( `${eid} hit ${Array.from(hits).join(', ')}` );
   }
 
   update( timeMilli:number ) {
@@ -56,7 +56,6 @@ export default class Movement extends System {
       if ( !rb ) {
         continue;
       }
-      console.log( `${eid}: Setting velocity: ${vec.x()}, ${vec.y()}, ${vec.z()}` );
       rb.activate();
       rb.setLinearVelocity(vec);
     }

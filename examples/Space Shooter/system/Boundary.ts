@@ -16,9 +16,11 @@ export default class Boundary extends System {
     const enemy = scene.getComponent(Enemy);
     this.queries.push( scene.game.ecs.defineQuery([enemy.store]) );
 
-    //const query = scene.game.ecs.defineQuery([ component.store ]);
     this.physics = scene.getSystem( Physics );
-    //this.physics.watchQuery( query, this.onCollide.bind(this) );
+    for ( const query of this.queries ) {
+      this.physics.watchEnterByQuery( query, this.onCollideEnter.bind(this) );
+      this.physics.watchExitByQuery( query, this.onCollideExit.bind(this) );
+    }
   }
 
   boundaryPath:string = "";
@@ -33,10 +35,12 @@ export default class Boundary extends System {
     return data;
   }
 
-  onCollide( eid:number, hits:Set<number> ) {
-    for ( const hit of hits ) {
-      this.seen.add(hit);
-    }
+  onCollideEnter( eid:number, hits:Set<number> ) {
+    console.log( `${eid} entered ${Array.from(hits).join(', ')}` );
+  }
+
+  onCollideExit( eid:number, hits:Set<number> ) {
+    console.log( `${eid} exited ${Array.from(hits).join(', ')}` );
   }
 
   update( timeMilli:number ) {

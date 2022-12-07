@@ -2,7 +2,6 @@
 import * as bitecs from 'bitecs';
 import Ammo from 'ammo.js';
 import System from '../System.js';
-import Scene from '../Scene.js';
 import Position from '../component/Position.js';
 import RigidBody from '../component/RigidBody.js';
 import BoxCollider from '../component/BoxCollider.js';
@@ -45,7 +44,8 @@ export default class Physics extends System {
   enterQueries:ColliderQueryMap = {};
   exitQueries:ColliderQueryMap = {};
 
-  watchQueries:Array<[ bitecs.Query, (...args:any) => void ]> = [];
+  watchQueries:Array<[ boolean, bitecs.Query, (eid:number, hits:Set<number>) => void ]> = [];
+  collisions:{ [key:number]: Set<number> } = {};
 
   start() {
     const scene = this.scene;
@@ -83,8 +83,20 @@ export default class Physics extends System {
     this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
   }
 
-  watchQuery( query:bitecs.Query, cb:(...args:any) => void ) {
-    this.watchQueries.push( [ query, cb ] );
+  /**
+   * watchEnterByQuery adds a watcher for when an entity starts
+   * colliding with another entity.
+   */
+  watchEnterByQuery( query:bitecs.Query, cb:(eida:number, collisions:Set<number>) => void ) {
+    this.watchQueries.push( [ true, query, cb ] );
+  }
+
+  /**
+   * watchExitByQuery adds a watcher for when an entity stops colliding
+   * with another entity.
+   */
+  watchExitByQuery( query:bitecs.Query, cb:(eida:number, collisions:Set<number>) => void ) {
+    this.watchQueries.push( [ false, query, cb ] );
   }
 
   initAmmo() {
@@ -112,13 +124,13 @@ export default class Physics extends System {
         let transform = new Ammo.btTransform();
         transform.setIdentity();
         transform.setOrigin( new Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] ) );
-        console.log( `${eid}: Initial position: ${position.x[eid]}, ${position.y[eid]}, ${position.z[eid]}` );
+        //console.log( `${eid}: Initial position: ${position.x[eid]}, ${position.y[eid]}, ${position.z[eid]}` );
 
         //transform.setRotation( new Ammo.btQuaternion( position.rx[eid], position.ry[eid], position.rz[eid], position.rw[eid] ) );
         let motionState = new Ammo.btDefaultMotionState( transform );
 
         // Scale should be adjusted by object scale
-        console.log( `${eid}: Collider ${colliderName} scale: ${colliderData.sx[eid] * position.sx[eid]}, ${colliderData.sy[eid] * position.sy[eid]}, ${colliderData.sz[eid] * position.sz[eid]}` );
+        //console.log( `${eid}: Collider ${colliderName} scale: ${colliderData.sx[eid] * position.sx[eid]}, ${colliderData.sy[eid] * position.sy[eid]}, ${colliderData.sz[eid] * position.sz[eid]}` );
         const scale = new Ammo.btVector3(colliderData.sx[eid] * position.sx[eid] / 2, colliderData.sy[eid] * position.sy[eid] / 2, colliderData.sz[eid] * position.sz[eid] / 2);
         const collider = new COLLIDER_SHAPES[colliderName as keyof ColliderMap](scale);
         collider.setMargin( 0 );
@@ -140,8 +152,8 @@ export default class Physics extends System {
           collider.calculateLocalInertia( mass, inertia );
         }
 
-        console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
-        console.log( `${eid}: RigidBody Lin Factor: ${rigidBody.lx[eid]}, ${rigidBody.ly[eid]}, ${rigidBody.lz[eid]}; Ang Factor: ${rigidBody.ax[eid]}, ${rigidBody.ay[eid]}, ${rigidBody.az[eid]}` );
+        //console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
+        //console.log( `${eid}: RigidBody Lin Factor: ${rigidBody.lx[eid]}, ${rigidBody.ly[eid]}, ${rigidBody.lz[eid]}; Ang Factor: ${rigidBody.ax[eid]}, ${rigidBody.ay[eid]}, ${rigidBody.az[eid]}` );
 
         let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
         body = new Ammo.btRigidBody( rbodyInfo );
@@ -174,8 +186,10 @@ export default class Physics extends System {
     }
 
     this.universe.stepSimulation( timeMilli/1000, 1 );
-    // Detect all collisions
-    const collisions:{ [key:number]: Set<number> } = {};
+
+    // Detect all changes in collisions
+    const newCollisions:{ [key:number]: Set<number> } = {};
+    const enters:{ [key:number]: Set<number> } = {};
     let dispatcher = this.universe.getDispatcher();
     let numManifolds = dispatcher.getNumManifolds();
     MANIFOLDS:
@@ -191,26 +205,55 @@ export default class Physics extends System {
 
         let rb0 = Ammo.castObject( contactManifold.getBody0(), Ammo.btRigidBody );
         let rb1 = Ammo.castObject( contactManifold.getBody1(), Ammo.btRigidBody );
-        if ( !collisions[rb0.eid] ) {
-          collisions[rb0.eid] = new Set<number>();
+        const [ from, to ] = rb0.eid < rb1.eid ? [ rb0.eid, rb1.eid ] : [ rb1.eid, rb0.eid ];
+        if ( !newCollisions[from] ) {
+          newCollisions[from] = new Set<number>();
         }
-        if ( !collisions[rb1.eid] ) {
-          collisions[rb1.eid] = new Set<number>();
+        if ( !newCollisions[to] ) {
+          newCollisions[to] = new Set<number>();
         }
-        collisions[rb0.eid].add(rb1.eid);
-        collisions[rb1.eid].add(rb0.eid);
+        newCollisions[from].add(to);
+        newCollisions[to].add(from);
+
+        // Figure out if this is an entering collision
+        if ( this.collisions[from] && this.collisions[from].has(to) ) {
+          // Remove entering collisions from the old cache so anything
+          // that remains is a leaving collision event
+          this.collisions[from].delete(to);
+          if ( this.collisions[from].size == 0 ) {
+            delete this.collisions[from];
+          }
+          this.collisions[to].delete(from);
+          if ( this.collisions[to].size == 0 ) {
+            delete this.collisions[to];
+          }
+        }
+        else {
+          if ( !enters[from] ) {
+            enters[from] = new Set();
+          }
+          if ( !enters[to] ) {
+            enters[to] = new Set();
+          }
+          enters[from].add(to);
+          enters[to].add(from);
+        }
+
         continue MANIFOLDS;
       }
     }
 
+    // Anything left in this.collisions is not in newCollisions
     // Dispatch any collisions that we're watching
-    // XXX: Only dispatch when entering and exiting
-    for ( const [ query, cb ] of this.watchQueries ) {
+    for ( const [ collide, query, cb ] of this.watchQueries ) {
+      const data = collide ? enters : this.collisions;
       const eids = query(this.scene.world)
-      for ( const eid of eids.filter( eid => eid in collisions ) ) {
-        cb( eid, collisions[eid] )
+      for ( const eid of eids.filter( eid => eid in data ) ) {
+        cb( eid, data[eid] )
       }
     }
+
+    this.collisions = newCollisions;
 
     for ( const [colliderName, query] of Object.entries(this.colliderQueries) ) {
       const update = query(this.scene.world);
