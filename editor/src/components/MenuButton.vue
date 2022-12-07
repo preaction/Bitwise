@@ -43,7 +43,11 @@ export default defineComponent({
       menuOpen = this;
     },
     close() {
-      this.$refs['menu'].style.display = '';
+      if ( this.$refs['menu'] ) {
+        // The menu may already be gone because the element has been
+        // removed
+        this.$refs['menu'].style.display = '';
+      }
       this.cleanup();
       document.body.removeEventListener( 'click', this.closeHandler );
       this.closeHandler = null;
