@@ -186,22 +186,23 @@ export default defineComponent({
       this.$emit('update');
     },
 
-    dragOverEntity( event ) {
+    dragOverEntity( event, item ) {
       // Drag over left half, adjacent to over.
       // Drag over right half, child of over.
-      //const targetLeft = event.target.getBoundingClientRect().left;
-      //const rowLeft = event.currentTarget.getBoundingClientRect().left;
-      //const rowWidth = event.currentTarget.clientWidth;
-      //const rowOffsetX = event.offsetX + ( targetLeft - rowLeft );
-      // XXX: Show indicator: Adjacent circle at left, child-of circle indented
-      //for ( const node of event.currentTarget.parentNode.querySelectorAll('.entity-drop-top,.entity-drop') ) {
-        //node.classList.remove('entity-drop');
-        //node.classList.remove('entity-drop-top');
-      //}
-      //const isChild = rowOffsetX > rowWidth / 2
+      const targetLeft = event.target.getBoundingClientRect().left;
+      const rowLeft = event.currentTarget.getBoundingClientRect().left;
+      const rowWidth = event.currentTarget.clientWidth;
+      const rowOffsetX = event.offsetX + ( targetLeft - rowLeft );
+      const isChild = rowOffsetX > rowWidth / 4
+
+      // Show indicator: Adjacent circle at left, child-of circle indented
+      for ( const node of event.currentTarget.parentNode.querySelectorAll('.entity-drop-top,.entity-drop') ) {
+        node.classList.remove('entity-drop');
+        node.classList.remove('entity-drop-top');
+      }
     },
 
-    dropEntity( event ) {
+    dropEntity( event, onItem ) {
       const data = event.dataTransfer.getData("bitwise/entity");
       if ( data ) {
         event.preventDefault();
@@ -212,23 +213,14 @@ export default defineComponent({
         const rowLeft = event.currentTarget.getBoundingClientRect().left;
         const rowWidth = event.currentTarget.clientWidth;
         const rowOffsetX = event.offsetX + ( targetLeft - rowLeft );
-        const isChild = rowOffsetX > rowWidth / 2
+        const isChild = rowOffsetX > rowWidth / 4;
 
-        const dragPid = data.indexOf( '/' ) >= 0 ? data.split('/').pop() : data;
-        const dropPath = event.currentTarget.dataset.path;
-        let dropPid = 2**32-1;
-        if ( dropPath && dropPath.indexOf( '/' ) >= 0 ) {
-          if ( isChild ) {
-            dropPid = dropPath.split('/').pop();
-          }
-          else {
-            dropPid = dropPath.split('/').slice(-2, 1)[0];
-          }
-        }
-        else if ( typeof dropPath !== 'undefined' && isChild ) {
-          dropPid = dropPath;
-        }
-        this.scene.components.Position.store.pid[dragPid] = dropPid;
+        const dragEntity = this.scene.getEntityByPath(data);
+        const dropEntity = this.scene.getEntityByPath(onItem.path);
+        console.log( `Drop ${data} on ${onItem.path} (${dropEntity.id}) ${ isChild ? 'as child' : 'as sibling' }` );
+
+        const dropPid = isChild ? dropEntity.id : this.scene.components.Position.store.pid[dropEntity.id];
+        this.scene.components.Position.store.pid[dragEntity.id] = dropPid;
         this.updateSceneTree(this.scene);
         // XXX: Expand dropPid if not root
         this.$emit('update');

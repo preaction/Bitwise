@@ -34,7 +34,7 @@
         "rx": 0,
         "ry": 0,
         "rz": 0,
-        "rw": 1,
+        "rw": 0,
         "sx": 1,
         "sy": 1,
         "sz": 1,
@@ -78,12 +78,12 @@
         "z": 0,
         "rx": 0,
         "ry": 0,
-        "rz": 0,
-        "rw": 1,
+        "rz": 1,
+        "rw": 0,
         "sx": 1,
         "sy": 1,
         "sz": 1,
-        "path": "New Entity/Meteor 1"
+        "path": "Meteor 1"
       },
       "Sprite": {
         "texturePath": "meteorBrown_big1.png"
@@ -99,6 +99,21 @@
       },
       "Enemy": {
         "health": 0
+      },
+      "RigidBody": {
+        "mass": 1,
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0.10000000149011612,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1
       }
     },
     {
@@ -108,14 +123,14 @@
         "x": 3,
         "y": 0,
         "z": 0,
-        "rx": 1,
+        "rx": 0,
         "ry": 0,
-        "rz": 0,
-        "rw": 1,
+        "rz": 1,
+        "rw": 0,
         "sx": 1,
         "sy": 1,
         "sz": 1,
-        "path": "New Entity/Meteor 2"
+        "path": "Meteor 2"
       },
       "Sprite": {
         "texturePath": "meteorBrown_big1.png"
@@ -131,23 +146,21 @@
       },
       "Enemy": {
         "health": 0
-      }
-    },
-    {
-      "name": "New Entity",
-      "type": "Entity",
-      "Position": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
+      },
+      "RigidBody": {
+        "mass": 1,
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
         "rx": 0,
         "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1,
-        "path": "New Entity"
+        "rz": 1,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1
       }
     },
     {
@@ -160,11 +173,11 @@
         "rx": 0,
         "ry": 0,
         "rz": 0,
-        "rw": 1,
+        "rw": 0,
         "sx": 0.10000000149011612,
         "sy": 0.4000000059604645,
         "sz": 1,
-        "path": "Laser"
+        "path": "Player Ship/Laser"
       },
       "Sprite": {
         "texturePath": "laserBlue03.png"
@@ -181,7 +194,7 @@
       "RigidBody": {
         "mass": 1,
         "vx": 0,
-        "vy": 10,
+        "vy": 5,
         "vz": 0,
         "rx": 0,
         "ry": 0,

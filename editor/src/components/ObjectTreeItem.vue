@@ -85,13 +85,13 @@ export default defineComponent({
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
         if ( this.ondragover ) {
-          this.ondragover(event);
+          this.ondragover(event, this.item);
         }
       }
     },
     drop( event ) {
       if ( this.ondropitem ) {
-        this.ondropitem(event);
+        this.ondropitem(event, this.item);
       }
       else {
         event.dataTransfer.dropEffect = "";
