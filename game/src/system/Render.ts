@@ -227,7 +227,14 @@ export default class Render extends System {
   addCamera( eid:number ) {
     const camera = this.cameras[eid] || this.createCamera(eid);
     // XXX: If entity has a parent, add it to that instead
-    this.scene._scene.add( camera );
+    const pid = this.positionComponent.store.pid[eid];
+    if ( pid < PositionComponent.MAX_PARENT_ID ){
+      console.log( `Adding camera to parent ${pid}`, this.objects[pid] );
+      this.objects[pid].add( camera );
+    }
+    else {
+      this.scene._scene.add( camera );
+    }
   }
 
   removeCamera( eid:number ) {
@@ -247,8 +254,14 @@ export default class Render extends System {
 
   addGroup( eid:number ) {
     const group = this.objects[eid] || this.createGroup( eid );
-    // XXX: If entity has a parent, add it to that instead
-    this.scene._scene.add( group );
+    const pid = this.positionComponent.store.pid[eid];
+    if ( pid < PositionComponent.MAX_PARENT_ID ){
+      console.log( `Adding group to parent ${pid}`, this.objects[pid] );
+      this.objects[pid].add( group );
+    }
+    else {
+      this.scene._scene.add( group );
+    }
   }
 
   createSprite( eid:number ):three.Sprite {
@@ -282,8 +295,14 @@ export default class Render extends System {
 
   addSprite( eid:number ) {
     const sprite = this.objects[eid] || this.createSprite( eid );
-    // XXX: If entity has a parent, add it to that instead
-    this.scene._scene.add( sprite );
+    const pid = this.positionComponent.store.pid[eid];
+    if ( pid < PositionComponent.MAX_PARENT_ID ){
+      console.log( `Adding sprite to parent ${pid}`, this.objects[pid] );
+      this.objects[pid].add( sprite );
+    }
+    else {
+      this.scene._scene.add( sprite );
+    }
   }
 
   remove( eid:number ) {

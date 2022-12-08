@@ -4,6 +4,7 @@ import Component from '../Component.js';
 import Entity from '../Entity.js';
 
 export default class Position extends Component {
+  static readonly MAX_PARENT_ID:number = 2**32-1;
   declare store:{
     x: number[],
     y: number[],
@@ -39,7 +40,7 @@ export default class Position extends Component {
     this.store.sx[eid] = 1;
     this.store.sy[eid] = 1;
     this.store.sz[eid] = 1;
-    this.store.pid[eid] = 2**32-1;
+    this.store.pid[eid] = Position.MAX_PARENT_ID;
   }
 
   freezeEntity( eid:number ) {
@@ -47,7 +48,7 @@ export default class Position extends Component {
     const entity = this.scene.entities[ eid ];
     data.path = entity.name;
     let parentId = this.store.pid[ entity.id ];
-    while ( parentId < 2**32-1 ) {
+    while ( parentId < Position.MAX_PARENT_ID ) {
       const parent = this.scene.entities[ parentId ];
       data.path = [ parent.name, data.path ].join("/");
       parentId = this.store.pid[ parent.id ];
@@ -58,7 +59,7 @@ export default class Position extends Component {
   }
 
   thawEntity( eid:number, data:{ [key:string]: any } ) {
-    let pid = 2**32-1;
+    let pid = Position.MAX_PARENT_ID;
     if ( data.path && typeof data.path === "string" ) {
       const parts = data.path.split("/");
       parts.pop(); // Pop off the object's name

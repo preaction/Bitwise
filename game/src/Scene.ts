@@ -184,7 +184,7 @@ export default class Scene extends three.EventDispatcher {
     // XXX: Might want to keep a cache of entity by path
     const parts = path.split( /\// );
     const position = this.getComponent( Position );
-    let pid = 2**32-1;
+    let pid = Position.MAX_PARENT_ID;
     let findName = '';
     let entity = null;
     while ( parts.length > 0 ) {

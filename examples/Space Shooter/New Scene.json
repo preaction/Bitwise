@@ -117,59 +117,12 @@
       }
     },
     {
-      "name": "Meteor 2",
-      "type": "Entity",
-      "Position": {
-        "x": 3,
-        "y": 0,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 1,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1,
-        "path": "Meteor 2"
-      },
-      "Sprite": {
-        "texturePath": "meteorBrown_big1.png"
-      },
-      "BoxCollider": {
-        "trigger": 0,
-        "ox": 0,
-        "oy": 0,
-        "oz": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "Enemy": {
-        "health": 0
-      },
-      "RigidBody": {
-        "mass": 1,
-        "vx": 0,
-        "vy": 0,
-        "vz": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 1,
-        "lx": 1,
-        "ly": 1,
-        "lz": 0,
-        "ax": 0,
-        "ay": 0,
-        "az": 1
-      }
-    },
-    {
       "name": "Laser",
       "type": "Entity",
       "Position": {
         "x": 0,
-        "y": -2,
-        "z": 0,
+        "y": 0.30000001192092896,
+        "z": -1,
         "rx": 0,
         "ry": 0,
         "rz": 0,
@@ -205,6 +158,26 @@
         "ax": 0,
         "ay": 0,
         "az": 1
+      }
+    },
+    {
+      "name": "Meteor 2",
+      "type": "Entity",
+      "Position": {
+        "x": 2,
+        "y": 0,
+        "z": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1,
+        "path": "Meteor 2"
+      },
+      "Sprite": {
+        "texturePath": "meteorBrown_big1.png"
       }
     }
   ],

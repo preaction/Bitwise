@@ -78,7 +78,7 @@ export default defineComponent({
         tree[id].icon = this.icons[ entity.type ] || this.icons.default;
 
         const pid = scene.components.Position.store.pid[id];
-        if ( pid < 2**32-1 ) {
+        if ( pid < scene.components.Position.constructor.MAX_PARENT_ID ) {
           if ( !tree[pid] ) {
             tree[pid] = { entity: null, children: [], path: scene.entities[ pid ].name };
           }
@@ -221,8 +221,12 @@ export default defineComponent({
 
         const dropPid = isChild ? dropEntity.id : this.scene.components.Position.store.pid[dropEntity.id];
         this.scene.components.Position.store.pid[dragEntity.id] = dropPid;
+        // XXX: Adjust position to offset from parent so that entity
+        // stays in same place visually
+
         this.updateSceneTree(this.scene);
-        // XXX: Expand dropPid if not root
+        // XXX: Expand dropEntity in scene tree if not root
+
         this.$emit('update');
       }
       else {
