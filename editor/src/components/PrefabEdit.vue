@@ -23,18 +23,23 @@ export default defineComponent({
 
   mounted() {
     const scene = this.createScene();
+
+    const editor = scene.getSystem( this.systems.EditorRender );
+    editor.addEventListener( 'update', () => this.update() );
+
     const entity = scene.addEntity();
 
     if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
       entity.thaw( toRaw( this.modelValue ) );
     }
 
+    this.scene = scene;
+    this.entity = entity;
+
     this.$nextTick( () => {
       this.game.start();
       scene.update(0);
       scene.render();
-      this.scene = scene;
-      this.entity = entity;
     } );
   },
 
@@ -56,7 +61,6 @@ export default defineComponent({
       scene.addComponent( 'RigidBody' );
       scene.addComponent( 'BoxCollider' );
       scene.addSystem( 'Physics' );
-      scene.addSystem( 'Sprite' );
       // XXX: Render camera should come from game settings
       scene.addSystem( 'Render' );
 
@@ -94,6 +98,12 @@ export default defineComponent({
       return markRaw(game);
     },
 
+    sceneChanged() {
+      this.scene.update(0);
+      this.scene.render();
+      this.update();
+    },
+
     update() {
       const prefabData = this.entity.freeze();
       console.log( 'Frozen', prefabData );
@@ -102,6 +112,7 @@ export default defineComponent({
         ...prefabData,
         name: this.name,
       });
+      this.$refs.scenePanel.refresh();
     },
 
     save() {
@@ -128,7 +139,7 @@ export default defineComponent({
       <canvas ref="prefab-canvas" />
     </div>
     <div class="prefab-tab-sidebar">
-      <ScenePanel :scene="scene" :is-prefab="true" />
+      <ScenePanel class="prefab-tab-sidebar-item" ref="scenePanel" @update="sceneChanged" :scene="scene" :is-prefab="true" />
     </div>
   </div>
 </template>
@@ -137,7 +148,7 @@ export default defineComponent({
   .prefab-edit {
     display: grid;
     place-content: stretch;
-    grid-template-rows: 42px 1fr;
+    grid-template-rows: auto 1fr;
     grid-template-columns: 1fr minmax(0, auto);
     grid-template-areas: "toolbar toolbar" "main sidebar";
     height: 100%;
@@ -145,21 +156,33 @@ export default defineComponent({
   }
   .prefab-tab-toolbar {
     grid-area: toolbar;
-    padding: 2px;
-    background: var(--bs-gray-100);
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
+    color: var(--bw-color);
+    background: var(--bw-border-color);
+    border: 2px outset var(--bw-color);
+    border-radius: 4px;
+    padding: 0.1em;
   }
+
   .prefab-tab-sidebar {
+    /* XXX: Allow changing sidebar width */
+    --tab-sidebar-width: auto;
+    grid-area: sidebar;
+    width: 17vw;
+    max-width: 17vw;
+    transition: width 0.2s;
     display: flex;
     flex-flow: column;
-    font-size: 0.9em;
-    grid-area: sidebar;
-    padding: 2px;
-    width: 200px;
-    background: var(--bs-light);
-    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
+    background: var(--bw-border-color);
+    padding: 0.3em;
+    height: 100%;
     overflow: hidden;
   }
+
+  .prefab-tab-sidebar-item {
+    background: var(--bw-background-color);
+    color: var(--bw-color);
+  }
+
   .prefab-tab-main {
     position: relative;
     grid-area: main;

@@ -22,7 +22,7 @@ export default abstract class Component {
   removeEntity( eid:number ) {
     this.scene.game.ecs.removeComponent( this.world, this.store, eid );
   }
-  thawEntity( eid:number, data:{ [key:string]: any } ):void {
+  thawEntity( eid:number, data:{ [key:string]: any }={} ):void {
     this.addEntity( eid );
     for ( const k in data ) {
       this.store[k][eid] = data[k];

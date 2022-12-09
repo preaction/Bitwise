@@ -58,7 +58,7 @@ export default class Position extends Component {
     return data;
   }
 
-  thawEntity( eid:number, data:{ [key:string]: any } ) {
+  thawEntity( eid:number, data:{ [key:string]: any }={} ) {
     let pid = Position.MAX_PARENT_ID;
     if ( data.path && typeof data.path === "string" ) {
       const parts = data.path.split("/");

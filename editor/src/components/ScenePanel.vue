@@ -146,6 +146,9 @@ export default defineComponent({
       for ( const c of components ) {
         entity.addComponent(c);
       }
+      if ( this.isPrefab ) {
+        this.scene.components.Position.store.pid[entity.id] = this.sceneTree.entity;
+      }
       this.updateSceneTree(this.scene);
       const entityItem = this.sceneTree.children[ this.sceneTree.children.length - 1 ];
       this.select( entityItem );

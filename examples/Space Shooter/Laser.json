@@ -12,7 +12,7 @@
     "sx": 0.10000000149011612,
     "sy": 0.4000000059604645,
     "sz": 1,
-    "path": "Player Ship/Laser"
+    "path": "Laser"
   },
   "Sprite": {
     "texturePath": "laserBlue03.png"
@@ -41,6 +41,8 @@
     "ay": 0,
     "az": 1
   },
-  "id": 15,
+  "Weapon": {
+    "damage": 0
+  },
   "component": "PrefabEdit"
 }

@@ -22,7 +22,8 @@
         "zoom": 1,
         "near": 0,
         "far": 10
-      }
+      },
+      "id": 3
     },
     {
       "name": "Player Ship",
@@ -69,7 +70,8 @@
         "sx": 1,
         "sy": 1,
         "sz": 1
-      }
+      },
+      "id": 4
     },
     {
       "name": "Meteor 1",
@@ -116,7 +118,8 @@
         "ax": 0,
         "ay": 0,
         "az": 1
-      }
+      },
+      "id": 5
     },
     {
       "name": "Meteor 2",
@@ -136,7 +139,8 @@
       },
       "Sprite": {
         "texturePath": "meteorBrown_big1.png"
-      }
+      },
+      "id": 6
     }
   ],
   "components": [
@@ -149,10 +153,6 @@
     "Enemy"
   ],
   "systems": [
-    {
-      "name": "Movement",
-      "data": {}
-    },
     {
       "name": "Boundary",
       "data": {
@@ -170,6 +170,10 @@
     },
     {
       "name": "Render",
+      "data": {}
+    },
+    {
+      "name": "Movement",
       "data": {}
     }
   ],

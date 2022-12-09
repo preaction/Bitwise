@@ -49,7 +49,7 @@ export default defineComponent({
       const camera = scene.addEntity();
       camera.name = "Camera";
       camera.type = "Camera";
-      camera.addComponent( "Position", { sx: 1, sy: 1, sz: 1, pid: Position.MAX_PARENT_ID } );
+      camera.addComponent( "Position", { sx: 1, sy: 1, sz: 1, pid: 2**32-1 } );
       camera.addComponent( "OrthographicCamera", { frustum: 10, far: 10, near: 0, zoom: 1 } );
 
       this.update();
