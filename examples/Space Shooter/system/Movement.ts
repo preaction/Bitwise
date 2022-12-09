@@ -4,30 +4,50 @@ import * as Ammo from 'ammo.js';
 import { System, Input } from '@fourstar/bitwise';
 import { Physics } from '@fourstar/bitwise/system';
 import { Position } from '@fourstar/bitwise/component';
-import Player from '../component/Player.js';
+import PlayerComponent from '../component/Player.js';
 
 export default class Movement extends System {
-  position?:Position;
-  input?:Input;
-  physics?:Physics;
-  query?:bitecs.Query;
+  position!:Position;
+  input!:Input;
+  physics!:Physics;
+  query!:bitecs.Query;
+  playerComponent!:PlayerComponent;
 
-  start() {
+  async init() {
     const scene = this.scene;
     this.position = scene.getComponent(Position);
-    const player = scene.getComponent( Player );
+    const player = this.playerComponent = scene.getComponent( PlayerComponent );
     const query = this.query = scene.game.ecs.defineQuery([ player.store ]);
 
     this.physics = scene.getSystem( Physics );
-    this.physics.watchEnterByQuery( query, this.onCollide.bind(this) );
-
     this.input = scene.game.input;
-    if ( this.input ) {
-      this.input.watchKey( 'ArrowLeft', 'left' );
-      this.input.watchKey( 'ArrowRight', 'right' );
-      this.input.watchKey( 'ArrowUp', 'up' );
-      this.input.watchKey( 'ArrowDown', 'down' );
+
+    const playerEids = this.query(this.scene.world);
+    for ( const eid of playerEids ) {
+      const weaponId = this.playerComponent.store.weapon[ eid ];
+      const weaponPath = PlayerComponent.paths[ weaponId ];
+      this.weaponPrefabs[weaponId] = await this.scene.game.load.json( weaponPath );
     }
+  }
+
+  start() {
+    this.physics.watchEnterByQuery( this.query, this.onCollide.bind(this) );
+    this.input.watchKey( 'ArrowLeft', 'left' );
+    this.input.watchKey( 'ArrowRight', 'right' );
+    this.input.watchKey( 'ArrowUp', 'up' );
+    this.input.watchKey( 'ArrowDown', 'down' );
+    this.input.watchKey( ' ', 'fire' );
+  }
+
+  weaponPrefabs:{[key:number]: any} = {};
+
+  stop() {
+    // XXX: this.physics.unwatchEnterByQuery( this.query );
+    // XXX: this.input.unwatchKey( 'ArrowLeft', 'left' );
+    // XXX: this.input.unwatchKey( 'ArrowRight', 'right' );
+    // XXX: this.input.unwatchKey( 'ArrowUp', 'up' );
+    // XXX: this.input.unwatchKey( 'ArrowDown', 'down' );
+    // XXX: this.input.unwatchKey( ' ', 'fire' );
   }
 
   onCollide( eid:number, hits:Set<number> ) {
@@ -50,14 +70,23 @@ export default class Movement extends System {
       vec = vec.op_mul( timeMilli * speed );
     }
 
-    const update = this.query(this.scene.world);
-    for ( const eid of update ) {
+    const playerEids = this.query(this.scene.world);
+    for ( const eid of playerEids ) {
       const rb = this.physics.bodies[eid];
       if ( !rb ) {
         continue;
       }
       rb.activate();
       rb.setLinearVelocity(vec);
+      if ( key.fire ) {
+        const weaponId = this.playerComponent.store.weapon[ eid ];
+        const weaponPath = PlayerComponent.paths[ weaponId ];
+        const weapon = this.scene.addEntity( this.weaponPrefabs[weaponId] );
+        this.position.store.pid[ weapon.id ] = Position.MAX_PARENT_ID;
+        this.position.store.x[ weapon.id ] += this.position.store.x[eid];
+        this.position.store.y[ weapon.id ] += this.position.store.y[eid];
+        this.position.store.z[ weapon.id ] += this.position.store.z[eid];
+      }
     }
   }
 

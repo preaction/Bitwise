@@ -1,12 +1,12 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+
 export default defineComponent({
   props: ['modelValue', 'scene'],
   data() {
     return {
-      boundary: null,
       ...this.modelValue,
-    }
+    };
   },
   methods: {
     update() {
@@ -18,9 +18,11 @@ export default defineComponent({
 </script>
 <template>
   <div>
-    <div class="d-flex align-items-center">
-      <label>Boundary</label>
-      <InputGameObject v-model="$data.boundaryPath" type="entity" @update="update" />
+    <div class="d-flex">
+      <label>Weapon</label>
+      <InputGameObject class="flex-fill" v-model="$data.weapon" type="prefab" @update="update" />
     </div>
   </div>
 </template>
+<style>
+</style>

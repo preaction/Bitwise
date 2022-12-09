@@ -208,8 +208,7 @@ export default class Game extends three.EventDispatcher {
   }
 
   async loadScene( path:string ):Promise<Scene> {
-    const res = await fetch(path);
-    const sceneData = await res.json();
+    const sceneData = await this.load.json(path);
     const scene = this.addScene();
     scene.thaw( sceneData );
     return scene;

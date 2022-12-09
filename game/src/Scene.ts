@@ -274,10 +274,13 @@ export default class Scene extends three.EventDispatcher {
     this.components[name] = new cons( this, this.world );
   }
 
-  addEntity() {
+  addEntity( data:any=null ) {
     const id = this.game.ecs.addEntity( this.world );
     this.eids.push(id);
     this.entities[id] = new Entity(this, id);
+    if ( data !== null ) {
+      this.entities[id].thaw(data);
+    }
     return this.entities[id];
   }
 

@@ -16,6 +16,11 @@ export default class Load extends three.EventDispatcher {
     three.DefaultLoadingManager.setURLModifier( url => this.base + url );
   }
 
+  async json( path:string ):Promise<any> {
+    const res = await fetch(this.base + path);
+    return res.json();
+  }
+
   texture( path:string ):number {
     let textureId = this.texturePaths.indexOf( path );
     if ( textureId < 0 ) {
