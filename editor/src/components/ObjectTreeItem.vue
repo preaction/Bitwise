@@ -105,7 +105,7 @@ export default defineComponent({
         this.item.children.splice( idx, 1 );
         return true;
       }
-      for ( const tree of this.$refs.children ) {
+      for ( const tree of this.$refs.children || [] ) {
         const removed = tree.removeItem( item );
         if ( removed ) {
           return removed;

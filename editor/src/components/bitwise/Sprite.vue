@@ -8,30 +8,23 @@ export default defineComponent({
     InputGameObject,
   },
   data() {
-    const textureId = this.modelValue.textureId ?? null;
-    const texturePath = this.scene.game.load.texturePaths[ textureId ];
     return {
-      textureId,
-      texturePath,
+      ...this.modelValue,
     };
   },
   watch: {
-    texturePath(newPath) {
-      this.loadTexture(newPath);
+    texturePath() {
+      this.update();
     },
   },
   methods: {
     update() {
       const newModel = {
-        textureId: this.textureId,
+        texturePath: this.texturePath,
       };
+      console.log( `Updated texture: ${this.texturePath}` );
       this.$emit( 'update:modelValue', newModel );
       this.$emit( 'update', newModel );
-    },
-    async loadTexture( path ) {
-      await this.scene.game.load.texture( path );
-      this.textureId = this.$data.textureId = this.scene.game.load.textureIds[ path ];
-      this.update();
     },
   },
 });

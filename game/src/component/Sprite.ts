@@ -14,13 +14,15 @@ export default class Sprite extends Component {
   }
 
   freezeEntity( eid:number ) {
+    // Freeze always gives a texture path
     const data = super.freezeEntity(eid);
     data.texturePath = this.scene.game.load.texturePaths[data.textureId];
     delete data.textureId;
     return data;
   }
   thawEntity( eid:number, data:{ [key:string]:any } ) {
-    const textureId = this.scene.game.load.texture( data.texturePath );
+    // Thaw can work with an ID or a path
+    const textureId = data.textureId || this.scene.game.load.texture( data.texturePath );
     super.thawEntity( eid, {textureId} );
   }
 }

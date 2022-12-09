@@ -14,7 +14,7 @@ export default class Entity {
     this.id = id;
   }
 
-  addComponent( name:string, data:{ [key:string]: number } ) {
+  addComponent( name:string, data:{ [key:string]: any } ) {
     if ( !this.scene.components[name] ) {
       this.scene.addComponent( name );
     }
@@ -23,11 +23,8 @@ export default class Entity {
     this.setComponent(name, data);
   }
 
-  setComponent( name:string, data:{ [key:string]: number } ) {
-    const component = this.scene.components[name].store;
-    for ( let key in data ) {
-      component[key][this.id] = data[key];
-    }
+  setComponent( name:string, data:{ [key:string]: any } ) {
+    return this.scene.components[name].thawEntity( this.id, data );
   }
 
   removeComponent( name:string ) {
@@ -35,13 +32,8 @@ export default class Entity {
     component.removeEntity( this.id );
   }
 
-  getComponent( name:string ):{ [key:string]: number } {
-    const component = this.scene.components[name].store;
-    const data:{ [key:string]: number } = {};
-    for ( let key in component ) {
-      data[key] = component[key][this.id];
-    }
-    return data;
+  getComponent( name:string ):{ [key:string]: any } {
+    return this.scene.components[name].freezeEntity( this.id );
   }
 
   listComponents() {

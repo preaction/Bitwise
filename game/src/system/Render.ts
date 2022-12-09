@@ -60,7 +60,7 @@ export default class Render extends System {
     const cameraEids = this.cameraQuery(this.scene.world);
     for ( const eid of spriteEids ) {
       const textureId = this.spriteComponent.store.textureId[eid];
-      promises.push( this.loadTexture( textureId ) );
+      promises.push( this.loadTexture( textureId, eid ) );
       this.createSprite( eid );
     }
     for ( const eid of cameraEids ) {
@@ -114,8 +114,11 @@ export default class Render extends System {
   /**
    * Load the texture and prepare it to be rendered.
    */
-  async loadTexture( textureId:number ):Promise<three.Texture> {
+  async loadTexture( textureId:number, forEid:string|number="preload" ):Promise<three.Texture> {
     const path = this.scene.game.load.texturePaths[textureId];
+    if ( !path ) {
+      throw `Unknown texture ID ${textureId} (${forEid})`;
+    }
     return new Promise(
       (resolve, reject) => {
         const texture = this.loader.load( path, resolve, undefined, reject ) 
@@ -284,7 +287,7 @@ export default class Render extends System {
     const tid = this.spriteComponent.store.textureId[eid];
     let texture = this.textures[tid];
     if ( !texture ) {
-      this.loadTexture( tid ).then( () => this.render() );
+      this.loadTexture( tid, eid ).then( () => this.render() );
       texture = this.textures[tid];
     }
     if ( !this.materials[eid] || (this.materials[eid] as three.SpriteMaterial).map !== texture ) {
