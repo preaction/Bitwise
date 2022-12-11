@@ -42,8 +42,8 @@
     "az": 1
   },
   "Weapon": {
-    "damage": 0,
-    "cooldown": 0
+    "damage": 5,
+    "cooldown": 250
   },
   "component": "PrefabEdit"
 }

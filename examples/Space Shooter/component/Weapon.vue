@@ -5,6 +5,8 @@ export default defineComponent({
   props: ['modelValue', 'scene'],
   data() {
     return {
+      damage: 0,
+      cooldown: 0,
       ...this.modelValue,
     };
   },
@@ -20,11 +22,11 @@ export default defineComponent({
   <div>
     <div class="d-flex">
       <label>Damage</label>
-      <input class="flex-fill" v-model="$data.damage" @update="update" />
+      <input class="flex-fill" v-model="$data.damage" @change="update" />
     </div>
     <div class="d-flex">
       <label>Cooldown</label>
-      <input class="flex-fill" v-model="$data.cooldown" @update="update" />
+      <input class="flex-fill" v-model="$data.cooldown" @change="update" />
     </div>
   </div>
 </template>
