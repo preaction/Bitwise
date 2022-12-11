@@ -24,6 +24,7 @@ export default class Movement extends System {
 
     const playerEids = this.query(this.scene.world);
     for ( const eid of playerEids ) {
+      console.log( `Player ID: ${eid}` );
       const weaponId = this.playerComponent.store.weapon[ eid ];
       const weaponPath = PlayerComponent.paths[ weaponId ];
       this.weaponPrefabs[weaponId] = await this.scene.game.load.json( weaponPath );
@@ -78,16 +79,22 @@ export default class Movement extends System {
       }
       rb.activate();
       rb.setLinearVelocity(vec);
-      if ( key.fire ) {
-        const weaponId = this.playerComponent.store.weapon[ eid ];
-        const weaponPath = PlayerComponent.paths[ weaponId ];
+
+      const weaponId = this.playerComponent.store.weapon[ eid ];
+      if ( this.cooldown[ weaponId ] > 0 ) {
+        this.cooldown[weaponId] -= timeMilli;
+      }
+      if ( ( !this.cooldown[weaponId] || this.cooldown[ weaponId ] <= 0 ) && key.fire ) {
         const weapon = this.scene.addEntity( this.weaponPrefabs[weaponId] );
         this.position.store.pid[ weapon.id ] = Position.MAX_PARENT_ID;
         this.position.store.x[ weapon.id ] += this.position.store.x[eid];
         this.position.store.y[ weapon.id ] += this.position.store.y[eid];
         this.position.store.z[ weapon.id ] += this.position.store.z[eid];
+        this.cooldown[ weaponId ] = 250; // milliseconds
       }
     }
   }
+
+  cooldown:{ [key:number]: number } = {};
 
 }

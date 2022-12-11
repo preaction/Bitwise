@@ -22,8 +22,7 @@
         "zoom": 1,
         "near": 0,
         "far": 10
-      },
-      "id": 3
+      }
     },
     {
       "name": "Player Ship",
@@ -70,8 +69,7 @@
         "sx": 1,
         "sy": 1,
         "sz": 1
-      },
-      "id": 4
+      }
     },
     {
       "name": "Meteor 1",
@@ -111,36 +109,40 @@
         "vz": 0,
         "rx": 0,
         "ry": 0,
-        "rz": 0.10000000149011612,
+        "rz": 0,
         "lx": 1,
         "ly": 1,
         "lz": 0,
         "ax": 0,
         "ay": 0,
-        "az": 1
-      },
-      "id": 5
+        "az": 0
+      }
     },
     {
-      "name": "Meteor 2",
+      "name": "Boundary",
       "type": "Entity",
       "Position": {
-        "x": 2,
+        "x": 0,
         "y": 0,
-        "z": 0,
+        "z": -10,
         "rx": 0,
         "ry": 0,
         "rz": 0,
         "rw": 0,
+        "sx": 18,
+        "sy": 10,
+        "sz": 50,
+        "path": "Boundary"
+      },
+      "BoxCollider": {
+        "trigger": 1,
+        "ox": 0,
+        "oy": 0,
+        "oz": 0,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Meteor 2"
-      },
-      "Sprite": {
-        "texturePath": "meteorBrown_big1.png"
-      },
-      "id": 6
+        "sz": 1
+      }
     }
   ],
   "components": [
@@ -165,7 +167,7 @@
         "gx": 0,
         "gy": 0,
         "gz": 0,
-        "broadphase": 0
+        "broadphase": 1
       }
     },
     {

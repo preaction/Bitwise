@@ -38,12 +38,15 @@ export default class Physics extends System {
 
   universe:any; //Ammo.btCollisionWorld;
   bodies:Array<any> = [];
+  ghosts:Array<any> = [];
+  collisionObjects:Array<any> = [];
 
   colliderQueries:ColliderQueryMap = {};
   rigidbodyQuery!:bitecs.Query;
   enterQueries:ColliderQueryMap = {};
   exitQueries:ColliderQueryMap = {};
 
+  watchEntities:Array<[ boolean, number, (eid:number, hits:Set<number>) => void ]> = [];
   watchQueries:Array<[ boolean, bitecs.Query, (eid:number, hits:Set<number>) => void ]> = [];
   collisions:{ [key:number]: Set<number> } = {};
 
@@ -81,6 +84,22 @@ export default class Physics extends System {
     super.thaw(data);
     this.broadphase = data.broadphase || Physics.Broadphase.AxisSweep;
     this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
+  }
+
+  /**
+   * watchEnter adds a watcher for when an entity starts
+   * colliding with another entity.
+   */
+  watchEnter( eid:number, cb:(eida:number, collisions:Set<number>) => void ) {
+    this.watchEntities.push( [ true, eid, cb ] );
+  }
+
+  /**
+   * watchExit adds a watcher for when an entity stops colliding
+   * with another entity.
+   */
+  watchExit( eid:number, cb:(eida:number, collisions:Set<number>) => void ) {
+    this.watchEntities.push( [ false, eid, cb ] );
   }
 
   /**
@@ -133,54 +152,67 @@ export default class Physics extends System {
         //console.log( `${eid}: Collider ${colliderName} scale: ${colliderData.sx[eid] * position.sx[eid]}, ${colliderData.sy[eid] * position.sy[eid]}, ${colliderData.sz[eid] * position.sz[eid]}` );
         const scale = new Ammo.btVector3(colliderData.sx[eid] * position.sx[eid] / 2, colliderData.sy[eid] * position.sy[eid] / 2, colliderData.sz[eid] * position.sz[eid] / 2);
         const collider = new COLLIDER_SHAPES[colliderName as keyof ColliderMap](scale);
-        collider.setMargin( 0 );
+        collider.setMargin( 0.05 );
         const origin = new Ammo.btVector3( colliderData.ox[eid], colliderData.oy[eid], colliderData.oz[eid] );
         transform.setOrigin( transform.getOrigin() + origin );
 
-        // If the item has a rigidbody, it can have mass
         let body;
         const group:number = 1; // XXX: Add group/mask to collider shapes
         const mask:number = -1;
+        // If the item has a rigidbody, it can have mass
+        if ( bitecs.hasComponent( this.scene.world, this.rigidbody.store, eid ) ) {
+          // Calculate mass and initial inertia for dynamic bodies. Static
+          // bodies have a mass of 0. Kinematic bodies collide but are not
+          // affected by dynamic bodies.
+          const mass = rigidBody.mass[eid];
 
-        // Calculate mass and initial inertia for dynamic bodies. Static
-        // bodies have a mass of 0. Kinematic bodies collide but are not
-        // affected by dynamic bodies.
-        const mass = rigidBody.mass[eid];
+          let inertia = new Ammo.btVector3( 0, 0, 0 );
+          if ( mass > 0 ) {
+            collider.calculateLocalInertia( mass, inertia );
+          }
 
-        let inertia = new Ammo.btVector3( 0, 0, 0 );
-        if ( mass > 0 ) {
-          collider.calculateLocalInertia( mass, inertia );
+          //console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
+          //console.log( `${eid}: RigidBody Lin Factor: ${rigidBody.lx[eid]}, ${rigidBody.ly[eid]}, ${rigidBody.lz[eid]}; Ang Factor: ${rigidBody.ax[eid]}, ${rigidBody.ay[eid]}, ${rigidBody.az[eid]}` );
+
+          let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
+          body = new Ammo.btRigidBody( rbodyInfo );
+          body.setLinearFactor( new Ammo.btVector3( rigidBody.lx[eid], rigidBody.ly[eid], rigidBody.lz[eid] ) );
+          body.setAngularFactor( new Ammo.btVector3( rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid] ) );
+
+          const velocity = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
+          body.applyImpulse( velocity );
+
+          const torque = new Ammo.btVector3( rigidBody.rx[eid], rigidBody.ry[eid], rigidBody.rz[eid] );
+          body.applyTorqueImpulse( torque );
+
+          this.universe.addRigidBody( body, group, mask );
+          this.bodies[eid] = body;
         }
-
-        //console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
-        //console.log( `${eid}: RigidBody Lin Factor: ${rigidBody.lx[eid]}, ${rigidBody.ly[eid]}, ${rigidBody.lz[eid]}; Ang Factor: ${rigidBody.ax[eid]}, ${rigidBody.ay[eid]}, ${rigidBody.az[eid]}` );
-
-        let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
-        body = new Ammo.btRigidBody( rbodyInfo );
-        body.setLinearFactor( new Ammo.btVector3( rigidBody.lx[eid], rigidBody.ly[eid], rigidBody.lz[eid] ) );
-        body.setAngularFactor( new Ammo.btVector3( rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid] ) );
-
-        const velocity = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
-        body.applyImpulse( velocity );
-
-        const torque = new Ammo.btVector3( rigidBody.rx[eid], rigidBody.ry[eid], rigidBody.rz[eid] );
-        body.applyTorqueImpulse( torque );
+        else {
+          // Create a ghost body for this collider
+          body = new Ammo.btGhostObject();
+          body.setCollisionShape(collider);
+          body.setWorldTransform(transform);
+          this.universe.addCollisionObject( body, group, mask );
+          this.ghosts[eid] = body;
+        }
 
         if ( colliderData.trigger[eid] ) {
           body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
         }
 
-        this.universe.addRigidBody( body, group, mask );
-
-        body.eid = eid;
-        this.bodies[eid] = body;
+        const collisionObject = Ammo.castObject( body, Ammo.btCollisionObject );
+        collisionObject.eid = eid;
+        this.collisionObjects[eid] = collisionObject;
       }
     }
 
     for ( const [colliderName, query] of Object.entries(this.exitQueries) ) {
       const remove = query(this.scene.world);
       for ( const eid of remove ) {
-        this.universe.removeCollisionObject( this.bodies[eid] );
+        this.universe.removeRigidBody( this.collisionObjects[eid] );
+        delete this.collisionObjects[eid];
+        delete this.ghosts[eid];
         delete this.bodies[eid];
       }
     }
@@ -195,56 +227,72 @@ export default class Physics extends System {
     MANIFOLDS:
     for ( let i = 0; i < numManifolds; i ++ ) {
       let contactManifold = dispatcher.getManifoldByIndexInternal( i );
-      let numContacts = contactManifold.getNumContacts();
-      for ( let j = 0; j < numContacts; j++ ) {
-        let contactPoint = contactManifold.getContactPoint( j );
-        let distance = contactPoint.getDistance();
-        if ( distance > 0.0 ) {
-          continue;
-        }
+      let rb0 = Ammo.castObject( contactManifold.getBody0(), Ammo.btCollisionObject );
+      let rb1 = Ammo.castObject( contactManifold.getBody1(), Ammo.btCollisionObject );
+      const [ from, to ] = rb0.eid < rb1.eid ? [ rb0.eid, rb1.eid ] : [ rb1.eid, rb0.eid ];
 
-        let rb0 = Ammo.castObject( contactManifold.getBody0(), Ammo.btRigidBody );
-        let rb1 = Ammo.castObject( contactManifold.getBody1(), Ammo.btRigidBody );
-        const [ from, to ] = rb0.eid < rb1.eid ? [ rb0.eid, rb1.eid ] : [ rb1.eid, rb0.eid ];
-        if ( !newCollisions[from] ) {
-          newCollisions[from] = new Set<number>();
-        }
-        if ( !newCollisions[to] ) {
-          newCollisions[to] = new Set<number>();
-        }
-        newCollisions[from].add(to);
-        newCollisions[to].add(from);
-
-        // Figure out if this is an entering collision
-        if ( this.collisions[from] && this.collisions[from].has(to) ) {
-          // Remove entering collisions from the old cache so anything
-          // that remains is a leaving collision event
-          this.collisions[from].delete(to);
-          if ( this.collisions[from].size == 0 ) {
-            delete this.collisions[from];
-          }
-          this.collisions[to].delete(from);
-          if ( this.collisions[to].size == 0 ) {
-            delete this.collisions[to];
-          }
-        }
-        else {
-          if ( !enters[from] ) {
-            enters[from] = new Set();
-          }
-          if ( !enters[to] ) {
-            enters[to] = new Set();
-          }
-          enters[from].add(to);
-          enters[to].add(from);
-        }
-
-        continue MANIFOLDS;
+      if ( !newCollisions[from] ) {
+        newCollisions[from] = new Set<number>();
       }
+      if ( !newCollisions[to] ) {
+        newCollisions[to] = new Set<number>();
+      }
+
+      if ( newCollisions[from].has(to) ) {
+        continue;
+      }
+
+      newCollisions[from].add(to);
+      newCollisions[to].add(from);
+
+      // Figure out if this is an entering collision
+      if ( this.collisions[from] && this.collisions[from].has(to) ) {
+        // Remove new collisions from the old cache so anything
+        // that remains is a leaving collision event
+        this.collisions[from].delete(to);
+        if ( this.collisions[from].size == 0 ) {
+          delete this.collisions[from];
+        }
+        this.collisions[to].delete(from);
+        if ( this.collisions[to].size == 0 ) {
+          delete this.collisions[to];
+        }
+      }
+      else {
+        if ( !enters[from] ) {
+          enters[from] = new Set();
+        }
+        if ( !enters[to] ) {
+          enters[to] = new Set();
+        }
+        enters[from].add(to);
+        enters[to].add(from);
+      }
+
+      // XXX: Some tutorials have told me to check the distance of the
+      // contact points, but not every manifold has a contact point. My
+      // best guess is that one object completely inside another object
+      // has a contact manifold, but no actual points of contact.
+      // let numContacts = contactManifold.getNumContacts();
+      // console.log( `Found collision ${from}/${to} (contacts ${numContacts})` );
+      // for ( let j = 0; j < numContacts; j++ ) {
+      //   let contactPoint = contactManifold.getContactPoint( j );
+      //   let distance = contactPoint.getDistance();
+      //   if ( distance > 0.0 ) {
+      //     continue;
+      //   }
+      //   continue MANIFOLDS;
+      // }
     }
 
     // Anything left in this.collisions is not in newCollisions
     // Dispatch any collisions that we're watching
+    for ( const [ collide, eid, cb ] of this.watchEntities ) {
+      const data = collide ? enters : this.collisions;
+      if ( eid in data ) {
+        cb( eid, data[eid] )
+      }
+    }
     for ( const [ collide, query, cb ] of this.watchQueries ) {
       const data = collide ? enters : this.collisions;
       const eids = query(this.scene.world)
@@ -258,9 +306,19 @@ export default class Physics extends System {
     for ( const [colliderName, query] of Object.entries(this.colliderQueries) ) {
       const update = query(this.scene.world);
       for ( const eid of update ) {
-        const body = this.bodies[eid];
+        // Ghost bodies are moved outside of physics
+        if ( eid in this.ghosts ) {
+          const body = this.ghosts[eid];
+          const xform = body.getWorldTransform();
+          const pos = new Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] );
+          const rot = new Ammo.btVector3( position.rx[eid], position.ry[eid], position.rz[eid] );
+          xform.setOrigin(pos);
+          xform.setRotation(rot);
+          body.setWorldTransform(xform);
+        }
         // Rigidbodies are moved by physics
-        if ( body instanceof Ammo.btRigidBody ) {
+        else {
+          const body = Ammo.castObject( this.bodies[eid], Ammo.btRigidBody );
           const xform = new Ammo.btTransform();
           const motionState = body.getMotionState();
           if ( motionState ) {
@@ -276,15 +334,6 @@ export default class Physics extends System {
             position.rz[eid] = rot.z();
             position.rw[eid] = rot.w();
           }
-        }
-        // Ghost bodies are moved outside of physics
-        else if ( body instanceof Ammo.btGhostObject ) {
-          const xform = body.getWorldTransform();
-          const pos = new Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] );
-          const rot = new Ammo.btVector3( position.rx[eid], position.ry[eid], position.rz[eid] );
-          xform.setOrigin(pos);
-          xform.setRotation(rot);
-          body.setWorldTransform(xform);
         }
       }
     }

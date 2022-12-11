@@ -2,28 +2,27 @@
 import * as bitecs from 'bitecs';
 import { System } from '@fourstar/bitwise';
 import { Physics } from '@fourstar/bitwise/system';
-import Enemy from '../component/Enemy.js';
 
 export default class Boundary extends System {
-  queries:bitecs.Query[] = [];
-  physics?:Physics;
+  physics!:Physics;
   seen:Set<number> = new Set();
+  boundaryPath:string = "";
+
 
   static editorComponent = 'editor/system/Boundary.vue';
 
-  start() {
-    const scene = this.scene;
-    const enemy = scene.getComponent(Enemy);
-    this.queries.push( scene.game.ecs.defineQuery([enemy.store]) );
-
-    this.physics = scene.getSystem( Physics );
-    for ( const query of this.queries ) {
-      this.physics.watchEnterByQuery( query, this.onCollideEnter.bind(this) );
-      this.physics.watchExitByQuery( query, this.onCollideExit.bind(this) );
-    }
+  async init() {
+    this.physics = this.scene.getSystem( Physics );
   }
 
-  boundaryPath:string = "";
+  start() {
+    const boundary = this.scene.getEntityByPath( this.boundaryPath );
+    if ( boundary ) {
+      console.log( `Boundary ID: ${boundary.id}` );
+      this.physics.watchEnter( boundary.id, this.onCollideEnter.bind(this) );
+      this.physics.watchExit( boundary.id, this.onCollideExit.bind(this) );
+    }
+  }
 
   thaw( data:any ) {
     this.boundaryPath = data.boundaryPath;
@@ -41,18 +40,12 @@ export default class Boundary extends System {
 
   onCollideExit( eid:number, hits:Set<number> ) {
     console.log( `${eid} exited ${Array.from(hits).join(', ')}` );
+    for ( const leftEid of hits ) {
+      this.scene.removeEntity( leftEid );
+    }
   }
 
   update( timeMilli:number ) {
-    for ( const q of this.queries ) {
-      const entities = q( this.scene.world );
-      for ( const eid of entities ) {
-        if ( !this.seen.has( eid ) ) {
-          //console.log( `${eid} is out of bounds` );
-        }
-      }
-    }
-    this.seen = new Set();
   }
 
 }

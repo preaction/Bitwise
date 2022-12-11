@@ -18,7 +18,7 @@
     "texturePath": "laserBlue03.png"
   },
   "BoxCollider": {
-    "trigger": 1,
+    "trigger": 0,
     "ox": 0,
     "oy": 0,
     "oz": 0,
@@ -42,7 +42,8 @@
     "az": 1
   },
   "Weapon": {
-    "damage": 0
+    "damage": 0,
+    "cooldown": 0
   },
   "component": "PrefabEdit"
 }
