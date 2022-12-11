@@ -266,6 +266,9 @@ export default class Scene extends three.EventDispatcher {
   }
 
   addComponent( name:string ) {
+    if ( this.components[name] ) {
+      return;
+    }
     let cons = this.game.components[ name ];
     if ( !cons ) {
       console.log( `Could not find component ${name}` );

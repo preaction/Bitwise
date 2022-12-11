@@ -5,6 +5,7 @@ import { System, Input } from '@fourstar/bitwise';
 import { Physics } from '@fourstar/bitwise/system';
 import { Position } from '@fourstar/bitwise/component';
 import PlayerComponent from '../component/Player.js';
+import WeaponComponent from '../component/Weapon.js';
 
 export default class Movement extends System {
   position!:Position;
@@ -12,6 +13,7 @@ export default class Movement extends System {
   physics!:Physics;
   query!:bitecs.Query;
   playerComponent!:PlayerComponent;
+  weaponComponent!:WeaponComponent;
 
   async init() {
     const scene = this.scene;
@@ -24,11 +26,18 @@ export default class Movement extends System {
 
     const playerEids = this.query(this.scene.world);
     for ( const eid of playerEids ) {
-      console.log( `Player ID: ${eid}` );
       const weaponId = this.playerComponent.store.weapon[ eid ];
       const weaponPath = PlayerComponent.paths[ weaponId ];
-      this.weaponPrefabs[weaponId] = await this.scene.game.load.json( weaponPath );
+      const prefab = this.weaponPrefabs[weaponId] = await this.scene.game.load.json( weaponPath );
+      // Pre-register components in our prefab
+      for ( const key in prefab ) {
+        if ( typeof prefab[key] === 'object' ) {
+          scene.addComponent( key );
+        }
+      }
     }
+
+    this.weaponComponent = scene.getComponent(WeaponComponent);
   }
 
   start() {
@@ -90,7 +99,7 @@ export default class Movement extends System {
         this.position.store.x[ weapon.id ] += this.position.store.x[eid];
         this.position.store.y[ weapon.id ] += this.position.store.y[eid];
         this.position.store.z[ weapon.id ] += this.position.store.z[eid];
-        this.cooldown[ weaponId ] = 250; // milliseconds
+        this.cooldown[ weaponId ] = this.weaponComponent.store.cooldown[weapon.id];
       }
     }
   }
