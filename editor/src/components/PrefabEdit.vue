@@ -107,7 +107,9 @@ export default defineComponent({
     update() {
       const prefabData = this.entity.freeze();
       console.log( 'Frozen', prefabData );
-      this.$emit('update:name', this.name);
+      if ( this.name !== prefabData.name ) {
+        this.$emit('update:name', prefabData.name);
+      }
       this.$emit('update:modelValue', {
         ...prefabData,
         name: this.name,
