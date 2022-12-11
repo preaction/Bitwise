@@ -62,7 +62,7 @@ export default defineComponent({
       scene.addComponent( 'BoxCollider' );
       scene.addSystem( 'Physics' );
       // XXX: Render camera should come from game settings
-      scene.addSystem( 'Render' );
+      scene.addSystem( 'EditorRender' );
 
       return scene;
     },
@@ -83,14 +83,12 @@ export default defineComponent({
       });
 
       for ( const name in this.components ) {
-        console.log( `Registering editor game component ${name}` );
         game.registerComponent( name, this.components[name] );
       }
       for ( const name in this.systems ) {
         if ( name.match(/^Editor/) ) {
           continue;
         }
-        console.log( `Registering editor game system ${name}` );
         let system = this.systems[ "Editor" + name ] || this.systems[name];
         game.registerSystem( name, system );
       }
@@ -106,7 +104,6 @@ export default defineComponent({
 
     update() {
       const prefabData = this.entity.freeze();
-      console.log( 'Frozen', prefabData );
       if ( this.name !== prefabData.name ) {
         this.$emit('update:name', prefabData.name);
       }

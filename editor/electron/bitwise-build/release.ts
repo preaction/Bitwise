@@ -31,7 +31,6 @@ async function releaseZip( root:string, gameFile:string, dest:string ):Promise<a
 
   // Add code file
   archive.file( gameFile, { name: path.relative( root, gameFile ) } );
-  console.log( `Adding game file ${gameFile}` );
 
   // Add all non-code files
   const allFiles = await getFiles(root);
@@ -100,8 +99,6 @@ async function releaseZip( root:string, gameFile:string, dest:string ):Promise<a
   archive.append( index, { name: 'index.html' } );
   return new Promise( (resolve, reject) => {
     output.on('close', function() {
-      console.log(archive.pointer() + ' total bytes');
-      console.log('archiver has been finalized and the output file descriptor has closed.');
       resolve(true);
     });
 
@@ -109,7 +106,6 @@ async function releaseZip( root:string, gameFile:string, dest:string ):Promise<a
     // It is not part of this library but rather from the NodeJS Stream API.
     // @see: https://nodejs.org/api/stream.html#stream_event_end
     output.on('end', function() {
-      console.log('Data has been drained');
       output.close();
     });
 

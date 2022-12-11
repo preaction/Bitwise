@@ -257,7 +257,6 @@ export default class Scene extends three.EventDispatcher {
   addSystem( name:string, data:any={} ) {
     let cons = this.game.systems[ name ];
     if ( !cons ) {
-      console.log( `Could not find system ${name}` );
       cons = NullSystem;
     }
     const system = new cons( name, this );
@@ -271,7 +270,6 @@ export default class Scene extends three.EventDispatcher {
     }
     let cons = this.game.components[ name ];
     if ( !cons ) {
-      console.log( `Could not find component ${name}` );
       cons = NullComponent;
     }
     this.components[name] = new cons( this, this.world );

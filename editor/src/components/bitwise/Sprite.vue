@@ -8,9 +8,14 @@ export default defineComponent({
     InputGameObject,
   },
   data() {
-    return {
+    const data = {
       ...this.modelValue,
+      entityPath: '',
     };
+    if ( !data.texturePath.match(/^[a-z]+:/) ) {
+      data.entityPath = data.texturePath;
+    }
+    return data;
   },
   watch: {
     texturePath() {
@@ -20,9 +25,8 @@ export default defineComponent({
   methods: {
     update() {
       const newModel = {
-        texturePath: this.texturePath,
+        texturePath: this.entityPath,
       };
-      console.log( `Updated texture: ${this.texturePath}` );
       this.$emit( 'update:modelValue', newModel );
       this.$emit( 'update', newModel );
     },
@@ -33,7 +37,7 @@ export default defineComponent({
   <div>
     <div class="d-flex justify-content-between texture-field align-items-center">
       <label class="me-1">Texture</label>
-      <InputGameObject v-model="texturePath" type="file" drop-effect="link" />
+      <InputGameObject v-model="entityPath" type="file" drop-effect="link" />
     </div>
   </div>
 </template>

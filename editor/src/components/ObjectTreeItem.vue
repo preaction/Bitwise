@@ -74,7 +74,6 @@ export default defineComponent({
       }
     },
     dragstart( event ) {
-      console.log( `Dragging ${this.item.path}: bitwise/${this.dragtype} + bitwise/${this.item.dragtype}` );
       event.dataTransfer.setData('bitwise/' + this.dragtype, this.item.path);
       if ( this.item.dragtype ) {
         event.dataTransfer.setData('bitwise/' + this.item.dragtype, this.item.path);

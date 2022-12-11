@@ -239,7 +239,6 @@ export default defineComponent({
     },
 
     ondelete( event:KeyboardEvent, update:boolean=true ) {
-      console.log( event.target );
       if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
         return;
       }

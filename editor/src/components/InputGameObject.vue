@@ -13,7 +13,6 @@ export default defineComponent({
     },
     async drop(event:DragEvent) {
       const data = event.dataTransfer.getData(`bitwise/${this.type}`);
-      console.log( `Drop data "bitwise/${this.type}": `, data );
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = this.dropEffect || "link";

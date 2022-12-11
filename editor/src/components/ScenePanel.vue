@@ -220,7 +220,6 @@ export default defineComponent({
 
         const dragEntity = this.scene.getEntityByPath(data);
         const dropEntity = this.scene.getEntityByPath(onItem.path);
-        console.log( `Drop ${data} on ${onItem.path} (${dropEntity.id}) ${ isChild ? 'as child' : 'as sibling' }` );
 
         const dropPid = isChild ? dropEntity.id : this.scene.components.Position.store.pid[dropEntity.id];
         this.scene.components.Position.store.pid[dragEntity.id] = dropPid;

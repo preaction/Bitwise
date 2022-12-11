@@ -262,7 +262,6 @@ export const useAppStore = defineStore('app', {
 
     openTab( tab:Tab ) {
       // XXX: If tab lacks icon, add icon based on Component
-      console.log( 'open tab', tab );
       this.openTabs.push( tab );
       this.showTab( this.openTabs.length - 1 );
     },
@@ -313,7 +312,6 @@ export const useAppStore = defineStore('app', {
     },
 
     changeFile(event:any, {eventType, filename}:{eventType:string, filename:string}) {
-      console.log( 'file changed', eventType, filename );
       this.readProject();
       if ( !filename.match(/^\./) && filename.match( /\.[tj]s$/ ) ) {
         this.isBuilding = true;
@@ -411,11 +409,9 @@ export const useAppStore = defineStore('app', {
           console.log( `Could not create new game: ${e}` );
         }
 
-        console.log( `Components: ${Object.keys(this.components).join(", ")}; Systems: ${Object.keys(this.systems).join(", ")}` );
         for ( const name in this.components ) {
           const component = this.components[name];
           if ( component.editorComponent ) {
-            console.log( `Loading editor component ${name}: ${component.editorComponent}` );
             const path = this.currentProject + '/' + component.editorComponent;
             this.componentForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
           }
@@ -424,7 +420,6 @@ export const useAppStore = defineStore('app', {
         for ( const name in this.systems ) {
           const system = this.systems[name];
           if ( system.editorComponent ) {
-            console.log( `Loading editor component ${name}: ${system.editorComponent}` );
             const path = this.currentProject + '/' + system.editorComponent;
             this.systemForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
           }

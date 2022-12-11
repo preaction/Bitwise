@@ -13,12 +13,10 @@ export default defineComponent({
       broadphase: 0,
       ...this.modelValue,
     };
-    console.log( 'System form init', data );
     return data;
   },
   methods: {
     update() {
-      console.log( 'System form update', this.$data );
       this.$emit( 'update:modelValue', this.$data );
       this.$emit( 'update', this.$data );
     },

@@ -22,7 +22,10 @@ export default class Sprite extends Component {
   }
   thawEntity( eid:number, data:{ [key:string]:any }={} ) {
     // Thaw can work with an ID or a path
-    const textureId = data.textureId || this.scene.game.load.texture( data.texturePath );
+    let textureId = data.textureId;
+    if ( !textureId && data.texturePath ) {
+      textureId = this.scene.game.load.texture( data.texturePath );
+    }
     super.thawEntity( eid, {textureId} );
   }
 }

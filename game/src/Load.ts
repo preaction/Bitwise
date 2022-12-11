@@ -1,6 +1,8 @@
 
 import * as three from 'three';
 
+const DEFAULT_TEXTURE = "data:image/webp;base64,UklGRkAAAABXRUJQVlA4TDMAAAAv/8A/AA/wEP5zxv9cf/6DB2TSNvNvuleZgrGI/pNN2pAH0nbrCYiIvffoe+y9x/3/HQAA";
+
 export default class Load extends three.EventDispatcher {
   base:string;
 
@@ -13,7 +15,18 @@ export default class Load extends three.EventDispatcher {
 
     // Set up loaders
     three.Cache.enabled = true;
-    three.DefaultLoadingManager.setURLModifier( url => this.base + url );
+    three.DefaultLoadingManager.setURLModifier(
+      url => {
+        // Let full URLs pass through unharmed
+        if ( url.match( /^[a-zA-Z]+:/ ) ) {
+          return url;
+        }
+        return this.base + url
+      },
+    );
+
+    // Load default texture as texture ID 0
+    this.texture( DEFAULT_TEXTURE );
   }
 
   async json( path:string ):Promise<any> {

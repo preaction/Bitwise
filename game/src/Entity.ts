@@ -94,7 +94,6 @@ export default class Entity {
         data.entities.push(eData);
       } );
     }
-    console.log( 'Frozen entity:', data );
 
     return data;
   }

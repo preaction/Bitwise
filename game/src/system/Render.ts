@@ -232,7 +232,6 @@ export default class Render extends System {
     // XXX: If entity has a parent, add it to that instead
     const pid = this.positionComponent.store.pid[eid];
     if ( pid < PositionComponent.MAX_PARENT_ID ){
-      console.log( `Adding camera to parent ${pid}`, this.objects[pid] );
       this.objects[pid].add( camera );
     }
     else {
@@ -259,7 +258,6 @@ export default class Render extends System {
     const group = this.objects[eid] || this.createGroup( eid );
     const pid = this.positionComponent.store.pid[eid];
     if ( pid < PositionComponent.MAX_PARENT_ID ){
-      console.log( `Adding group to parent ${pid}`, this.objects[pid] );
       this.objects[pid].add( group );
     }
     else {
@@ -270,7 +268,11 @@ export default class Render extends System {
   createSprite( eid:number ):three.Sprite {
     // Find the sprite's texture
     const tid = this.spriteComponent.store.textureId[eid];
-    const texture = this.textures[tid];
+    let texture = this.textures[tid];
+    if ( !texture ) {
+      this.loadTexture( tid, eid ).then( () => this.render() );
+      texture = this.textures[tid];
+    }
     const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
     const sprite = this.objects[eid] = new three.Sprite( material );
     sprite.userData.eid = eid;
@@ -300,7 +302,6 @@ export default class Render extends System {
     const sprite = this.objects[eid] || this.createSprite( eid );
     const pid = this.positionComponent.store.pid[eid];
     if ( pid < PositionComponent.MAX_PARENT_ID ){
-      console.log( `Adding sprite to parent ${pid}`, this.objects[pid] );
       this.objects[pid].add( sprite );
     }
     else {

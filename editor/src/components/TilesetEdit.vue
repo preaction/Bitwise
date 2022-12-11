@@ -35,7 +35,6 @@ export default defineComponent({
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "link";
-        console.log( data );
         this.imageSrc = data;
         this.update();
       }
