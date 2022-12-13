@@ -325,7 +325,13 @@ export default class Render extends RenderSystem {
     // Point a camera at 0, 0
     // Frustum size appears to work the same as zoom for an
     // orthographic camera, which makes sense
-    const frustumSize = this.frustumSize;
+    const bounds = new three.Box3();
+    this.scene._scene.traverseVisible( (obj) => {
+      bounds.expandByObject(obj);
+    });
+
+    const boxSize = bounds.getSize(new three.Vector3());
+    const frustumSize = this.frustumSize = Math.max( boxSize.x, boxSize.y );
     const far = 4000;
     const near = 0;
     const camera = new three.OrthographicCamera(
@@ -335,11 +341,13 @@ export default class Render extends RenderSystem {
       frustumSize /-2,
       near, far,
     );
-    camera.zoom = this.zoom;
     // Position the camera so that Sprites can have positive and
     // negative Z values
     camera.position.z = far/2;
+
+    camera.zoom = this.zoom;
     camera.updateProjectionMatrix();
+
     return camera;
   }
 
