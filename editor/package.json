@@ -59,7 +59,7 @@
     "vue3-sfc-loader": "^0.8.4"
   },
   "peerDependencies": {
-    "ammo.js": "^0.0.10",
+    "ammojs-typed": "^1.0.6",
     "bitecs": "^0.3.38",
     "three": "^0.146.0"
   }

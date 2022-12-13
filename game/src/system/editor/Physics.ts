@@ -1,7 +1,6 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import * as Ammo from 'ammo.js';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
 import Component from '../../Component.js';
@@ -14,7 +13,7 @@ export default class Physics extends System {
   rigidbody:RigidBody;
   position:Position;
   collider:{ box: Component };
-  gravity:any;
+  gravity:three.Vector3 = new three.Vector3( 0, 0, 0 );
   broadphase:number = 0;
   //broadphase:number = PhysicsSystem.Broadphase.AxisSweep;
 
@@ -41,16 +40,16 @@ export default class Physics extends System {
 
   freeze():any {
     const data = super.freeze();
-    data.gx = this.gravity?.x() || 0;
-    data.gy = this.gravity?.y() || 0;
-    data.gz = this.gravity?.z() || 0;
+    data.gx = this.gravity?.x || 0;
+    data.gy = this.gravity?.y || 0;
+    data.gz = this.gravity?.z || 0;
     data.broadphase = this.broadphase //|| PhysicsSystem.Broadphase.AxisSweep;
     return data;
   }
 
   thaw( data:any ) {
     this.broadphase = data.broadphase //|| PhysicsSystem.Broadphase.AxisSweep;
-    this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
+    this.gravity = new three.Vector3(data.gx || 0, data.gy || 0, data.gz || 0)
     super.thaw(data);
   }
 

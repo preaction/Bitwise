@@ -1,6 +1,6 @@
 
+import * as three from 'three';
 import * as bitecs from 'bitecs';
-import * as Ammo from 'ammo.js';
 import { System, Input } from '@fourstar/bitwise';
 import { Physics } from '@fourstar/bitwise/system';
 import { Position } from '@fourstar/bitwise/component';
@@ -74,21 +74,15 @@ export default class Movement extends System {
     const z = 0;
     const speed = 0.5;
 
-    let vec = new Ammo.btVector3(x, y, z);
+    let vec = new three.Vector3(x, y, z);
     if ( vec.length() > 0 ) {
       vec.normalize();
-      vec = vec.op_mul( timeMilli * speed );
+      vec = vec.multiplyScalar( timeMilli * speed );
     }
 
     const playerEids = this.query(this.scene.world);
     for ( const eid of playerEids ) {
-      const rb = this.physics.bodies[eid];
-      if ( !rb ) {
-        continue;
-      }
-      rb.activate();
-      rb.setLinearVelocity(vec);
-
+      this.physics.setVelocity( eid, vec );
       const weaponId = this.playerComponent.store.weapon[ eid ];
       if ( this.cooldown[ weaponId ] > 0 ) {
         this.cooldown[weaponId] -= timeMilli;
@@ -105,5 +99,4 @@ export default class Movement extends System {
   }
 
   cooldown:{ [key:number]: number } = {};
-
 }

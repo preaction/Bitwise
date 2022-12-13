@@ -1,6 +1,7 @@
 
+import * as three from 'three';
 import * as bitecs from 'bitecs';
-import Ammo from 'ammo.js';
+import Ammo from 'ammojs-typed';
 import System from '../System.js';
 import Position from '../component/Position.js';
 import RigidBody from '../component/RigidBody.js';
@@ -34,8 +35,9 @@ export default class Physics extends System {
   position!:Position;
   collider:ColliderMap = {};
   broadphase:number = Physics.Broadphase.AxisSweep;
-  gravity:any;
+  gravity:three.Vector3 = new three.Vector3( 0, 0, 0 );
 
+  Ammo!:typeof Ammo;
   universe:any; //Ammo.btCollisionWorld;
   bodies:Array<any> = [];
   ghosts:Array<any> = [];
@@ -49,6 +51,10 @@ export default class Physics extends System {
   watchEntities:Array<[ boolean, number, (eid:number, hits:Set<number>) => void ]> = [];
   watchQueries:Array<[ boolean, bitecs.Query, (eid:number, hits:Set<number>) => void ]> = [];
   collisions:{ [key:number]: Set<number> } = {};
+
+  async init() {
+    await this.initAmmo();
+  }
 
   start() {
     const scene = this.scene;
@@ -68,14 +74,20 @@ export default class Physics extends System {
     }
     this.rigidbodyQuery = scene.game.ecs.defineQuery([ this.position.store, this.rigidbody.store ]);
 
-    this.initAmmo();
+    const collisionConfiguration = new this.Ammo.btDefaultCollisionConfiguration();
+    const dispatcher = new this.Ammo.btCollisionDispatcher(collisionConfiguration);
+    const broadphase = new this.Ammo[ Physics.broadphaseClass[ this.broadphase] ]();
+    const solver = new this.Ammo.btSequentialImpulseConstraintSolver();
+    this.universe = new this.Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    const gravity = new this.Ammo.btVector3( this.gravity.x, this.gravity.y, this.gravity.z );
+    this.universe.setGravity(gravity);
   }
 
   freeze() {
     const data = super.freeze();
-    data.gx = this.gravity?.x() || 0;
-    data.gy = this.gravity?.y() || 0;
-    data.gz = this.gravity?.z() || 0;
+    data.gx = this.gravity?.x || 0;
+    data.gy = this.gravity?.y || 0;
+    data.gz = this.gravity?.z || 0;
     data.broadphase = this.broadphase || Physics.Broadphase.AxisSweep;
     return data;
   }
@@ -83,7 +95,7 @@ export default class Physics extends System {
   thaw( data:any ) {
     super.thaw(data);
     this.broadphase = data.broadphase || Physics.Broadphase.AxisSweep;
-    this.gravity = new Ammo.btVector3(data.gx || 0, data.gy || 0, data.gz || 0)
+    this.gravity = new three.Vector3(data.gx || 0, data.gy || 0, data.gz || 0)
   }
 
   /**
@@ -118,13 +130,21 @@ export default class Physics extends System {
     this.watchQueries.push( [ false, query, cb ] );
   }
 
-  initAmmo() {
-    const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-    const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-    const broadphase = new Ammo[ Physics.broadphaseClass[ this.broadphase] ]();
-    const solver = new Ammo.btSequentialImpulseConstraintSolver();
-    this.universe = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-    this.universe.setGravity(this.gravity);
+  async initAmmo() {
+    return Ammo.bind(window)(Ammo).then( () => {
+      this.Ammo = Ammo;
+      COLLIDER_SHAPES.box = Ammo.btBoxShape;
+    });
+  }
+
+  setVelocity( eid:number, vec:three.Vector3 ) {
+    const body = this.bodies[eid];
+    if ( !body ) {
+      return;
+    }
+    const avec = new this.Ammo.btVector3( vec.x, vec.y, vec.z );
+    body.activate();
+    body.setLinearVelocity( avec );
   }
 
   update( timeMilli:number ) {
@@ -140,20 +160,20 @@ export default class Physics extends System {
           throw `Unknown collider ${colliderName}`;
         }
 
-        let transform = new Ammo.btTransform();
+        let transform = new this.Ammo.btTransform();
         transform.setIdentity();
-        transform.setOrigin( new Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] ) );
+        transform.setOrigin( new this.Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] ) );
         //console.log( `${eid}: Initial position: ${position.x[eid]}, ${position.y[eid]}, ${position.z[eid]}` );
 
-        //transform.setRotation( new Ammo.btQuaternion( position.rx[eid], position.ry[eid], position.rz[eid], position.rw[eid] ) );
-        let motionState = new Ammo.btDefaultMotionState( transform );
+        //transform.setRotation( new this.Ammo.btQuaternion( position.rx[eid], position.ry[eid], position.rz[eid], position.rw[eid] ) );
+        let motionState = new this.Ammo.btDefaultMotionState( transform );
 
         // Scale should be adjusted by object scale
         //console.log( `${eid}: Collider ${colliderName} scale: ${colliderData.sx[eid] * position.sx[eid]}, ${colliderData.sy[eid] * position.sy[eid]}, ${colliderData.sz[eid] * position.sz[eid]}` );
-        const scale = new Ammo.btVector3(colliderData.sx[eid] * position.sx[eid] / 2, colliderData.sy[eid] * position.sy[eid] / 2, colliderData.sz[eid] * position.sz[eid] / 2);
+        const scale = new this.Ammo.btVector3(colliderData.sx[eid] * position.sx[eid] / 2, colliderData.sy[eid] * position.sy[eid] / 2, colliderData.sz[eid] * position.sz[eid] / 2);
         const collider = new COLLIDER_SHAPES[colliderName as keyof ColliderMap](scale);
         collider.setMargin( 0.05 );
-        const origin = new Ammo.btVector3( colliderData.ox[eid], colliderData.oy[eid], colliderData.oz[eid] );
+        const origin = new this.Ammo.btVector3( colliderData.ox[eid], colliderData.oy[eid], colliderData.oz[eid] );
         transform.setOrigin( transform.getOrigin() + origin );
 
         let body;
@@ -166,7 +186,7 @@ export default class Physics extends System {
           // affected by dynamic bodies.
           const mass = rigidBody.mass[eid];
 
-          let inertia = new Ammo.btVector3( 0, 0, 0 );
+          let inertia = new this.Ammo.btVector3( 0, 0, 0 );
           if ( mass > 0 ) {
             collider.calculateLocalInertia( mass, inertia );
           }
@@ -174,15 +194,15 @@ export default class Physics extends System {
           //console.log( `${eid}: RigidBody Mass: ${mass}, Velocity: ${rigidBody.vx[eid]}, ${rigidBody.vy[eid]}, ${rigidBody.vz[eid]}` );
           //console.log( `${eid}: RigidBody Lin Factor: ${rigidBody.lx[eid]}, ${rigidBody.ly[eid]}, ${rigidBody.lz[eid]}; Ang Factor: ${rigidBody.ax[eid]}, ${rigidBody.ay[eid]}, ${rigidBody.az[eid]}` );
 
-          let rbodyInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
-          body = new Ammo.btRigidBody( rbodyInfo );
-          body.setLinearFactor( new Ammo.btVector3( rigidBody.lx[eid], rigidBody.ly[eid], rigidBody.lz[eid] ) );
-          body.setAngularFactor( new Ammo.btVector3( rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid] ) );
+          let rbodyInfo = new this.Ammo.btRigidBodyConstructionInfo( mass, motionState, collider, inertia );
+          body = new this.Ammo.btRigidBody( rbodyInfo );
+          body.setLinearFactor( new this.Ammo.btVector3( rigidBody.lx[eid], rigidBody.ly[eid], rigidBody.lz[eid] ) );
+          body.setAngularFactor( new this.Ammo.btVector3( rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid] ) );
 
-          const velocity = new Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
+          const velocity = new this.Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
           body.applyImpulse( velocity );
 
-          const torque = new Ammo.btVector3( rigidBody.rx[eid], rigidBody.ry[eid], rigidBody.rz[eid] );
+          const torque = new this.Ammo.btVector3( rigidBody.rx[eid], rigidBody.ry[eid], rigidBody.rz[eid] );
           body.applyTorqueImpulse( torque );
 
           this.universe.addRigidBody( body, group, mask );
@@ -190,7 +210,7 @@ export default class Physics extends System {
         }
         else {
           // Create a ghost body for this collider
-          body = new Ammo.btGhostObject();
+          body = new this.Ammo.btGhostObject();
           body.setCollisionShape(collider);
           body.setWorldTransform(transform);
           this.universe.addCollisionObject( body, group, mask );
@@ -201,7 +221,7 @@ export default class Physics extends System {
           body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
         }
 
-        const collisionObject = Ammo.castObject( body, Ammo.btCollisionObject );
+        const collisionObject = this.Ammo.castObject( body, this.Ammo.btCollisionObject );
         collisionObject.eid = eid;
         this.collisionObjects[eid] = collisionObject;
       }
@@ -227,8 +247,8 @@ export default class Physics extends System {
     MANIFOLDS:
     for ( let i = 0; i < numManifolds; i ++ ) {
       let contactManifold = dispatcher.getManifoldByIndexInternal( i );
-      let rb0 = Ammo.castObject( contactManifold.getBody0(), Ammo.btCollisionObject );
-      let rb1 = Ammo.castObject( contactManifold.getBody1(), Ammo.btCollisionObject );
+      let rb0 = this.Ammo.castObject( contactManifold.getBody0(), this.Ammo.btCollisionObject );
+      let rb1 = this.Ammo.castObject( contactManifold.getBody1(), this.Ammo.btCollisionObject );
       const [ from, to ] = rb0.eid < rb1.eid ? [ rb0.eid, rb1.eid ] : [ rb1.eid, rb0.eid ];
 
       if ( !newCollisions[from] ) {
@@ -310,16 +330,16 @@ export default class Physics extends System {
         if ( eid in this.ghosts ) {
           const body = this.ghosts[eid];
           const xform = body.getWorldTransform();
-          const pos = new Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] );
-          const rot = new Ammo.btVector3( position.rx[eid], position.ry[eid], position.rz[eid] );
+          const pos = new this.Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] );
+          const rot = new this.Ammo.btVector3( position.rx[eid], position.ry[eid], position.rz[eid] );
           xform.setOrigin(pos);
           xform.setRotation(rot);
           body.setWorldTransform(xform);
         }
         // Rigidbodies are moved by physics
         else {
-          const body = Ammo.castObject( this.bodies[eid], Ammo.btRigidBody );
-          const xform = new Ammo.btTransform();
+          const body = this.Ammo.castObject( this.bodies[eid], this.Ammo.btRigidBody );
+          const xform = new this.Ammo.btTransform();
           const motionState = body.getMotionState();
           if ( motionState ) {
             motionState.getWorldTransform( xform );

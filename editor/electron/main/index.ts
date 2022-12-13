@@ -266,7 +266,7 @@ ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
 
 async function linkModules( root:string ) {
   // Make sure the project has all necessary dependencies linked in,
-  // because Ammo.js breaks completely if it is loaded more than once,
+  // because Ammo breaks completely if it is loaded more than once,
   // and Three complains.
   // We do "npm link --force" to make absolutely sure that the game and
   // the framework rely on the exact same file, so esbuild will not
@@ -279,7 +279,7 @@ async function linkModules( root:string ) {
     '@fourstar/bitwise',
     '@fourstar/bitwise/node_modules/three',
     '@fourstar/bitwise/node_modules/bitecs',
-    '@fourstar/bitwise/node_modules/ammo.js',
+    '@fourstar/bitwise/node_modules/ammojs-typed',
   ];
   const p = new Promise( (resolve, reject) => {
     const cp = fork(
