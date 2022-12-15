@@ -2,7 +2,6 @@
 import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
-import System from '../../System.js';
 import RenderSystem from '../Render.js';
 import Position from '../../component/Position.js';
 import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
@@ -12,18 +11,48 @@ const raycaster = new three.Raycaster();
 raycaster.layers.set(1);
 const pointer = new three.Vector3();
 
+/**
+ * The Editor Render class renders the scene like the regular Render
+ * class. Additionally, the Editor Render class shows the boundaries of
+ * all cameras in the scene.
+ *
+ * Most importantly, the Editor Render class adds input handlers to
+ * allow manipulating the scene:
+ *
+ * * Scroll wheel to zoom in and out.
+ * * Click and drag the scene to move the view.
+ * * Click to select objects. Selected objects may be dragged or moved
+ *   with the arrow keys.
+ *
+ */
 export default class Render extends RenderSystem {
-  camera?:three.OrthographicCamera;
+  /**
+   * The camera showing the scene for editing. This is not a camera that
+   * is added to the scene being edited.
+   */
+  camera!:three.OrthographicCamera;
 
+  /**
+   * The rendered frustum boxes for the cameras in the scene.
+   */
   sceneCameras:Array<three.LineSegments> = [];
-  component:OrthographicCameraComponent;
-  position:Position;
 
-  query:bitecs.Query;
+  positionComponent:Position;
+  cameraComponent:OrthographicCameraComponent;
+  cameraQuery:bitecs.Query;
   cameraEnterQuery:bitecs.Query;
   cameraExitQuery:bitecs.Query;
 
-  frustumSize = 200;
+  /**
+   * How many units the camera should display, at minimum. Height/width
+   * of the camera will be set by multiplying this value with the aspect
+   * ratio to ensure no distortion
+   */
+  frustumSize:number = 200;
+
+  /**
+   * The current zoom level. Can be modified by scroll wheel.
+   */
   zoom = 1;
 
   selected:Array<three.Object3D> = [];
@@ -33,44 +62,45 @@ export default class Render extends RenderSystem {
   moveRatio:{x: number, y: number} = {x: 0, y: 0};
   moveObject:three.Object3D|null = null;
 
+  listeners:{ [key:string]: (e:any) => void } = {};
+
   constructor( name:string, scene:Scene ) {
     super(name, scene);
 
-    this.position = scene.getComponent(Position);
-    this.component = scene.getComponent(OrthographicCameraComponent);
+    this.positionComponent = scene.getComponent(Position);
+    this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
 
-    this.query = scene.game.ecs.defineQuery([ this.position.store, this.component.store ]);
-    this.cameraEnterQuery = scene.game.ecs.enterQuery( this.query );
-    this.cameraExitQuery = scene.game.ecs.exitQuery( this.query );
-
-    scene.addEventListener( "resize", (e:three.Event) => {
-      this.onResize(e as ResizeEvent);
-    });
+    this.cameraQuery = scene.game.ecs.defineQuery([ this.positionComponent.store, this.cameraComponent.store ]);
+    this.cameraEnterQuery = scene.game.ecs.enterQuery( this.cameraQuery );
+    this.cameraExitQuery = scene.game.ecs.exitQuery( this.cameraQuery );
 
     // Allow canvas to have keyboard focus
     scene.game.canvas.tabIndex = 1;
 
-    const listeners:{ [key:string]: (e:any) => void } = {
+    this.listeners = {
       wheel: this.onWheel.bind(this),
       mousedown: this.onMouseDown.bind(this),
       mouseup: this.onMouseUp.bind(this),
       mousemove: this.onMouseMove.bind(this),
       keydown: this.onKeyDown.bind(this),
     };
-    for ( const ev in listeners ) {
-      scene.game.input.on( ev, listeners[ev] );
-    }
-    scene.game.addEventListener( "stop", () => {
-      for ( const ev in listeners ) {
-        scene.game.input.off( ev, listeners[ev] );
-      }
-    });
+  }
 
-    scene.game.input.watchPointer();
+  start() {
+    this.scene.addEventListener( "resize", (e:three.Event) => {
+      this.onResize(e as ResizeEvent);
+    });
+    for ( const ev in this.listeners ) {
+      this.scene.game.input.on( ev, this.listeners[ev] );
+    }
+    this.scene.game.input.watchPointer();
   }
 
   stop() {
     super.stop();
+    for ( const ev in this.listeners ) {
+      this.scene.game.input.off( ev, this.listeners[ev] );
+    }
   }
 
   onWheel( event:WheelEvent ) {
@@ -320,18 +350,22 @@ export default class Render extends RenderSystem {
   }
 
   createCamera() {
+    // Maintain a constant aspect ratio so shapes don't get distorted
     const { width, height } = this.scene.game;
     const ratio = width / height;
-    // Point a camera at 0, 0
-    // Frustum size appears to work the same as zoom for an
-    // orthographic camera, which makes sense
+
+    // Find the boundary of the scene so we can show everything to start
+    // XXX: If the scene has a main camera, make our boundary be that
+    // + a bit of margin.
+    // XXX: After above, show scrollbars for the scene to demonstrate there is more
+    // to see
     const bounds = new three.Box3();
     this.scene._scene.traverseVisible( (obj) => {
       bounds.expandByObject(obj);
     });
-
     const boxSize = bounds.getSize(new three.Vector3());
-    const frustumSize = this.frustumSize = Math.max( boxSize.x, boxSize.y );
+    const frustumSize = this.frustumSize = Math.max( boxSize.x, boxSize.y, 10 );
+
     const far = 4000;
     const near = 0;
     const camera = new three.OrthographicCamera(
