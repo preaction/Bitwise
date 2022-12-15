@@ -2,6 +2,7 @@
 import * as three from 'three';
 import * as shifty from 'shifty';
 import { System, Entity } from '@fourstar/bitwise';
+import type { Pointer } from '@fourstar/bitwise';
 import { Render } from '@fourstar/bitwise/system';
 import { Position, Sprite } from '@fourstar/bitwise/component';
 import Foundation from '../components/Foundation.js';
@@ -388,40 +389,44 @@ export default class Klondike extends System {
     }
   }
 
+  getEntityAtPointer( pointer:three.Vector3 ):number|null {
+    raycaster.setFromCamera( pointer, this.camera );
+    const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
+    if ( intersects.length > 0 ) {
+      const selected = intersects[0].object;
+      return selected.userData.eid || null;
+    }
+    return null;
+  }
+
   update( timeMilli:number ) {
     // Perform updates
     const p = this.scene.game.input.pointers[0];
-    if ( p?.active ) {
+    if ( p?.active || this.dragEntity >= 0 ) {
       pointer.x = p.x;
       pointer.y = p.y;
       pointer.z = 0;
       // Check for mouse down
       if ( p.buttonPress & 1 ) {
-        // Check for a card under the cursor and start dragging it
-        raycaster.setFromCamera( pointer, this.camera );
-        const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
-        if ( intersects.length > 0 ) {
-          const selected = intersects[0].object;
-          const eid = selected.userData.eid;
+        const eid = this.getEntityAtPointer( pointer );
+        if ( eid && this.cards[eid] ) {
           const card = this.cards[eid];
-          if ( card ) {
-            // Card face down in deck gets flipped face up on discard
-            if ( !card.faceUp && card.stack < 0 ) {
-              this.deckCards.shift();
-              this.moveToDiscard( card );
-            }
-            // Any face up card is going to be dragged
-            else if ( card.faceUp ) {
-              this.startDragCard( card );
-            }
+          // Card face down in deck gets flipped face up on discard
+          if ( !card.faceUp && card.stack < 0 ) {
+            this.deckCards.shift();
+            this.moveToDiscard( card );
           }
-          else if ( eid === this.drawEntity.id && this.deckCards.length === 0 ) {
-            // Clicked the bottom under the deck, so move the discard
-            // back
-            this.deckCards = this.discardCards.reverse();
-            this.discardCards = [];
-            this.positionDeck();
+          // Any face up card is going to be dragged
+          else if ( card.faceUp ) {
+            this.startDragCard( card );
           }
+        }
+        else if ( eid === this.drawEntity.id && this.deckCards.length === 0 ) {
+          // Clicked the bottom under the deck, so move the discard
+          // back
+          this.deckCards = this.discardCards.reverse();
+          this.discardCards = [];
+          this.positionDeck();
         }
       }
       else if ( p.button & 1 && this.dragEntity >= 0 ) {

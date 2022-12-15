@@ -1,7 +1,7 @@
 
 import Game from './Game.js';
 
-type Pointer = {
+export type Pointer = {
   id: number,
   active: boolean,
   x: number,
