@@ -1,5 +1,5 @@
 {
-  "name": "Space Shoote",
+  "name": "Space Shooter",
   "entities": [
     {
       "name": "Camera",
@@ -41,10 +41,10 @@
         "path": "Player Ship"
       },
       "Sprite": {
-        "texturePath": "playerShip1_blue.png"
+        "texturePath": "images/playerShip1_blue.png"
       },
       "Player": {
-        "weapon": "Laser.json"
+        "weapon": "prefabs/Laser.json"
       },
       "RigidBody": {
         "mass": 1,
@@ -88,7 +88,7 @@
         "path": "Meteor 1"
       },
       "Sprite": {
-        "texturePath": "meteorBrown_big1.png"
+        "texturePath": "images/meteorBrown_big1.png"
       },
       "BoxCollider": {
         "trigger": 0,
@@ -133,6 +133,100 @@
         "sy": 10,
         "sz": 50,
         "path": "Boundary"
+      },
+      "BoxCollider": {
+        "trigger": 1,
+        "ox": 0,
+        "oy": 0,
+        "oz": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1
+      }
+    },
+    {
+      "name": "Enemy Fighter",
+      "type": "Entity",
+      "Position": {
+        "x": -4,
+        "y": 4,
+        "z": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1,
+        "path": "Enemy Fighter"
+      },
+      "Sprite": {
+        "texturePath": "images/enemyBlack1.png"
+      },
+      "RigidBody": {
+        "mass": 1,
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1
+      },
+      "Enemy": {
+        "health": 10
+      },
+      "BoxCollider": {
+        "trigger": 1,
+        "ox": 0,
+        "oy": 0,
+        "oz": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1
+      }
+    },
+    {
+      "name": "Enemy Bomber",
+      "type": "Entity",
+      "Position": {
+        "x": 4,
+        "y": 4,
+        "z": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1,
+        "path": "Enemy Bomber"
+      },
+      "Sprite": {
+        "texturePath": "images/enemyBlack4.png"
+      },
+      "RigidBody": {
+        "mass": 1,
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1
+      },
+      "Enemy": {
+        "health": 20
       },
       "BoxCollider": {
         "trigger": 1,

@@ -29,7 +29,7 @@
   "RigidBody": {
     "mass": 1,
     "vx": 0,
-    "vy": 5,
+    "vy": 20,
     "vz": 0,
     "rx": 0,
     "ry": 0,
