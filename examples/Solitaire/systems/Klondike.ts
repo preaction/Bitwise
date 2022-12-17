@@ -390,6 +390,7 @@ export default class Klondike extends System {
   }
 
   getEntityAtPointer( pointer:three.Vector3 ):number|null {
+    // XXX: This should probably be moved to the Render system
     raycaster.setFromCamera( pointer, this.camera );
     const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
     if ( intersects.length > 0 ) {
@@ -445,6 +446,8 @@ export default class Klondike extends System {
       }
       // Otherwise, mouse up
       else if ( this.dragEntity >= 0 ) {
+        // XXX: If we have only been down for less than 250ms, consider
+        // it a click and try to auto-move
         // Try to drop the card where we are
         const dragCard = this.cards[ this.dragEntity ];
         const fromStack = dragCard.stack;

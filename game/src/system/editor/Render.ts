@@ -226,7 +226,7 @@ export default class Render extends RenderSystem {
   }
 
   nudgeSelected({ x, y }:{x?:number, y?:number}) {
-    const position = this.position.store;
+    const position = this.positionComponent.store;
     for ( const obj of this.selected ) {
       obj.position.x += x || 0;
       obj.position.y += y || 0;
@@ -314,7 +314,7 @@ export default class Render extends RenderSystem {
     }
 
     // cameraQuery: Update camera properties and render if needed
-    const update = this.query(this.scene.world);
+    const update = this.cameraQuery(this.scene.world);
     for ( const eid of update ) {
       // XXX: Object3d should be its own component somehow
       const camera = this.sceneCameras[eid];
@@ -322,9 +322,9 @@ export default class Render extends RenderSystem {
         continue;
       }
 
-      camera.position.x = this.position.store.x[eid];
-      camera.position.y = this.position.store.y[eid];
-      camera.position.z = this.position.store.z[eid];
+      camera.position.x = this.positionComponent.store.x[eid];
+      camera.position.y = this.positionComponent.store.y[eid];
+      camera.position.z = this.positionComponent.store.z[eid];
 
       // Update wireframe width/height/depth
       // It's not the current game we want, we want the player game
@@ -332,11 +332,11 @@ export default class Render extends RenderSystem {
       const { gameWidth, gameHeight } = this.scene.game.data;
       const ratio = gameWidth / gameHeight;
 
-      const frustumSize = this.component.store.frustum[eid] || 20;
+      const frustumSize = this.cameraComponent.store.frustum[eid] || 20;
       const width = frustumSize * ratio;
       const height = frustumSize;
-      const far = this.component.store.far[eid];
-      const near = this.component.store.near[eid];
+      const far = this.cameraComponent.store.far[eid];
+      const near = this.cameraComponent.store.near[eid];
       const depth = far - near;
       camera.scale.set( width, height, depth );
     }
@@ -389,11 +389,11 @@ export default class Render extends RenderSystem {
     const { gameWidth, gameHeight } = this.scene.game.data;
     const ratio = gameWidth / gameHeight;
 
-    const frustumSize = this.component.store.frustum[eid] || 20;
+    const frustumSize = this.cameraComponent.store.frustum[eid] || 20;
     const width = frustumSize * ratio;
     const height = frustumSize;
-    const far = this.component.store.far[eid];
-    const near = this.component.store.near[eid];
+    const far = this.cameraComponent.store.far[eid];
+    const near = this.cameraComponent.store.near[eid];
     const depth = far - near;
 
     const geometry = new three.BoxGeometry(1, 1, 1);
@@ -406,9 +406,9 @@ export default class Render extends RenderSystem {
 
     camera.scale.set( width, height, depth );
 
-    camera.position.x = this.position.store.x[eid];
-    camera.position.y = this.position.store.y[eid];
-    camera.position.z = this.position.store.z[eid];
+    camera.position.x = this.positionComponent.store.x[eid];
+    camera.position.y = this.positionComponent.store.y[eid];
+    camera.position.z = this.positionComponent.store.z[eid];
 
     this.sceneCameras[eid] = camera;
     this.scene._scene.add( camera );
