@@ -18,7 +18,7 @@ export default defineComponent({
     return data;
   },
   watch: {
-    texturePath() {
+    entityPath() {
       this.update();
     },
   },
