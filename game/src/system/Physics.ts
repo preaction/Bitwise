@@ -174,7 +174,7 @@ export default class Physics extends System {
         const collider = new COLLIDER_SHAPES[colliderName as keyof ColliderMap](scale);
         collider.setMargin( 0.05 );
         const origin = new this.Ammo.btVector3( colliderData.ox[eid], colliderData.oy[eid], colliderData.oz[eid] );
-        transform.setOrigin( transform.getOrigin() + origin );
+        transform.setOrigin( origin.op_add( transform.getOrigin() ) );
 
         let body;
         const group:number = 1; // XXX: Add group/mask to collider shapes
@@ -200,7 +200,7 @@ export default class Physics extends System {
           body.setAngularFactor( new this.Ammo.btVector3( rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid] ) );
 
           const velocity = new this.Ammo.btVector3( rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid] );
-          body.applyImpulse( velocity );
+          body.applyCentralImpulse( velocity );
 
           const torque = new this.Ammo.btVector3( rigidBody.rx[eid], rigidBody.ry[eid], rigidBody.rz[eid] );
           body.applyTorqueImpulse( torque );
