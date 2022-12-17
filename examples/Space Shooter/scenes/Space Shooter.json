@@ -1,0 +1,183 @@
+{
+  "name": "Space Shoote",
+  "entities": [
+    {
+      "name": "Camera",
+      "type": "Camera",
+      "Position": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1,
+        "path": "Camera"
+      },
+      "OrthographicCamera": {
+        "frustum": 10,
+        "zoom": 1,
+        "near": 0,
+        "far": 10
+      }
+    },
+    {
+      "name": "Player Ship",
+      "type": "Entity",
+      "Position": {
+        "x": 0,
+        "y": -4,
+        "z": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1,
+        "path": "Player Ship"
+      },
+      "Sprite": {
+        "texturePath": "playerShip1_blue.png"
+      },
+      "Player": {
+        "weapon": "Laser.json"
+      },
+      "RigidBody": {
+        "mass": 1,
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1
+      },
+      "BoxCollider": {
+        "trigger": 1,
+        "ox": 0,
+        "oy": 0,
+        "oz": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1
+      }
+    },
+    {
+      "name": "Meteor 1",
+      "type": "Entity",
+      "Position": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 1,
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1,
+        "path": "Meteor 1"
+      },
+      "Sprite": {
+        "texturePath": "meteorBrown_big1.png"
+      },
+      "BoxCollider": {
+        "trigger": 0,
+        "ox": 0,
+        "oy": 0,
+        "oz": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1
+      },
+      "Enemy": {
+        "health": 0
+      },
+      "RigidBody": {
+        "mass": 1,
+        "vx": 0,
+        "vy": 0,
+        "vz": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "lx": 1,
+        "ly": 1,
+        "lz": 0,
+        "ax": 0,
+        "ay": 0,
+        "az": 0
+      }
+    },
+    {
+      "name": "Boundary",
+      "type": "Entity",
+      "Position": {
+        "x": 0,
+        "y": 0,
+        "z": -10,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "sx": 18,
+        "sy": 10,
+        "sz": 50,
+        "path": "Boundary"
+      },
+      "BoxCollider": {
+        "trigger": 1,
+        "ox": 0,
+        "oy": 0,
+        "oz": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1
+      }
+    }
+  ],
+  "components": [
+    "Position",
+    "OrthographicCamera",
+    "Sprite",
+    "Player",
+    "RigidBody",
+    "BoxCollider",
+    "Enemy"
+  ],
+  "systems": [
+    {
+      "name": "Boundary",
+      "data": {
+        "boundaryPath": "Boundary"
+      }
+    },
+    {
+      "name": "Physics",
+      "data": {
+        "gx": 0,
+        "gy": 0,
+        "gz": 0,
+        "broadphase": 1
+      }
+    },
+    {
+      "name": "Render",
+      "data": {}
+    },
+    {
+      "name": "Movement",
+      "data": {}
+    }
+  ],
+  "component": "SceneEdit"
+}

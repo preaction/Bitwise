@@ -15,7 +15,7 @@
     "path": "Laser"
   },
   "Sprite": {
-    "texturePath": "laserBlue03.png"
+    "texturePath": "images/laserBlue03.png"
   },
   "BoxCollider": {
     "trigger": 0,
