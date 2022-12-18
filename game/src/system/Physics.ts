@@ -39,8 +39,8 @@ export default class Physics extends System {
 
   Ammo!:typeof Ammo;
   universe:any; //Ammo.btCollisionWorld;
-  bodies:Array<any> = [];
-  ghosts:Array<any> = [];
+  bodies:Array<Ammo.btRigidBody> = [];
+  ghosts:Array<Ammo.btGhostObject> = [];
   collisionObjects:Array<any> = [];
 
   colliderQueries:ColliderQueryMap = {};
@@ -54,9 +54,6 @@ export default class Physics extends System {
 
   async init() {
     await this.initAmmo();
-  }
-
-  start() {
     const scene = this.scene;
 
     this.position = scene.getComponent(Position);
@@ -137,6 +134,17 @@ export default class Physics extends System {
     });
   }
 
+  setPosition( eid:number, vec:three.Vector3 ) {
+    const body = this.bodies[eid];
+    if ( !body ) {
+      return;
+    }
+    const avec = new this.Ammo.btVector3( vec.x, vec.y, vec.z );
+    const xform = body.getWorldTransform();
+    xform.setOrigin(avec);
+    body.setWorldTransform(xform);
+  }
+
   setVelocity( eid:number, vec:three.Vector3 ) {
     const body = this.bodies[eid];
     if ( !body ) {
@@ -147,9 +155,13 @@ export default class Physics extends System {
     body.setLinearVelocity( avec );
   }
 
-  update( timeMilli:number ) {
-    const position = this.position.store;
+  start() {
+    this.createColliders();
+  }
+
+  createColliders() {
     const rigidBody = this.rigidbody.store;
+    const position = this.position.store;
 
     // Create any new colliders
     for ( const [colliderName, query] of Object.entries(this.enterQueries) ) {
@@ -227,6 +239,13 @@ export default class Physics extends System {
       }
     }
 
+  }
+
+
+  update( timeMilli:number ) {
+    this.createColliders();
+
+    const position = this.position.store;
     for ( const [colliderName, query] of Object.entries(this.exitQueries) ) {
       const remove = query(this.scene.world);
       for ( const eid of remove ) {

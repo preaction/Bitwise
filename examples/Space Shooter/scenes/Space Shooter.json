@@ -129,7 +129,7 @@
         "ry": 0,
         "rz": 0,
         "rw": 0,
-        "sx": 18,
+        "sx": 17.799999237060547,
         "sy": 10,
         "sz": 50,
         "path": "Boundary"
@@ -250,10 +250,8 @@
   ],
   "systems": [
     {
-      "name": "Boundary",
-      "data": {
-        "boundaryPath": "Boundary"
-      }
+      "name": "Movement",
+      "data": {}
     },
     {
       "name": "Physics",
@@ -265,11 +263,13 @@
       }
     },
     {
-      "name": "Render",
-      "data": {}
+      "name": "Boundary",
+      "data": {
+        "boundaryPath": "Boundary"
+      }
     },
     {
-      "name": "Movement",
+      "name": "Render",
       "data": {}
     }
   ],
