@@ -264,6 +264,30 @@ ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
   return fs.rename( path.join( root, from ), path.join( root, to ) );
 });
 
+ipcMain.handle('bitwise-import-files', (event, root) => {
+  if ( !win ) {
+    return;
+  }
+  return dialog.showOpenDialog(win, {
+    filters: [],
+    properties: [ 'openDirectory' ],
+  })
+  .then( async (res) => {
+    const promises = [];
+    for ( const src of res.filePaths ) {
+      // If path is a directory, copy to a new directory with the same
+      // name in the root
+      const stat = await fs.stat( src );
+      let dest = root;
+      if ( stat.isDirectory() ) {
+        dest = path.join( dest, path.basename( src ) );
+      }
+      promises.push( fs.cp( src, dest, { recursive: true } ) );
+    }
+    return Promise.all(promises);
+  });
+});
+
 async function linkModules( root:string ) {
   // Make sure the project has all necessary dependencies linked in,
   // because Ammo breaks completely if it is loaded more than once,

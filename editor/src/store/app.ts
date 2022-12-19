@@ -546,6 +546,10 @@ export const useAppStore = defineStore('app', {
       // XXX: Pre-move item in projectItems
       return electron.renamePath( this.currentProject, path, dest );
     },
+
+    importFiles() {
+      return electron.importFiles( this.currentProject );
+    },
   },
 });
 

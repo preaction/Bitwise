@@ -34,6 +34,9 @@ contextBridge.exposeInMainWorld('electron', {
   readFile( path:string ) {
     return ipcRenderer.invoke('bitwise-read-file', path);
   },
+  importFiles( root:string ) {
+    return ipcRenderer.invoke('bitwise-import-files', root);
+  },
   newFile( path:string, name:string, ext:string, data:any ) {
     return ipcRenderer.invoke('bitwise-new-file', path, name, ext, data);
   },

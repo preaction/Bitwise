@@ -48,7 +48,7 @@ export default defineComponent({
     },
   },
   methods: {
-    ...mapActions(useAppStore, ['loadSessionState']),
+    ...mapActions(useAppStore, ['loadSessionState', 'importFiles']),
     updateTab(data:Object) {
       this.currentTab.data = data;
       this.currentTab.edited = true;
@@ -312,17 +312,25 @@ export default defineComponent({
 
     <div class="app-sidebar">
       <div class="d-flex justify-content-between">
-        <MenuButton title="Add...">
-          <ul>
-            <li @click="newTab('New Scene', 'SceneEdit')">Scene</li>
-            <li class="hr"><hr></li>
-            <li @click="newModule('NewComponent', 'Component.ts')">Component</li>
-            <li @click="newModule('NewComponentForm', 'Component.vue')">Component Form</li>
-            <li @click="newModule('NewSystem', 'System.ts')">System</li>
-            <li @click="newModule('NewSystemForm', 'Component.vue')">System Form</li>
-          </ul>
-        </MenuButton>
-        <MenuButton>
+        <div class="d-flex">
+          <MenuButton class="me-1" title="New">
+            <template #title>
+              <i class="fa fa-file-circle-plus"></i>
+            </template>
+            <ul>
+              <li @click="newTab('New Scene', 'SceneEdit')">Scene</li>
+              <li class="hr"><hr></li>
+              <li @click="newModule('NewComponent', 'Component.ts')">Component</li>
+              <li @click="newModule('NewComponentForm', 'Component.vue')">Component Form</li>
+              <li @click="newModule('NewSystem', 'System.ts')">System</li>
+              <li @click="newModule('NewSystemForm', 'Component.vue')">System Form</li>
+            </ul>
+          </MenuButton>
+          <button class="menu-button" title="Import" @click="importFiles">
+            <i class="fa fa-file-import"></i>
+          </button>
+        </div>
+        <MenuButton title="Project">
           <template #title>
             <i class="fa fa-gear"></i>
           </template>

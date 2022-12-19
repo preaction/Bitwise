@@ -62,7 +62,7 @@ export default defineComponent({
   <div>
     <div class="menu-button-slot" ref="button" @click.stop="open">
       <slot name="button">
-        <button class="menu-button">
+        <button class="menu-button" :title="title">
           <slot name="title">{{title}}</slot>
         </button>
       </slot>
