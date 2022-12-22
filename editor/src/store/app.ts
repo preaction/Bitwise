@@ -152,6 +152,7 @@ type AppState = {
   systemForms: { [key:string]: any },
   buildTimeout: any,
   _fsWatcher: any,
+  _pendingChanges: [],
 };
 
 export const useAppStore = defineStore('app', {
@@ -191,6 +192,7 @@ export const useAppStore = defineStore('app', {
         "Physics": PhysicsEdit,
       }),
       buildTimeout: null,
+      _pendingChanges: [],
     } as AppState;
   },
 
@@ -311,9 +313,28 @@ export const useAppStore = defineStore('app', {
       electron.on( 'watch', this._fsWatcher );
     },
 
-    changeFile(event:any, {eventType, filename}:{eventType:string, filename:string}) {
+    changeFile(event:any, changes:{eventType:string, filename:string}[]) {
+      // If we do not have focus, queue up changes to process
+      if ( !document.hasFocus() ) {
+        if ( !this._pendingChanges?.length ) {
+          const processChanges = () => {
+            this.processChanges( this._pendingChanges );
+            this._pendingChanges = [];
+            window.removeEventListener( 'focus', processChanges );
+          };
+          window.addEventListener( 'focus', processChanges );
+        }
+        this.isBuilding = true;
+        this._pendingChanges.push( ...changes );
+        return;
+      }
+      this.processChanges( changes );
+    },
+
+    processChanges( changes:{eventType:string, filename:string}[] ) {
       this.readProject();
-      if ( !filename.match(/^\./) && filename.match( /\.[tj]s$/ ) ) {
+      // If any ts/js file changed, build the project
+      if ( changes.find( ({eventType, filename}) => !filename.match(/(^|\/)\./) && filename.match( /\.[tj]s$/ ) ) ) {
         this.isBuilding = true;
         if ( this.buildTimeout ) {
           clearTimeout( this.buildTimeout );

@@ -198,8 +198,19 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
   const watcher = fs.watch( path, { signal: aborter.signal, recursive: true, persistent: false } );
   (async () => {
     try {
+      const changes:{eventType: string, filename:string}[] = [];
+      let timeoutId;
       for await (const event of watcher) {
-        win.webContents.send( 'watch', event );
+        console.log( 'Watcher event:', event );
+        changes.push( event );
+        if ( timeoutId ) {
+          clearTimeout( timeoutId );
+        }
+        timeoutId = setTimeout( () => {
+          win.webContents.send( 'watch', changes );
+          changes.length = 0;
+          timeoutId = null;
+        }, 2000);
       }
     }
     catch ( err:any ) {
@@ -340,13 +351,13 @@ ipcMain.handle('bitwise-build-project', async (event, root) => {
       if ( !res ) {
         return null;
       }
-      if ( res.errors.length > 0 ) {
+      if ( res.errors?.length > 0 ) {
         res.errors.map( err => webwin.webContents.send( 'error', err ) );
       }
-      if ( res.warnings.length > 0 ) {
+      if ( res.warnings?.length > 0 ) {
         res.warnings.map( warn => webwin.webContents.send( 'info', `Warning: ${warn}` ) );
       }
-      return res.errors.length > 0 ? null : dest;
+      return res.errors?.length > 0 ? null : dest;
     });
   });
 });
