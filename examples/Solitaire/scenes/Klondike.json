@@ -322,6 +322,10 @@
   ],
   "systems": [
     {
+      "name": "Input",
+      "data": {}
+    },
+    {
       "name": "Klondike",
       "data": {
         "drawEntityPath": "Deck",

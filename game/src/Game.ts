@@ -6,7 +6,6 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene, { SceneState } from './Scene.js';
 import Load from './Load.js';
-import Input from './Input.js';
 import Component from './Component.js';
 import System from './System.js';
 
@@ -16,6 +15,7 @@ import SpriteComponent from './component/Sprite.js';
 import RigidBodyComponent from './component/RigidBody.js';
 import BoxColliderComponent from './component/BoxCollider.js';
 
+import InputSystem from './system/Input.js';
 import RenderSystem from './system/Render.js';
 import PhysicsSystem from './system/Physics.js';
 
@@ -25,6 +25,7 @@ import EditorPhysicsSystem from './system/editor/Physics.js';
 let tick = 0;
 
 const DEFAULT_SYSTEMS = {
+  Input: InputSystem,
   Render: RenderSystem,
   Physics: PhysicsSystem,
   // XXX: Default systems should load their own editor system if they
@@ -60,7 +61,6 @@ export default class Game extends three.EventDispatcher {
   initialScenePath:string = '';
   scenes:Scene[] = [];
   data:Object;
-  input:Input;
 
   components:{ [key:string]: typeof Component } = {};
   systems:{ [key:string]: typeof System } = {};
@@ -77,7 +77,6 @@ export default class Game extends three.EventDispatcher {
     this.width = opt.renderer?.width || conf.renderer?.width;
     this.height = opt.renderer?.height || conf.renderer?.height;
     this.data = opt.data || {};
-    this.input = new Input( this );
     if ( this.width > 0 || this.height > 0 ) {
       this.autoSize = false;
     }
@@ -113,7 +112,6 @@ export default class Game extends three.EventDispatcher {
 
     this.renderer.setSize(this.width, this.height, false);
 
-    this.input.start();
     this.dispatchEvent({ type: 'start' });
 
     if ( this.initialScenePath ) {
@@ -127,7 +125,6 @@ export default class Game extends three.EventDispatcher {
 
   stop() {
     this.dispatchEvent({ type: 'stop' });
-    this.input.stop();
     for ( const scene of this.scenes ) {
       scene.stop();
     }

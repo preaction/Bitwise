@@ -1,8 +1,8 @@
 
 import * as three from 'three';
 import * as bitecs from 'bitecs';
-import { System, Input } from '@fourstar/bitwise';
-import { Physics } from '@fourstar/bitwise/system';
+import { System } from '@fourstar/bitwise';
+import { Physics, Input } from '@fourstar/bitwise/system';
 import { Position } from '@fourstar/bitwise/component';
 import PlayerComponent from '../component/Player.js';
 import WeaponComponent from '../component/Weapon.js';
@@ -22,7 +22,7 @@ export default class Movement extends System {
     const query = this.query = scene.game.ecs.defineQuery([ player.store ]);
 
     this.physics = scene.getSystem( Physics );
-    this.input = scene.game.input;
+    this.input = scene.getSystem( Input );
 
     const playerEids = this.query(this.scene.world);
     for ( const eid of playerEids ) {

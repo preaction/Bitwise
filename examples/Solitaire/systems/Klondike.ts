@@ -3,7 +3,7 @@ import * as three from 'three';
 import * as shifty from 'shifty';
 import { System, Entity } from '@fourstar/bitwise';
 import type { Pointer } from '@fourstar/bitwise';
-import { Render } from '@fourstar/bitwise/system';
+import { Render, Input } from '@fourstar/bitwise/system';
 import { Position, Sprite } from '@fourstar/bitwise/component';
 import Foundation from '../components/Foundation.js';
 import Stack from '../components/Stack.js';
@@ -36,6 +36,7 @@ raycaster.layers.set(1); // XXX: Make this face-up cards
 const pointer = new three.Vector3();
 
 export default class Klondike extends System {
+  Input!:Input;
   Position!:Position;
   Render!:Render;
   Foundation!:Foundation;
@@ -94,6 +95,7 @@ export default class Klondike extends System {
     this.Stack = this.scene.getComponent(Stack);
     this.Sprite = this.scene.getComponent(Sprite);
     this.Render = this.scene.getSystem(Render);
+    this.Input = this.scene.getSystem(Input);
 
     // Create queries with bitecs.Query
     const foundationQuery = this.defineQuery([ this.Foundation ]);
@@ -158,7 +160,7 @@ export default class Klondike extends System {
       }
     }
 
-    this.scene.game.input.watchPointer();
+    this.Input.watchPointer();
     this.tweens = new shifty.Scene();
   }
 
@@ -402,7 +404,7 @@ export default class Klondike extends System {
 
   update( timeMilli:number ) {
     // Perform updates
-    const p = this.scene.game.input.pointers[0];
+    const p = this.Input.pointers[0];
     if ( p?.active || this.dragEntity >= 0 ) {
       pointer.x = p.x;
       pointer.y = p.y;

@@ -1,5 +1,6 @@
 
-import Game from './Game.js';
+import System from '../System.js';
+import Scene from '../Scene.js';
 
 export type Pointer = {
   id: number,
@@ -10,7 +11,7 @@ export type Pointer = {
   buttonPress: number,
 };
 
-export default class Input {
+export default class Input extends System {
   // Event types
   // keyup
   // keydown
@@ -22,7 +23,6 @@ export default class Input {
   // touchend
   // touchmove
   // touchcancel
-  game:Game;
   watchingKeys:{ [key:string]: Set<string> } = {};
   watchingKeypresses:{ [key:string]: Set<string> } = {};
 
@@ -47,45 +47,45 @@ export default class Input {
   //    update. Keypress is reset after every update (technically, in
   //    the after-render event)
 
-  constructor( game:Game ) {
-    this.game = game;
-    game.addEventListener( 'afterRender', this.clearKeypresses.bind(this) );
-    game.addEventListener( 'afterRender', this.clearButtonPresses.bind(this) );
+  constructor( name:string, scene:Scene ) {
+    super(name, scene);
   }
 
   start() {
-    this.game.canvas.tabIndex = 1;
-    this.game.canvas.addEventListener( 'keydown', this._downHandler = this.keydown.bind(this) );
-    this.game.canvas.addEventListener( 'keyup', this._upHandler = this.keyup.bind(this) );
-    this.game.canvas.onpointerover = this.pointerbegin.bind(this);
-    this.game.canvas.onpointerenter = this.pointerbegin.bind(this);
-    this.game.canvas.onpointerdown = this.pointerdown.bind(this);
-    this.game.canvas.onpointermove = this.pointerchange.bind(this);
-    this.game.canvas.onpointerup = this.pointerchange.bind(this);
-    this.game.canvas.onpointercancel = this.pointerend.bind(this);
-    this.game.canvas.onpointerout = this.pointerend.bind(this);
-    this.game.canvas.onpointerleave = this.pointerend.bind(this);
-    this.game.canvas.style.touchAction = "none";
+    this.scene.addEventListener( 'afterRender', this.clearKeypresses.bind(this) );
+    this.scene.addEventListener( 'afterRender', this.clearButtonPresses.bind(this) );
+    this.scene.game.canvas.tabIndex = 1;
+    this.scene.game.canvas.addEventListener( 'keydown', this._downHandler = this.keydown.bind(this) );
+    this.scene.game.canvas.addEventListener( 'keyup', this._upHandler = this.keyup.bind(this) );
+    this.scene.game.canvas.onpointerover = this.pointerbegin.bind(this);
+    this.scene.game.canvas.onpointerenter = this.pointerbegin.bind(this);
+    this.scene.game.canvas.onpointerdown = this.pointerdown.bind(this);
+    this.scene.game.canvas.onpointermove = this.pointerchange.bind(this);
+    this.scene.game.canvas.onpointerup = this.pointerchange.bind(this);
+    this.scene.game.canvas.onpointercancel = this.pointerend.bind(this);
+    this.scene.game.canvas.onpointerout = this.pointerend.bind(this);
+    this.scene.game.canvas.onpointerleave = this.pointerend.bind(this);
+    this.scene.game.canvas.style.touchAction = "none";
   }
 
   stop() {
     if ( this._downHandler ) {
-      this.game.canvas.removeEventListener( 'keydown', this._downHandler );
+      this.scene.game.canvas.removeEventListener( 'keydown', this._downHandler );
       this._downHandler = null;
     }
     if ( this._upHandler ) {
-      this.game.canvas.removeEventListener( 'keyup', this._upHandler );
+      this.scene.game.canvas.removeEventListener( 'keyup', this._upHandler );
       this._upHandler = null;
     }
-    this.game.canvas.onpointerover = null;
-    this.game.canvas.onpointerenter = null;
-    this.game.canvas.onpointerdown = null;
-    this.game.canvas.onpointermove = null;
-    this.game.canvas.onpointerup = null;
-    this.game.canvas.onpointercancel = null;
-    this.game.canvas.onpointerout = null;
-    this.game.canvas.onpointerleave = null;
-    this.game.canvas.style.touchAction = "unset";
+    this.scene.game.canvas.onpointerover = null;
+    this.scene.game.canvas.onpointerenter = null;
+    this.scene.game.canvas.onpointerdown = null;
+    this.scene.game.canvas.onpointermove = null;
+    this.scene.game.canvas.onpointerup = null;
+    this.scene.game.canvas.onpointercancel = null;
+    this.scene.game.canvas.onpointerout = null;
+    this.scene.game.canvas.onpointerleave = null;
+    this.scene.game.canvas.style.touchAction = "unset";
   }
 
   keydown(e:KeyboardEvent) {
@@ -109,10 +109,10 @@ export default class Input {
   }
 
   on( event:string, fn:(e:Event) => void ) {
-    this.game.canvas.addEventListener( event, fn );
+    this.scene.game.canvas.addEventListener( event, fn );
   }
   off( event:string, fn:(e:Event) => void ) {
-    this.game.canvas.removeEventListener( event, fn );
+    this.scene.game.canvas.removeEventListener( event, fn );
   }
 
   watchKey( key:string, alias:string='' ) {
@@ -173,7 +173,7 @@ export default class Input {
     }
     pointer.buttonPress |= ev.buttons;
     this.pointerchange( ev );
-    this.game.canvas.setPointerCapture(ev.pointerId);
+    this.scene.game.canvas.setPointerCapture(ev.pointerId);
   }
 
   // pointerdown / up / move - Update pointer buttons, position
@@ -185,8 +185,8 @@ export default class Input {
     }
     ev.preventDefault();
     pointer.button = ev.buttons;
-    pointer.x = ( ev.offsetX / this.game.canvas.clientWidth ) * 2 - 1;
-    pointer.y = -( ev.offsetY / this.game.canvas.clientHeight ) * 2 + 1;
+    pointer.x = ( ev.offsetX / this.scene.game.canvas.clientWidth ) * 2 - 1;
+    pointer.y = -( ev.offsetY / this.scene.game.canvas.clientHeight ) * 2 + 1;
   }
 
   // pointer out/leave/cancel - deactivate pointer

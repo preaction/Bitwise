@@ -41,6 +41,7 @@ export default defineComponent({
       scene.addComponent( 'OrthographicCamera' );
       scene.addComponent( 'RigidBody' );
       scene.addComponent( 'BoxCollider' );
+      scene.addSystem( 'Input' );
       scene.addSystem( 'Physics' );
       scene.addSystem( 'Sprite' );
       scene.addSystem( 'Render' );
@@ -60,7 +61,12 @@ export default defineComponent({
 
     this.$nextTick( () => {
       this.editGame.start();
-      scene.update(0);
+      try {
+        scene.update(0);
+      }
+      catch (err) {
+        console.log( `Error calling update(): `, err );
+      }
       scene.render();
     } );
   },
@@ -94,7 +100,12 @@ export default defineComponent({
         scene.thaw( toRaw( this.modelValue ) );
         this.$nextTick( () => {
           this.editGame.start();
-          scene.update(0);
+          try {
+            scene.update(0);
+          }
+          catch (err) {
+            console.log( `Error calling update(): `, err );
+          }
           scene.render();
           this.editScene = scene;
         } );
@@ -173,7 +184,12 @@ export default defineComponent({
     },
 
     sceneChanged() {
-      this.scene.update(0);
+      try {
+        this.scene.update(0);
+      }
+      catch (err) {
+        console.log( `Error calling update(): `, err );
+      }
       this.scene.render();
       if ( !this.playing ) {
         this.update();
@@ -249,7 +265,12 @@ export default defineComponent({
       eids.forEach( eid => scene.removeEntity(eid) );
       editor.clearSelected();
       if ( update ) {
-        scene.update(0);
+        try {
+          scene.update(0);
+        }
+        catch (err) {
+          console.log( `Error calling update(): `, err );
+        }
         scene.render();
         this.update();
       }
@@ -314,7 +335,12 @@ export default defineComponent({
         const entity = scene.addEntity();
         entity.thaw(eData);
       }
-      scene.update(0);
+      try {
+        scene.update(0);
+      }
+      catch (err) {
+        console.log( `Error calling update(): `, err );
+      }
       scene.render();
       this.update();
     },

@@ -250,6 +250,10 @@
   ],
   "systems": [
     {
+      "name": "Input",
+      "data": {}
+    },
+    {
       "name": "Movement",
       "data": {}
     },

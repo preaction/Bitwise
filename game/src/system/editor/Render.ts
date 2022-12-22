@@ -2,6 +2,7 @@
 import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
+import InputSystem from '../Input.js';
 import RenderSystem from '../Render.js';
 import Position from '../../component/Position.js';
 import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
@@ -37,6 +38,7 @@ export default class Render extends RenderSystem {
    */
   sceneCameras:Array<three.LineSegments> = [];
 
+  input!:InputSystem;
   positionComponent:Position;
   cameraComponent:OrthographicCameraComponent;
   cameraQuery:bitecs.Query;
@@ -86,20 +88,24 @@ export default class Render extends RenderSystem {
     };
   }
 
+  async init() {
+    this.input = this.scene.getSystem( InputSystem );
+  }
+
   start() {
     this.scene.addEventListener( "resize", (e:three.Event) => {
       this.onResize(e as ResizeEvent);
     });
     for ( const ev in this.listeners ) {
-      this.scene.game.input.on( ev, this.listeners[ev] );
+      this.input.on( ev, this.listeners[ev] );
     }
-    this.scene.game.input.watchPointer();
+    this.input.watchPointer();
   }
 
   stop() {
     super.stop();
     for ( const ev in this.listeners ) {
-      this.scene.game.input.off( ev, this.listeners[ev] );
+      this.input.off( ev, this.listeners[ev] );
     }
   }
 
