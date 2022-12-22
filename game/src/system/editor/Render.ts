@@ -420,6 +420,7 @@ export default class Render extends RenderSystem {
       this.scene._scene.remove( camera );
       delete this.sceneCameras[eid];
     }
+    super.remove(eid);
   }
 
   onResize(e:ResizeEvent) {
