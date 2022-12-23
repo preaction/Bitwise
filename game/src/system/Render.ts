@@ -30,6 +30,18 @@ export default class Render extends System {
   constructor( name:string, scene:Scene ) {
     super(name, scene);
 
+    // Set up loaders
+    three.Cache.enabled = true;
+    three.DefaultLoadingManager.setURLModifier(
+      url => {
+        // Let full URLs pass through unharmed
+        if ( url.match( /^[a-zA-Z]+:/ ) ) {
+          return url;
+        }
+        return this.scene.game.base + url
+      },
+    );
+
     this.positionComponent = scene.getComponent(PositionComponent);
     this.spriteComponent = scene.getComponent(SpriteComponent);
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
