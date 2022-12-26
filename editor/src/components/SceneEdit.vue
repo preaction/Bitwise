@@ -42,39 +42,47 @@ export default defineComponent({
   mounted() {
     const game = this.editGame = this.createEditorGame( 'edit-canvas' );
 
-    // XXX: Pinch controls for zoom
-
-    const scene = this.editScene = markRaw(game.addScene());
-
-    if ( this.sceneData && Object.keys( this.sceneData ).length > 0 ) {
-      try {
-        scene.thaw( toRaw( this.sceneData ) );
-      }
-      catch (e) {
-        console.log( `Error thawing scene: ${e}` );
-      }
-    }
-    else {
+    let sceneData = toRaw( this.sceneData );
+    if ( !sceneData || Object.keys( sceneData ).length === 0 ) {
       // Create a new, blank scene
-      scene.addComponent( 'Position' );
-      scene.addComponent( 'Sprite' );
-      scene.addComponent( 'OrthographicCamera' );
-      scene.addComponent( 'RigidBody' );
-      scene.addComponent( 'BoxCollider' );
-      scene.addSystem( 'Input' );
-      scene.addSystem( 'Physics' );
-      scene.addSystem( 'Sprite' );
-      scene.addSystem( 'Render' );
-
-      // XXX: Default camera should come from game settings
-      const camera = scene.addEntity();
-      camera.name = "Camera";
-      camera.type = "Camera";
-      camera.addComponent( "Position", { sx: 1, sy: 1, sz: 1, pid: 2**32-1 } );
-      camera.addComponent( "OrthographicCamera", { frustum: 10, far: 10, near: 0, zoom: 1 } );
+      // XXX: This data should come from game settings
+      sceneData = this.sceneData = {
+        components: [
+          'Position', 'Sprite', 'OrthographicCamera', 'RigidBody',
+          'BoxCollider',
+        ],
+        systems: [
+          { name: 'Input', data: {} },
+          { name: 'Physics', data: {} },
+          { name: 'Render', data: {} },
+        ],
+        entities: [
+          {
+            name: "Camera",
+            type: "Camera",
+            Position: {
+              z: 2000,
+              rw: 1,
+              sx: 1,
+              sy: 1,
+              sz: 1,
+              path: "Camera",
+            },
+            OrthographicCamera: {
+              frustum: 10,
+              zoom: 1,
+              near: 0,
+              far: 2000,
+            },
+          },
+        ],
+      };
 
       this.update();
     }
+
+    const scene = this.editScene = markRaw(game.addScene());
+    this.thawEditScene(sceneData);
 
     const editor = this.editScene.getSystem( this.systems.EditorRender );
     editor.addEventListener( 'update', () => this.update() );
@@ -116,8 +124,8 @@ export default defineComponent({
         // Update the editor game
         this.editGame.stop();
         const game = this.editGame = this.createEditorGame( 'edit-canvas' );
-        const scene = markRaw(game.addScene());
-        scene.thaw( toRaw( this.sceneData ) );
+        const scene = this.editScene = markRaw(game.addScene());
+        this.thawEditScene( this.sceneData );
         this.$nextTick( () => {
           this.editGame.start();
           try {
@@ -127,7 +135,6 @@ export default defineComponent({
             console.log( `Error calling update(): `, err );
           }
           scene.render();
-          this.editScene = scene;
         } );
 
         // Start the current pane again
@@ -140,6 +147,25 @@ export default defineComponent({
 
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
+
+    thawEditScene( sceneData:any ) {
+      try {
+        // Editor scene gets its own systems
+        const systems = [
+          { name: 'EditorRender', data: {} },
+        ];
+        if ( sceneData.systems.find( sys => sys.name === 'Physics' ) ) {
+          systems.push( { name: 'EditorPhysics', data: {} } );
+        }
+        this.editScene.thaw({
+          ...sceneData,
+          systems,
+        });
+      }
+      catch (e) {
+        console.log( `Error thawing scene: ${e}` );
+      }
+    },
 
     // The player game is sized according to the game settings and uses
     // the runtime systems
@@ -193,10 +219,10 @@ export default defineComponent({
         game.registerComponent( name, this.components[name] );
       }
       for ( const name in this.systems ) {
-        if ( name.match(/^Editor/) ) {
+        if ( !name.match(/^Editor/) ) {
           continue;
         }
-        let system = this.systems[ "Editor" + name ] || this.systems[name];
+        let system = this.systems[ name ];
         game.registerSystem( name, system );
       }
 
@@ -234,7 +260,7 @@ export default defineComponent({
     },
 
     play(playState) {
-      this.playState = playState ||= this.editScene.freeze();
+      this.playState = playState ||= this.sceneData;
 
       if ( this.playGame ) {
         this.stop()
