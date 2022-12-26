@@ -9,6 +9,7 @@ export default defineComponent({
   },
   data() {
     const data = {
+      texturePath: '',
       ...this.modelValue,
       entityPath: '',
     };

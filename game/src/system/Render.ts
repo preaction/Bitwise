@@ -38,7 +38,7 @@ export default class Render extends System {
         if ( url.match( /^[a-zA-Z]+:/ ) ) {
           return url;
         }
-        return this.scene.game.base + url
+        return this.scene.game.load.base + url
       },
     );
 

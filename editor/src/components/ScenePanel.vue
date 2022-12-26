@@ -5,19 +5,28 @@ import { useAppStore } from "../store/app.ts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 import MenuButton from "./MenuButton.vue";
 
+/**
+ * ScenePanel handles showing the scene entity tree and rendering the
+ * forms needed to edit scene systems and entity components. Changes
+ * made to the scene data by the ScenePanel are also made to the running
+ * scene.
+ */
 export default defineComponent({
   components: {
     ObjectTreeItem,
     MenuButton,
   },
-  props: ['scene', 'isPrefab'],
-  emits: ['update'],
+  props: ['modelValue', 'scene', 'isPrefab'],
+  emits: ['update:modelValue', 'update'],
   data() {
     return {
+      sceneData: JSON.parse( JSON.stringify( toRaw( this.modelValue ) ) ),
+      // XXX: sceneTree should not be stored, but should be a computed
+      // value so it is automatically recalculated
       sceneTree: {},
       selectedSceneItem: null,
+      selectedEntityData: null,
       selectedEntity: null,
-      sceneSystems: [],
       icons: {
         "default": "fa-cube",
         "Camera": "fa-camera",
@@ -25,19 +34,9 @@ export default defineComponent({
       },
     }
   },
-  watch: {
-    scene(newScene:Scene) {
-      if ( newScene ) {
-        this.updateSceneTree(newScene);
-        this.select( this.sceneTree );
-      }
-    }
-  },
   mounted() {
-    if ( this.scene ) {
-      this.updateSceneTree( this.scene );
-      this.select( this.sceneTree );
-    }
+    this.updateSceneTree();
+    this.select( this.sceneTree );
   },
   computed: {
     ...mapStores(useAppStore),
@@ -48,13 +47,17 @@ export default defineComponent({
     availableSystems() {
       return Object.keys( this.systems ).filter( s => !this.systems[s].isNull && !s.match(/^Editor/) );
     },
-    selectedComponents() {
-      if ( !this.selectedEntity ) {
+    selectedEntityComponents() {
+      if ( !this.selectedEntityData ) {
         return {};
       }
-      const components = {};
-      for ( const c of this.selectedEntity.listComponents() ) {
-        components[c] = this.selectedEntity.getComponent(c);
+      const components = [];
+      for ( const c in this.selectedEntityData ) {
+        // These fields in entity data are not components
+        if ( [ 'name', 'type', 'path', 'id' ].indexOf( c ) >= 0 ) {
+          continue;
+        }
+        components.push(c);
       }
       return components;
     },
@@ -62,131 +65,146 @@ export default defineComponent({
 
   methods: {
     refresh() {
-      this.updateSceneTree( this.scene );
+      this.updateSceneTree();
     },
-    updateSceneTree(scene:Scene) {
+    updateSceneTree() {
       // Find all the entities and build tree items for them
-      const tree = {};
-      for ( const id of scene.eids ) {
-        const entity = scene.entities[id];
-        if ( !tree[id] ) {
-          tree[id] = { entity: null, children: [] };
-        }
-        tree[id].entity = id;
-        tree[id].name = entity.name;
-        tree[id].path = entity.name;
-        tree[id].icon = this.icons[ entity.type ] || this.icons.default;
-
-        const pid = scene.components.Position.store.pid[id];
-        if ( pid < scene.components.Position.constructor.MAX_PARENT_ID ) {
-          if ( !tree[pid] ) {
-            tree[pid] = { entity: null, children: [], path: scene.entities[ pid ].name };
+      const rootNode = {
+        name: '',
+        path: '',
+        icon: '',
+        data: {},
+        children: [],
+      };
+      for ( const entity of this.sceneData.entities ) {
+        const pathParts = entity.Position.path.split(/\//);
+        let treeNode = rootNode;
+        while ( pathParts.length > 0 ) {
+          const pathPart = pathParts.shift();
+          let leafNode = treeNode.children.find( node => node.name === pathPart );
+          if ( !leafNode ) {
+            leafNode = {
+              children: [],
+            };
+            treeNode.children.push( leafNode );
           }
-          tree[id].path = [ tree[pid].path, tree[id].path ].join('/');
-          tree[pid].children.push( tree[id] );
-          delete tree[id];
+          treeNode = leafNode;
         }
+
+        treeNode.data = entity;
+        treeNode.name = entity.name;
+        treeNode.path = entity.Position.path;
+        treeNode.icon = this.icons[ entity.type ] || this.icons.default;
       }
 
       if ( this.isPrefab ) {
-        this.sceneTree = Object.values(tree)[0];
+        this.sceneTree = rootNode.children[0];
       }
       else {
         this.sceneTree = {
-          name: scene?.name || 'New Scene',
+          ...rootNode,
+          name: this.sceneData?.name || 'New Scene',
           icon: 'fa-film',
-          parent: 2**32-1,
-          children: Object.values(tree),
         };
-        // Update the systems array
-        this.sceneSystems = scene.systems.map( s => ({ name: s.name, data: s.freeze() }) );
       }
     },
 
     select(item) {
       if ( !this.isPrefab && this.sceneTree === item ) {
         this.selectedEntity = null;
+        this.selectedEntityData = null;
         this.selectedSceneItem = null;
         return;
       }
       this.selectedSceneItem = item;
-      this.selectEntity( this.scene.entities[item.entity] );
+      this.selectEntity( item.data );
     },
 
-    selectEntity(entity) {
-      this.selectedEntity = entity;
+    selectEntity(entityData:any) {
+      this.selectedEntityData = entityData;
+      this.selectedEntity = this.scene.getEntityByPath( entityData.Position.path );
+      // XXX: Listen for updates to entity data
     },
 
     updateComponent( name:string, data:Object ) {
+      this.selectedEntityData[name] = data;
       this.selectedEntity.setComponent(name, toRaw(data));
-      this.$emit('update');
+      this.update();
     },
 
     removeComponent( name:string ) {
       if ( confirm( 'Are you sure?' ) ) {
+        delete this.selectedEntityData[name];
         this.selectedEntity.removeComponent(name);
-        this.$emit('update');
+        this.update();
       }
     },
 
     hasComponent( name:string ) {
-      return this.selectedEntity.listComponents().includes(name);
+      return name in this.selectedEntityData;
     },
 
     addComponent( name:string ) {
       if ( this.hasComponent(name) ) {
         return;
       }
+      this.selectedEntityData[name] = {};
       this.selectedEntity.addComponent(name);
-      this.$emit('update');
+      this.update();
     },
 
     addEntity( ...components:string[] ) {
-      const entity = this.scene.addEntity();
+      const entityData = {
+        name: 'New Entity',
+        path: 'New Entity',
+      };
       for ( const c of components ) {
-        entity.addComponent(c);
+        entityData[c] = {};
       }
       if ( this.isPrefab ) {
-        this.scene.components.Position.store.pid[entity.id] = this.sceneTree.entity;
+        entityData.path = `${this.sceneTree.path}/${entityData.path}`;
       }
-      this.updateSceneTree(this.scene);
-      const entityItem = this.sceneTree.children[ this.sceneTree.children.length - 1 ];
-      this.select( entityItem );
-      this.$emit('update');
+      const entity = this.scene.addEntity();
+      entity.thaw( entityData );
+      this.updateSceneTree();
+      //this.select( entityItem );
+      this.update();
     },
 
     updateName( event ) {
       const name = event.target.value;
       this.sceneTree.name = name;
       this.scene.name = name;
-      this.$emit('update');
+      this.sceneData.name = name;
+      this.update();
     },
 
     deleteEntity( item ) {
       if ( confirm( `Are you sure you want to delete "${item.name}"?` ) ) {
-        const scene = this.scene;
-        const entity = scene.entities[ item.entity ];
-        if ( this.selectedEntity?.id === entity.id ) {
+        const entityData = item.data;
+        if ( this.selectedEntity?.path === entityData.Position.path ) {
           this.select( this.sceneTree );
         }
-        scene.removeEntity( entity.id );
+        const entity = this.scene.getEntityByPath( entityData.Position.path );
+        this.scene.removeEntity( entity.id );
         this.$refs.tree.removeItem(item);
-        this.$emit('update');
+        this.update();
       }
     },
 
     duplicateEntity( item ) {
-      const scene = this.scene;
-      const entity = scene.entities[ item.entity ];
-      const newEntity = scene.addEntity();
-      newEntity.thaw( entity.freeze() );
-      this.updateSceneTree( scene );
-      this.$emit('update');
+      const entityData = item.data;
+      const entity = this.scene.addEntity();
+      entity.thaw( entityData );
+      this.sceneData.entities.push( entity.freeze() );
+      this.updateSceneTree();
+      this.update();
     },
 
     updateSystem( idx:number, data:Object ) {
+      this.sceneData.systems[idx] = data;
       this.scene.systems[idx].thaw( data );
-      this.$emit('update');
+      this.update();
     },
 
     dragOverEntity( event, item ) {
@@ -218,6 +236,7 @@ export default defineComponent({
         const rowOffsetX = event.offsetX + ( targetLeft - rowLeft );
         const isChild = rowOffsetX > rowWidth / 4;
 
+        // First, fix the scene to reparent the dragged entity
         const dragEntity = this.scene.getEntityByPath(data);
         const dropEntity = this.scene.getEntityByPath(onItem.path);
 
@@ -226,14 +245,37 @@ export default defineComponent({
         // XXX: Adjust position to offset from parent so that entity
         // stays in same place visually
 
-        this.updateSceneTree(this.scene);
+        // Then we can update the data with the new path (XXX: and
+        // position)
+        const dragEntityData = this.getEntityDataByPath(data);
+        const dropEntityData = this.getEntityDataByPath(onItem.path);
+        const dropPath = isChild ?
+          `${dropEntityData.Position.path}/${dragEntityData.name}` :
+          dropEntityData.Position.path.split('/').slice(0, -1).join( '/' );
+        dragEntityData.Position.path = dropPath;
+
+        this.updateSceneTree();
         // XXX: Expand dropEntity in scene tree if not root
 
-        this.$emit('update');
+        this.update();
       }
       else {
         event.dataTransfer.dropEffect = "";
       }
+    },
+
+    getEntityDataByPath( path:string ) {
+      const pathParts = path.split(/\//);
+      let treeNode = this.sceneTree;
+      while ( pathParts.length > 0 ) {
+        const pathPart = pathParts.shift();
+        let leafNode = treeNode.children.find( node => node.name === pathPart );
+        if ( !leafNode ) {
+          return null;
+        }
+        treeNode = leafNode;
+      }
+      return treeNode.data;
     },
 
     startDragSystem(event, index) {
@@ -251,15 +293,16 @@ export default defineComponent({
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
+        const systemData = this.sceneData.systems.splice(data, 1);
+        this.sceneData.systems.splice( index, 0, ...systemData );
         const system = this.scene.systems.splice(data, 1);
         this.scene.systems.splice( index, 0, ...system );
-        this.$emit('update');
-        this.updateSceneTree( this.scene );
+        this.update();
       }
     },
 
     hasSystem( name:string ) {
-      return !!this.sceneSystems.find( s => s.name === name );
+      return !!this.sceneData.systems.find( s => s.name === name );
     },
 
     addSystem( name:string ) {
@@ -267,28 +310,31 @@ export default defineComponent({
         return;
       }
       this.scene.addSystem( name );
-      this.$emit('update');
-      this.updateSceneTree( this.scene );
+      this.sceneData.systems.push( this.scene.systems[ this.scene.systems.length - 1 ].freeze() );
+      this.update();
     },
 
-    removeSystem( idx ) {
+    removeSystem( idx:number ) {
+      this.sceneData.systems.splice( idx, 1 );
       this.scene.systems.splice( idx, 1 );
-      this.$emit('update');
-      this.updateSceneTree( this.scene );
+      this.update();
+      this.updateSceneTree();
     },
 
     updateEntityName() {
       const newName = this.selectedSceneItem.name;
-      if ( newName != this.selectedEntity.name ) {
+      if ( newName != this.selectedEntityData.name ) {
         this.selectedEntity.name = newName;
-        this.$emit('update');
+        this.selectedEntityData.name = newName;
+        this.update();
       }
     },
 
     createPrefab( item ) {
       // Create a new file with this entity's configuration, including
       // children
-      const eData = this.scene.entities[ item.entity ].freeze();
+      const entity = this.scene.getEntityByPath( item.path );
+      const eData = entity.freeze();
       let filename = eData.name + '.json';
       let suffix = 1;
       while ( this.appStore.projectItems.includes( filename ) ) {
@@ -305,6 +351,14 @@ export default defineComponent({
         data: eData,
         edited: true,
       });
+    },
+
+    update() {
+      this.$emit( 'update:modelValue', {
+        ...toRaw(this.sceneData),
+        name: this.sceneTree.name,
+      } );
+      this.$emit( 'update' );
     },
   },
 });
@@ -344,25 +398,25 @@ export default defineComponent({
         </template>
       </ObjectTreeItem>
     </div>
-    <div class="entity-pane" v-if="selectedEntity">
-      <h5>{{ selectedEntity.type || "Unknown Type" }}</h5>
+    <div class="entity-pane" v-if="selectedEntityData">
+      <h5>{{ selectedEntityData.type || "Unknown Type" }}</h5>
       <div class="d-flex justify-content-between align-items-center">
         <label class="me-1">Name</label>
         <input class="flex-fill text-end col-1" v-model="selectedSceneItem.name"
           @keyup="updateEntityName" pattern="^[^/]+$"
         />
       </div>
-      <div v-for="c in selectedEntity.listComponents()" class="component-form" :key="selectedEntity.id + c">
+      <div v-for="name in selectedEntityComponents" class="component-form" :key="selectedEntityData.Position.path + '/' + name">
         <div class="mb-1 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
-            <h6 class="m-0">{{ c }}</h6>
-            <i v-if="!components[c]" class="ms-1 fa fa-file-circle-question" title="Component not found" ></i>
+            <h6 class="m-0">{{ name }}</h6>
+            <i v-if="!components[name]" class="ms-1 fa fa-file-circle-question" title="Component not found" ></i>
           </div>
-          <i @click="removeComponent(c)" class="fa fa-close me-1 icon-button"></i>
+          <i @click="removeComponent(name)" class="fa fa-close me-1 icon-button"></i>
         </div>
-        <div v-if="componentForms[c]" class="component-form__body">
-          <component :is="componentForms[c]" v-model="selectedComponents[c]"
-            :scene="scene" @update="updateComponent(c, $event)"
+        <div v-if="componentForms[name]" class="component-form__body">
+          <component :is="componentForms[name]" v-model="selectedEntityData[name]"
+            :scene="scene" @update="updateComponent(name, $event)"
           />
         </div>
       </div>
@@ -379,7 +433,7 @@ export default defineComponent({
         <label class="me-1">Name</label>
         <input v-model="sceneTree.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
       </div>
-      <div v-for="s, idx in sceneSystems" :key="s.name" class="system-form">
+      <div v-for="s, idx in sceneData.systems" :key="s.name" class="system-form">
         <div class="mb-1 d-flex justify-content-between align-items-center"
           draggable="true" @dragstart="startDragSystem( $event, idx )"
           @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"

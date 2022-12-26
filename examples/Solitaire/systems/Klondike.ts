@@ -404,7 +404,7 @@ export default class Klondike extends System {
 
   update( timeMilli:number ) {
     // Perform updates
-    const p = this.Input.pointers[0];
+    const p = this.Input?.pointers?.[0];
     if ( p?.active || this.dragEntity >= 0 ) {
       pointer.x = p.x;
       pointer.y = p.y;

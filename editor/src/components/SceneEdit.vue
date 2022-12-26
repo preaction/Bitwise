@@ -5,18 +5,38 @@ import { useAppStore } from "../store/app.js";
 import { Game, Scene } from '@fourstar/bitwise';
 import ScenePanel from './ScenePanel.vue';
 
+/**
+ * SceneEdit is the scene editor tab. The scene JSON file contains the
+ * systems config and entities (with entity component configs). This
+ * data is used to build two Bitwise scenes: One for editing and one for
+ * playing.
+ *
+ * The editing scene loads only the entity data. This scene uses special
+ * systems to enable editing behaviors and report information back to the
+ * SceneEdit tab. In essense, it's a game that edits the game. Changes
+ * made to the editing scene are copied back to the scene JSON file data.
+ *
+ * The playing scene loads all the data, including systems. It also adds
+ * an additional system for reporting information back to the SceneEdit
+ * tab. Changes made to the playing scene are displayed in the editor
+ * but not copied back to the scene JSON file data.
+ *
+ * Much of the work of displaying scene data and editing scene data is
+ * handled by the ScenePanel component used by this tab and other tabs.
+ */
 export default defineComponent({
   components: {
     ScenePanel,
   },
   props: ['modelValue', 'name', 'edited'],
   data() {
-    return shallowReactive({
+    return {
+      sceneData: JSON.parse( JSON.stringify( this.modelValue ) ),
       playing: false,
       paused: false,
       editScene: null,
       playScene: null,
-    });
+    };
   },
 
   mounted() {
@@ -26,9 +46,9 @@ export default defineComponent({
 
     const scene = this.editScene = markRaw(game.addScene());
 
-    if ( this.modelValue && Object.keys( this.modelValue ).length > 0 ) {
+    if ( this.sceneData && Object.keys( this.sceneData ).length > 0 ) {
       try {
-        scene.thaw( toRaw( this.modelValue ) );
+        scene.thaw( toRaw( this.sceneData ) );
       }
       catch (e) {
         console.log( `Error thawing scene: ${e}` );
@@ -97,7 +117,7 @@ export default defineComponent({
         this.editGame.stop();
         const game = this.editGame = this.createEditorGame( 'edit-canvas' );
         const scene = markRaw(game.addScene());
-        scene.thaw( toRaw( this.modelValue ) );
+        scene.thaw( toRaw( this.sceneData ) );
         this.$nextTick( () => {
           this.editGame.start();
           try {
@@ -198,13 +218,12 @@ export default defineComponent({
 
     update() {
       // update() always works with the edit scene
-      // XXX: Editor scene should freeze camera settings
-      const sceneData = this.editScene.freeze();
+      const sceneData = this.sceneData;
       if ( this.name !== sceneData.name ) {
         this.$emit('update:name', sceneData.name);
       }
       this.$emit('update:modelValue', {
-        ...sceneData,
+        ...toRaw(sceneData),
         name: this.name,
       });
       this.$refs.scenePanel.refresh();
@@ -388,7 +407,8 @@ export default defineComponent({
       <canvas ref="play-canvas"/>
     </div>
     <div class="tab-sidebar">
-      <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged" :scene="scene" />
+      <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged"
+        v-model="sceneData" :scene="scene" />
     </div>
   </div>
 </template>
