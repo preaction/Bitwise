@@ -63,6 +63,7 @@ export default class Render extends RenderSystem {
   moveSelected:boolean = false;
   moveRatio:{x: number, y: number} = {x: 0, y: 0};
   moveObject:three.Object3D|null = null;
+  pointerStart:three.Vector3 = new three.Vector3(0, 0);
 
   listeners:{ [key:string]: (e:any) => void } = {};
 
@@ -81,9 +82,9 @@ export default class Render extends RenderSystem {
 
     this.listeners = {
       wheel: this.onWheel.bind(this),
-      mousedown: this.onMouseDown.bind(this),
-      mouseup: this.onMouseUp.bind(this),
-      mousemove: this.onMouseMove.bind(this),
+      pointerdown: this.onPointerDown.bind(this),
+      pointerup: this.onPointerUp.bind(this),
+      pointermove: this.onPointerMove.bind(this),
       keydown: this.onKeyDown.bind(this),
     };
   }
@@ -125,7 +126,7 @@ export default class Render extends RenderSystem {
     this.render();
   }
 
-  onMouseDown( event:MouseEvent ) {
+  onPointerDown( event:MouseEvent ) {
     if ( !this.camera ) {
       return;
     }
@@ -137,6 +138,8 @@ export default class Render extends RenderSystem {
     const scene = this.scene._scene;
     pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
     pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+    pointer.z = 0;
+    this.pointerStart = pointer.clone().unproject( this.camera );
 
     raycaster.setFromCamera( pointer, this.camera );
     const intersects = raycaster.intersectObjects( scene.children, true );
@@ -148,13 +151,11 @@ export default class Render extends RenderSystem {
         const camera = this.camera;
         this.moveSelected = true;
         this.moveObject = selected;
-        // XXX: This always moves the object center to the mouse
-        // position. We need to find the offset onMouseDown.
       }
     }
   }
 
-  onMouseUp( event:MouseEvent ) {
+  onPointerUp( event:MouseEvent ) {
     if ( !this.camera ) {
       return;
     }
@@ -276,29 +277,29 @@ export default class Render extends RenderSystem {
     return this.selected.map( obj => obj.userData.eid );
   }
 
-  onMouseMove( event:MouseEvent ) {
+  onPointerMove( event:MouseEvent ) {
     if ( !this.camera ) {
       return;
     }
-    // XXX: Mouse move with object selected moves object
-    // XXX: Mouse move with button down moves camera
     if ( this.mouseIsDown ) {
+      const canvas = this.scene.game.canvas;
+      pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
+      pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+      pointer.z = 0;
+      pointer.unproject( this.camera );
+
       // Allow a bare bit of movement
       this.mouseMoved ||= 1 < Math.abs(event.movementX) + Math.abs(event.movementY);
       if ( this.moveSelected && this.moveObject ) {
-        const canvas = this.scene.game.canvas;
-        const scene = this.scene._scene;
-        pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
-        pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
-        pointer.unproject( this.camera );
-        // XXX: This always moves the object center to the mouse
-        // position. We need to find the offset onMouseDown.
-        this.nudgeSelected({ x: pointer.x-this.moveObject.position.x, y: pointer.y-this.moveObject.position.y });
+        this.nudgeSelected({ x: pointer.x-this.pointerStart.x, y: pointer.y-this.pointerStart.y });
       }
       else {
-        this.camera.position.x -= event.movementX / this.camera.zoom / 2.5;
-        this.camera.position.y += event.movementY / this.camera.zoom / 2.5;
+        this.camera.position.x -= (pointer.x-this.pointerStart.x);
+        this.camera.position.y -= (pointer.y-this.pointerStart.y);
+        this.camera.updateProjectionMatrix();
       }
+
+      this.pointerStart = pointer.clone();
       this.render();
     }
   }

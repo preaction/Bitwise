@@ -87,9 +87,11 @@ export default defineComponent({
     const editor = this.editScene.getSystem( this.systems.EditorRender );
     editor.addEventListener( 'update', () => this.update() );
 
-    this.$nextTick( () => {
+    this.$nextTick( async () => {
       this.editGame.start();
       try {
+        await scene.init();
+        scene.start();
         scene.update(0);
       }
       catch (err) {
@@ -126,9 +128,11 @@ export default defineComponent({
         const game = this.editGame = this.createEditorGame( 'edit-canvas' );
         const scene = this.editScene = markRaw(game.addScene());
         this.thawEditScene( this.sceneData );
-        this.$nextTick( () => {
+        this.$nextTick( async () => {
           this.editGame.start();
           try {
+            await scene.init();
+            scene.start();
             scene.update(0);
           }
           catch (err) {
@@ -152,6 +156,7 @@ export default defineComponent({
       try {
         // Editor scene gets its own systems
         const systems = [
+          { name: 'Input', data: {} },
           { name: 'EditorRender', data: {} },
         ];
         if ( sceneData.systems.find( sys => sys.name === 'Physics' ) ) {
