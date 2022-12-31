@@ -190,6 +190,7 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
   if ( !win ) {
     return;
   }
+  const mywin = win;
   if ( aborter ) {
     aborter.abort();
   }
@@ -207,7 +208,7 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
           clearTimeout( timeoutId );
         }
         timeoutId = setTimeout( () => {
-          win.webContents.send( 'watch', changes );
+          mywin.webContents.send( 'watch', changes );
           changes.length = 0;
           timeoutId = null;
         }, 2000);
