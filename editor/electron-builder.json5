@@ -2,7 +2,7 @@
  * @see https://www.electron.build/configuration/configuration
  */
 {
-  "appId": "YourAppID",
+  "appId": "games.fourstar.bitwise",
   "asar": true,
   "directories": {
     "output": "../release/${version}"
@@ -34,14 +34,19 @@
   "linux": {
     "executableName": "bitwise-editor",
     "artifactName": "${productName}-${version}.${ext}",
+    "icon": "../extras/icon.png",
+    "category": "Development",
   },
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
+    "category": "public.app-category.developer-tools",
+    "icon": "../extras/icon.icns",
     "target": [
       "dmg"
     ]
   },
   "win": {
+    "icon": "../extras/icon.ico",
     "target": [
       {
         "target": "nsis",
