@@ -167,13 +167,29 @@ export default class Scene extends three.EventDispatcher {
     throw `System ${sysType.name} is required`;
   }
 
-  getComponent<T extends Component>(compType:(new (...args: any[]) => T)):T {
+  /**
+   * Get the component with the given class constructor. Will create a new
+   * component instance if necessary.
+   *
+   * @param componentType The component class / constructor
+   * @throws string If the component constructor cannot be found in the registry
+   * @returns T An object of the given class
+   */
+  getComponent<T extends Component>(componentType:(new (...args: any[]) => T)):T {
     for ( const comp of Object.values(this.components) ) {
-      if ( comp.constructor === compType ) {
+      if ( comp.constructor === componentType ) {
         return comp as T;
       }
     }
-    throw `Component ${compType} is required`;
+    // Otherwise, try to load it using the name from the Game class
+    // XXX: Why do we need to look up the name like this if we already
+    // have the constructor?
+    for ( const componentName in this.game.components ) {
+      if ( this.game.components[ componentName ] === componentType ) {
+        return this.addComponent( componentName );
+      }
+    }
+    throw `Component ${componentType.name} not found in Game`;
   }
 
   getEntityById( eid:number ):Entity {
@@ -264,15 +280,22 @@ export default class Scene extends three.EventDispatcher {
     this.systems.push(system);
   }
 
-  addComponent( name:string ) {
-    if ( this.components[name] ) {
-      return;
+  /**
+   * Add a component to the scene. Creates an instance of the component
+   * class registered with the Game.registerComponent() method.
+   *
+   * @param name The name of a component registered with the Game object
+   * @returns The newly-created component
+   */
+  addComponent<T extends Component>( name:string ):T {
+    if ( !this.components[name] ) {
+      let cons = this.game.components[ name ];
+      if ( !cons ) {
+        cons = NullComponent;
+      }
+      this.components[name] = new cons( this, this.world );
     }
-    let cons = this.game.components[ name ];
-    if ( !cons ) {
-      cons = NullComponent;
-    }
-    this.components[name] = new cons( this, this.world );
+    return this.components[name] as T;
   }
 
   addEntity( data:any=null ) {
