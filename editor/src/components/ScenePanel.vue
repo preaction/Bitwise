@@ -120,6 +120,15 @@ export default defineComponent({
       this.selectEntity( item.data );
     },
 
+    selectByPath(path:string) {
+      const pathParts = path.split(/\//);
+      let item = this.sceneTree;
+      for ( const pathPart of pathParts ) {
+        item = item.children.find( i => i.name === pathPart );
+      }
+      this.select(item);
+    },
+
     selectEntity(entityData:any) {
       this.selectedEntityData = entityData;
       this.selectedEntity = this.scene.getEntityByPath( entityData.Position.path );
@@ -141,6 +150,9 @@ export default defineComponent({
     },
 
     hasComponent( name:string ) {
+      // XXX: This should be named "canAddComponent" and should dispatch
+      // a call to the component object so a component can decide that
+      // it is not compatible with other components.
       return name in this.selectedEntityData;
     },
 
@@ -154,7 +166,7 @@ export default defineComponent({
     },
 
     addEntity( ...components:string[] ) {
-      const entityData = {
+      const entityData:{ [key:string]: any } = {
         name: 'New Entity',
         path: 'New Entity',
       };
@@ -164,11 +176,15 @@ export default defineComponent({
       if ( this.isPrefab ) {
         entityData.path = `${this.sceneTree.path}/${entityData.path}`;
       }
+      // XXX: Path should be an Entity property, not a Position property
+      entityData.Position.path = entityData.path;
+      this.sceneData.entities.push( entityData );
+      this.updateSceneTree();
+      this.update();
+      this.selectByPath(entityData.path);
+
       const entity = this.scene.addEntity();
       entity.thaw( entityData );
-      this.updateSceneTree();
-      //this.select( entityItem );
-      this.update();
     },
 
     updateName( event ) {
