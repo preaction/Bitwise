@@ -201,6 +201,12 @@ export default defineComponent({
         if ( this.selectedEntity?.path === entityData.Position.path ) {
           this.select( this.sceneTree );
         }
+        for ( let i = 0; i < this.sceneData.entities.length; i++ ) {
+          if ( this.sceneData.entities[i].path === entityData.path ) {
+            this.sceneData.entities.splice( i, 1 );
+            break;
+          }
+        }
         const entity = this.scene.getEntityByPath( entityData.Position.path );
         this.scene.removeEntity( entity.id );
         this.$refs.tree.removeItem(item);
