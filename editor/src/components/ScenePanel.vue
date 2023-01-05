@@ -348,6 +348,12 @@ export default defineComponent({
       if ( newName != this.selectedEntityData.name ) {
         this.selectedEntity.name = newName;
         this.selectedEntityData.name = newName;
+        const path = this.selectedEntityData.Position.path;
+        const pathParts = path.split('/').slice(0, -1);
+        pathParts.push(newName);
+        const newPath = pathParts.join( '/' );
+        this.selectedEntityData.Position.path = newPath;
+        this.selectedEntityData.path = newPath;
         this.update();
       }
     },
