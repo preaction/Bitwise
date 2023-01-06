@@ -345,7 +345,7 @@ export default defineComponent({
       const eids:number[] = editor.getSelectedEntityIds();
       const frozenEntities = eids.map( eid => scene.entities[eid].freeze() );
       // Clear the path so they are put at the root
-      frozenEntities.forEach( e => delete e.Position.path );
+      frozenEntities.forEach( e => delete e.path );
       const blob = new Blob(
         [JSON.stringify({ type: 'bitwise/entity', items: frozenEntities }, null, 2)],
         {

@@ -309,10 +309,10 @@ export default class Render extends System {
 
   addCamera( eid:number ) {
     const camera = this.cameras[eid] || this.createCamera(eid);
-    // XXX: If entity has a parent, add it to that instead
-    const pid = this.positionComponent.store.pid[eid];
-    if ( pid < PositionComponent.MAX_PARENT_ID ){
-      this.objects[pid].add( camera );
+    const entity = this.scene.getEntityById( eid );
+    const parent = entity.parent;
+    if ( parent ){
+      this.objects[parent.id].add( camera );
     }
     else {
       this.scene._scene.add( camera );
@@ -336,9 +336,10 @@ export default class Render extends System {
 
   addGroup( eid:number ) {
     const group = this.objects[eid] || this.createGroup( eid );
-    const pid = this.positionComponent.store.pid[eid];
-    if ( pid < PositionComponent.MAX_PARENT_ID ){
-      this.objects[pid].add( group );
+    const entity = this.scene.getEntityById( eid );
+    const parent = entity.parent;
+    if ( parent ){
+      this.objects[parent.id].add( group );
     }
     else {
       this.scene._scene.add( group );
@@ -380,9 +381,10 @@ export default class Render extends System {
 
   addSprite( eid:number ) {
     const sprite = this.objects[eid] || this.createSprite( eid );
-    const pid = this.positionComponent.store.pid[eid];
-    if ( pid < PositionComponent.MAX_PARENT_ID ){
-      this.objects[pid].add( sprite );
+    const entity = this.scene.getEntityById( eid );
+    const parent = entity.parent;
+    if ( parent ){
+      this.objects[parent.id].add( sprite );
     }
     else {
       this.scene._scene.add( sprite );

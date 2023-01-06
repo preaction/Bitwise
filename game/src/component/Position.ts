@@ -1,10 +1,8 @@
 
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
-import Entity from '../Entity.js';
 
 export default class Position extends Component {
-  static readonly MAX_PARENT_ID:number = 2**32-1;
   declare store:{
     x: number[],
     y: number[],
@@ -16,7 +14,6 @@ export default class Position extends Component {
     sx: number[],
     sy: number[],
     sz: number[],
-    pid: number[],
   }
 
   get componentData() {
@@ -31,49 +28,16 @@ export default class Position extends Component {
       sx: bitecs.Types.f32,
       sy: bitecs.Types.f32,
       sz: bitecs.Types.f32,
-      pid: bitecs.Types.eid,
     }
   }
 
   addEntity( eid:number ) {
     super.addEntity(eid);
+    this.store.x[eid] = 0;
+    this.store.y[eid] = 0;
+    this.store.z[eid] = 0;
     this.store.sx[eid] = 1;
     this.store.sy[eid] = 1;
     this.store.sz[eid] = 1;
-    this.store.pid[eid] = Position.MAX_PARENT_ID;
-  }
-
-  freezeEntity( eid:number ) {
-    const data = super.freezeEntity(eid);
-    const entity = this.scene.entities[ eid ];
-    data.path = entity.name;
-    let parentId = this.store.pid[ entity.id ];
-    while ( parentId < Position.MAX_PARENT_ID ) {
-      const parent = this.scene.entities[ parentId ];
-      data.path = [ parent.name, data.path ].join("/");
-      parentId = this.store.pid[ parent.id ];
-    }
-    delete data.pid;
-    entity.path = data.path;
-    return data;
-  }
-
-  thawEntity( eid:number, data:{ [key:string]: any }={} ) {
-    let pid = Position.MAX_PARENT_ID;
-    if ( data.path && typeof data.path === "string" ) {
-      const parts = data.path.split("/");
-      parts.pop(); // Pop off the object's name
-      if ( parts.length ) {
-        const parentName = parts.pop();
-        const parentPath = parts.join("/");
-        var parent = Object.values( this.scene.entities ).find( (e:Entity) => ( !parentPath || e.path === parentPath ) && e.name === parentName );
-        if ( parent ) {
-          pid = parent.id;
-        }
-      }
-    }
-    data = { pid, ...data };
-    delete data.path;
-    super.thawEntity( eid, data );
   }
 }

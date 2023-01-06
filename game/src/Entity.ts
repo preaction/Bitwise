@@ -1,17 +1,49 @@
 
 import Scene from './Scene.js';
-import Position from './component/Position.js';
 
 export default class Entity {
   id:number;
   type:string = "Entity";
   name:string = "New Entity";
-  path:string = "";
   scene:Scene;
 
   constructor(scene:Scene, id:number) {
     this.scene = scene;
     this.id = id;
+  }
+
+  _path:string = "";
+  /**
+   * path is the full path to this entity.
+   */
+  get path():string {
+    return this._path;
+  }
+  set path(newPath:string) {
+    this._path = newPath;
+    // Reset the parent cache
+    this._parent = undefined;
+  }
+
+  _parent:Entity|undefined = undefined;
+  /**
+   * parent is the parent Entity, if any.
+   */
+  get parent():Entity|undefined {
+    if ( !this._parent && this.path.match(/\//) ) {
+      const parentPath = this.path.split('/').slice(0, -1).join('/');
+      this._parent = this.scene.getEntityByPath(parentPath);
+    }
+    return this._parent;
+  }
+  set parent(newParent:Entity|undefined) {
+    if ( newParent ) {
+      this._path = newParent.path + '/' + this.name;
+    }
+    else {
+      this._path = this.name;
+    }
+    this._parent = newParent;
   }
 
   addComponent( name:string, data:{ [key:string]: any } ) {
@@ -54,46 +86,24 @@ export default class Entity {
     const data:{[key:string]:any} = {
       name: this.name,
       type: this.type,
+      path: this.path,
     };
     for ( const c of this.listComponents() ) {
       data[c] = this.scene.components[c].freezeEntity(this.id);
     }
 
     // Also freeze descendants
-    const parentChildren:{ [key:number]: Set<number> } = {};
-    const pos = this.scene.getComponent(Position).store;
-    for ( const eid of this.scene.eids ) {
-      const pid = pos.pid[eid];
-      if ( !parentChildren[pid] ) {
-        parentChildren[pid] = new Set([eid]);
+    data.entities = [];
+    Object.values(this.scene.entities).filter( e => e.path.startsWith(this.path + '/' ) ).forEach( entity => {
+      const eData:{[key:string]:any} = {
+        name: entity.name,
+        type: entity.type,
+      };
+      for ( const c of entity.listComponents() ) {
+        eData[c] = entity.scene.components[c].freezeEntity(entity.id);
       }
-      else {
-        parentChildren[pid].add(eid);
-      }
-    }
-    const descendantIds:Set<number> = parentChildren[this.id];
-    if ( descendantIds ) {
-      for ( const pid of descendantIds ) {
-        const children = parentChildren[pid];
-        if ( children ) {
-          for ( const cid of children ) {
-            descendantIds.add(cid);
-          }
-        }
-      }
-      data.entities = [];
-      descendantIds.forEach( id => {
-        const entity = this.scene.entities[id];
-        const eData:{[key:string]:any} = {
-          name: entity.name,
-          type: entity.type,
-        };
-        for ( const c of entity.listComponents() ) {
-          eData[c] = entity.scene.components[c].freezeEntity(entity.id);
-        }
-        data.entities.push(eData);
-      } );
-    }
+      data.entities.push(eData);
+    } );
 
     return data;
   }

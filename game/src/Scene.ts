@@ -197,24 +197,8 @@ export default class Scene extends three.EventDispatcher {
     return this.entities[ eid ];
   }
 
-  getEntityByPath( path:string ):Entity|null {
-    // XXX: Might want to keep a cache of entity by path
-    const parts = path.split( /\// );
-    const position = this.getComponent( Position );
-    let pid = Position.MAX_PARENT_ID;
-    let findName = '';
-    let entity = null;
-    while ( parts.length > 0 ) {
-      findName = parts.shift() || '';
-      entity = Object.values( this.entities ).find( e => {
-        return position.store.pid[ e.id ] === pid && e.name === findName;
-      });
-      if ( !entity ) {
-        return null;
-      }
-      pid = entity.id;
-    }
-    return entity;
+  getEntityByPath( path:string ):Entity|undefined {
+    return Object.values( this.entities ).find( e => e.path === path );
   }
 
   freeze():SceneData {

@@ -3,6 +3,7 @@
   "entities": [
     {
       "name": "Camera",
+      "path": "Camera",
       "type": "Camera",
       "Position": {
         "x": 0,
@@ -14,8 +15,7 @@
         "rw": 0,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Camera"
+        "sz": 1
       },
       "OrthographicCamera": {
         "frustum": 10,
@@ -26,6 +26,7 @@
     },
     {
       "name": "Player Ship",
+      "path": "Player Ship",
       "type": "Entity",
       "Position": {
         "x": 0,
@@ -37,8 +38,7 @@
         "rw": 0,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Player Ship"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "images/playerShip1_blue.png"
@@ -73,6 +73,7 @@
     },
     {
       "name": "Meteor 1",
+      "path": "Meteor 1",
       "type": "Entity",
       "Position": {
         "x": 0,
@@ -84,8 +85,7 @@
         "rw": 0,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Meteor 1"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "images/meteorBrown_big1.png"
@@ -120,6 +120,7 @@
     },
     {
       "name": "Boundary",
+      "path": "Boundary",
       "type": "Entity",
       "Position": {
         "x": 0,
@@ -131,8 +132,7 @@
         "rw": 0,
         "sx": 17.799999237060547,
         "sy": 10,
-        "sz": 50,
-        "path": "Boundary"
+        "sz": 50
       },
       "BoxCollider": {
         "trigger": 1,
@@ -146,6 +146,7 @@
     },
     {
       "name": "Enemy Fighter",
+      "path": "Enemy Fighter",
       "type": "Entity",
       "Position": {
         "x": -4,
@@ -157,8 +158,7 @@
         "rw": 0,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Enemy Fighter"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "images/enemyBlack1.png"
@@ -193,6 +193,7 @@
     },
     {
       "name": "Enemy Bomber",
+      "path": "Enemy Bomber",
       "type": "Entity",
       "Position": {
         "x": 4,
@@ -204,8 +205,7 @@
         "rw": 0,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Enemy Bomber"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "images/enemyBlack4.png"

@@ -89,7 +89,6 @@ export default class Movement extends System {
       }
       if ( ( !this.cooldown[weaponId] || this.cooldown[ weaponId ] <= 0 ) && key.fire ) {
         const weapon = this.scene.addEntity( this.weaponPrefabs[weaponId] );
-        this.position.store.pid[ weapon.id ] = Position.MAX_PARENT_ID;
         this.position.store.x[ weapon.id ] += this.position.store.x[eid];
         this.position.store.y[ weapon.id ] += this.position.store.y[eid];
         this.position.store.z[ weapon.id ] += this.position.store.z[eid];

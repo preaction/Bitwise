@@ -77,7 +77,7 @@ export default defineComponent({
         children: [],
       };
       for ( const entity of this.sceneData.entities ) {
-        const pathParts = entity.Position.path.split(/\//);
+        const pathParts = entity.path.split(/\//);
         let treeNode = rootNode;
         while ( pathParts.length > 0 ) {
           const pathPart = pathParts.shift();
@@ -93,7 +93,7 @@ export default defineComponent({
 
         treeNode.data = entity;
         treeNode.name = entity.name;
-        treeNode.path = entity.Position.path;
+        treeNode.path = entity.path;
         treeNode.icon = this.icons[ entity.type ] || this.icons.default;
       }
 
@@ -131,7 +131,7 @@ export default defineComponent({
 
     selectEntity(entityData:any) {
       this.selectedEntityData = entityData;
-      this.selectedEntity = this.scene.getEntityByPath( entityData.Position.path );
+      this.selectedEntity = this.scene.getEntityByPath( entityData.path );
       // XXX: Listen for updates to entity data
     },
 
@@ -176,8 +176,6 @@ export default defineComponent({
       if ( this.isPrefab ) {
         entityData.path = `${this.sceneTree.path}/${entityData.path}`;
       }
-      // XXX: Path should be an Entity property, not a Position property
-      entityData.Position.path = entityData.path;
       this.sceneData.entities.push( entityData );
       this.updateSceneTree();
       this.update();
@@ -198,7 +196,7 @@ export default defineComponent({
     deleteEntity( item ) {
       if ( confirm( `Are you sure you want to delete "${item.name}"?` ) ) {
         const entityData = item.data;
-        if ( this.selectedEntity?.path === entityData.Position.path ) {
+        if ( this.selectedEntity?.path === entityData.path ) {
           this.select( this.sceneTree );
         }
         for ( let i = 0; i < this.sceneData.entities.length; i++ ) {
@@ -207,7 +205,7 @@ export default defineComponent({
             break;
           }
         }
-        const entity = this.scene.getEntityByPath( entityData.Position.path );
+        const entity = this.scene.getEntityByPath( entityData.path );
         this.scene.removeEntity( entity.id );
         this.$refs.tree.removeItem(item);
         this.update();
@@ -262,19 +260,14 @@ export default defineComponent({
         const dragEntity = this.scene.getEntityByPath(data);
         const dropEntity = this.scene.getEntityByPath(onItem.path);
 
-        const dropPid = isChild ? dropEntity.id : this.scene.components.Position.store.pid[dropEntity.id];
-        this.scene.components.Position.store.pid[dragEntity.id] = dropPid;
+        dragEntity.parent = isChild ? dropEntity : dropEntity.parent;
         // XXX: Adjust position to offset from parent so that entity
         // stays in same place visually
 
         // Then we can update the data with the new path (XXX: and
         // position)
         const dragEntityData = this.getEntityDataByPath(data);
-        const dropEntityData = this.getEntityDataByPath(onItem.path);
-        const dropPath = isChild ?
-          `${dropEntityData.Position.path}/${dragEntityData.name}` :
-          dropEntityData.Position.path.split('/').slice(0, -1).join( '/' );
-        dragEntityData.Position.path = dropPath;
+        dragEntityData.path = dragEntity.path;
 
         this.updateSceneTree();
         // XXX: Expand dropEntity in scene tree if not root
@@ -348,11 +341,10 @@ export default defineComponent({
       if ( newName != this.selectedEntityData.name ) {
         this.selectedEntity.name = newName;
         this.selectedEntityData.name = newName;
-        const path = this.selectedEntityData.Position.path;
+        const path = this.selectedEntityData.path;
         const pathParts = path.split('/').slice(0, -1);
         pathParts.push(newName);
         const newPath = pathParts.join( '/' );
-        this.selectedEntityData.Position.path = newPath;
         this.selectedEntityData.path = newPath;
         this.update();
       }
@@ -437,7 +429,7 @@ export default defineComponent({
           @keyup="updateEntityName" pattern="^[^/]+$"
         />
       </div>
-      <div v-for="name in selectedEntityComponents" class="component-form" :key="selectedEntityData.Position.path + '/' + name">
+      <div v-for="name in selectedEntityComponents" class="component-form" :key="selectedEntityData.path + '/' + name">
         <div class="mb-1 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
             <h6 class="m-0">{{ name }}</h6>

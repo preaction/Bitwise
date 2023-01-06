@@ -4,6 +4,7 @@
     {
       "name": "Camera",
       "type": "Camera",
+      "path": "Camera",
       "Position": {
         "x": 0,
         "y": 0,
@@ -14,8 +15,7 @@
         "rw": 1,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Camera"
+        "sz": 1
       },
       "OrthographicCamera": {
         "frustum": 10,
@@ -27,6 +27,7 @@
     {
       "name": "Foundations",
       "type": "Entity",
+      "path": "Foundations",
       "Position": {
         "x": 0,
         "y": 0,
@@ -37,13 +38,13 @@
         "rw": 0,
         "sx": 1,
         "sy": 1,
-        "sz": 1,
-        "path": "Foundations"
+        "sz": 1
       }
     },
     {
       "name": "Foundation 1",
       "type": "Entity",
+      "path": "Foundation 1",
       "Position": {
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
@@ -54,8 +55,7 @@
         "rw": 1,
         "x": "7.534010410308838",
         "y": 3.5,
-        "z": 0,
-        "path": "Foundation 1"
+        "z": 0
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -65,6 +65,7 @@
     {
       "name": "Foundation 2",
       "type": "Entity",
+      "path": "Foundation 2",
       "Position": {
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
@@ -75,8 +76,7 @@
         "rw": 1,
         "x": "5.352031230926514",
         "y": 3.5,
-        "z": 0,
-        "path": "Foundation 2"
+        "z": 0
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -86,6 +86,7 @@
     {
       "name": "Foundation 3",
       "type": "Entity",
+      "path": "Foundation 3",
       "Position": {
         "x": 3.1700520515441895,
         "y": 3.5,
@@ -96,8 +97,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Foundation 3"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -107,6 +107,7 @@
     {
       "name": "Foundation 4",
       "type": "Entity",
+      "path": "Foundation 4",
       "Position": {
         "x": 0.974126935005188,
         "y": 3.5,
@@ -117,8 +118,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Foundation 4"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -127,6 +127,7 @@
     },
     {
       "name": "Stack 1",
+      "path": "Stack 1",
       "type": "Entity",
       "Position": {
         "x": 7.015634536743164,
@@ -138,8 +139,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Stack 1"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -148,6 +148,7 @@
     },
     {
       "name": "Stack 2",
+      "path": "Stack 2",
       "type": "Entity",
       "Position": {
         "x": 4.743009090423584,
@@ -159,8 +160,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Stack 2"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -169,6 +169,7 @@
     },
     {
       "name": "Stack 4",
+      "path": "Stack 4",
       "type": "Entity",
       "Position": {
         "x": 2.4703850746154785,
@@ -180,8 +181,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Stack 4"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -190,6 +190,7 @@
     },
     {
       "name": "Stack 5",
+      "path": "Stack 5",
       "type": "Entity",
       "Position": {
         "x": 0.2063533365726471,
@@ -201,8 +202,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Stack 5"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -212,6 +212,7 @@
     {
       "name": "Stack 6",
       "type": "Entity",
+      "path": "Stack 6",
       "Position": {
         "x": -2.1560862064361572,
         "y": 0.5472471117973328,
@@ -222,8 +223,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Stack 6"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -232,6 +232,7 @@
     },
     {
       "name": "Stack 7",
+      "path": "Stack 7",
       "type": "Entity",
       "Position": {
         "x": -4.518527984619141,
@@ -243,8 +244,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Stack 7"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -253,6 +253,7 @@
     },
     {
       "name": "Deck",
+      "path": "Deck",
       "type": "Entity",
       "Position": {
         "x": -7.3369059562683105,
@@ -264,8 +265,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Deck"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -273,6 +273,7 @@
     },
     {
       "name": "Discard",
+      "path": "Discard",
       "type": "Entity",
       "Position": {
         "x": -5.099999904632568,
@@ -284,8 +285,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Discard"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -293,6 +293,7 @@
     },
     {
       "name": "Stack 3",
+      "path": "Stack 3",
       "type": "Entity",
       "Position": {
         "x": -6.926290988922119,
@@ -304,8 +305,7 @@
         "rw": 1,
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
-        "sz": 1,
-        "path": "Stack 3"
+        "sz": 1
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
@@ -323,7 +323,6 @@
         "ry": 0,
         "rz": 0,
         "rw": 0,
-        "path": "Menu Button",
         "x": "-8",
         "y": "-4"
       },
