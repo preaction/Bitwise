@@ -101,7 +101,6 @@ export default class Entity {
   thaw( data:any ) {
     this.name = data.name;
     this.type = data.type;
-    data.id = this.id;
     for ( const c in data ) {
       if ( typeof data[c] !== "object" || Array.isArray(data[c]) ) {
         continue;
