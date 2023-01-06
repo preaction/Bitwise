@@ -66,6 +66,9 @@ export default class Klondike extends System {
   drawEntityPath:string = "";
   discardEntity!:Entity;
   discardEntityPath:string = "";
+  menuButtonEntity!:Entity;
+  menuButtonEntityPath:string = "";
+  menuButtonElement!:HTMLElement;
 
   rowHeight:number = 0.5;
 
@@ -79,13 +82,20 @@ export default class Klondike extends System {
    */
   followEntities:number[] = [];
 
-  thaw( data:{drawEntityPath: string, discardEntityPath: string} ) {
+  thaw( data:{drawEntityPath: string, discardEntityPath: string, menuButtonEntityPath: string} ) {
+    // XXX: Annoying to define all system fields in thaw and freeze...
     this.drawEntityPath = data.drawEntityPath;
     this.discardEntityPath = data.discardEntityPath;
+    this.menuButtonEntityPath = data.menuButtonEntityPath;
   }
 
   freeze():any {
-    return { drawEntityPath: this.drawEntityPath, discardEntityPath: this.discardEntityPath };
+    // XXX: Annoying to define all system fields in thaw and freeze...
+    return {
+      drawEntityPath: this.drawEntityPath,
+      discardEntityPath: this.discardEntityPath,
+      menuButtonEntityPath: this.menuButtonEntityPath,
+    };
   }
 
   async init() {
@@ -125,6 +135,12 @@ export default class Klondike extends System {
       throw "Missing discard entity";
     }
     this.discardEntity = discardEntity;
+
+    const menuButtonEntity = this.scene.getEntityByPath( this.menuButtonEntityPath );
+    if ( !menuButtonEntity ) {
+      throw `Missing menu button entity: ${this.menuButtonEntityPath}`;
+    }
+    this.menuButtonEntity = menuButtonEntity;
 
     // Load the Deck prefab textures and materials
     this.cardBackTextureId = this.scene.game.load.texture( cardBackImage );
@@ -187,6 +203,13 @@ export default class Klondike extends System {
       }
     }
 
+    const menuButtonElement = this.Render.getUIElement(this.menuButtonEntity.id);
+    if ( !menuButtonElement ) {
+      throw "Missing menu button HTML element";
+    }
+    this.menuButtonElement = menuButtonElement;
+    this.menuButtonElement.addEventListener( 'click', this.showMenu.bind(this) );
+
     this.tweens.play();
     this.positionDeck();
   }
@@ -197,6 +220,10 @@ export default class Klondike extends System {
 
   resume() {
     this.tweens.resume();
+  }
+
+  showMenu() {
+    console.log( 'Show menu' );
   }
 
   positionDeck() {

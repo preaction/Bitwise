@@ -224,7 +224,7 @@ export default defineComponent({
     },
 
     updateSystem( idx:number, data:Object ) {
-      this.sceneData.systems[idx] = data;
+      this.sceneData.systems[idx].data = data;
       this.scene.systems[idx].thaw( data );
       this.update();
     },
@@ -405,6 +405,9 @@ export default defineComponent({
           <li class="hr"><hr></li>
           <li @click="addEntity('Position','Sprite')">Sprite</li>
           <li @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</li>
+          <li class="hr"><hr></li>
+          <li @click="addEntity('Position','UI')">UI Element</li>
+          <li @click="addEntity('Position','UI','UIImage')">UI Image</li>
         </ul>
       </MenuButton>
     </div>

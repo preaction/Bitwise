@@ -1,10 +1,13 @@
 
 import * as three from 'three';
+import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import * as bitecs from 'bitecs';
 import System from '../System.js';
 import Scene from '../Scene.js';
 import PositionComponent from '../component/Position.js';
 import SpriteComponent from '../component/Sprite.js';
+import UIComponent from '../component/UI.js';
+import UIImageComponent from '../component/UIImage.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
 
@@ -13,6 +16,13 @@ export default class Render extends System {
   positionQuery:bitecs.Query;
   positionEnterQuery:bitecs.Query;
   positionExitQuery:bitecs.Query;
+
+  uiComponent:UIComponent;
+  uiImageComponent:UIImageComponent;
+  uiQuery:bitecs.Query;
+  uiEnterQuery:bitecs.Query;
+  uiExitQuery:bitecs.Query;
+  uiElements:CSS3DObject[] = [];
 
   cameraComponent:OrthographicCameraComponent;
   cameraQuery:bitecs.Query;
@@ -45,10 +55,16 @@ export default class Render extends System {
     this.positionComponent = scene.getComponent(PositionComponent);
     this.spriteComponent = scene.getComponent(SpriteComponent);
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
+    this.uiComponent = scene.getComponent(UIComponent);
+    this.uiImageComponent = scene.getComponent(UIImageComponent);
 
     this.positionQuery = scene.game.ecs.defineQuery([ this.positionComponent.store ]);
     this.positionEnterQuery = scene.game.ecs.enterQuery( this.positionQuery );
     this.positionExitQuery = scene.game.ecs.exitQuery( this.positionQuery );
+
+    this.uiQuery = scene.game.ecs.defineQuery([ this.uiComponent.store ]);
+    this.uiEnterQuery = scene.game.ecs.enterQuery( this.uiQuery );
+    this.uiExitQuery = scene.game.ecs.exitQuery( this.uiQuery );
 
     this.cameraQuery = scene.game.ecs.defineQuery([ this.cameraComponent.store ]);
     this.spriteQuery = scene.game.ecs.defineQuery([ this.spriteComponent.store ]);
@@ -79,6 +95,11 @@ export default class Render extends System {
       this.createCamera( eid );
     }
 
+    // Pre-create UI elements
+    for ( const eid of this.uiQuery(this.scene.world) ) {
+      this.createUIElement( eid );
+    }
+
     // XXX: We should set this in a System form
     this.mainCamera = cameraEids[0];
     return Promise.all( promises );
@@ -99,6 +120,34 @@ export default class Render extends System {
         this.addGroup( eid );
       }
     }
+    // Add UI objects to UI scene
+    for ( const eid of this.uiQuery(this.scene.world) ) {
+      this.addUIElement( eid );
+    }
+  }
+
+  createUIElement( eid:number ):CSS3DObject {
+    // XXX: Look up element to create by which components are on the
+    // element?
+    const node = document.createElement( 'div' );
+    node.dataset.eid = eid.toString();
+    const element = new CSS3DObject( node );
+    this.objects[eid] = this.uiElements[eid] = element;
+
+    const imageId = this.uiImageComponent.store.imageId[eid];
+    if ( imageId ) {
+      const img = document.createElement( 'img' );
+      img.src = this.scene.game.load.base + this.scene.game.load.texturePaths[imageId];
+      img.dataset.imageId = imageId.toString();
+      node.appendChild( img );
+    }
+
+    return element;
+  }
+
+  addUIElement( eid:number ) {
+    const element = this.uiElements[eid] ||= this.createUIElement(eid);
+    this.scene._uiScene.add( element );
   }
 
   stop() {
@@ -122,6 +171,14 @@ export default class Render extends System {
   getRenderObject<T extends three.Object3D>( eid:number ):T|null {
     return this.objects[eid] as T || null;
   }
+
+  /**
+   * Get the UI element object for the given entity, if any.
+   */
+  getUIElement( eid:number ):HTMLElement|null {
+    return this.uiElements[eid]?.element || null;
+  }
+
 
   /**
    * Load the texture and prepare it to be rendered.
@@ -175,6 +232,16 @@ export default class Render extends System {
     for ( const eid of cameraEids ) {
       this.updateCamera( eid );
     }
+
+    // UI elements entering the scene
+    for ( const eid of this.uiEnterQuery(this.scene.world) ) {
+      this.addUIElement( eid );
+    }
+
+    // UI elements leaving the scene
+    for ( const eid of this.uiExitQuery(this.scene.world) ) {
+      this.remove( eid );
+    }
   }
 
   render() {
@@ -186,6 +253,7 @@ export default class Render extends System {
         continue;
       }
       this.scene.game.renderer.render( this.scene._scene, camera );
+      this.scene.game.ui.renderer.render( this.scene._uiScene, camera );
     }
   }
 
@@ -323,6 +391,7 @@ export default class Render extends System {
 
   remove( eid:number ) {
     this.scene._scene.remove( this.objects[eid] );
+    this.scene._uiScene.remove( this.objects[eid] );
     delete this.objects[eid];
     delete this.materials[eid];
   }

@@ -1,5 +1,6 @@
 
 import * as three from 'three';
+import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import * as bitecs from 'bitecs';
 import Scene, { SceneState } from './Scene.js';
 import Load from './Load.js';
@@ -11,6 +12,8 @@ import OrthographicCameraComponent from './component/OrthographicCamera.js';
 import SpriteComponent from './component/Sprite.js';
 import RigidBodyComponent from './component/RigidBody.js';
 import BoxColliderComponent from './component/BoxCollider.js';
+import UIComponent from './component/UI.js';
+import UIImageComponent from './component/UIImage.js';
 
 import InputSystem from './system/Input.js';
 import RenderSystem from './system/Render.js';
@@ -36,6 +39,8 @@ const DEFAULT_COMPONENTS = {
   Sprite: SpriteComponent,
   RigidBody: RigidBodyComponent,
   BoxCollider: BoxColliderComponent,
+  UI: UIComponent,
+  UIImage: UIImageComponent,
 };
 
 /**
@@ -51,9 +56,10 @@ export interface ResizeEvent extends three.Event {
  * Any number of Scenes may be active at once.
  */
 export default class Game extends three.EventDispatcher {
-  canvas:HTMLCanvasElement;
+  canvas!:HTMLCanvasElement;
   load:Load;
-  renderer:three.WebGLRenderer|null = null;
+  renderer!:three.WebGLRenderer;
+  ui!:{ renderer: CSS3DRenderer };
   ecs:typeof bitecs;
 
   width:number = 0;
@@ -128,6 +134,17 @@ export default class Game extends three.EventDispatcher {
 
     this.renderer.setSize(this.width, this.height, false);
 
+    this.ui = { renderer: new CSS3DRenderer() };
+    const uiRenderer = this.ui.renderer;
+    this.canvas.insertAdjacentElement("afterend", uiRenderer.domElement);
+    // Position ui dom element exactly above canvas
+    const uiEl = uiRenderer.domElement;
+    uiEl.style.position = "absolute";
+    uiEl.style.left = this.canvas.clientLeft + "px";
+    uiEl.style.top = this.canvas.clientTop + "px";
+    uiEl.style.pointerEvents = "none";
+    uiRenderer.setSize( this.canvas.clientWidth, this.canvas.clientHeight );
+
     this.dispatchEvent({ type: 'start' });
 
     if ( this.initialScenePath ) {
@@ -192,6 +209,7 @@ export default class Game extends three.EventDispatcher {
     const needResize = canvas.width !== render.width || canvas.height !== render.height;
     if (needResize) {
       this.renderer.setSize(render.width, render.height, false);
+      this.ui.renderer.setSize( this.canvas.clientWidth, this.canvas.clientHeight );
       this.dispatchEvent({ type: 'resize', width: render.width, height: render.height });
     }
     return needResize;

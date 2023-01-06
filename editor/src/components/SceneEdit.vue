@@ -49,7 +49,7 @@ export default defineComponent({
       sceneData = this.sceneData = {
         components: [
           'Position', 'Sprite', 'OrthographicCamera', 'RigidBody',
-          'BoxCollider',
+          'BoxCollider', 'UI',
         ],
         systems: [
           { name: 'Input', data: {} },

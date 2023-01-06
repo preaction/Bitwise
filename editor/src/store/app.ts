@@ -14,6 +14,8 @@ import OrthographicCameraEdit from '../components/bitwise/OrthographicCamera.vue
 import SpriteEdit from '../components/bitwise/Sprite.vue';
 import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
 import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
+import UIEdit from '../components/bitwise/UI.vue';
+import UIImageEdit from '../components/bitwise/UIImage.vue';
 
 // Core System forms
 import PhysicsEdit from '../components/bitwise/system/Physics.vue';
@@ -187,6 +189,8 @@ export const useAppStore = defineStore('app', {
         "Sprite": SpriteEdit,
         "RigidBody": RigidBodyEdit,
         "BoxCollider": BoxColliderEdit,
+        "UI": UIEdit,
+        "UIImage": UIImageEdit,
       }),
       systemForms: Vue.markRaw({
         "Physics": PhysicsEdit,

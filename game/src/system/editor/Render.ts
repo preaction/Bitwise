@@ -94,6 +94,7 @@ export default class Render extends RenderSystem {
   }
 
   start() {
+    super.start();
     this.scene.addEventListener( "resize", (e:three.Event) => {
       this.onResize(e as ResizeEvent);
     });
@@ -349,13 +350,23 @@ export default class Render extends RenderSystem {
     }
   }
 
+  /**
+   * render overrides the normal rendering to render the entire scene
+   * only to the editor camera, creating it if needed.
+   */
   render() {
     if ( !this.camera ) {
       this.camera = this.createCamera();
     }
     this.scene.game.renderer.render( this.scene._scene, this.camera );
+    this.scene.game.ui.renderer.render( this.scene._uiScene, this.camera );
   }
 
+  /**
+   * createCamera creates the editor camera and sets it up to
+   * automatically resize and maintain its aspect ratio. The camera will
+   * be created just large enough to see everything in the scene.
+   */
   createCamera() {
     // Maintain a constant aspect ratio so shapes don't get distorted
     const { width, height } = this.scene.game;

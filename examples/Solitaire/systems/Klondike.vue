@@ -7,6 +7,7 @@ export default defineComponent({
     return {
       drawEntityPath: '',
       discardEntityPath: '',
+      menuButtonEntityPath: '',
       ...this.modelValue,
     };
   },
@@ -17,6 +18,9 @@ export default defineComponent({
       this.update();
     },
     discardEntityPath() {
+      this.update();
+    },
+    menuButtonEntityPath() {
       this.update();
     },
   },
@@ -37,6 +41,10 @@ export default defineComponent({
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Discard</label>
       <InputGameObject v-model="discardEntityPath" type="entity" drop-effect="link" />
+    </div>
+    <div class="d-flex justify-content align-items-center">
+      <label class="me-1">Menu Button</label>
+      <InputGameObject v-model="menuButtonEntityPath" type="entity" drop-effect="link" />
     </div>
   </div>
 </template>

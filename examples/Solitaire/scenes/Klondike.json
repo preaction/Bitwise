@@ -311,6 +311,26 @@
         "texturePath": "cards/card_empty.png"
       },
       "Stack": {}
+    },
+    {
+      "name": "Menu Button",
+      "path": "Menu Button",
+      "Position": {
+        "sx": "0.02",
+        "sy": "0.02",
+        "sz": 1,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "path": "Menu Button",
+        "x": "-8",
+        "y": "-4"
+      },
+      "UI": {},
+      "UIImage": {
+        "imagePath": "ui/gear-button.png"
+      }
     }
   ],
   "components": [
@@ -329,7 +349,8 @@
       "name": "Klondike",
       "data": {
         "drawEntityPath": "Deck",
-        "discardEntityPath": "Discard"
+        "discardEntityPath": "Discard",
+        "menuButtonEntityPath": "Menu Button"
       }
     },
     {

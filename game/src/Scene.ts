@@ -55,6 +55,7 @@ export default class Scene extends three.EventDispatcher {
   game:any;
   state:SceneState = SceneState.Stop;
   _scene:three.Scene = new three.Scene();
+  _uiScene:three.Scene = new three.Scene();
 
   // world is the bitecs World object. Each scene has its own.
   world:bitecs.IWorld;
@@ -263,6 +264,10 @@ export default class Scene extends three.EventDispatcher {
     for ( const eData of data.entities ) {
       for ( const c in eData ) {
         if ( typeof eData[c] !== "object" ) {
+          continue;
+        }
+        if ( !this.components[c] ) {
+          console.error( `Component ${c} not registered on scene` );
           continue;
         }
         this.components[c].thawEntity(eData.id, eData[c]);
