@@ -5,6 +5,7 @@ import * as bitecs from 'bitecs';
 import System from '../System.js';
 import Scene from '../Scene.js';
 import PositionComponent from '../component/Position.js';
+import ActiveComponent from '../component/Active.js';
 import SpriteComponent from '../component/Sprite.js';
 import UIComponent from '../component/UI.js';
 import UIImageComponent from '../component/UIImage.js';
@@ -58,11 +59,12 @@ export default class Render extends System {
     this.uiComponent = scene.getComponent(UIComponent);
     this.uiImageComponent = scene.getComponent(UIImageComponent);
 
-    this.positionQuery = scene.game.ecs.defineQuery([ this.positionComponent.store ]);
+    const activeComponent = scene.getComponent(ActiveComponent);
+    this.positionQuery = scene.game.ecs.defineQuery([ this.positionComponent.store, activeComponent.store ]);
     this.positionEnterQuery = scene.game.ecs.enterQuery( this.positionQuery );
     this.positionExitQuery = scene.game.ecs.exitQuery( this.positionQuery );
 
-    this.uiQuery = scene.game.ecs.defineQuery([ this.uiComponent.store ]);
+    this.uiQuery = scene.game.ecs.defineQuery([ this.uiComponent.store, activeComponent.store ]);
     this.uiEnterQuery = scene.game.ecs.enterQuery( this.uiQuery );
     this.uiExitQuery = scene.game.ecs.exitQuery( this.uiQuery );
 
@@ -109,7 +111,7 @@ export default class Render extends System {
     // Add all render objects to the scene
     const spriteEids = this.spriteQuery(this.scene.world);
     const cameraEids = this.cameraQuery(this.scene.world);
-    for ( const eid of this.positionQuery(this.scene.world) ) {
+    for ( const eid of this.positionEnterQuery(this.scene.world) ) {
       if ( spriteEids.indexOf(eid) >= 0 ) {
         this.addSprite( eid );
       }
@@ -121,7 +123,7 @@ export default class Render extends System {
       }
     }
     // Add UI objects to UI scene
-    for ( const eid of this.uiQuery(this.scene.world) ) {
+    for ( const eid of this.uiEnterQuery(this.scene.world) ) {
       this.addUIElement( eid );
     }
   }

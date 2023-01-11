@@ -1,4 +1,6 @@
 
+import * as bitecs from 'bitecs';
+import ActiveComponent from './component/Active.js';
 import Scene from './Scene.js';
 
 export default class Entity {
@@ -6,6 +8,26 @@ export default class Entity {
   type:string = "Entity";
   name:string = "New Entity";
   scene:Scene;
+
+  /**
+   * The active flag determines if the entity is added to the scene when
+   * the scene starts. Otherwise, the entity is created but not added to
+   * the scene.
+   *
+   * The active flag corresponds to the Active component. Systems can
+   * honor the active flag by adding the Active component to queries.
+   */
+  get active():boolean {
+    return bitecs.hasComponent( this.scene.world, this.id, this.scene.getComponent(ActiveComponent).store );
+  }
+  set active(newActive:boolean) {
+    if ( newActive ) {
+      bitecs.addComponent( this.scene.world, this.scene.getComponent(ActiveComponent).store, this.id )
+    }
+    else {
+      bitecs.removeComponent(this.scene.world, this.scene.getComponent(ActiveComponent).store, this.id )
+    }
+  }
 
   constructor(scene:Scene, id:number) {
     this.scene = scene;
@@ -87,6 +109,7 @@ export default class Entity {
       name: this.name,
       type: this.type,
       path: this.path,
+      active: this.active,
     };
     for ( const c of this.listComponents() ) {
       data[c] = this.scene.components[c].freezeEntity(this.id);
@@ -98,6 +121,8 @@ export default class Entity {
       const eData:{[key:string]:any} = {
         name: entity.name,
         type: entity.type,
+        path: entity.path,
+        active: entity.active,
       };
       for ( const c of entity.listComponents() ) {
         eData[c] = entity.scene.components[c].freezeEntity(entity.id);
@@ -111,6 +136,7 @@ export default class Entity {
   thaw( data:any ) {
     this.name = data.name;
     this.type = data.type;
+    this.active = "active" in data ? data.active : true;
     for ( const c in data ) {
       if ( typeof data[c] !== "object" || Array.isArray(data[c]) ) {
         continue;
@@ -131,6 +157,7 @@ export default class Entity {
         entity.name = eData.name;
         entity.type = eData.type;
         entity.path = eData.path;
+        entity.active = eData.active;
         eData.id = entity.id;
       }
       for ( const eData of data.entities ) {
@@ -145,6 +172,7 @@ export default class Entity {
         }
         // XXX: Remove any components from this entity which are not in the
         // given data
+        delete eData.id;
       }
     }
   }

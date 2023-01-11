@@ -25,7 +25,6 @@ import System from './System.js';
 import NullSystem from './system/Null.js';
 import NullComponent from './component/Null.js';
 import Entity from './Entity.js';
-import Position from './component/Position';
 
 // SceneState is the current state of the scene.
 export enum SceneState {
@@ -211,6 +210,7 @@ export default class Scene extends three.EventDispatcher {
       const eData:{ [key:string]: any } = {
         name: entity.name,
         type: entity.type,
+        active: entity.active,
       };
       for ( const c of entity.listComponents() ) {
         seenComponents.add(c);
@@ -243,6 +243,7 @@ export default class Scene extends three.EventDispatcher {
       entity.name = eData.name;
       entity.type = eData.type;
       entity.path = eData.path;
+      entity.active = "active" in eData ? eData.active : true;
       eData.id = entity.id;
     }
     for ( const eData of data.entities ) {
@@ -256,6 +257,7 @@ export default class Scene extends three.EventDispatcher {
         }
         this.components[c].thawEntity(eData.id, eData[c]);
       }
+      delete eData.id;
     }
   }
 

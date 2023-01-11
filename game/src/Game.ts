@@ -7,6 +7,7 @@ import Load from './Load.js';
 import Component from './Component.js';
 import System from './System.js';
 
+import ActiveComponent from './component/Active.js';
 import PositionComponent from './component/Position.js';
 import OrthographicCameraComponent from './component/OrthographicCamera.js';
 import SpriteComponent from './component/Sprite.js';
@@ -34,6 +35,7 @@ const DEFAULT_SYSTEMS = {
 };
 
 const DEFAULT_COMPONENTS = {
+  Active: ActiveComponent,
   Position: PositionComponent,
   OrthographicCamera: OrthographicCameraComponent,
   Sprite: SpriteComponent,

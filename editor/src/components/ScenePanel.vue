@@ -42,7 +42,7 @@ export default defineComponent({
     ...mapStores(useAppStore),
     ...mapState( useAppStore, ['components', 'systems', 'componentForms', 'systemForms'] ),
     availableComponents() {
-      return Object.keys( this.components ).filter( c => !this.components[c].isNull );
+      return Object.keys( this.components ).filter( c => !this.components[c].isNull && !this.components[c].isHidden );
     },
     availableSystems() {
       return Object.keys( this.systems ).filter( s => !this.systems[s].isNull && !s.match(/^Editor/) );
@@ -54,7 +54,7 @@ export default defineComponent({
       const components = [];
       for ( const c in this.selectedEntityData ) {
         // These fields in entity data are not components
-        if ( [ 'name', 'type', 'path', 'id' ].indexOf( c ) >= 0 ) {
+        if ( [ 'name', 'type', 'path', 'id', 'active' ].indexOf( c ) >= 0 ) {
           continue;
         }
         components.push(c);
@@ -130,6 +130,9 @@ export default defineComponent({
     },
 
     selectEntity(entityData:any) {
+      if ( !("active" in entityData) ) {
+        entityData.active = true;
+      }
       this.selectedEntityData = entityData;
       this.selectedEntity = this.scene.getEntityByPath( entityData.path );
       // XXX: Listen for updates to entity data
@@ -190,6 +193,13 @@ export default defineComponent({
       this.sceneTree.name = name;
       this.scene.name = name;
       this.sceneData.name = name;
+      this.update();
+    },
+
+    updateActive( event ) {
+      const active = event.target.checked;
+      this.selectedEntityData.active = active;
+      this.selectedEntity.active = active;
       this.update();
     },
 
@@ -428,6 +438,12 @@ export default defineComponent({
         <input class="flex-fill text-end col-1" v-model="selectedSceneItem.name"
           @keyup="updateEntityName" pattern="^[^/]+$"
         />
+      </div>
+      <div class="d-flex justify-content-between align-items-center">
+        <label class="me-1">Active</label>
+        <div class="flex-fill text-end col-1">
+          <input type="checkbox" @change="updateActive" v-model="selectedEntityData.active" />
+        </div>
       </div>
       <div v-for="name in selectedEntityComponents" class="component-form" :key="selectedEntityData.path + '/' + name">
         <div class="mb-1 d-flex justify-content-between align-items-center">

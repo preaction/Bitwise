@@ -16,6 +16,10 @@ export default abstract class Component {
   static get editorComponent():string {
     return '';
   }
+  /**
+   * isHidden allows this component to be hidden from the editor.
+   */
+  static isHidden:boolean = false;
   addEntity( eid:number ) {
     this.scene.game.ecs.addComponent( this.world, this.store, eid );
   }

@@ -22,7 +22,9 @@
         "zoom": 1,
         "near": 0,
         "far": 2000
-      }
+      },
+      "active": true,
+      "id": 84
     },
     {
       "name": "Foundations",
@@ -39,7 +41,9 @@
         "sx": 1,
         "sy": 1,
         "sz": 1
-      }
+      },
+      "active": false,
+      "id": 85
     },
     {
       "name": "Foundation 1",
@@ -60,7 +64,9 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Foundation": {}
+      "Foundation": {},
+      "active": true,
+      "id": 86
     },
     {
       "name": "Foundation 2",
@@ -81,7 +87,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Foundation": {}
+      "Foundation": {},
+      "id": 87
     },
     {
       "name": "Foundation 3",
@@ -102,7 +109,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Foundation": {}
+      "Foundation": {},
+      "id": 88
     },
     {
       "name": "Foundation 4",
@@ -123,7 +131,9 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Foundation": {}
+      "Foundation": {},
+      "id": 89,
+      "active": false
     },
     {
       "name": "Stack 1",
@@ -144,7 +154,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {}
+      "Stack": {},
+      "id": 90
     },
     {
       "name": "Stack 2",
@@ -165,7 +176,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {}
+      "Stack": {},
+      "id": 91
     },
     {
       "name": "Stack 4",
@@ -186,7 +198,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {}
+      "Stack": {},
+      "id": 92
     },
     {
       "name": "Stack 5",
@@ -207,7 +220,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {}
+      "Stack": {},
+      "id": 93
     },
     {
       "name": "Stack 6",
@@ -228,7 +242,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {}
+      "Stack": {},
+      "id": 94
     },
     {
       "name": "Stack 7",
@@ -249,7 +264,8 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {}
+      "Stack": {},
+      "id": 95
     },
     {
       "name": "Deck",
@@ -269,7 +285,8 @@
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
-      }
+      },
+      "id": 96
     },
     {
       "name": "Discard",
@@ -289,7 +306,9 @@
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
-      }
+      },
+      "active": true,
+      "id": 97
     },
     {
       "name": "Stack 3",
@@ -310,7 +329,9 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {}
+      "Stack": {},
+      "active": true,
+      "id": 98
     },
     {
       "name": "Menu Button",
@@ -329,7 +350,9 @@
       "UI": {},
       "UIImage": {
         "imagePath": "ui/gear-button.png"
-      }
+      },
+      "active": true,
+      "id": 99
     }
   ],
   "components": [
