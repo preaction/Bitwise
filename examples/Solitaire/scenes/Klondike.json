@@ -347,7 +347,7 @@
         "x": "-8",
         "y": "-4"
       },
-      "UI": {},
+      "UIElement": {},
       "UIImage": {
         "imagePath": "ui/gear-button.png"
       },

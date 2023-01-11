@@ -18,8 +18,6 @@ export default defineComponent({
 <template>
   <div>
     <div class="d-flex position align-items-center">
-      XXX: Arbitrary style 
-      XXX: Flex child?
     </div>
   </div>
 </template>

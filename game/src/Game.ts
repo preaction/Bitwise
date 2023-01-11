@@ -13,7 +13,7 @@ import OrthographicCameraComponent from './component/OrthographicCamera.js';
 import SpriteComponent from './component/Sprite.js';
 import RigidBodyComponent from './component/RigidBody.js';
 import BoxColliderComponent from './component/BoxCollider.js';
-import UIComponent from './component/UI.js';
+import UIElementComponent from './component/UIElement.js';
 import UIImageComponent from './component/UIImage.js';
 
 import InputSystem from './system/Input.js';
@@ -41,7 +41,7 @@ const DEFAULT_COMPONENTS = {
   Sprite: SpriteComponent,
   RigidBody: RigidBodyComponent,
   BoxCollider: BoxColliderComponent,
-  UI: UIComponent,
+  UIElement: UIElementComponent,
   UIImage: UIImageComponent,
 };
 

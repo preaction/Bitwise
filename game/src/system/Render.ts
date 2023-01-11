@@ -7,7 +7,7 @@ import Scene from '../Scene.js';
 import PositionComponent from '../component/Position.js';
 import ActiveComponent from '../component/Active.js';
 import SpriteComponent from '../component/Sprite.js';
-import UIComponent from '../component/UI.js';
+import UIElementComponent from '../component/UIElement.js';
 import UIImageComponent from '../component/UIImage.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
@@ -18,7 +18,7 @@ export default class Render extends System {
   positionEnterQuery:bitecs.Query;
   positionExitQuery:bitecs.Query;
 
-  uiComponent:UIComponent;
+  uiElementComponent:UIElementComponent;
   uiImageComponent:UIImageComponent;
   uiQuery:bitecs.Query;
   uiEnterQuery:bitecs.Query;
@@ -56,7 +56,7 @@ export default class Render extends System {
     this.positionComponent = scene.getComponent(PositionComponent);
     this.spriteComponent = scene.getComponent(SpriteComponent);
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
-    this.uiComponent = scene.getComponent(UIComponent);
+    this.uiElementComponent = scene.getComponent(UIElementComponent);
     this.uiImageComponent = scene.getComponent(UIImageComponent);
 
     const activeComponent = scene.getComponent(ActiveComponent);
@@ -64,7 +64,7 @@ export default class Render extends System {
     this.positionEnterQuery = scene.game.ecs.enterQuery( this.positionQuery );
     this.positionExitQuery = scene.game.ecs.exitQuery( this.positionQuery );
 
-    this.uiQuery = scene.game.ecs.defineQuery([ this.uiComponent.store, activeComponent.store ]);
+    this.uiQuery = scene.game.ecs.defineQuery([ this.uiElementComponent.store, activeComponent.store ]);
     this.uiEnterQuery = scene.game.ecs.enterQuery( this.uiQuery );
     this.uiExitQuery = scene.game.ecs.exitQuery( this.uiQuery );
 
