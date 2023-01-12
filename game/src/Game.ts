@@ -8,7 +8,7 @@ import Component from './Component.js';
 import System from './System.js';
 
 import ActiveComponent from './component/Active.js';
-import PositionComponent from './component/Position.js';
+import TransformComponent from './component/Transform.js';
 import OrthographicCameraComponent from './component/OrthographicCamera.js';
 import SpriteComponent from './component/Sprite.js';
 import RigidBodyComponent from './component/RigidBody.js';
@@ -36,7 +36,7 @@ const DEFAULT_SYSTEMS = {
 
 const DEFAULT_COMPONENTS = {
   Active: ActiveComponent,
-  Position: PositionComponent,
+  Transform: TransformComponent,
   OrthographicCamera: OrthographicCameraComponent,
   Sprite: SpriteComponent,
   RigidBody: RigidBodyComponent,

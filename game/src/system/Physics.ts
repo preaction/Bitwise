@@ -3,7 +3,7 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Ammo from 'ammojs-typed';
 import System from '../System.js';
-import Position from '../component/Position.js';
+import Transform from '../component/Transform.js';
 import RigidBody from '../component/RigidBody.js';
 import BoxCollider from '../component/BoxCollider.js';
 
@@ -32,7 +32,7 @@ export default class Physics extends System {
   };
 
   rigidbody!:RigidBody;
-  position!:Position;
+  transform!:Transform;
   collider:ColliderMap = {};
   broadphase:number = Physics.Broadphase.AxisSweep;
   gravity:three.Vector3 = new three.Vector3( 0, 0, 0 );
@@ -56,7 +56,7 @@ export default class Physics extends System {
     await this.initAmmo();
     const scene = this.scene;
 
-    this.position = scene.getComponent(Position);
+    this.transform = scene.getComponent(Transform);
     this.rigidbody = scene.getComponent(RigidBody);
 
     this.collider = {
@@ -64,12 +64,12 @@ export default class Physics extends System {
     };
 
     for ( const [name, collider] of Object.entries(this.collider) ) {
-      const query = scene.game.ecs.defineQuery([ this.position.store, collider.store ]);
+      const query = scene.game.ecs.defineQuery([ this.transform.store, collider.store ]);
       this.colliderQueries[name as keyof ColliderMap] = query;
       this.enterQueries[name as keyof ColliderMap] = scene.game.ecs.enterQuery( query );
       this.exitQueries[name as keyof ColliderMap] = scene.game.ecs.exitQuery( query );
     }
-    this.rigidbodyQuery = scene.game.ecs.defineQuery([ this.position.store, this.rigidbody.store ]);
+    this.rigidbodyQuery = scene.game.ecs.defineQuery([ this.transform.store, this.rigidbody.store ]);
 
     const collisionConfiguration = new this.Ammo.btDefaultCollisionConfiguration();
     const dispatcher = new this.Ammo.btCollisionDispatcher(collisionConfiguration);
@@ -161,7 +161,7 @@ export default class Physics extends System {
 
   createColliders() {
     const rigidBody = this.rigidbody.store;
-    const position = this.position.store;
+    const transform = this.transform.store;
 
     // Create any new colliders
     for ( const [colliderName, query] of Object.entries(this.enterQueries) ) {
@@ -172,21 +172,21 @@ export default class Physics extends System {
           throw `Unknown collider ${colliderName}`;
         }
 
-        let transform = new this.Ammo.btTransform();
-        transform.setIdentity();
-        transform.setOrigin( new this.Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] ) );
-        //console.log( `${eid}: Initial position: ${position.x[eid]}, ${position.y[eid]}, ${position.z[eid]}` );
+        let physicsTransform = new this.Ammo.btTransform();
+        physicsTransform.setIdentity();
+        physicsTransform.setOrigin( new this.Ammo.btVector3( transform.x[eid], transform.y[eid], transform.z[eid] ) );
+        //console.log( `${eid}: Initial position: ${transform.x[eid]}, ${transform.y[eid]}, ${transform.z[eid]}` );
 
-        //transform.setRotation( new this.Ammo.btQuaternion( position.rx[eid], position.ry[eid], position.rz[eid], position.rw[eid] ) );
-        let motionState = new this.Ammo.btDefaultMotionState( transform );
+        //physicsTransform.setRotation( new this.Ammo.btQuaternion( transform.rx[eid], transform.ry[eid], transform.rz[eid], transform.rw[eid] ) );
+        let motionState = new this.Ammo.btDefaultMotionState( physicsTransform );
 
         // Scale should be adjusted by object scale
-        //console.log( `${eid}: Collider ${colliderName} scale: ${colliderData.sx[eid] * position.sx[eid]}, ${colliderData.sy[eid] * position.sy[eid]}, ${colliderData.sz[eid] * position.sz[eid]}` );
-        const scale = new this.Ammo.btVector3(colliderData.sx[eid] * position.sx[eid] / 2, colliderData.sy[eid] * position.sy[eid] / 2, colliderData.sz[eid] * position.sz[eid] / 2);
+        //console.log( `${eid}: Collider ${colliderName} scale: ${colliderData.sx[eid] * transform.sx[eid]}, ${colliderData.sy[eid] * transform.sy[eid]}, ${colliderData.sz[eid] * transform.sz[eid]}` );
+        const scale = new this.Ammo.btVector3(colliderData.sx[eid] * transform.sx[eid] / 2, colliderData.sy[eid] * transform.sy[eid] / 2, colliderData.sz[eid] * transform.sz[eid] / 2);
         const collider = new COLLIDER_SHAPES[colliderName as keyof ColliderMap](scale);
         collider.setMargin( 0.05 );
         const origin = new this.Ammo.btVector3( colliderData.ox[eid], colliderData.oy[eid], colliderData.oz[eid] );
-        transform.setOrigin( origin.op_add( transform.getOrigin() ) );
+        physicsTransform.setOrigin( origin.op_add( physicsTransform.getOrigin() ) );
 
         let body;
         const group:number = 1; // XXX: Add group/mask to collider shapes
@@ -224,7 +224,7 @@ export default class Physics extends System {
           // Create a ghost body for this collider
           body = new this.Ammo.btGhostObject();
           body.setCollisionShape(collider);
-          body.setWorldTransform(transform);
+          body.setWorldTransform(physicsTransform);
           this.universe.addCollisionObject( body, group, mask );
           this.ghosts[eid] = body;
         }
@@ -245,7 +245,7 @@ export default class Physics extends System {
   update( timeMilli:number ) {
     this.createColliders();
 
-    const position = this.position.store;
+    const transform = this.transform.store;
     for ( const [colliderName, query] of Object.entries(this.exitQueries) ) {
       const remove = query(this.scene.world);
       for ( const eid of remove ) {
@@ -349,8 +349,8 @@ export default class Physics extends System {
         if ( eid in this.ghosts ) {
           const body = this.ghosts[eid];
           const xform = body.getWorldTransform();
-          const pos = new this.Ammo.btVector3( position.x[eid], position.y[eid], position.z[eid] );
-          const rot = new this.Ammo.btVector3( position.rx[eid], position.ry[eid], position.rz[eid] );
+          const pos = new this.Ammo.btVector3( transform.x[eid], transform.y[eid], transform.z[eid] );
+          const rot = new this.Ammo.btVector3( transform.rx[eid], transform.ry[eid], transform.rz[eid] );
           xform.setOrigin(pos);
           xform.setRotation(rot);
           body.setWorldTransform(xform);
@@ -363,15 +363,15 @@ export default class Physics extends System {
           if ( motionState ) {
             motionState.getWorldTransform( xform );
             let pos = xform.getOrigin();
-            position.x[eid] = pos.x();
-            position.y[eid] = pos.y();
-            position.z[eid] = pos.z();
+            transform.x[eid] = pos.x();
+            transform.y[eid] = pos.y();
+            transform.z[eid] = pos.z();
 
             let rot = xform.getRotation();
-            position.rx[eid] = rot.x();
-            position.ry[eid] = rot.y();
-            position.rz[eid] = rot.z();
-            position.rw[eid] = rot.w();
+            transform.rx[eid] = rot.x();
+            transform.ry[eid] = rot.y();
+            transform.rz[eid] = rot.z();
+            transform.rw[eid] = rot.w();
           }
         }
       }

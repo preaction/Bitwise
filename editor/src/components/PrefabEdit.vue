@@ -55,7 +55,7 @@ export default defineComponent({
       const scene = markRaw( game.addScene() );
 
       // Create a new, blank scene
-      scene.addComponent( 'Position' );
+      scene.addComponent( 'Transform' );
       scene.addComponent( 'Sprite' );
       scene.addComponent( 'OrthographicCamera' );
       scene.addComponent( 'RigidBody' );

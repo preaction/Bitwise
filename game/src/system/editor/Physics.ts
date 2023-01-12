@@ -4,14 +4,14 @@ import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import System from '../../System.js';
 import Component from '../../Component.js';
-import Position from '../../component/Position.js';
+import Transform from '../../component/Transform.js';
 import RigidBody from '../../component/RigidBody.js';
 import PhysicsSystem from '../Physics.js';
 
 // XXX: This should subclass the standard Physics system
 export default class Physics extends System {
   rigidbody:RigidBody;
-  position:Position;
+  transform:Transform;
   collider:{ box: Component };
   gravity:three.Vector3 = new three.Vector3( 0, 0, 0 );
   broadphase:number = 0;
@@ -26,14 +26,14 @@ export default class Physics extends System {
   constructor( name:string, scene:Scene ) {
     super(name, scene);
 
-    this.position = scene.getComponent(Position);
+    this.transform = scene.getComponent(Transform);
     this.rigidbody = scene.getComponent(RigidBody);
 
     this.collider = {
       box: scene.components[ "BoxCollider" ],
     };
 
-    this.rigidBodyQuery = scene.game.ecs.defineQuery([ this.position.store ]);
+    this.rigidBodyQuery = scene.game.ecs.defineQuery([ this.transform.store ]);
     this.rigidBodyEnterQuery = scene.game.ecs.enterQuery( this.rigidBodyQuery );
     this.rigidBodyExitQuery = scene.game.ecs.exitQuery( this.rigidBodyQuery );
   }
@@ -54,7 +54,7 @@ export default class Physics extends System {
   }
 
   update( timeMilli:number ) {
-    const position = this.position.store;
+    const transform = this.transform.store;
 
     const add = this.rigidBodyEnterQuery(this.scene.world);
     for ( const eid of add ) {
@@ -85,10 +85,10 @@ export default class Physics extends System {
       if ( !collider ) {
         continue;
       }
-      // Update collider dimensions and position
+      // Update collider dimensions and transform
       const box = this.collider.box.store;
-      collider.position.set( box.ox[eid] + position.x[eid], box.oy[eid] + position.y[eid], box.oz[eid] + position.z[eid] );
-      collider.scale.set(box.sx[eid] * position.sx[eid], box.sy[eid] * position.sy[eid], box.sz[eid] * position.sz[eid]);
+      collider.position.set( box.ox[eid] + transform.x[eid], box.oy[eid] + transform.y[eid], box.oz[eid] + transform.z[eid] );
+      collider.scale.set(box.sx[eid] * transform.sx[eid], box.sy[eid] * transform.sy[eid], box.sz[eid] * transform.sz[eid]);
     }
   }
 }

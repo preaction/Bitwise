@@ -271,11 +271,11 @@ export default defineComponent({
         const dropEntity = this.scene.getEntityByPath(onItem.path);
 
         dragEntity.parent = isChild ? dropEntity : dropEntity.parent;
-        // XXX: Adjust position to offset from parent so that entity
+        // XXX: Adjust Transform to offset from parent so that entity
         // stays in same place visually
 
         // Then we can update the data with the new path (XXX: and
-        // position)
+        // Transform)
         const dragEntityData = this.getEntityDataByPath(data);
         dragEntityData.path = dragEntity.path;
 
@@ -403,13 +403,13 @@ export default defineComponent({
           New Entity
         </template>
         <ul>
-          <li @click="addEntity('Position')">Blank</li>
+          <li @click="addEntity('Transform')">Blank</li>
           <li class="hr"><hr></li>
-          <li @click="addEntity('Position','Sprite')">Sprite</li>
-          <li @click="addEntity('Position','OrthographicCamera')">Orthographic Camera</li>
+          <li @click="addEntity('Transform','Sprite')">Sprite</li>
+          <li @click="addEntity('Transform','OrthographicCamera')">Orthographic Camera</li>
           <li class="hr"><hr></li>
-          <li @click="addEntity('Position','UI')">UI Element</li>
-          <li @click="addEntity('Position','UI','UIImage')">UI Image</li>
+          <li @click="addEntity('Transform','UI')">UI Element</li>
+          <li @click="addEntity('Transform','UI','UIImage')">UI Image</li>
         </ul>
       </MenuButton>
     </div>

@@ -4,7 +4,7 @@ import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import * as bitecs from 'bitecs';
 import System from '../System.js';
 import Scene from '../Scene.js';
-import PositionComponent from '../component/Position.js';
+import TransformComponent from '../component/Transform.js';
 import ActiveComponent from '../component/Active.js';
 import SpriteComponent from '../component/Sprite.js';
 import UIElementComponent from '../component/UIElement.js';
@@ -13,10 +13,10 @@ import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
 
 export default class Render extends System {
-  positionComponent:PositionComponent;
-  positionQuery:bitecs.Query;
-  positionEnterQuery:bitecs.Query;
-  positionExitQuery:bitecs.Query;
+  transformComponent:TransformComponent;
+  transformQuery:bitecs.Query;
+  transformEnterQuery:bitecs.Query;
+  transformExitQuery:bitecs.Query;
 
   uiElementComponent:UIElementComponent;
   uiImageComponent:UIImageComponent;
@@ -53,16 +53,16 @@ export default class Render extends System {
       },
     );
 
-    this.positionComponent = scene.getComponent(PositionComponent);
+    this.transformComponent = scene.getComponent(TransformComponent);
     this.spriteComponent = scene.getComponent(SpriteComponent);
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
     this.uiElementComponent = scene.getComponent(UIElementComponent);
     this.uiImageComponent = scene.getComponent(UIImageComponent);
 
     const activeComponent = scene.getComponent(ActiveComponent);
-    this.positionQuery = scene.game.ecs.defineQuery([ this.positionComponent.store, activeComponent.store ]);
-    this.positionEnterQuery = scene.game.ecs.enterQuery( this.positionQuery );
-    this.positionExitQuery = scene.game.ecs.exitQuery( this.positionQuery );
+    this.transformQuery = scene.game.ecs.defineQuery([ this.transformComponent.store, activeComponent.store ]);
+    this.transformEnterQuery = scene.game.ecs.enterQuery( this.transformQuery );
+    this.transformExitQuery = scene.game.ecs.exitQuery( this.transformQuery );
 
     this.uiQuery = scene.game.ecs.defineQuery([ this.uiElementComponent.store, activeComponent.store ]);
     this.uiEnterQuery = scene.game.ecs.enterQuery( this.uiQuery );
@@ -111,7 +111,7 @@ export default class Render extends System {
     // Add all render objects to the scene
     const spriteEids = this.spriteQuery(this.scene.world);
     const cameraEids = this.cameraQuery(this.scene.world);
-    for ( const eid of this.positionEnterQuery(this.scene.world) ) {
+    for ( const eid of this.transformEnterQuery(this.scene.world) ) {
       if ( spriteEids.indexOf(eid) >= 0 ) {
         this.addSprite( eid );
       }
@@ -154,7 +154,7 @@ export default class Render extends System {
 
   stop() {
     // Remove all render objects from the scene
-    for ( const eid of this.positionQuery(this.scene.world) ) {
+    for ( const eid of this.transformQuery(this.scene.world) ) {
       this.remove( eid );
       if ( this.materials[eid] ) {
         this.materials[eid].dispose();
@@ -202,8 +202,8 @@ export default class Render extends System {
     const spriteEids = this.spriteQuery(this.scene.world);
     const cameraEids = this.cameraQuery(this.scene.world);
 
-    // Objects entering the scene with a Position component
-    for ( const eid of this.positionEnterQuery(this.scene.world) ) {
+    // Objects entering the scene with a Transform component
+    for ( const eid of this.transformEnterQuery(this.scene.world) ) {
       if ( spriteEids.indexOf(eid) >= 0 ) {
         this.addSprite( eid );
       }
@@ -215,14 +215,14 @@ export default class Render extends System {
       }
     }
 
-    // Objects leaving the scene via their Position component
-    for ( const eid of this.positionExitQuery(this.scene.world) ) {
+    // Objects leaving the scene via their Transform component
+    for ( const eid of this.transformExitQuery(this.scene.world) ) {
       this.remove( eid );
     }
 
-    // Objects changing their position
-    for ( const eid of this.positionQuery( this.scene.world ) ) {
-      this.updatePosition( eid );
+    // Objects changing their transform
+    for ( const eid of this.transformQuery( this.scene.world ) ) {
+      this.updateTransform( eid );
     }
 
     // Sprites changing their texture
@@ -259,20 +259,20 @@ export default class Render extends System {
     }
   }
 
-  updatePosition( eid:number ) {
+  updateTransform( eid:number ) {
     const obj = this.objects[eid];
     if ( !obj ) {
       return;
     }
-    obj.position.x = this.positionComponent.store.x[eid];
-    obj.position.y = this.positionComponent.store.y[eid];
-    obj.position.z = this.positionComponent.store.z[eid];
-    // obj.rotation.x = this.positionComponent.store.rx[eid];
-    // obj.rotation.y = this.positionComponent.store.ry[eid];
-    // obj.rotation.z = this.positionComponent.store.rz[eid];
-    obj.scale.x = this.positionComponent.store.sx[eid];
-    obj.scale.y = this.positionComponent.store.sy[eid];
-    obj.scale.z = this.positionComponent.store.sz[eid];
+    obj.position.x = this.transformComponent.store.x[eid];
+    obj.position.y = this.transformComponent.store.y[eid];
+    obj.position.z = this.transformComponent.store.z[eid];
+    // obj.rotation.x = this.transformComponent.store.rx[eid];
+    // obj.rotation.y = this.transformComponent.store.ry[eid];
+    // obj.rotation.z = this.transformComponent.store.rz[eid];
+    obj.scale.x = this.transformComponent.store.sx[eid];
+    obj.scale.y = this.transformComponent.store.sy[eid];
+    obj.scale.z = this.transformComponent.store.sz[eid];
   }
 
   createCamera( eid:number ):three.OrthographicCamera {
@@ -293,7 +293,7 @@ export default class Render extends System {
       near, far,
     );
     this.cameras[eid] = this.objects[eid] = camera;
-    this.updatePosition( eid );
+    this.updateTransform( eid );
     this.updateCamera( eid );
     return camera;
   }
@@ -332,7 +332,7 @@ export default class Render extends System {
 
   createGroup( eid:number ):three.Group {
     const group = this.objects[eid] = new three.Group();
-    this.updatePosition( eid );
+    this.updateTransform( eid );
     return group;
   }
 
@@ -360,7 +360,7 @@ export default class Render extends System {
     const sprite = this.objects[eid] = new three.Sprite( material );
     sprite.userData.eid = eid;
     sprite.layers.enable(1);
-    this.updatePosition( eid );
+    this.updateTransform( eid );
     return sprite;
   }
 

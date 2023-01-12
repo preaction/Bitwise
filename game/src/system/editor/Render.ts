@@ -4,7 +4,7 @@ import * as bitecs from 'bitecs';
 import Scene from '../../Scene.js';
 import InputSystem from '../Input.js';
 import RenderSystem from '../Render.js';
-import Position from '../../component/Position.js';
+import Transform from '../../component/Transform.js';
 import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
 import { ResizeEvent } from '../../Game.js';
 
@@ -39,7 +39,7 @@ export default class Render extends RenderSystem {
   sceneCameras:Array<three.LineSegments> = [];
 
   input!:InputSystem;
-  positionComponent:Position;
+  transformComponent:Transform;
   cameraComponent:OrthographicCameraComponent;
   cameraQuery:bitecs.Query;
   cameraEnterQuery:bitecs.Query;
@@ -70,10 +70,10 @@ export default class Render extends RenderSystem {
   constructor( name:string, scene:Scene ) {
     super(name, scene);
 
-    this.positionComponent = scene.getComponent(Position);
+    this.transformComponent = scene.getComponent(Transform);
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
 
-    this.cameraQuery = scene.game.ecs.defineQuery([ this.positionComponent.store, this.cameraComponent.store ]);
+    this.cameraQuery = scene.game.ecs.defineQuery([ this.transformComponent.store, this.cameraComponent.store ]);
     this.cameraEnterQuery = scene.game.ecs.enterQuery( this.cameraQuery );
     this.cameraExitQuery = scene.game.ecs.exitQuery( this.cameraQuery );
 
@@ -234,13 +234,13 @@ export default class Render extends RenderSystem {
   }
 
   nudgeSelected({ x, y }:{x?:number, y?:number}) {
-    const position = this.positionComponent.store;
+    const transform = this.transformComponent.store;
     for ( const obj of this.selected ) {
       obj.position.x += x || 0;
       obj.position.y += y || 0;
       const eid = obj.userData.eid;
-      position.x[eid] += x || 0;
-      position.y[eid] += y || 0;
+      transform.x[eid] += x || 0;
+      transform.y[eid] += y || 0;
     }
     this.scene.update(0);
     this.scene.render();
@@ -330,9 +330,9 @@ export default class Render extends RenderSystem {
         continue;
       }
 
-      camera.position.x = this.positionComponent.store.x[eid];
-      camera.position.y = this.positionComponent.store.y[eid];
-      camera.position.z = this.positionComponent.store.z[eid];
+      camera.position.x = this.transformComponent.store.x[eid];
+      camera.position.y = this.transformComponent.store.y[eid];
+      camera.position.z = this.transformComponent.store.z[eid];
 
       // Update wireframe width/height/depth
       // It's not the current game we want, we want the player game
@@ -424,9 +424,9 @@ export default class Render extends RenderSystem {
 
     camera.scale.set( width, height, depth );
 
-    camera.position.x = this.positionComponent.store.x[eid];
-    camera.position.y = this.positionComponent.store.y[eid];
-    camera.position.z = this.positionComponent.store.z[eid];
+    camera.position.x = this.transformComponent.store.x[eid];
+    camera.position.y = this.transformComponent.store.y[eid];
+    camera.position.z = this.transformComponent.store.z[eid];
 
     this.sceneCameras[eid] = camera;
     this.scene._scene.add( camera );

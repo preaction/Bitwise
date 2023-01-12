@@ -2,7 +2,7 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
-export default class Position extends Component {
+export default class Transform extends Component {
   declare store:{
     x: number[],
     y: number[],

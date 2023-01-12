@@ -9,7 +9,7 @@ import { loadModule } from 'vue3-sfc-loader';
 import { Game, Component, System } from '@fourstar/bitwise';
 
 // Core Component Forms
-import PositionEdit from '../components/bitwise/Position.vue';
+import TransformEdit from '../components/bitwise/Transform.vue';
 import OrthographicCameraEdit from '../components/bitwise/OrthographicCamera.vue';
 import SpriteEdit from '../components/bitwise/Sprite.vue';
 import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
@@ -184,7 +184,7 @@ export const useAppStore = defineStore('app', {
       components: Vue.markRaw({}),
       systems: Vue.markRaw({}),
       componentForms: Vue.markRaw({
-        "Position": PositionEdit,
+        "Transform": TransformEdit,
         "OrthographicCamera": OrthographicCameraEdit,
         "Sprite": SpriteEdit,
         "RigidBody": RigidBodyEdit,

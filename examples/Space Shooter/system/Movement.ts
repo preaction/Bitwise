@@ -3,12 +3,12 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import { System } from '@fourstar/bitwise';
 import { Physics, Input } from '@fourstar/bitwise/system';
-import { Position } from '@fourstar/bitwise/component';
+import { Transform } from '@fourstar/bitwise/component';
 import PlayerComponent from '../component/Player.js';
 import WeaponComponent from '../component/Weapon.js';
 
 export default class Movement extends System {
-  position!:Position;
+  transform!:Transform;
   input!:Input;
   physics!:Physics;
   query!:bitecs.Query;
@@ -17,7 +17,7 @@ export default class Movement extends System {
 
   async init() {
     const scene = this.scene;
-    this.position = scene.getComponent(Position);
+    this.transform = scene.getComponent(Transform);
     const player = this.playerComponent = scene.getComponent( PlayerComponent );
     const query = this.query = scene.game.ecs.defineQuery([ player.store ]);
 
@@ -89,9 +89,9 @@ export default class Movement extends System {
       }
       if ( ( !this.cooldown[weaponId] || this.cooldown[ weaponId ] <= 0 ) && key.fire ) {
         const weapon = this.scene.addEntity( this.weaponPrefabs[weaponId] );
-        this.position.store.x[ weapon.id ] += this.position.store.x[eid];
-        this.position.store.y[ weapon.id ] += this.position.store.y[eid];
-        this.position.store.z[ weapon.id ] += this.position.store.z[eid];
+        this.transform.store.x[ weapon.id ] += this.transform.store.x[eid];
+        this.transform.store.y[ weapon.id ] += this.transform.store.y[eid];
+        this.transform.store.z[ weapon.id ] += this.transform.store.z[eid];
         this.cooldown[ weaponId ] = this.weaponComponent.store.cooldown[weapon.id];
       }
     }

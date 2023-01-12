@@ -4,7 +4,7 @@ import * as shifty from 'shifty';
 import { System, Entity } from '@fourstar/bitwise';
 import type { Pointer } from '@fourstar/bitwise';
 import { Render, Input } from '@fourstar/bitwise/system';
-import { Position, Sprite } from '@fourstar/bitwise/component';
+import { Transform, Sprite } from '@fourstar/bitwise/component';
 import Foundation from '../components/Foundation.js';
 import Stack from '../components/Stack.js';
 
@@ -37,7 +37,7 @@ const pointer = new three.Vector3();
 
 export default class Klondike extends System {
   Input!:Input;
-  Position!:Position;
+  Transform!:Transform;
   Render!:Render;
   Foundation!:Foundation;
   Stack!:Stack;
@@ -100,7 +100,7 @@ export default class Klondike extends System {
 
   async init() {
     // Get references to Components and Systems from this.scene
-    this.Position = this.scene.getComponent(Position);
+    this.Transform = this.scene.getComponent(Transform);
     this.Foundation = this.scene.getComponent(Foundation);
     this.Stack = this.scene.getComponent(Stack);
     this.Sprite = this.scene.getComponent(Sprite);
@@ -115,10 +115,10 @@ export default class Klondike extends System {
     const stackQuery = this.defineQuery([ this.Stack ]);
     this.stacks = stackQuery(this.world);
     this.removeQuery( stackQuery );
-    // Sort stacks by X position
+    // Sort stacks by X Transform
     this.stacks = this.stacks
-      .map( stack => ({ stack, position: this.scene.getEntityById( stack ).getComponent( "Position" ) }) )
-      .sort( (a, b) => a.position.x - b.position.x )
+      .map( stack => ({ stack, transform: this.scene.getEntityById( stack ).getComponent( "Transform" ) }) )
+      .sort( (a, b) => a.transform.x - b.transform.x )
       .map( obj => obj.stack );
 
     // Add event handlers
@@ -145,7 +145,7 @@ export default class Klondike extends System {
     // Load the Deck prefab textures and materials
     this.cardBackTextureId = this.scene.game.load.texture( cardBackImage );
 
-    const drawPosition = this.drawEntity.getComponent( "Position" );
+    const drawTransform = this.drawEntity.getComponent( "Transform" );
     for ( let suit = 0; suit < suits.length; suit++ ) {
       for ( let rank = 0; rank < ranks.length; rank++ ) {
         const entity = this.scene.addEntity();
@@ -160,12 +160,12 @@ export default class Klondike extends System {
         };
 
         entity.name = `${suits[suit]}_${ranks[rank]}`;
-        entity.addComponent( "Position", {
-          x: drawPosition.x,
-          y: drawPosition.y,
-          z: drawPosition.z,
-          sx: drawPosition.sx,
-          sy: drawPosition.sy,
+        entity.addComponent( "Transform", {
+          x: drawTransform.x,
+          y: drawTransform.y,
+          z: drawTransform.z,
+          sx: drawTransform.sx,
+          sy: drawTransform.sy,
           sz: 1,
         } );
         entity.addComponent( "Sprite", {
@@ -211,7 +211,7 @@ export default class Klondike extends System {
     this.menuButtonElement.addEventListener( 'click', this.showMenu.bind(this) );
 
     this.tweens.play();
-    this.positionDeck();
+    this.TransformDeck();
   }
 
   pause() {
@@ -226,21 +226,21 @@ export default class Klondike extends System {
     console.log( 'Show menu' );
   }
 
-  positionDeck() {
-    const drawPosition = this.drawEntity.getComponent( "Position" );
+  TransformDeck() {
+    const drawTransform = this.drawEntity.getComponent( "Transform" );
     for ( let i = this.deckCards.length - 1; i >= 0; i-- ) {
       const card = this.deckCards[i];
       this.faceDownCard( card );
-      this.Position.store.x[card.entity] = drawPosition.x;
-      this.Position.store.y[card.entity] = drawPosition.y;
-      this.Position.store.z[card.entity] = drawPosition.z + (this.deckCards.length - i + 1);
+      this.Transform.store.x[card.entity] = drawTransform.x;
+      this.Transform.store.y[card.entity] = drawTransform.y;
+      this.Transform.store.z[card.entity] = drawTransform.z + (this.deckCards.length - i + 1);
     }
   }
 
   faceUpCard( card:Card ) {
     card.faceUp = true;
     // XXX: Rotating sprites doesn't work. We would have to use Plane instead
-    // const position = this.Position.store;
+    // const Transform = this.Transform.store;
     // const tween = shifty.tween({
     //   from: {
     //     ry: 0,
@@ -248,7 +248,7 @@ export default class Klondike extends System {
     //   to: { ry: 1 },
     //   duration: 250,
     //   render: ( state:{ry: number} ) => {
-    //     position.ry[card.entity] = state.ry;
+    //     Transform.ry[card.entity] = state.ry;
     //   },
     // });
     // tween.then( () => { this.tweens.remove( tween ) } );
@@ -259,7 +259,7 @@ export default class Klondike extends System {
   faceDownCard( card:Card ) {
     card.faceUp = false;
     // XXX: Rotating sprites doesn't work. We would have to use Plane instead
-    // const position = this.Position.store;
+    // const Transform = this.Transform.store;
     // const tween = shifty.tween({
     //   from: {
     //     ry: 0,
@@ -267,7 +267,7 @@ export default class Klondike extends System {
     //   to: { ry: 1 },
     //   duration: 250,
     //   render: ( state:{ry: number} ) => {
-    //     position.ry[card.entity] = state.ry;
+    //     Transform.ry[card.entity] = state.ry;
     //   },
     // });
     // tween.then( () => { this.tweens.remove( tween ) } );
@@ -281,9 +281,9 @@ export default class Klondike extends System {
     this.faceUpCard( card );
     this.tweenTo(
       card.entity,
-      this.Position.store.x[this.discardEntity.id],
-      this.Position.store.y[this.discardEntity.id],
-      this.Position.store.z[this.discardEntity.id] + this.discardCards.length,
+      this.Transform.store.x[this.discardEntity.id],
+      this.Transform.store.y[this.discardEntity.id],
+      this.Transform.store.z[this.discardEntity.id] + this.discardCards.length,
     );
   }
 
@@ -298,9 +298,9 @@ export default class Klondike extends System {
     foundationCards.unshift(card);
     this.tweenTo(
       card.entity,
-      this.Position.store.x[foundationId],
-      this.Position.store.y[foundationId],
-      this.Position.store.z[foundationId] + foundationCards.length,
+      this.Transform.store.x[foundationId],
+      this.Transform.store.y[foundationId],
+      this.Transform.store.z[foundationId] + foundationCards.length,
     );
   }
 
@@ -315,29 +315,29 @@ export default class Klondike extends System {
     stackCards.unshift(card);
     this.tweenTo(
       card.entity,
-      this.Position.store.x[stackId],
-      this.Position.store.y[stackId] - (stackCards.length - 1) * this.rowHeight,
-      this.Position.store.z[stackId] + stackCards.length,
+      this.Transform.store.x[stackId],
+      this.Transform.store.y[stackId] - (stackCards.length - 1) * this.rowHeight,
+      this.Transform.store.z[stackId] + stackCards.length,
     );
   }
 
   tweenTo( eid:number, x:number, y:number, z:number ) {
-    const position = this.Position.store;
-    position.z[eid] = 1000 + z;
+    const Transform = this.Transform.store;
+    Transform.z[eid] = 1000 + z;
     const tween = shifty.tween({
       from: {
-        x: position.x[eid],
-        y: position.y[eid],
+        x: Transform.x[eid],
+        y: Transform.y[eid],
       },
       to: { x, y },
       duration: 250,
       render: ( state:{x: number, y:number} ) => {
-        position.x[eid] = state.x;
-        position.y[eid] = state.y;
+        Transform.x[eid] = state.x;
+        Transform.y[eid] = state.y;
       },
     })
     tween.then( () => {
-      position.z[eid] = z;
+      Transform.z[eid] = z;
       this.tweens.remove(tween);
     });
     this.tweens.add(tween);
@@ -456,21 +456,21 @@ export default class Klondike extends System {
           // back
           this.deckCards = this.discardCards.reverse();
           this.discardCards = [];
-          this.positionDeck();
+          this.TransformDeck();
         }
       }
       else if ( p.button & 1 && this.dragEntity >= 0 ) {
         // Move the card being dragged
         pointer.unproject( this.camera );
-        this.Position.store.x[this.dragEntity] = pointer.x;
-        this.Position.store.y[this.dragEntity] = pointer.y;
-        this.Position.store.z[this.dragEntity] = 1000;
+        this.Transform.store.x[this.dragEntity] = pointer.x;
+        this.Transform.store.y[this.dragEntity] = pointer.y;
+        this.Transform.store.z[this.dragEntity] = 1000;
         for ( let i = 0; i < this.followEntities.length; i++ ) {
           const eid = this.followEntities[i];
           const row = this.followEntities.length - i;
-          this.Position.store.x[eid] = pointer.x;
-          this.Position.store.y[eid] = pointer.y - row * this.rowHeight;
-          this.Position.store.z[eid] = 1000 + row;
+          this.Transform.store.x[eid] = pointer.x;
+          this.Transform.store.y[eid] = pointer.y - row * this.rowHeight;
+          this.Transform.store.z[eid] = 1000 + row;
         }
       }
       // Otherwise, mouse up

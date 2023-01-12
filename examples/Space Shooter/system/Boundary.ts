@@ -3,7 +3,7 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import { System } from '@fourstar/bitwise';
 import { Physics, Render } from '@fourstar/bitwise/system';
-import { Position } from '@fourstar/bitwise/component';
+import { Transform } from '@fourstar/bitwise/component';
 import PlayerComponent from '../component/Player.js';
 
 export default class Boundary extends System {
@@ -14,14 +14,14 @@ export default class Boundary extends System {
   boundaryBox!:three.Box3;
   playerQuery!:bitecs.Query;
   playerComponent!:PlayerComponent;
-  positionComponent!:Position;
+  transformComponent!:Transform;
 
   static editorComponent = 'editor/system/Boundary.vue';
 
   async init() {
     this.physics = this.scene.getSystem( Physics );
     this.renderSystem = this.scene.getSystem( Render );
-    this.positionComponent = this.scene.getComponent(Position);
+    this.transformComponent = this.scene.getComponent(Transform);
     const player = this.playerComponent = this.scene.getComponent( PlayerComponent );
     this.playerQuery = this.scene.game.ecs.defineQuery([ player.store ]);
   }
@@ -32,7 +32,7 @@ export default class Boundary extends System {
       console.log( `Boundary ID: ${boundary.id}` );
       this.physics.watchEnter( boundary.id, this.onCollideEnter.bind(this) );
       this.physics.watchExit( boundary.id, this.onCollideExit.bind(this) );
-      const pos = this.positionComponent.store;
+      const pos = this.transformComponent.store;
       this.boundaryBox = new three.Box3().setFromCenterAndSize(
         new three.Vector3( pos.x[boundary.id], pos.y[boundary.id], pos.z[boundary.id] ),
         new three.Vector3( pos.sx[boundary.id], pos.sy[boundary.id], pos.sz[boundary.id] ),
@@ -73,10 +73,10 @@ export default class Boundary extends System {
   }
 
   update( timeMilli:number ) {
-    if ( !this.positionComponent ) {
+    if ( !this.transformComponent ) {
       return;
     }
-    const pos = this.positionComponent.store;
+    const pos = this.transformComponent.store;
     // Constrain player to boundary
     const playerEids = this.playerQuery(this.scene.world);
     for ( const eid of playerEids ) {

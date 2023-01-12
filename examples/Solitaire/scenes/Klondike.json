@@ -5,7 +5,7 @@
       "name": "Camera",
       "type": "Camera",
       "path": "Camera",
-      "Position": {
+      "Transform": {
         "x": 0,
         "y": 0,
         "z": 2000,
@@ -30,7 +30,7 @@
       "name": "Foundations",
       "type": "Entity",
       "path": "Foundations",
-      "Position": {
+      "Transform": {
         "x": 0,
         "y": 0,
         "z": 0,
@@ -49,7 +49,7 @@
       "name": "Foundation 1",
       "type": "Entity",
       "path": "Foundation 1",
-      "Position": {
+      "Transform": {
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
         "sz": 1,
@@ -72,7 +72,7 @@
       "name": "Foundation 2",
       "type": "Entity",
       "path": "Foundation 2",
-      "Position": {
+      "Transform": {
         "sx": 2.799999952316284,
         "sy": 2.799999952316284,
         "sz": 1,
@@ -94,7 +94,7 @@
       "name": "Foundation 3",
       "type": "Entity",
       "path": "Foundation 3",
-      "Position": {
+      "Transform": {
         "x": 3.1700520515441895,
         "y": 3.5,
         "z": 0,
@@ -116,7 +116,7 @@
       "name": "Foundation 4",
       "type": "Entity",
       "path": "Foundation 4",
-      "Position": {
+      "Transform": {
         "x": 0.974126935005188,
         "y": 3.5,
         "z": 0,
@@ -139,7 +139,7 @@
       "name": "Stack 1",
       "path": "Stack 1",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": 7.015634536743164,
         "y": 0.5472468733787537,
         "z": 100,
@@ -161,7 +161,7 @@
       "name": "Stack 2",
       "path": "Stack 2",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": 4.743009090423584,
         "y": 0.5472471117973328,
         "z": 100,
@@ -183,7 +183,7 @@
       "name": "Stack 4",
       "path": "Stack 4",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": 2.4703850746154785,
         "y": 0.5472471117973328,
         "z": 100,
@@ -205,7 +205,7 @@
       "name": "Stack 5",
       "path": "Stack 5",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": 0.2063533365726471,
         "y": 0.5472471117973328,
         "z": 100,
@@ -227,7 +227,7 @@
       "name": "Stack 6",
       "type": "Entity",
       "path": "Stack 6",
-      "Position": {
+      "Transform": {
         "x": -2.1560862064361572,
         "y": 0.5472471117973328,
         "z": 100,
@@ -249,7 +249,7 @@
       "name": "Stack 7",
       "path": "Stack 7",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": -4.518527984619141,
         "y": 0.5472471117973328,
         "z": 100,
@@ -271,7 +271,7 @@
       "name": "Deck",
       "path": "Deck",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": -7.3369059562683105,
         "y": 3.5,
         "z": 0,
@@ -292,7 +292,7 @@
       "name": "Discard",
       "path": "Discard",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": -5.099999904632568,
         "y": 3.5,
         "z": 0,
@@ -314,7 +314,7 @@
       "name": "Stack 3",
       "path": "Stack 3",
       "type": "Entity",
-      "Position": {
+      "Transform": {
         "x": -6.926290988922119,
         "y": 0.4883785843849182,
         "z": 100,
@@ -336,7 +336,7 @@
     {
       "name": "Menu Button",
       "path": "Menu Button",
-      "Position": {
+      "Transform": {
         "sx": "0.02",
         "sy": "0.02",
         "sz": 1,
@@ -356,7 +356,7 @@
     }
   ],
   "components": [
-    "Position",
+    "Transform",
     "OrthographicCamera",
     "Sprite",
     "Foundation",
