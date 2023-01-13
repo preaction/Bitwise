@@ -133,16 +133,12 @@ export default class Render extends System {
     // element?
     const node = document.createElement( 'div' );
     node.dataset.eid = eid.toString();
+
     const element = new CSS3DObject( node );
     this.objects[eid] = this.uiElements[eid] = element;
 
-    const imageId = this.uiImageComponent.store.imageId[eid];
-    if ( imageId ) {
-      const img = document.createElement( 'img' );
-      img.src = this.scene.game.load.base + this.scene.game.load.texturePaths[imageId];
-      img.dataset.imageId = imageId.toString();
-      node.appendChild( img );
-    }
+    this.updateTransform( eid );
+    this.updateUIElement( eid );
 
     return element;
   }
@@ -150,6 +146,23 @@ export default class Render extends System {
   addUIElement( eid:number ) {
     const element = this.uiElements[eid] ||= this.createUIElement(eid);
     this.scene._uiScene.add( element );
+  }
+
+  updateUIElement( eid:number ) {
+    const node = this.uiElements[eid].element;
+    node.style.backgroundColor = '#' + this.uiElementComponent.store.backgroundColor[eid].toString(16).padStart(8, '0');
+    const imageId = this.uiImageComponent.store.imageId[eid];
+    if ( imageId ) {
+      let img = node.querySelector('img');
+      if ( !img ) {
+        img = document.createElement( 'img' );
+        node.appendChild( img );
+      }
+      if ( img.dataset.imageId != imageId.toString() ) {
+        img.src = this.scene.game.load.base + this.scene.game.load.texturePaths[imageId];
+        img.dataset.imageId = imageId.toString();
+      }
+    }
   }
 
   stop() {
@@ -243,6 +256,10 @@ export default class Render extends System {
     // UI elements leaving the scene
     for ( const eid of this.uiExitQuery(this.scene.world) ) {
       this.remove( eid );
+    }
+
+    for ( const eid of this.uiQuery(this.scene.world) ) {
+      this.updateUIElement(eid);
     }
   }
 

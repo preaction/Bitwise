@@ -347,7 +347,9 @@
         "x": "-8",
         "y": "-4"
       },
-      "UIElement": {},
+      "UIElement": {
+        "backgroundColor": "#18a59c7a"
+      },
       "UIImage": {
         "imagePath": "ui/gear-button.png"
       },
