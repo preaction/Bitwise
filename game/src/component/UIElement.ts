@@ -34,7 +34,7 @@ export default class UIElement extends Component {
   }
   thawEntity(eid: number, data?: {[key: string]: any;}): void {
     data = {...data};
-    if ( data?.backgroundColor.startsWith('#') ) {
+    if ( data?.backgroundColor?.startsWith('#') ) {
       data.backgroundColor = parseInt( data.backgroundColor.slice(1), 16 );
     }
     this.width[eid] = data?.width;
