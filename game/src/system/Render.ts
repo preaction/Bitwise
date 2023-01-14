@@ -9,6 +9,7 @@ import ActiveComponent from '../component/Active.js';
 import SpriteComponent from '../component/Sprite.js';
 import UIElementComponent from '../component/UIElement.js';
 import UIImageComponent from '../component/UIImage.js';
+import UITextComponent from '../component/UIText.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
 
@@ -20,6 +21,7 @@ export default class Render extends System {
 
   uiElementComponent:UIElementComponent;
   uiImageComponent:UIImageComponent;
+  uiTextComponent:UITextComponent;
   uiQuery:bitecs.Query;
   uiEnterQuery:bitecs.Query;
   uiExitQuery:bitecs.Query;
@@ -58,6 +60,7 @@ export default class Render extends System {
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
     this.uiElementComponent = scene.getComponent(UIElementComponent);
     this.uiImageComponent = scene.getComponent(UIImageComponent);
+    this.uiTextComponent = scene.getComponent(UITextComponent);
 
     const activeComponent = scene.getComponent(ActiveComponent);
     this.transformQuery = scene.game.ecs.defineQuery([ this.transformComponent.store, activeComponent.store ]);
@@ -219,6 +222,18 @@ export default class Render extends System {
       if ( img.dataset.imageId != imageId.toString() ) {
         img.src = this.scene.game.load.base + this.scene.game.load.texturePaths[imageId];
         img.dataset.imageId = imageId.toString();
+      }
+    }
+
+    const text = this.uiTextComponent.text[eid];
+    if ( text ) {
+      let span = node.querySelector('span');
+      if ( !span ) {
+        span = document.createElement( 'span' );
+        node.appendChild(span);
+      }
+      if ( span.innerText != text ) {
+        span.innerText = text;
       }
     }
   }

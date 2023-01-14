@@ -15,6 +15,7 @@ import RigidBodyComponent from './component/RigidBody.js';
 import BoxColliderComponent from './component/BoxCollider.js';
 import UIElementComponent from './component/UIElement.js';
 import UIImageComponent from './component/UIImage.js';
+import UITextComponent from './component/UIText.js';
 
 import InputSystem from './system/Input.js';
 import RenderSystem from './system/Render.js';
@@ -43,6 +44,7 @@ const DEFAULT_COMPONENTS = {
   BoxCollider: BoxColliderComponent,
   UIElement: UIElementComponent,
   UIImage: UIImageComponent,
+  UIText: UITextComponent,
 };
 
 /**

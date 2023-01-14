@@ -16,6 +16,7 @@ import RigidBodyEdit from '../components/bitwise/RigidBody.vue';
 import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 import UIElementEdit from '../components/bitwise/UIElement.vue';
 import UIImageEdit from '../components/bitwise/UIImage.vue';
+import UITextEdit from '../components/bitwise/UIText.vue';
 
 // Core System forms
 import PhysicsEdit from '../components/bitwise/system/Physics.vue';
@@ -191,6 +192,7 @@ export const useAppStore = defineStore('app', {
         "BoxCollider": BoxColliderEdit,
         "UIElement": UIElementEdit,
         "UIImage": UIImageEdit,
+        "UIText": UITextEdit,
       }),
       systemForms: Vue.markRaw({
         "Physics": PhysicsEdit,
