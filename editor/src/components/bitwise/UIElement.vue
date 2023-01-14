@@ -6,7 +6,7 @@ export default defineComponent({
     return {
       width: '',
       height: '',
-      backgroundColor: '#000000FF',
+      backgroundColor: '#00000000',
       borderWidth: '',
       borderColor: '#000000',
       borderStyle: 'none',
