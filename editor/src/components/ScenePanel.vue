@@ -182,10 +182,11 @@ export default defineComponent({
       this.sceneData.entities.push( entityData );
       this.updateSceneTree();
       this.update();
-      this.selectByPath(entityData.path);
 
       const entity = this.scene.addEntity();
       entity.thaw( entityData );
+
+      this.selectByPath(entityData.path);
     },
 
     updateName( event ) {

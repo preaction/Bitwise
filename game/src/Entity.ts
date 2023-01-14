@@ -136,6 +136,7 @@ export default class Entity {
   thaw( data:any ) {
     this.name = data.name;
     this.type = data.type;
+    this.path = data.path;
     this.active = "active" in data ? data.active : true;
     for ( const c in data ) {
       if ( typeof data[c] !== "object" || Array.isArray(data[c]) ) {
@@ -144,7 +145,7 @@ export default class Entity {
       if ( !this.scene.components[c] ) {
         this.scene.addComponent(c);
       }
-      this.scene.components[c].thawEntity(data.id, data[c]);
+      this.scene.components[c].thawEntity(this.id, data[c]);
     }
     // XXX: Remove any components from this entity which are not in the
     // given data
