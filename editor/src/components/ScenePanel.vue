@@ -409,8 +409,9 @@ export default defineComponent({
           <li @click="addEntity('Transform','Sprite')">Sprite</li>
           <li @click="addEntity('Transform','OrthographicCamera')">Orthographic Camera</li>
           <li class="hr"><hr></li>
-          <li @click="addEntity('Transform','UI')">UI Element</li>
-          <li @click="addEntity('Transform','UI','UIImage')">UI Image</li>
+          <li @click="addEntity('Transform','UIElement')">UI Element</li>
+          <li @click="addEntity('Transform','UIElement','UIImage')">UI Image</li>
+          <li @click="addEntity('Transform','UIElement','UIText')">UI Text</li>
         </ul>
       </MenuButton>
     </div>
