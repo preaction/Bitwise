@@ -48,7 +48,7 @@ export default defineComponent({
       // XXX: This data should come from game settings
       sceneData = this.sceneData = {
         components: [
-          'Position', 'Sprite', 'OrthographicCamera', 'RigidBody',
+          'Transform', 'Sprite', 'OrthographicCamera', 'RigidBody',
           'BoxCollider', 'UI',
         ],
         systems: [
@@ -60,7 +60,7 @@ export default defineComponent({
           {
             name: "Camera",
             type: "Camera",
-            Position: {
+            Transform: {
               z: 2000,
               rw: 1,
               sx: 1,

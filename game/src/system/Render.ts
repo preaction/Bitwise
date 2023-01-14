@@ -149,8 +149,66 @@ export default class Render extends System {
   }
 
   updateUIElement( eid:number ) {
+    const uiElementComponent = this.uiElementComponent;
+    const uiElementData = uiElementComponent.store;
     const node = this.uiElements[eid].element;
-    node.style.backgroundColor = '#' + this.uiElementComponent.store.backgroundColor[eid].toString(16).padStart(8, '0');
+    node.style.backgroundColor = '#' + uiElementData.backgroundColor[eid].toString(16).padStart(8, '0');
+    const width = uiElementComponent.width[eid];
+    if ( width ) {
+      node.style.width = width;
+    }
+    else {
+      node.style.width = '';
+    }
+    const height = uiElementComponent.height[eid];
+    if ( height ) {
+      node.style.height = height;
+    }
+    else {
+      node.style.height = '';
+    }
+    const borderStyle = uiElementComponent.borderStyle[eid];
+    if ( borderStyle ) {
+      node.style.borderStyle = borderStyle;
+    }
+    else {
+      node.style.borderStyle = '';
+    }
+    const borderWidth = uiElementComponent.borderWidth[eid];
+    if ( borderWidth ) {
+      node.style.borderWidth = borderWidth;
+    }
+    else {
+      node.style.borderWidth = '';
+    }
+    const borderColor = uiElementComponent.borderColor[eid];
+    if ( borderColor ) {
+      node.style.borderColor = borderColor;
+    }
+    else {
+      node.style.borderColor = '';
+    }
+    const borderRadius = uiElementComponent.borderRadius[eid];
+    if ( borderRadius ) {
+      node.style.borderRadius = borderRadius;
+    }
+    else {
+      node.style.borderRadius = '';
+    }
+    const margin = uiElementComponent.margin[eid];
+    if ( margin ) {
+      node.style.margin = margin;
+    }
+    else {
+      node.style.margin = '';
+    }
+    const padding = uiElementComponent.padding[eid];
+    if ( padding ) {
+      node.style.padding = padding;
+    }
+    else {
+      node.style.padding = '';
+    }
     const imageId = this.uiImageComponent.store.imageId[eid];
     if ( imageId ) {
       let img = node.querySelector('img');

@@ -348,7 +348,14 @@
         "y": "-4"
       },
       "UIElement": {
-        "backgroundColor": "#18a59c7a"
+        "width": "",
+        "height": "",
+        "backgroundColor": "#5018a5c8",
+        "borderWidth": "2px",
+        "borderColor": "#949494",
+        "borderStyle": "outset",
+        "margin": "",
+        "padding": ""
       },
       "UIImage": {
         "imagePath": "ui/gear-button.png"
