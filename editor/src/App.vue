@@ -414,7 +414,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--bw-color);
 }
 
-input, select {
+input, select, textarea {
   color: var(--bw-color);
   background: var(--bw-background-color);
   border-color: var(--bw-border-color);
