@@ -84,6 +84,7 @@ export default defineComponent({
           let leafNode = treeNode.children.find( node => node.name === pathPart );
           if ( !leafNode ) {
             leafNode = {
+              name: pathPart,
               children: [],
             };
             treeNode.children.push( leafNode );
