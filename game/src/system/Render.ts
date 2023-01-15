@@ -10,6 +10,7 @@ import SpriteComponent from '../component/Sprite.js';
 import UIElementComponent from '../component/UIElement.js';
 import UIImageComponent from '../component/UIImage.js';
 import UITextComponent from '../component/UIText.js';
+import UIContainerComponent from '../component/UIContainer.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
 
@@ -22,10 +23,12 @@ export default class Render extends System {
   uiElementComponent:UIElementComponent;
   uiImageComponent:UIImageComponent;
   uiTextComponent:UITextComponent;
+  uiContainerComponent:UIContainerComponent;
   uiQuery:bitecs.Query;
   uiEnterQuery:bitecs.Query;
   uiExitQuery:bitecs.Query;
   uiElements:CSS3DObject[] = [];
+  uiNodes:HTMLDivElement[] = [];
 
   cameraComponent:OrthographicCameraComponent;
   cameraQuery:bitecs.Query;
@@ -61,6 +64,7 @@ export default class Render extends System {
     this.uiElementComponent = scene.getComponent(UIElementComponent);
     this.uiImageComponent = scene.getComponent(UIImageComponent);
     this.uiTextComponent = scene.getComponent(UITextComponent);
+    this.uiContainerComponent = scene.getComponent(UIContainerComponent);
 
     const activeComponent = scene.getComponent(ActiveComponent);
     this.transformQuery = scene.game.ecs.defineQuery([ this.transformComponent.store, activeComponent.store ]);
@@ -131,30 +135,41 @@ export default class Render extends System {
     }
   }
 
-  createUIElement( eid:number ):CSS3DObject {
+  createUINode( eid:number ):HTMLDivElement {
     // XXX: Look up element to create by which components are on the
     // element?
     const node = document.createElement( 'div' );
     node.dataset.eid = eid.toString();
+    this.uiNodes[eid] = node;
 
-    const element = new CSS3DObject( node );
-    this.objects[eid] = this.uiElements[eid] = element;
-
-    this.updateTransform( eid );
     this.updateUIElement( eid );
 
-    return element;
+    return node;
   }
 
   addUIElement( eid:number ) {
-    const element = this.uiElements[eid] ||= this.createUIElement(eid);
-    this.scene._uiScene.add( element );
+    const node = this.uiNodes[eid] ||= this.createUINode(eid);
+    const entity = this.scene.getEntityById(eid);
+    const parent = entity.parent;
+    if ( parent && this.uiNodes[parent.id] ) {
+      this.uiNodes[parent.id].appendChild( node );
+    }
+    else {
+      const element = new CSS3DObject( node );
+      this.objects[eid] = this.uiElements[eid] = element;
+      if ( parent ) {
+        this.objects[parent.id].add( element );
+      }
+      else {
+        this.scene._uiScene.add( element );
+      }
+    }
   }
 
   updateUIElement( eid:number ) {
     const uiElementComponent = this.uiElementComponent;
     const uiElementData = uiElementComponent.store;
-    const node = this.uiElements[eid].element;
+    const node = this.uiNodes[eid];
     node.style.backgroundColor = '#' + uiElementData.backgroundColor[eid].toString(16).padStart(8, '0');
     const width = uiElementComponent.width[eid];
     if ( width ) {
@@ -235,6 +250,14 @@ export default class Render extends System {
       if ( span.innerText != text ) {
         span.innerText = text;
       }
+    }
+
+    const flow = this.uiContainerComponent.flow[eid];
+    if ( flow ) {
+      node.style.display = 'flex';
+      node.style.flexDirection = flow;
+      node.style.justifyContent = this.uiContainerComponent.justify[eid];
+      node.style.alignItems = this.uiContainerComponent.align[eid];
     }
   }
 
