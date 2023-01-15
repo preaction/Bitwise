@@ -181,13 +181,14 @@ export default defineComponent({
         entityData.path = `${this.sceneTree.path}/${entityData.path}`;
       }
       this.sceneData.entities.push( entityData );
-      this.updateSceneTree();
-      this.update();
 
       const entity = this.scene.addEntity();
       entity.thaw( entityData );
 
+      this.updateSceneTree();
       this.selectByPath(entityData.path);
+
+      this.update();
     },
 
     updateName( event ) {
@@ -358,6 +359,7 @@ export default defineComponent({
         pathParts.push(newName);
         const newPath = pathParts.join( '/' );
         this.selectedEntityData.path = newPath;
+        this.selectedEntity.path = newPath;
         this.update();
       }
     },
