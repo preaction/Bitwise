@@ -5,6 +5,7 @@ export default defineComponent({
   data() {
     return {
       text: '',
+      align: 'start',
       ...this.modelValue,
     }
   },
@@ -22,8 +23,18 @@ export default defineComponent({
 </script>
 <template>
   <div>
-    <label class="me-1">Text</label>
-    <textarea class="uitext" v-model="text" @keyup="updateText"></textarea>
+    <div>
+      <label class="me-1">Text</label>
+      <textarea class="uitext" v-model="text" @keyup="updateText"></textarea>
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <label class="me-1">Align</label>
+      <select v-model="align" @change="update">
+        <option>start</option>
+        <option>center</option>
+        <option>end</option>
+      </select>
+    </div>
   </div>
 </template>
 <style>

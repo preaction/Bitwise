@@ -354,6 +354,7 @@
         "borderWidth": "2px",
         "borderColor": "#949494",
         "borderStyle": "outset",
+        "borderRadius": "8px",
         "margin": "",
         "padding": ""
       },
@@ -362,6 +363,65 @@
       },
       "active": true,
       "id": 99
+    },
+    {
+      "name": "Menu",
+      "path": "Menu",
+      "Transform": {
+        "sx": "0.03",
+        "sy": "0.03",
+        "sz": 1,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0
+      },
+      "UIElement": {
+        "width": "120px",
+        "height": "240px",
+        "backgroundColor": "#000000e4",
+        "borderWidth": "1px",
+        "borderColor": "#c7c7c7",
+        "borderStyle": "solid",
+        "borderRadius": "10px",
+        "margin": "",
+        "padding": "5px"
+      },
+      "active": true,
+      "UIContainer": {
+        "flow": "column",
+        "justify": "center",
+        "align": "stretch"
+      }
+    },
+    {
+      "name": "Replay Button",
+      "path": "Menu/Replay Button",
+      "Transform": {
+        "sx": "1",
+        "sy": "1",
+        "sz": 1,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0
+      },
+      "UIElement": {
+        "width": "",
+        "height": "",
+        "backgroundColor": "#00000000",
+        "borderWidth": "2px",
+        "borderColor": "#cfcfcf",
+        "borderStyle": "outset",
+        "borderRadius": "5px",
+        "margin": "",
+        "padding": "5px"
+      },
+      "UIText": {
+        "text": "Replay",
+        "align": "center"
+      },
+      "active": true
     }
   ],
   "components": [

@@ -106,7 +106,7 @@ export default class Render extends System {
 
     // Pre-create UI elements
     for ( const eid of this.uiQuery(this.scene.world) ) {
-      this.createUIElement( eid );
+      this.createUINode( eid );
     }
 
     // XXX: We should set this in a System form
@@ -118,7 +118,11 @@ export default class Render extends System {
     // Add all render objects to the scene
     const spriteEids = this.spriteQuery(this.scene.world);
     const cameraEids = this.cameraQuery(this.scene.world);
+    const elementEids = this.uiEnterQuery(this.scene.world);
     for ( const eid of this.transformEnterQuery(this.scene.world) ) {
+      if ( elementEids.indexOf(eid) >= 0 ) {
+        continue;
+      }
       if ( spriteEids.indexOf(eid) >= 0 ) {
         this.addSprite( eid );
       }
@@ -130,7 +134,7 @@ export default class Render extends System {
       }
     }
     // Add UI objects to UI scene
-    for ( const eid of this.uiEnterQuery(this.scene.world) ) {
+    for ( const eid of elementEids ) {
       this.addUIElement( eid );
     }
   }
@@ -242,6 +246,8 @@ export default class Render extends System {
 
     const text = this.uiTextComponent.text[eid];
     if ( text ) {
+      const align = this.uiTextComponent.align[eid];
+      node.style.textAlign = align === "end" ? "right" : align === "center" ? "center" : "left";
       let span = node.querySelector('span');
       if ( !span ) {
         span = document.createElement( 'span' );
