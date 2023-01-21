@@ -387,7 +387,7 @@
         "margin": "",
         "padding": "5px"
       },
-      "active": true,
+      "active": false,
       "UIContainer": {
         "flow": "column",
         "justify": "center",

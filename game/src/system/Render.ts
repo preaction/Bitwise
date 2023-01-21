@@ -14,7 +14,21 @@ import UIContainerComponent from '../component/UIContainer.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
 
+/**
+ * The Render class handles rendering most Three.JS Object3D objects.
+ *
+ * This classes uses the following components:
+ *
+ * * TransformComponent
+ * * SpriteComponent
+ * * OrthographicCameraComponent
+ */
 export default class Render extends System {
+  activeComponent:ActiveComponent;
+  activeQuery:bitecs.Query;
+  activeEnterQuery:bitecs.Query;
+  activeExitQuery:bitecs.Query;
+
   transformComponent:TransformComponent;
   transformQuery:bitecs.Query;
   transformEnterQuery:bitecs.Query;
@@ -32,9 +46,13 @@ export default class Render extends System {
 
   cameraComponent:OrthographicCameraComponent;
   cameraQuery:bitecs.Query;
+  cameraEnterQuery:bitecs.Query;
+  cameraExitQuery:bitecs.Query;
 
   spriteComponent:SpriteComponent;
   spriteQuery:bitecs.Query;
+  spriteEnterQuery:bitecs.Query;
+  spriteExitQuery:bitecs.Query;
 
   cameras:Array<three.OrthographicCamera|undefined> = [];
   mainCamera:number = -1;
@@ -58,85 +76,141 @@ export default class Render extends System {
       },
     );
 
+    // Render currently has Sprite and OrthographicCamera
+    // At init(), we want to create all Object3D
+    // At start(), we want to add all Active Object3D
+    // At update(), we want to update all Active Object3D
+
+    this.activeComponent = scene.getComponent(ActiveComponent);
+    this.activeQuery = this.defineQuery([ this.activeComponent ]);
+    this.activeEnterQuery = this.enterQuery( this.activeQuery );
+    this.activeExitQuery = this.exitQuery( this.activeQuery );
+
     this.transformComponent = scene.getComponent(TransformComponent);
-    this.spriteComponent = scene.getComponent(SpriteComponent);
+    this.transformQuery = this.defineQuery([ this.transformComponent ]);
+    this.transformEnterQuery = this.enterQuery( this.transformQuery );
+    this.transformExitQuery = this.exitQuery( this.transformQuery );
+
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
+    this.cameraQuery = this.defineQuery([ this.cameraComponent ]);
+    this.cameraEnterQuery = this.enterQuery(this.cameraQuery);
+    this.cameraExitQuery = this.exitQuery(this.cameraQuery);
+
+    this.spriteComponent = scene.getComponent(SpriteComponent);
+    this.spriteQuery = this.defineQuery([ this.spriteComponent ]);
+    this.spriteEnterQuery = this.enterQuery(this.spriteQuery);
+    this.spriteExitQuery = this.exitQuery(this.spriteQuery);
+
     this.uiElementComponent = scene.getComponent(UIElementComponent);
     this.uiImageComponent = scene.getComponent(UIImageComponent);
     this.uiTextComponent = scene.getComponent(UITextComponent);
     this.uiContainerComponent = scene.getComponent(UIContainerComponent);
-
-    const activeComponent = scene.getComponent(ActiveComponent);
-    this.transformQuery = scene.game.ecs.defineQuery([ this.transformComponent.store, activeComponent.store ]);
-    this.transformEnterQuery = scene.game.ecs.enterQuery( this.transformQuery );
-    this.transformExitQuery = scene.game.ecs.exitQuery( this.transformQuery );
-
-    this.uiQuery = scene.game.ecs.defineQuery([ this.uiElementComponent.store, activeComponent.store ]);
-    this.uiEnterQuery = scene.game.ecs.enterQuery( this.uiQuery );
-    this.uiExitQuery = scene.game.ecs.exitQuery( this.uiQuery );
-
-    this.cameraQuery = scene.game.ecs.defineQuery([ this.cameraComponent.store ]);
-    this.spriteQuery = scene.game.ecs.defineQuery([ this.spriteComponent.store ]);
+    this.uiQuery = this.defineQuery([ this.uiElementComponent ]);
+    this.uiEnterQuery = this.enterQuery( this.uiQuery );
+    this.uiExitQuery = this.exitQuery( this.uiQuery );
 
     scene.addEventListener( "resize", (e:any) => {
       this.onResize(e as ResizeEvent);
     });
   }
 
+  /**
+   * Initialize the renderer by creating all of the Object3D in the
+   * scene and loading all external resources (like textures).
+   */
   async init():Promise<any> {
+    const promise = this.createEnters();
+    // XXX: This should be a System setting.
+    this.mainCamera = this.cameras.findIndex( c => !!c );
+    return promise;
+  }
+
+  /**
+   * This creates all the Object3D entering the scene. It does not add
+   * anything to the scene.
+   */
+  private createEnters():Promise<any> {
     const promises = [];
-
-    // XXX: Should we preload textures like this, or will we load too
-    // many textures that we don't later use?
-    for ( const path in this.scene.game.load.textureIds ) {
-      const textureId = this.scene.game.load.textureIds[path];
-      promises.push( this.loadTexture( textureId ) );
-    }
-
-    const spriteEids = this.spriteQuery(this.scene.world);
-    const cameraEids = this.cameraQuery(this.scene.world);
+    const spriteEids = this.spriteEnterQuery(this.scene.world);
     for ( const eid of spriteEids ) {
       const textureId = this.spriteComponent.store.textureId[eid];
       promises.push( this.loadTexture( textureId, eid ) );
       this.createSprite( eid );
     }
+    const cameraEids = this.cameraEnterQuery(this.scene.world);
     for ( const eid of cameraEids ) {
       this.createCamera( eid );
     }
-
-    // Pre-create UI elements
-    for ( const eid of this.uiQuery(this.scene.world) ) {
-      this.createUINode( eid );
+    const elementEids = this.uiEnterQuery(this.scene.world);
+    for ( const eid of elementEids ) {
+      this.createUINode(eid);
     }
 
-    // XXX: We should set this in a System form
-    this.mainCamera = cameraEids[0];
     return Promise.all( promises );
   }
 
-  start() {
-    // Add all render objects to the scene
-    const spriteEids = this.spriteQuery(this.scene.world);
-    const cameraEids = this.cameraQuery(this.scene.world);
-    const elementEids = this.uiEnterQuery(this.scene.world);
-    for ( const eid of this.transformEnterQuery(this.scene.world) ) {
-      if ( elementEids.indexOf(eid) >= 0 ) {
+  /**
+   * Thie adds any newly-active objects, creating blank objects if
+   * necessary.
+   */
+  private addNewActive():void {
+    const activeEnterEids = this.activeEnterQuery( this.scene.world );
+    for ( const eid of activeEnterEids ) {
+      if ( this.uiNodes[eid] ) {
+        this.addUINode(eid);
         continue;
       }
-      if ( spriteEids.indexOf(eid) >= 0 ) {
-        this.addSprite( eid );
+      let renderObject = this.objects[eid];
+      if ( !renderObject ) {
+        renderObject = this.createGroup(eid);
       }
-      else if ( cameraEids.indexOf(eid) >= 0 ) {
-        this.addCamera( eid );
+      const entity = this.scene.getEntityById( eid );
+      const parentEntity = entity.parent;
+      if ( parentEntity ) {
+        let parentRenderObject = this.objects[parentEntity.id];
+        if ( !parentRenderObject ) {
+          parentRenderObject = this.objects[parentEntity.id] = this.createGroup(parentEntity.id);
+        }
+        this.objects[parentEntity.id].add( renderObject );
       }
       else {
-        this.addGroup( eid );
+        this.scene._scene.add( renderObject );
       }
     }
-    // Add UI objects to UI scene
-    for ( const eid of elementEids ) {
-      this.addUIElement( eid );
+  }
+
+  /**
+   * This removes any objects that have become inactive.
+   */
+  private removeInactive():void {
+    const activeExitEids = this.activeExitQuery( this.scene.world );
+    for ( const eid of activeExitEids ) {
+      const renderObject = this.objects[eid];
+      if ( !renderObject ) {
+        continue;
+      }
+      renderObject.removeFromParent();
     }
+  }
+
+  /**
+   * Updates the transforms for all objects, active or not.
+   */
+  private updateTransforms() {
+    const transformEids = this.transformQuery( this.scene.world );
+    for ( const eid of transformEids ) {
+      this.updateTransform( eid );
+    }
+  }
+
+  /**
+   * Start the scene by adding all the active entities.
+   */
+  start() {
+    this.createEnters();
+    this.updateTransforms();
+    this.addNewActive();
+    this.removeInactive();
   }
 
   createUINode( eid:number ):HTMLDivElement {
@@ -146,12 +220,12 @@ export default class Render extends System {
     node.dataset.eid = eid.toString();
     this.uiNodes[eid] = node;
 
-    this.updateUIElement( eid );
+    this.updateUINode( eid );
 
     return node;
   }
 
-  addUIElement( eid:number ) {
+  addUINode( eid:number ) {
     const node = this.uiNodes[eid] ||= this.createUINode(eid);
     const entity = this.scene.getEntityById(eid);
     const parent = entity.parent;
@@ -161,6 +235,7 @@ export default class Render extends System {
     else {
       const element = new CSS3DObject( node );
       this.objects[eid] = this.uiElements[eid] = element;
+      this.updateTransform(eid);
       if ( parent ) {
         this.objects[parent.id].add( element );
       }
@@ -170,7 +245,7 @@ export default class Render extends System {
     }
   }
 
-  updateUIElement( eid:number ) {
+  updateUINode( eid:number ) {
     const uiElementComponent = this.uiElementComponent;
     const uiElementData = uiElementComponent.store;
     const node = this.uiNodes[eid];
@@ -267,19 +342,11 @@ export default class Render extends System {
     }
   }
 
+  /**
+   * Stop rendering the scene by removing all the render objects.
+   */
   stop() {
-    // Remove all render objects from the scene
-    for ( const eid of this.transformQuery(this.scene.world) ) {
-      this.remove( eid );
-      if ( this.materials[eid] ) {
-        this.materials[eid].dispose();
-        delete this.materials[eid];
-        if ( this.textures[eid] ) {
-          this.textures[eid].dispose();
-          delete this.textures[eid];
-        }
-      }
-    }
+    // XXX
   }
 
   /**
@@ -293,7 +360,7 @@ export default class Render extends System {
    * Get the UI element object for the given entity, if any.
    */
   getUIElement( eid:number ):HTMLElement|null {
-    return this.uiElements[eid]?.element || null;
+    return this.uiNodes[eid] || null;
   }
 
 
@@ -314,45 +381,19 @@ export default class Render extends System {
   }
 
   update( timeMilli:number ) {
-    const spriteEids = this.spriteQuery(this.scene.world);
-    const cameraEids = this.cameraQuery(this.scene.world);
-
-    // Objects entering the scene with a Transform component
-    for ( const eid of this.transformEnterQuery(this.scene.world) ) {
-      if ( spriteEids.indexOf(eid) >= 0 ) {
-        this.addSprite( eid );
-      }
-      else if ( cameraEids.indexOf(eid) >= 0 ) {
-        this.addCamera( eid );
-      }
-      else {
-        this.addGroup( eid );
-      }
-    }
-
-    // Objects leaving the scene via their Transform component
-    for ( const eid of this.transformExitQuery(this.scene.world) ) {
-      this.remove( eid );
-    }
-
-    // Objects changing their transform
-    for ( const eid of this.transformQuery( this.scene.world ) ) {
-      this.updateTransform( eid );
-    }
+    this.createEnters();
+    this.updateTransforms();
+    this.addNewActive();
+    this.removeInactive();
 
     // Sprites changing their texture
-    for ( const eid of spriteEids ) {
+    for ( const eid of this.spriteQuery(this.scene.world) ) {
       this.updateSprite( eid );
     }
 
     // Cameras changing their properties
-    for ( const eid of cameraEids ) {
+    for ( const eid of this.cameraQuery(this.scene.world) ) {
       this.updateCamera( eid );
-    }
-
-    // UI elements entering the scene
-    for ( const eid of this.uiEnterQuery(this.scene.world) ) {
-      this.addUIElement( eid );
     }
 
     // UI elements leaving the scene
@@ -361,7 +402,7 @@ export default class Render extends System {
     }
 
     for ( const eid of this.uiQuery(this.scene.world) ) {
-      this.updateUIElement(eid);
+      this.updateUINode(eid);
     }
   }
 
@@ -394,7 +435,7 @@ export default class Render extends System {
     obj.scale.z = this.transformComponent.store.sz[eid];
   }
 
-  createCamera( eid:number ):three.OrthographicCamera {
+  createCamera( eid:number ):void {
     const { width, height } = this.scene.game;
     const ratio = width / height;
     // Point a camera at 0, 0
@@ -414,7 +455,6 @@ export default class Render extends System {
     this.cameras[eid] = this.objects[eid] = camera;
     this.updateTransform( eid );
     this.updateCamera( eid );
-    return camera;
   }
 
   updateCamera( eid:number ) {
@@ -428,43 +468,10 @@ export default class Render extends System {
     camera.updateProjectionMatrix();
   }
 
-  addCamera( eid:number ) {
-    const camera = this.cameras[eid] || this.createCamera(eid);
-    const entity = this.scene.getEntityById( eid );
-    const parent = entity.parent;
-    if ( parent ){
-      this.objects[parent.id].add( camera );
-    }
-    else {
-      this.scene._scene.add( camera );
-    }
-  }
-
-  removeCamera( eid:number ) {
-    const camera = this.cameras[eid];
-    if ( camera ) {
-      this.scene._scene.remove( camera );
-      this.cameras[eid] = undefined;
-      delete this.objects[eid];
-    }
-  }
-
   createGroup( eid:number ):three.Group {
     const group = this.objects[eid] = new three.Group();
     this.updateTransform( eid );
     return group;
-  }
-
-  addGroup( eid:number ) {
-    const group = this.objects[eid] || this.createGroup( eid );
-    const entity = this.scene.getEntityById( eid );
-    const parent = entity.parent;
-    if ( parent ){
-      this.objects[parent.id].add( group );
-    }
-    else {
-      this.scene._scene.add( group );
-    }
   }
 
   createSprite( eid:number ):three.Sprite {
@@ -497,18 +504,6 @@ export default class Render extends System {
     if ( !this.materials[eid] || (this.materials[eid] as three.SpriteMaterial).map !== texture ) {
       const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
       sprite.material = material;
-    }
-  }
-
-  addSprite( eid:number ) {
-    const sprite = this.objects[eid] || this.createSprite( eid );
-    const entity = this.scene.getEntityById( eid );
-    const parent = entity.parent;
-    if ( parent ){
-      this.objects[parent.id].add( sprite );
-    }
-    else {
-      this.scene._scene.add( sprite );
     }
   }
 

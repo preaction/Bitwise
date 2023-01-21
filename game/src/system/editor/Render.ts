@@ -91,6 +91,7 @@ export default class Render extends RenderSystem {
 
   async init() {
     this.input = this.scene.getSystem( InputSystem );
+    return super.init();
   }
 
   start() {
@@ -305,49 +306,29 @@ export default class Render extends RenderSystem {
     }
   }
 
-  update( timeMilli:number ) {
-    super.update(timeMilli);
-
-    // enteredQuery for cameraQuery: Create Camera and add to Scene
-    const add = this.cameraEnterQuery(this.scene.world);
-    for ( const eid of add ) {
-      this.add( eid );
+  updateCamera( eid:number ) {
+    const camera = this.sceneCameras[eid];
+    if ( !camera ) {
+      return;
     }
 
-    // exitedQuery for cameraQuery: Remove Camera from Scene
-    const remove = this.cameraExitQuery(this.scene.world);
-    for ( const eid of remove ) {
-      this.scene._scene.remove( this.sceneCameras[eid] );
-      delete this.sceneCameras[eid];
-    }
+    camera.position.x = this.transformComponent.store.x[eid];
+    camera.position.y = this.transformComponent.store.y[eid];
+    camera.position.z = this.transformComponent.store.z[eid];
 
-    // cameraQuery: Update camera properties and render if needed
-    const update = this.cameraQuery(this.scene.world);
-    for ( const eid of update ) {
-      // XXX: Object3d should be its own component somehow
-      const camera = this.sceneCameras[eid];
-      if ( !camera ) {
-        continue;
-      }
+    // Update wireframe width/height/depth
+    // It's not the current game we want, we want the player game
+    // size
+    const { gameWidth, gameHeight } = this.scene.game.data;
+    const ratio = gameWidth / gameHeight;
 
-      camera.position.x = this.transformComponent.store.x[eid];
-      camera.position.y = this.transformComponent.store.y[eid];
-      camera.position.z = this.transformComponent.store.z[eid];
-
-      // Update wireframe width/height/depth
-      // It's not the current game we want, we want the player game
-      // size
-      const { gameWidth, gameHeight } = this.scene.game.data;
-      const ratio = gameWidth / gameHeight;
-
-      const frustumSize = this.cameraComponent.store.frustum[eid] || 20;
-      const width = frustumSize * ratio;
-      const height = frustumSize;
-      const far = this.cameraComponent.store.far[eid];
-      const near = this.cameraComponent.store.near[eid];
-      const depth = far - near;
-      camera.scale.set( width, height, depth );
-    }
+    const frustumSize = this.cameraComponent.store.frustum[eid] || 20;
+    const width = frustumSize * ratio;
+    const height = frustumSize;
+    const far = this.cameraComponent.store.far[eid];
+    const near = this.cameraComponent.store.near[eid];
+    const depth = far - near;
+    camera.scale.set( width, height, depth );
   }
 
   /**
@@ -356,18 +337,18 @@ export default class Render extends RenderSystem {
    */
   render() {
     if ( !this.camera ) {
-      this.camera = this.createCamera();
+      this.camera = this.createEditorCamera();
     }
     this.scene.game.renderer.render( this.scene._scene, this.camera );
     this.scene.game.ui.renderer.render( this.scene._uiScene, this.camera );
   }
 
   /**
-   * createCamera creates the editor camera and sets it up to
+   * createEditorCamera creates the editor camera and sets it up to
    * automatically resize and maintain its aspect ratio. The camera will
    * be created just large enough to see everything in the scene.
    */
-  createCamera() {
+  createEditorCamera() {
     // Maintain a constant aspect ratio so shapes don't get distorted
     const { width, height } = this.scene.game;
     const ratio = width / height;
@@ -403,7 +384,7 @@ export default class Render extends RenderSystem {
     return camera;
   }
 
-  add( eid:number ) {
+  createCamera( eid:number ) {
     const { gameWidth, gameHeight } = this.scene.game.data;
     const ratio = gameWidth / gameHeight;
 

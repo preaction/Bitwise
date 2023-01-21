@@ -149,6 +149,7 @@ export default class Klondike extends System {
     for ( let suit = 0; suit < suits.length; suit++ ) {
       for ( let rank = 0; rank < ranks.length; rank++ ) {
         const entity = this.scene.addEntity();
+        entity.active = true;
         const card = {
           entity: entity.id,
           suit,
