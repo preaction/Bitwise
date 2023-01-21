@@ -10,6 +10,7 @@ import SpriteComponent from '../component/Sprite.js';
 import UIElementComponent from '../component/UIElement.js';
 import UIImageComponent from '../component/UIImage.js';
 import UITextComponent from '../component/UIText.js';
+import UIButtonComponent from '../component/UIButton.js';
 import UIContainerComponent from '../component/UIContainer.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
@@ -37,6 +38,7 @@ export default class Render extends System {
   uiElementComponent:UIElementComponent;
   uiImageComponent:UIImageComponent;
   uiTextComponent:UITextComponent;
+  uiButtonComponent:UIButtonComponent;
   uiContainerComponent:UIContainerComponent;
   uiQuery:bitecs.Query;
   uiEnterQuery:bitecs.Query;
@@ -104,6 +106,7 @@ export default class Render extends System {
     this.uiElementComponent = scene.getComponent(UIElementComponent);
     this.uiImageComponent = scene.getComponent(UIImageComponent);
     this.uiTextComponent = scene.getComponent(UITextComponent);
+    this.uiButtonComponent = scene.getComponent(UIButtonComponent);
     this.uiContainerComponent = scene.getComponent(UIContainerComponent);
     this.uiQuery = this.defineQuery([ this.uiElementComponent ]);
     this.uiEnterQuery = this.enterQuery( this.uiQuery );
@@ -204,13 +207,15 @@ export default class Render extends System {
   }
 
   /**
-   * Start the scene by adding all the active entities.
+   * Start the scene by adding all the active entities and creating
+   * event listeners.
    */
   start() {
     this.createEnters();
     this.updateTransforms();
     this.addNewActive();
     this.removeInactive();
+    this.startActionListener();
   }
 
   createUINode( eid:number ):HTMLDivElement {
@@ -340,13 +345,34 @@ export default class Render extends System {
       node.style.justifyContent = this.uiContainerComponent.justify[eid];
       node.style.alignItems = this.uiContainerComponent.align[eid];
     }
+
+    const action = this.uiButtonComponent.action[eid];
+    if ( action ) {
+      node.dataset.uiAction = action;
+    }
   }
 
   /**
-   * Stop rendering the scene by removing all the render objects.
+   * Pause the scene by removing event listeners.
+   */
+  pause() {
+    this.stopActionListener();
+  }
+
+  /**
+   * Resume the scene by restoring event listeners.
+   */
+  resume() {
+    this.startActionListener();
+  }
+
+  /**
+   * Stop rendering the scene by removing all the render objects and
+   * event listeners.
    */
   stop() {
     // XXX
+    this.stopActionListener();
   }
 
   /**
@@ -363,6 +389,26 @@ export default class Render extends System {
     return this.uiNodes[eid] || null;
   }
 
+  private actionListener!:(e:MouseEvent)=>void;
+
+  /**
+   * Start listening for clicks on UIButton entities to dispatch actions
+   * added by addUIAction.
+   */
+  startActionListener():void {
+    if ( !this.actionListener ) {
+      this.actionListener = this.dispatchAction.bind(this);
+    }
+    this.scene.game.ui.renderer.domElement.addEventListener( "click", this.actionListener );
+  }
+
+  /**
+   * Stop listening for clicks on UIButton entities to dispatch actions
+   * added by addUIAction.
+   */
+  stopActionListener():void {
+    this.scene.game.ui.renderer.domElement.removeEventListener( "click", this.actionListener );
+  }
 
   /**
    * Load the texture and prepare it to be rendered.
@@ -531,5 +577,43 @@ export default class Render extends System {
       camera.bottom = frustumSize / -2
       camera.updateProjectionMatrix();
     }
+  }
+
+  /**
+   * Registered handlers for UI actions declared on the UIButton
+   * component.
+   */
+  uiAction:{ [key:string]: Array<(type:string)=>void> } = {};
+
+  /**
+   * Add a UI action handler. UI actions are set on the UIButton
+   * component. Clicking the button will call the registered actions.
+   */
+  addUIAction( type:string, listener:(type:string)=>void ):void {
+    if ( !this.uiAction[type] ) {
+      this.uiAction[type] = [];
+    }
+    this.uiAction[type].push( listener );
+  }
+
+  /**
+   * Dispatch UI actions from the given MouseEvent, if the event was
+   * a UIButton.
+   */
+  dispatchAction( event:MouseEvent ):void {
+    const target = event.target as HTMLElement;
+    // Only elements with UI actions
+    if ( !target.matches("[data-ui-action]") ) {
+      return;
+    }
+    const action = target.dataset.uiAction;
+    if ( !action ) {
+      return;
+    }
+    if ( !this.uiAction[action]?.length ) {
+      console.warn(`Cannot dispatch UI action: No listener for action: ${action}`);
+      return;
+    }
+    this.uiAction[action].forEach( fn => fn(action) );
   }
 }

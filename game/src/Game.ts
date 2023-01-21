@@ -16,6 +16,7 @@ import BoxColliderComponent from './component/BoxCollider.js';
 import UIElementComponent from './component/UIElement.js';
 import UIImageComponent from './component/UIImage.js';
 import UITextComponent from './component/UIText.js';
+import UIButtonComponent from './component/UIButton.js';
 import UIContainerComponent from './component/UIContainer.js';
 
 import InputSystem from './system/Input.js';
@@ -46,6 +47,7 @@ const DEFAULT_COMPONENTS = {
   UIElement: UIElementComponent,
   UIImage: UIImageComponent,
   UIText: UITextComponent,
+  UIButton: UIButtonComponent,
   UIContainer: UIContainerComponent,
 };
 

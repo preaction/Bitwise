@@ -421,7 +421,10 @@
         "text": "Replay",
         "align": "center"
       },
-      "active": true
+      "active": true,
+      "UIButton": {
+        "action": "replay"
+      }
     }
   ],
   "components": [

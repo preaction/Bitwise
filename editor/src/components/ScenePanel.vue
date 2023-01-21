@@ -415,6 +415,7 @@ export default defineComponent({
           <li @click="addEntity('Transform','UIElement')">UI Element</li>
           <li @click="addEntity('Transform','UIElement','UIImage')">UI Image</li>
           <li @click="addEntity('Transform','UIElement','UIText')">UI Text</li>
+          <li @click="addEntity('Transform','UIElement','UIText','UIButton')">UI Button</li>
         </ul>
       </MenuButton>
     </div>

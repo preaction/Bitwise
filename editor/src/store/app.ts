@@ -17,6 +17,7 @@ import BoxColliderEdit from '../components/bitwise/BoxCollider.vue';
 import UIElementEdit from '../components/bitwise/UIElement.vue';
 import UIImageEdit from '../components/bitwise/UIImage.vue';
 import UITextEdit from '../components/bitwise/UIText.vue';
+import UIButtonEdit from '../components/bitwise/UIButton.vue';
 import UIContainerEdit from '../components/bitwise/UIContainer.vue';
 
 // Core System forms
@@ -194,6 +195,7 @@ export const useAppStore = defineStore('app', {
         "UIElement": UIElementEdit,
         "UIImage": UIImageEdit,
         "UIText": UITextEdit,
+        "UIButton": UIButtonEdit,
         "UIContainer": UIContainerEdit,
       }),
       systemForms: Vue.markRaw({
