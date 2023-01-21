@@ -441,7 +441,8 @@
       "data": {
         "drawEntityPath": "Deck",
         "discardEntityPath": "Discard",
-        "menuButtonEntityPath": "Menu Button"
+        "menuButtonEntityPath": "Menu Button",
+        "menuEntityPath": "Menu"
       }
     },
     {

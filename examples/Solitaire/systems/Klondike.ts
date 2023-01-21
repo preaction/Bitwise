@@ -69,6 +69,9 @@ export default class Klondike extends System {
   menuButtonEntity!:Entity;
   menuButtonEntityPath:string = "";
   menuButtonElement!:HTMLElement;
+  menuEntity!:Entity;
+  menuEntityPath:string = "";
+  menuElement!:HTMLElement;
 
   rowHeight:number = 0.5;
 
@@ -82,11 +85,12 @@ export default class Klondike extends System {
    */
   followEntities:number[] = [];
 
-  thaw( data:{drawEntityPath: string, discardEntityPath: string, menuButtonEntityPath: string} ) {
+  thaw( data:{drawEntityPath: string, discardEntityPath: string, menuButtonEntityPath: string, menuEntityPath: string} ) {
     // XXX: Annoying to define all system fields in thaw and freeze...
     this.drawEntityPath = data.drawEntityPath;
     this.discardEntityPath = data.discardEntityPath;
     this.menuButtonEntityPath = data.menuButtonEntityPath;
+    this.menuEntityPath = data.menuEntityPath;
   }
 
   freeze():any {
@@ -95,6 +99,7 @@ export default class Klondike extends System {
       drawEntityPath: this.drawEntityPath,
       discardEntityPath: this.discardEntityPath,
       menuButtonEntityPath: this.menuButtonEntityPath,
+      menuEntityPath: this.menuEntityPath,
     };
   }
 
@@ -141,6 +146,12 @@ export default class Klondike extends System {
       throw `Missing menu button entity: ${this.menuButtonEntityPath}`;
     }
     this.menuButtonEntity = menuButtonEntity;
+
+    const menuEntity = this.scene.getEntityByPath( this.menuEntityPath );
+    if ( !menuEntity ) {
+      throw `Missing menu entity: ${this.menuEntityPath}`;
+    }
+    this.menuEntity = menuEntity;
 
     // Load the Deck prefab textures and materials
     this.cardBackTextureId = this.scene.game.load.texture( cardBackImage );
@@ -211,6 +222,12 @@ export default class Klondike extends System {
     this.menuButtonElement = menuButtonElement;
     this.menuButtonElement.addEventListener( 'click', this.showMenu.bind(this) );
 
+    const menuElement = this.Render.getUIElement( this.menuEntity.id );
+    if ( !menuElement ) {
+      throw "Missing menu HTML element";
+    }
+    this.menuElement = menuElement;
+
     this.tweens.play();
     this.TransformDeck();
   }
@@ -224,7 +241,7 @@ export default class Klondike extends System {
   }
 
   showMenu() {
-    console.log( 'Show menu' );
+    this.menuEntity.active = true;
   }
 
   TransformDeck() {
