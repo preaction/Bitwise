@@ -189,10 +189,13 @@ export default class Render extends System {
     const activeExitEids = this.activeExitQuery( this.scene.world );
     for ( const eid of activeExitEids ) {
       const renderObject = this.objects[eid];
-      if ( !renderObject ) {
-        continue;
+      if ( renderObject ) {
+        renderObject.removeFromParent();
       }
-      renderObject.removeFromParent();
+      const uiNode = this.uiNodes[eid];
+      if ( uiNode ) {
+        uiNode.remove();
+      }
     }
   }
 
@@ -556,6 +559,10 @@ export default class Render extends System {
   remove( eid:number ) {
     this.scene._scene.remove( this.objects[eid] );
     this.scene._uiScene.remove( this.objects[eid] );
+    if ( this.uiNodes[eid] ) {
+      this.uiNodes[eid].remove();
+      delete this.uiNodes[eid];
+    }
     delete this.objects[eid];
     delete this.materials[eid];
   }
@@ -602,11 +609,12 @@ export default class Render extends System {
    */
   dispatchAction( event:MouseEvent ):void {
     const target = event.target as HTMLElement;
+    const button = target.closest( '[data-ui-action]' ) as HTMLElement;
     // Only elements with UI actions
-    if ( !target.matches("[data-ui-action]") ) {
+    if ( !button ) {
       return;
     }
-    const action = target.dataset.uiAction;
+    const action = button.dataset.uiAction;
     if ( !action ) {
       return;
     }

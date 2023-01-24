@@ -105,7 +105,7 @@ export default class System extends three.EventDispatcher {
    * Define a query for when an entity stops being matched by a query.
    */
   exitQuery( query:bitecs.Query ):bitecs.Query {
-    return this.scene.game.ecs.enterQuery(query);
+    return this.scene.game.ecs.exitQuery(query);
   }
 
   /**
