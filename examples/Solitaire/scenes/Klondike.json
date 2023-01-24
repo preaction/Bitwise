@@ -23,8 +23,7 @@
         "near": 0,
         "far": 2000
       },
-      "active": true,
-      "id": 84
+      "active": true
     },
     {
       "name": "Foundations",
@@ -42,8 +41,7 @@
         "sy": 1,
         "sz": 1
       },
-      "active": false,
-      "id": 85
+      "active": false
     },
     {
       "name": "Foundation 1",
@@ -65,8 +63,7 @@
         "texturePath": "cards/card_empty.png"
       },
       "Foundation": {},
-      "active": true,
-      "id": 86
+      "active": true
     },
     {
       "name": "Foundation 2",
@@ -87,8 +84,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Foundation": {},
-      "id": 87
+      "Foundation": {}
     },
     {
       "name": "Foundation 3",
@@ -109,8 +105,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Foundation": {},
-      "id": 88
+      "Foundation": {}
     },
     {
       "name": "Foundation 4",
@@ -132,7 +127,6 @@
         "texturePath": "cards/card_empty.png"
       },
       "Foundation": {},
-      "id": 89,
       "active": false
     },
     {
@@ -154,8 +148,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {},
-      "id": 90
+      "Stack": {}
     },
     {
       "name": "Stack 2",
@@ -176,8 +169,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {},
-      "id": 91
+      "Stack": {}
     },
     {
       "name": "Stack 4",
@@ -198,8 +190,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {},
-      "id": 92
+      "Stack": {}
     },
     {
       "name": "Stack 5",
@@ -220,8 +211,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {},
-      "id": 93
+      "Stack": {}
     },
     {
       "name": "Stack 6",
@@ -242,8 +232,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {},
-      "id": 94
+      "Stack": {}
     },
     {
       "name": "Stack 7",
@@ -264,8 +253,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "Stack": {},
-      "id": 95
+      "Stack": {}
     },
     {
       "name": "Deck",
@@ -285,8 +273,7 @@
       },
       "Sprite": {
         "texturePath": "cards/card_empty.png"
-      },
-      "id": 96
+      }
     },
     {
       "name": "Discard",
@@ -307,8 +294,7 @@
       "Sprite": {
         "texturePath": "cards/card_empty.png"
       },
-      "active": true,
-      "id": 97
+      "active": true
     },
     {
       "name": "Stack 3",
@@ -330,8 +316,7 @@
         "texturePath": "cards/card_empty.png"
       },
       "Stack": {},
-      "active": true,
-      "id": 98
+      "active": true
     },
     {
       "name": "Menu Button",
@@ -362,7 +347,9 @@
         "imagePath": "ui/gear-button.png"
       },
       "active": true,
-      "id": 99
+      "UIButton": {
+        "action": "showMenu"
+      }
     },
     {
       "name": "Menu",
@@ -390,29 +377,33 @@
       "active": false,
       "UIContainer": {
         "flow": "column",
-        "justify": "center",
+        "justify": "start",
         "align": "stretch"
       }
     },
     {
       "name": "Replay Button",
       "path": "Menu/Replay Button",
+      "active": false,
       "Transform": {
-        "sx": "1",
-        "sy": "1",
-        "sz": 1,
+        "x": 0,
+        "y": 0,
+        "z": 0,
         "rx": 0,
         "ry": 0,
         "rz": 0,
-        "rw": 0
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1
       },
       "UIElement": {
+        "backgroundColor": "#00000000",
         "width": "",
         "height": "",
-        "backgroundColor": "#00000000",
+        "borderStyle": "outset",
         "borderWidth": "2px",
         "borderColor": "#cfcfcf",
-        "borderStyle": "outset",
         "borderRadius": "5px",
         "margin": "",
         "padding": "5px"
@@ -421,10 +412,46 @@
         "text": "Replay",
         "align": "center"
       },
-      "active": true,
       "UIButton": {
         "action": "replay"
-      }
+      },
+      "entities": []
+    },
+    {
+      "name": "Close Button",
+      "path": "Menu/Close Button",
+      "active": true,
+      "Transform": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "rw": 0,
+        "sx": 1,
+        "sy": 1,
+        "sz": 1
+      },
+      "UIElement": {
+        "backgroundColor": "#00000000",
+        "width": "",
+        "height": "",
+        "borderStyle": "outset",
+        "borderWidth": "2px",
+        "borderColor": "#cfcfcf",
+        "borderRadius": "5px",
+        "margin": "",
+        "padding": "5px"
+      },
+      "UIText": {
+        "text": "Close",
+        "align": "center"
+      },
+      "UIButton": {
+        "action": "hideMenu"
+      },
+      "entities": []
     }
   ],
   "components": [

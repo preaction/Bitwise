@@ -66,12 +66,8 @@ export default class Klondike extends System {
   drawEntityPath:string = "";
   discardEntity!:Entity;
   discardEntityPath:string = "";
-  menuButtonEntity!:Entity;
-  menuButtonEntityPath:string = "";
-  menuButtonElement!:HTMLElement;
   menuEntity!:Entity;
   menuEntityPath:string = "";
-  menuElement!:HTMLElement;
 
   rowHeight:number = 0.5;
 
@@ -85,11 +81,10 @@ export default class Klondike extends System {
    */
   followEntities:number[] = [];
 
-  thaw( data:{drawEntityPath: string, discardEntityPath: string, menuButtonEntityPath: string, menuEntityPath: string} ) {
+  thaw( data:{drawEntityPath: string, discardEntityPath: string, menuEntityPath: string} ) {
     // XXX: Annoying to define all system fields in thaw and freeze...
     this.drawEntityPath = data.drawEntityPath;
     this.discardEntityPath = data.discardEntityPath;
-    this.menuButtonEntityPath = data.menuButtonEntityPath;
     this.menuEntityPath = data.menuEntityPath;
   }
 
@@ -98,7 +93,6 @@ export default class Klondike extends System {
     return {
       drawEntityPath: this.drawEntityPath,
       discardEntityPath: this.discardEntityPath,
-      menuButtonEntityPath: this.menuButtonEntityPath,
       menuEntityPath: this.menuEntityPath,
     };
   }
@@ -140,12 +134,6 @@ export default class Klondike extends System {
       throw "Missing discard entity";
     }
     this.discardEntity = discardEntity;
-
-    const menuButtonEntity = this.scene.getEntityByPath( this.menuButtonEntityPath );
-    if ( !menuButtonEntity ) {
-      throw `Missing menu button entity: ${this.menuButtonEntityPath}`;
-    }
-    this.menuButtonEntity = menuButtonEntity;
 
     const menuEntity = this.scene.getEntityByPath( this.menuEntityPath );
     if ( !menuEntity ) {
@@ -190,16 +178,24 @@ export default class Klondike extends System {
 
     this.Input.watchPointer();
     this.tweens = new shifty.Scene();
+
+    // Prepare UI actions
+    this.Render.addUIAction( "showMenu", this.showMenu.bind(this) );
+    this.Render.addUIAction( "hideMenu", this.hideMenu.bind(this) );
+    // XXX: New deal
+    // XXX: Replay deal
+    // XXX: Undo
   }
 
-  start() {
-    // Shuffle the deck
+  shuffleDeck() {
     const deck = this.deckCards;
     for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [deck[i], deck[j]] = [deck[j], deck[i]];
     }
+  }
 
+  dealTableau() {
     // Deal it out
     for ( let row = 0; row < this.stacks.length; row++ ) {
       // Each subsequent row skips the first (row) stacks
@@ -214,19 +210,11 @@ export default class Klondike extends System {
         }
       }
     }
+  }
 
-    const menuButtonElement = this.Render.getUIElement(this.menuButtonEntity.id);
-    if ( !menuButtonElement ) {
-      throw "Missing menu button HTML element";
-    }
-    this.menuButtonElement = menuButtonElement;
-    this.menuButtonElement.addEventListener( 'click', this.showMenu.bind(this) );
-
-    const menuElement = this.Render.getUIElement( this.menuEntity.id );
-    if ( !menuElement ) {
-      throw "Missing menu HTML element";
-    }
-    this.menuElement = menuElement;
+  start() {
+    this.shuffleDeck();
+    this.dealTableau();
 
     this.tweens.play();
     this.TransformDeck();
@@ -242,6 +230,10 @@ export default class Klondike extends System {
 
   showMenu() {
     this.menuEntity.active = true;
+  }
+
+  hideMenu() {
+    this.menuEntity.active = false;
   }
 
   TransformDeck() {
