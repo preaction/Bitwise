@@ -241,7 +241,12 @@ export default class Render extends System {
       this.uiNodes[parent.id].appendChild( node );
     }
     else {
-      const element = new CSS3DObject( node );
+      // We need this wrapper when using the CSS3DObject because the
+      // CSS3DRenderer controls a lot of CSS on the element, including
+      // "display", which we want to manage ourselves.
+      const wrapper = document.createElement('div');
+      const element = new CSS3DObject( wrapper );
+      wrapper.appendChild(node);
       this.objects[eid] = this.uiElements[eid] = element;
       this.updateTransform(eid);
       if ( parent ) {

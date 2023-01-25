@@ -33,8 +33,8 @@ export default defineComponent({
         <option>start</option>
         <option>center</option>
         <option>end</option>
-        <option>space between</option>
-        <option>space around</option>
+        <option>space-between</option>
+        <option>space-around</option>
       </select>
     </div>
     <div class="d-flex justify-content-between align-items-center">
