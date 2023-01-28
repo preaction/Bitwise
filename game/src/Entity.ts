@@ -104,15 +104,19 @@ export default class Entity {
     return names;
   }
 
+  /**
+   * Serialize this entity and all its descendants. The opposite of thaw().
+   */
   freeze():any {
     const data:{[key:string]:any} = {
       name: this.name,
       type: this.type,
       path: this.path,
       active: this.active,
+      components: {},
     };
     for ( const c of this.listComponents() ) {
-      data[c] = this.scene.components[c].freezeEntity(this.id);
+      data.components[c] = this.scene.components[c].freezeEntity(this.id);
     }
 
     // Also freeze descendants
@@ -123,9 +127,10 @@ export default class Entity {
         type: entity.type,
         path: entity.path,
         active: entity.active,
+        components: {},
       };
       for ( const c of entity.listComponents() ) {
-        eData[c] = entity.scene.components[c].freezeEntity(entity.id);
+        eData.components[c] = entity.scene.components[c].freezeEntity(entity.id);
       }
       data.entities.push(eData);
     } );
@@ -133,19 +138,20 @@ export default class Entity {
     return data;
   }
 
+  /**
+   * Deserialize this entity and any descendants. The opposite of
+   * freeze().
+   */
   thaw( data:any ) {
     this.name = data.name;
     this.type = data.type;
     this.path = data.path;
     this.active = "active" in data ? data.active : true;
-    for ( const c in data ) {
-      if ( typeof data[c] !== "object" || Array.isArray(data[c]) ) {
-        continue;
-      }
+    for ( const c in data.components ) {
       if ( !this.scene.components[c] ) {
         this.scene.addComponent(c);
       }
-      this.scene.components[c].thawEntity(this.id, data[c]);
+      this.scene.components[c].thawEntity(this.id, data.components[c]);
     }
     // XXX: Remove any components from this entity which are not in the
     // given data
@@ -162,19 +168,17 @@ export default class Entity {
         eData.id = entity.id;
       }
       for ( const eData of data.entities ) {
-        for ( const c in eData ) {
-          if ( typeof eData[c] !== "object" ) {
-            continue;
-          }
+        for ( const c in eData.components ) {
           if ( !this.scene.components[c] ) {
             this.scene.addComponent(c);
           }
-          this.scene.components[c].thawEntity(eData.id, eData[c]);
+          this.scene.components[c].thawEntity(eData.id, eData.components[c]);
         }
         // XXX: Remove any components from this entity which are not in the
         // given data
         delete eData.id;
       }
     }
+    // XXX: Remove any descendant entities not found in data
   }
 }

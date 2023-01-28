@@ -1,6 +1,7 @@
 {
   "name": "Laser",
   "type": "Entity",
+  "components": {
   "Transform": {
     "x": 0,
     "y": 0.30000001192092896,
@@ -44,6 +45,7 @@
   "Weapon": {
     "damage": 5,
     "cooldown": 250
+  }
   },
   "component": "PrefabEdit"
 }

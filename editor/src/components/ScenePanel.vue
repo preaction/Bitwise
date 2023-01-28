@@ -49,17 +49,9 @@ export default defineComponent({
     },
     selectedEntityComponents() {
       if ( !this.selectedEntityData ) {
-        return {};
+        return [];
       }
-      const components = [];
-      for ( const c in this.selectedEntityData ) {
-        // These fields in entity data are not components
-        if ( [ 'name', 'type', 'path', 'id', 'active' ].indexOf( c ) >= 0 ) {
-          continue;
-        }
-        components.push(c);
-      }
-      return components;
+      return Object.keys( this.selectedEntityData.components );
     },
   },
 
@@ -140,14 +132,14 @@ export default defineComponent({
     },
 
     updateComponent( name:string, data:Object ) {
-      this.selectedEntityData[name] = data;
+      this.selectedEntityData.components[name] = data;
       this.selectedEntity.setComponent(name, toRaw(data));
       this.update();
     },
 
     removeComponent( name:string ) {
       if ( confirm( 'Are you sure?' ) ) {
-        delete this.selectedEntityData[name];
+        delete this.selectedEntityData.components[name];
         this.selectedEntity.removeComponent(name);
         this.update();
       }
@@ -157,14 +149,14 @@ export default defineComponent({
       // XXX: This should be named "canAddComponent" and should dispatch
       // a call to the component object so a component can decide that
       // it is not compatible with other components.
-      return name in this.selectedEntityData;
+      return name in this.selectedEntityData.components;
     },
 
     addComponent( name:string ) {
       if ( this.hasComponent(name) ) {
         return;
       }
-      this.selectedEntityData[name] = {};
+      this.selectedEntityData.components[name] = {};
       this.selectedEntity.addComponent(name);
       this.update();
     },
@@ -173,9 +165,10 @@ export default defineComponent({
       const entityData:{ [key:string]: any } = {
         name: 'New Entity',
         path: 'New Entity',
+        components: {},
       };
       for ( const c of components ) {
-        entityData[c] = {};
+        entityData.components[c] = {};
       }
       if ( this.isPrefab ) {
         entityData.path = `${this.sceneTree.path}/${entityData.path}`;
@@ -460,7 +453,7 @@ export default defineComponent({
           <i @click="removeComponent(name)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="componentForms[name]" class="component-form__body">
-          <component :is="componentForms[name]" v-model="selectedEntityData[name]"
+          <component :is="componentForms[name]" v-model="selectedEntityData.components[name]"
             :scene="scene" @update="updateComponent(name, $event)"
           />
         </div>

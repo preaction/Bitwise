@@ -5,23 +5,25 @@
       "name": "Camera",
       "type": "Camera",
       "path": "Camera",
-      "Transform": {
-        "x": 0,
-        "y": 0,
-        "z": 2000,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "OrthographicCamera": {
-        "frustum": 10,
-        "zoom": 1,
-        "near": 0,
-        "far": 2000
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 2000,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "OrthographicCamera": {
+          "frustum": 10,
+          "zoom": 1,
+          "near": 0,
+          "far": 2000
+        }
       },
       "active": true
     },
@@ -29,17 +31,19 @@
       "name": "Foundations",
       "type": "Entity",
       "path": "Foundations",
-      "Transform": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        }
       },
       "active": false
     },
@@ -47,252 +51,278 @@
       "name": "Foundation 1",
       "type": "Entity",
       "path": "Foundation 1",
-      "Transform": {
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "x": "7.534010410308838",
-        "y": 3.5,
-        "z": 0
+      "components": {
+        "Transform": {
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "x": "7.534010410308838",
+          "y": 3.5,
+          "z": 0
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Foundation": {}
       },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Foundation": {},
       "active": true
     },
     {
       "name": "Foundation 2",
       "type": "Entity",
       "path": "Foundation 2",
-      "Transform": {
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "x": "5.352031230926514",
-        "y": 3.5,
-        "z": 0
+      "components": {
+        "Transform": {
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "x": "5.352031230926514",
+          "y": 3.5,
+          "z": 0
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Foundation": {}
       },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Foundation": {}
+      "active": true
     },
     {
       "name": "Foundation 3",
       "type": "Entity",
       "path": "Foundation 3",
-      "Transform": {
-        "x": 3.1700520515441895,
-        "y": 3.5,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
+      "components": {
+        "Transform": {
+          "x": 3.1700520515441895,
+          "y": 3.5,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Foundation": {}
       },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Foundation": {}
+      "active": true
     },
     {
       "name": "Foundation 4",
       "type": "Entity",
       "path": "Foundation 4",
-      "Transform": {
-        "x": 0.974126935005188,
-        "y": 3.5,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
+      "components": {
+        "Transform": {
+          "x": 0.974126935005188,
+          "y": 3.5,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Foundation": {}
       },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Foundation": {},
-      "active": false
+      "active": true
     },
     {
       "name": "Stack 1",
       "path": "Stack 1",
       "type": "Entity",
-      "Transform": {
-        "x": 7.015634536743164,
-        "y": 0.5472468733787537,
-        "z": 100,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Stack": {}
+      "components": {
+        "Transform": {
+          "x": 7.015634536743164,
+          "y": 0.5472468733787537,
+          "z": 100,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Stack": {}
+      }
     },
     {
       "name": "Stack 2",
       "path": "Stack 2",
       "type": "Entity",
-      "Transform": {
-        "x": 4.743009090423584,
-        "y": 0.5472471117973328,
-        "z": 100,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Stack": {}
+      "components": {
+        "Transform": {
+          "x": 4.743009090423584,
+          "y": 0.5472471117973328,
+          "z": 100,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Stack": {}
+      }
     },
     {
       "name": "Stack 4",
       "path": "Stack 4",
       "type": "Entity",
-      "Transform": {
-        "x": 2.4703850746154785,
-        "y": 0.5472471117973328,
-        "z": 100,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Stack": {}
+      "components": {
+        "Transform": {
+          "x": 2.4703850746154785,
+          "y": 0.5472471117973328,
+          "z": 100,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Stack": {}
+      }
     },
     {
       "name": "Stack 5",
       "path": "Stack 5",
       "type": "Entity",
-      "Transform": {
-        "x": 0.2063533365726471,
-        "y": 0.5472471117973328,
-        "z": 100,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Stack": {}
+      "components": {
+        "Transform": {
+          "x": 0.2063533365726471,
+          "y": 0.5472471117973328,
+          "z": 100,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Stack": {}
+      }
     },
     {
       "name": "Stack 6",
       "type": "Entity",
       "path": "Stack 6",
-      "Transform": {
-        "x": -2.1560862064361572,
-        "y": 0.5472471117973328,
-        "z": 100,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Stack": {}
+      "components": {
+        "Transform": {
+          "x": -2.1560862064361572,
+          "y": 0.5472471117973328,
+          "z": 100,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Stack": {}
+      }
     },
     {
       "name": "Stack 7",
       "path": "Stack 7",
       "type": "Entity",
-      "Transform": {
-        "x": -4.518527984619141,
-        "y": 0.5472471117973328,
-        "z": 100,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Stack": {}
+      "components": {
+        "Transform": {
+          "x": -4.518527984619141,
+          "y": 0.5472471117973328,
+          "z": 100,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Stack": {}
+      }
     },
     {
       "name": "Deck",
       "path": "Deck",
       "type": "Entity",
-      "Transform": {
-        "x": -7.3369059562683105,
-        "y": 3.5,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
+      "components": {
+        "Transform": {
+          "x": -7.3369059562683105,
+          "y": 3.5,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        }
       }
     },
     {
       "name": "Discard",
       "path": "Discard",
       "type": "Entity",
-      "Transform": {
-        "x": -5.099999904632568,
-        "y": 3.5,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
+      "components": {
+        "Transform": {
+          "x": -5.099999904632568,
+          "y": 3.5,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        }
       },
       "active": true
     },
@@ -300,158 +330,166 @@
       "name": "Stack 3",
       "path": "Stack 3",
       "type": "Entity",
-      "Transform": {
-        "x": -6.926290988922119,
-        "y": 0.4883785843849182,
-        "z": 100,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 1,
-        "sx": 2.799999952316284,
-        "sy": 2.799999952316284,
-        "sz": 1
+      "components": {
+        "Transform": {
+          "x": -6.926290988922119,
+          "y": 0.4883785843849182,
+          "z": 100,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 1,
+          "sx": 2.799999952316284,
+          "sy": 2.799999952316284,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "cards/card_empty.png"
+        },
+        "Stack": {}
       },
-      "Sprite": {
-        "texturePath": "cards/card_empty.png"
-      },
-      "Stack": {},
       "active": true
     },
     {
       "name": "Menu Button",
       "path": "Menu Button",
-      "Transform": {
-        "sx": "0.02",
-        "sy": "0.02",
-        "sz": 1,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "x": "-8",
-        "y": "-4"
+      "components": {
+        "Transform": {
+          "sx": "0.02",
+          "sy": "0.02",
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "x": "-8",
+          "y": "-4"
+        },
+        "UIElement": {
+          "width": "",
+          "height": "",
+          "backgroundColor": "#5018a5c8",
+          "borderWidth": "2px",
+          "borderColor": "#949494",
+          "borderStyle": "outset",
+          "borderRadius": "8px",
+          "margin": "",
+          "padding": ""
+        },
+        "UIImage": {
+          "imagePath": "ui/gear-button.png"
+        },
+        "UIButton": {
+          "action": "showMenu"
+        }
       },
-      "UIElement": {
-        "width": "",
-        "height": "",
-        "backgroundColor": "#5018a5c8",
-        "borderWidth": "2px",
-        "borderColor": "#949494",
-        "borderStyle": "outset",
-        "borderRadius": "8px",
-        "margin": "",
-        "padding": ""
-      },
-      "UIImage": {
-        "imagePath": "ui/gear-button.png"
-      },
-      "active": true,
-      "UIButton": {
-        "action": "showMenu"
-      }
+      "active": true
     },
     {
       "name": "Menu",
       "path": "Menu",
-      "Transform": {
-        "sx": "0.03",
-        "sy": "0.03",
-        "sz": 1,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0
+      "components": {
+        "Transform": {
+          "sx": "0.03",
+          "sy": "0.03",
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0
+        },
+        "UIElement": {
+          "width": "120px",
+          "height": "240px",
+          "backgroundColor": "#000000e4",
+          "borderWidth": "1px",
+          "borderColor": "#c7c7c7",
+          "borderStyle": "solid",
+          "borderRadius": "10px",
+          "margin": "",
+          "padding": "5px"
+        },
+        "UIContainer": {
+          "flow": "column",
+          "justify": "start",
+          "align": "stretch"
+        }
       },
-      "UIElement": {
-        "width": "120px",
-        "height": "240px",
-        "backgroundColor": "#000000e4",
-        "borderWidth": "1px",
-        "borderColor": "#c7c7c7",
-        "borderStyle": "solid",
-        "borderRadius": "10px",
-        "margin": "",
-        "padding": "5px"
-      },
-      "active": false,
-      "UIContainer": {
-        "flow": "column",
-        "justify": "start",
-        "align": "stretch"
-      }
+      "active": false
     },
     {
       "name": "Replay Button",
       "path": "Menu/Replay Button",
       "active": false,
-      "Transform": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "UIElement": {
-        "backgroundColor": "#00000000",
-        "width": "",
-        "height": "",
-        "borderStyle": "outset",
-        "borderWidth": "2px",
-        "borderColor": "#cfcfcf",
-        "borderRadius": "5px",
-        "margin": "",
-        "padding": "5px"
-      },
-      "UIText": {
-        "text": "Replay",
-        "align": "center"
-      },
-      "UIButton": {
-        "action": "replay"
-      },
-      "entities": []
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "UIElement": {
+          "backgroundColor": "#00000000",
+          "width": "",
+          "height": "",
+          "borderStyle": "outset",
+          "borderWidth": "2px",
+          "borderColor": "#cfcfcf",
+          "borderRadius": "5px",
+          "margin": "",
+          "padding": "5px"
+        },
+        "UIText": {
+          "text": "Replay",
+          "align": "center"
+        },
+        "UIButton": {
+          "action": "replay"
+        }
+      }
     },
     {
       "name": "Close Button",
       "path": "Menu/Close Button",
       "active": true,
-      "Transform": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "UIElement": {
-        "backgroundColor": "#00000000",
-        "width": "",
-        "height": "",
-        "borderStyle": "outset",
-        "borderWidth": "2px",
-        "borderColor": "#cfcfcf",
-        "borderRadius": "5px",
-        "margin": "",
-        "padding": "5px"
-      },
-      "UIText": {
-        "text": "Close",
-        "align": "center"
-      },
-      "UIButton": {
-        "action": "hideMenu"
-      },
-      "entities": []
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "UIElement": {
+          "backgroundColor": "#00000000",
+          "width": "",
+          "height": "",
+          "borderStyle": "outset",
+          "borderWidth": "2px",
+          "borderColor": "#cfcfcf",
+          "borderRadius": "5px",
+          "margin": "",
+          "padding": "5px"
+        },
+        "UIText": {
+          "text": "Close",
+          "align": "center"
+        },
+        "UIButton": {
+          "action": "hideMenu"
+        }
+      }
     }
   ],
   "components": [

@@ -200,6 +200,10 @@ export default class Scene extends three.EventDispatcher {
     return Object.values( this.entities ).find( e => e.path === path );
   }
 
+  /**
+   * Serialize the scene data into a form that can be stored. The
+   * opposite of thaw()
+   */
   freeze():SceneData {
     // XXX: Not using bitecs serialize/deserialize because I can't get
     // them to work...
@@ -209,12 +213,14 @@ export default class Scene extends three.EventDispatcher {
       const entity = this.entities[id];
       const eData:{ [key:string]: any } = {
         name: entity.name,
+        path: entity.path,
         type: entity.type,
         active: entity.active,
+        components: {},
       };
       for ( const c of entity.listComponents() ) {
         seenComponents.add(c);
-        eData[c] = this.components[c].freezeEntity(id);
+        eData.components[c] = this.components[c].freezeEntity(id);
       }
       data.push( eData );
     }
@@ -227,6 +233,9 @@ export default class Scene extends three.EventDispatcher {
     };
   }
 
+  /**
+   * Load the scene from the given data. The opposite of freeze().
+   */
   thaw( data:SceneData ) {
     this.name = data.name;
     for ( const name of data.components ) {
@@ -247,15 +256,12 @@ export default class Scene extends three.EventDispatcher {
       eData.id = entity.id;
     }
     for ( const eData of data.entities ) {
-      for ( const c in eData ) {
-        if ( typeof eData[c] !== "object" ) {
-          continue;
-        }
+      for ( const c in eData.components ) {
         if ( !this.components[c] ) {
           console.error( `Component ${c} not registered on scene` );
           continue;
         }
-        this.components[c].thawEntity(eData.id, eData[c]);
+        this.components[c].thawEntity(eData.id, eData.components[c]);
       }
       delete eData.id;
     }

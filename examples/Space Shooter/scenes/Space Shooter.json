@@ -5,6 +5,7 @@
       "name": "Camera",
       "path": "Camera",
       "type": "Camera",
+      "components": {
       "Transform": {
         "x": 0,
         "y": 0,
@@ -23,11 +24,13 @@
         "near": 0,
         "far": 10
       }
+      }
     },
     {
       "name": "Player Ship",
       "path": "Player Ship",
       "type": "Entity",
+      "components": {
       "Transform": {
         "x": 0,
         "y": -4,
@@ -70,11 +73,13 @@
         "sy": 1,
         "sz": 1
       }
+      }
     },
     {
       "name": "Meteor 1",
       "path": "Meteor 1",
       "type": "Entity",
+      "components": {
       "Transform": {
         "x": 0,
         "y": 0,
@@ -117,11 +122,13 @@
         "ay": 0,
         "az": 0
       }
+      }
     },
     {
       "name": "Boundary",
       "path": "Boundary",
       "type": "Entity",
+      "components": {
       "Transform": {
         "x": 0,
         "y": 0,
@@ -143,11 +150,13 @@
         "sy": 1,
         "sz": 1
       }
+      }
     },
     {
       "name": "Enemy Fighter",
       "path": "Enemy Fighter",
       "type": "Entity",
+      "components": {
       "Transform": {
         "x": -4,
         "y": 4,
@@ -190,11 +199,13 @@
         "sy": 1,
         "sz": 1
       }
+      }
     },
     {
       "name": "Enemy Bomber",
       "path": "Enemy Bomber",
       "type": "Entity",
+      "components": {
       "Transform": {
         "x": 4,
         "y": 4,
@@ -236,6 +247,7 @@
         "sx": 1,
         "sy": 1,
         "sz": 1
+      }
       }
     }
   ],
