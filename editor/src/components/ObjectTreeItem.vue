@@ -12,6 +12,10 @@ export default defineComponent({
     };
   },
   computed: {
+    name() {
+      // Treat the item's path as canonical if possible
+      return this.item?.path ? this.item.path.split('/').slice(-1)[0] : this.item?.name;
+    },
     isFolder() {
       return this.item?.children?.length >= 0;
     },
@@ -132,7 +136,7 @@ export default defineComponent({
       <span v-else-if="isFolder" class="me-1">
         <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-folder-open' : 'fa-folder'"></i>
       </span>
-      <span class="flex-fill">{{ item.name }}</span>
+      <span class="flex-fill">{{ name }}</span>
       <span class="object-tree-item__menu">
         <slot name="menu" :item="item" />
       </span>

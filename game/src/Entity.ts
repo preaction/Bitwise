@@ -6,8 +6,14 @@ import Scene from './Scene.js';
 export default class Entity {
   id:number;
   type:string = "Entity";
-  name:string = "New Entity";
   scene:Scene;
+
+  get name():string {
+    return this._path.split('/').slice(-1)[0];
+  }
+  set name(newName:string) {
+    this._path = [ ...this._path.split('/').slice(0,-1), newName ].join('/');
+  }
 
   /**
    * The active flag determines if the entity is added to the scene when
@@ -34,7 +40,7 @@ export default class Entity {
     this.id = id;
   }
 
-  _path:string = "";
+  _path:string = "New Entity";
   /**
    * path is the full path to this entity.
    */
@@ -109,9 +115,8 @@ export default class Entity {
    */
   freeze():any {
     const data:{[key:string]:any} = {
-      name: this.name,
-      type: this.type,
       path: this.path,
+      type: this.type,
       active: this.active,
       components: {},
     };
@@ -123,9 +128,8 @@ export default class Entity {
     data.entities = [];
     Object.values(this.scene.entities).filter( e => e.path.startsWith(this.path + '/' ) ).forEach( entity => {
       const eData:{[key:string]:any} = {
-        name: entity.name,
-        type: entity.type,
         path: entity.path,
+        type: entity.type,
         active: entity.active,
         components: {},
       };
@@ -143,9 +147,8 @@ export default class Entity {
    * freeze().
    */
   thaw( data:any ) {
-    this.name = data.name;
-    this.type = data.type;
     this.path = data.path;
+    this.type = data.type;
     this.active = "active" in data ? data.active : true;
     for ( const c in data.components ) {
       if ( !this.scene.components[c] ) {
@@ -161,9 +164,8 @@ export default class Entity {
         // XXX: Find an entity already descended from this entity with the
         // same name. Use that instead of adding one, if found.
         const entity = this.scene.addEntity();
-        entity.name = eData.name;
-        entity.type = eData.type;
         entity.path = eData.path;
+        entity.type = eData.type;
         entity.active = eData.active;
         eData.id = entity.id;
       }

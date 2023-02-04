@@ -62,7 +62,6 @@ export default defineComponent({
     updateSceneTree() {
       // Find all the entities and build tree items for them
       const rootNode = {
-        name: '',
         path: '',
         icon: '',
         data: {},
@@ -71,12 +70,13 @@ export default defineComponent({
       for ( const entity of this.sceneData.entities ) {
         const pathParts = entity.path.split(/\//);
         let treeNode = rootNode;
-        while ( pathParts.length > 0 ) {
-          const pathPart = pathParts.shift();
-          let leafNode = treeNode.children.find( node => node.name === pathPart );
+        for ( let i = 0; i < pathParts.length; i++ ) {
+          const findPath = pathParts.slice(0, i+1).join( '/' );
+          let leafNode = treeNode.children.find( node => node.path === findPath );
           if ( !leafNode ) {
             leafNode = {
-              name: pathPart,
+              name: findPath.split('/').pop(),
+              path: findPath,
               children: [],
             };
             treeNode.children.push( leafNode );
@@ -85,7 +85,6 @@ export default defineComponent({
         }
 
         treeNode.data = entity;
-        treeNode.name = entity.name;
         treeNode.path = entity.path;
         treeNode.icon = this.icons[ entity.type ] || this.icons.default;
       }
@@ -116,8 +115,9 @@ export default defineComponent({
     selectByPath(path:string) {
       const pathParts = path.split(/\//);
       let item = this.sceneTree;
-      for ( const pathPart of pathParts ) {
-        item = item.children.find( i => i.name === pathPart );
+      for ( let i = 0; i < pathParts.length; i++ ) {
+        const findPath = pathParts.slice(0, i+1).join( '/' );
+        item = item.children.find( i => i.path === findPath );
       }
       this.select(item);
     },
@@ -163,7 +163,6 @@ export default defineComponent({
 
     addEntity( ...components:string[] ) {
       const entityData:{ [key:string]: any } = {
-        name: 'New Entity',
         path: 'New Entity',
         components: {},
       };
@@ -173,6 +172,8 @@ export default defineComponent({
       if ( this.isPrefab ) {
         entityData.path = `${this.sceneTree.path}/${entityData.path}`;
       }
+      // XXX: Fix this to ensure entity path is unique before adding
+      // entity
       this.sceneData.entities.push( entityData );
 
       const entity = this.scene.addEntity();
@@ -219,7 +220,14 @@ export default defineComponent({
     },
 
     duplicateEntity( item ) {
-      const entityData = item.data;
+      const entityData = JSON.parse( JSON.stringify( item.data ) );
+      const match = entityData.path.match( /\((\d+)\)$/ );
+      if ( match ) {
+        entityData.path = entityData.path.replace( /\(\d+\)$/, `(${parseInt(match[1])+1})` );
+      }
+      else {
+        entityData.path += ' (2)';
+      }
       const entity = this.scene.addEntity();
       entity.thaw( entityData );
       this.sceneData.entities.push( entity.freeze() );
@@ -286,11 +294,12 @@ export default defineComponent({
     },
 
     getEntityDataByPath( path:string ) {
+      // XXX: Fix this to only use entityData.path
       const pathParts = path.split(/\//);
       let treeNode = this.sceneTree;
-      while ( pathParts.length > 0 ) {
-        const pathPart = pathParts.shift();
-        let leafNode = treeNode.children.find( node => node.name === pathPart );
+      for ( let i = 0; i < pathParts.length; i++ ) {
+        const findPath = pathParts.slice(0, i+1).join( '/' );
+        let leafNode = treeNode.children.find( node => node.path === findPath );
         if ( !leafNode ) {
           return null;
         }
@@ -344,15 +353,13 @@ export default defineComponent({
 
     updateEntityName() {
       const newName = this.selectedSceneItem.name;
-      if ( newName != this.selectedEntityData.name ) {
+      if ( newName != this.selectedEntity.name ) {
         this.selectedEntity.name = newName;
-        this.selectedEntityData.name = newName;
         const path = this.selectedEntityData.path;
         const pathParts = path.split('/').slice(0, -1);
         pathParts.push(newName);
         const newPath = pathParts.join( '/' );
         this.selectedEntityData.path = newPath;
-        this.selectedEntity.path = newPath;
         this.update();
       }
     },
@@ -362,10 +369,11 @@ export default defineComponent({
       // children
       const entity = this.scene.getEntityByPath( item.path );
       const eData = entity.freeze();
-      let filename = eData.name + '.json';
+      const eName = eData.path.split('/').slice(0, -1)[0];
+      let filename = eName + '.json';
       let suffix = 1;
       while ( this.appStore.projectItems.includes( filename ) ) {
-        filename = eData.name + (suffix++) + '.json';
+        filename = eName + (suffix++) + '.json';
       }
       // Don't write the file yet, just open a new tab on the prefab
       // editor

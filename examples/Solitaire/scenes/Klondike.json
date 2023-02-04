@@ -45,12 +45,12 @@
           "sz": 1
         }
       },
-      "active": false
+      "active": true
     },
     {
       "name": "Foundation 1",
       "type": "Entity",
-      "path": "Foundation 1",
+      "path": "Foundations/Foundation 1",
       "components": {
         "Transform": {
           "sx": 2.799999952316284,
@@ -74,7 +74,7 @@
     {
       "name": "Foundation 2",
       "type": "Entity",
-      "path": "Foundation 2",
+      "path": "Foundations/Foundation 2",
       "components": {
         "Transform": {
           "sx": 2.799999952316284,
@@ -98,7 +98,7 @@
     {
       "name": "Foundation 3",
       "type": "Entity",
-      "path": "Foundation 3",
+      "path": "Foundations/Foundation 3",
       "components": {
         "Transform": {
           "x": 3.1700520515441895,
@@ -122,7 +122,7 @@
     {
       "name": "Foundation 4",
       "type": "Entity",
-      "path": "Foundation 4",
+      "path": "Foundations/Foundation 4",
       "components": {
         "Transform": {
           "x": 0.974126935005188,
@@ -145,7 +145,7 @@
     },
     {
       "name": "Stack 1",
-      "path": "Stack 1",
+      "path": "Stack/Stack 1",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -168,7 +168,7 @@
     },
     {
       "name": "Stack 2",
-      "path": "Stack 2",
+      "path": "Stack/Stack 2",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -191,7 +191,7 @@
     },
     {
       "name": "Stack 4",
-      "path": "Stack 4",
+      "path": "Stack/Stack 4",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -214,7 +214,7 @@
     },
     {
       "name": "Stack 5",
-      "path": "Stack 5",
+      "path": "Stack/Stack 5",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -238,7 +238,7 @@
     {
       "name": "Stack 6",
       "type": "Entity",
-      "path": "Stack 6",
+      "path": "Stack/Stack 6",
       "components": {
         "Transform": {
           "x": -2.1560862064361572,
@@ -260,7 +260,7 @@
     },
     {
       "name": "Stack 7",
-      "path": "Stack 7",
+      "path": "Stack/Stack 7",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -301,7 +301,8 @@
         "Sprite": {
           "texturePath": "cards/card_empty.png"
         }
-      }
+      },
+      "active": true
     },
     {
       "name": "Discard",
@@ -328,7 +329,7 @@
     },
     {
       "name": "Stack 3",
-      "path": "Stack 3",
+      "path": "Stack/Stack 3",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -490,6 +491,13 @@
           "action": "hideMenu"
         }
       }
+    },
+    {
+      "path": "Stack",
+      "components": {
+        "Transform": {}
+      },
+      "active": true
     }
   ],
   "components": [
