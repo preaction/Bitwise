@@ -421,7 +421,7 @@
     {
       "name": "Replay Button",
       "path": "Menu/Replay Button",
-      "active": false,
+      "active": true,
       "components": {
         "Transform": {
           "x": 0,
@@ -451,7 +451,7 @@
           "align": "center"
         },
         "UIButton": {
-          "action": "replay"
+          "action": "restartGame"
         }
       }
     },
@@ -498,6 +498,43 @@
         "Transform": {}
       },
       "active": true
+    },
+    {
+      "path": "Menu/New Button",
+      "active": true,
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "UIElement": {
+          "backgroundColor": "#00000000",
+          "width": "",
+          "height": "",
+          "borderStyle": "outset",
+          "borderWidth": "2px",
+          "borderColor": "#cfcfcf",
+          "borderRadius": "5px",
+          "margin": "",
+          "padding": "5px"
+        },
+        "UIText": {
+          "text": "New Deal",
+          "align": "center"
+        },
+        "UIButton": {
+          "action": "newGame"
+        }
+      },
+      "entities": []
     }
   ],
   "components": [

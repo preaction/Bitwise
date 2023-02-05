@@ -46,6 +46,11 @@ export default class Klondike extends System {
   tweens!:shifty.Scene;
 
   /**
+   * The deck at the start of the game. Used to replay the game.
+   */
+  gameDeck:Card[] = [];
+
+  /**
    * An array of foundation base entity IDs, from left to right.
    */
   foundations:number[] = [];
@@ -171,7 +176,7 @@ export default class Klondike extends System {
         entity.addComponent( "Sprite", {
           textureId: this.cardBackTextureId,
         } );
-        this.deckCards.push(card);
+        this.gameDeck.push(card);
         this.cards[entity.id] = card;
       }
     }
@@ -182,20 +187,48 @@ export default class Klondike extends System {
     // Prepare UI actions
     this.Render.addUIAction( "showMenu", this.showMenu.bind(this) );
     this.Render.addUIAction( "hideMenu", this.hideMenu.bind(this) );
-    // XXX: New deal
-    // XXX: Replay deal
+    this.Render.addUIAction( "newGame", this.newGame.bind(this) );
+    this.Render.addUIAction( "restartGame", this.restartGame.bind(this) );
     // XXX: Undo
   }
 
+  newGame() {
+    this.hideMenu();
+    this.resetGame();
+    this.shuffleDeck();
+    this.dealTableau();
+    this.tweens.play();
+  }
+
+  restartGame() {
+    this.hideMenu();
+    this.resetGame();
+    this.dealTableau();
+    this.tweens.play();
+  }
+
   shuffleDeck() {
-    const deck = this.deckCards;
+    const deck = this.gameDeck;
     for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [deck[i], deck[j]] = [deck[j], deck[i]];
     }
   }
 
+  resetGame() {
+    this.stackCards = [];
+    this.deckCards = [];
+    this.discardCards = [];
+    for ( const card of this.gameDeck ) {
+      card.faceUp = false;
+      card.stack = -1;
+      card.foundation = -1;
+    }
+  }
+
   dealTableau() {
+    this.deckCards = [...this.gameDeck];
+    this.placeDeck();
     // Deal it out
     for ( let row = 0; row < this.stacks.length; row++ ) {
       // Each subsequent row skips the first (row) stacks
@@ -213,11 +246,7 @@ export default class Klondike extends System {
   }
 
   start() {
-    this.shuffleDeck();
-    this.dealTableau();
-
-    this.tweens.play();
-    this.TransformDeck();
+    this.newGame();
   }
 
   pause() {
@@ -236,7 +265,7 @@ export default class Klondike extends System {
     this.menuEntity.active = false;
   }
 
-  TransformDeck() {
+  placeDeck() {
     const drawTransform = this.drawEntity.getComponent( "Transform" );
     for ( let i = this.deckCards.length - 1; i >= 0; i-- ) {
       const card = this.deckCards[i];
@@ -466,7 +495,7 @@ export default class Klondike extends System {
           // back
           this.deckCards = this.discardCards.reverse();
           this.discardCards = [];
-          this.TransformDeck();
+          this.placeDeck();
         }
       }
       else if ( p.button & 1 && this.dragEntity >= 0 ) {
