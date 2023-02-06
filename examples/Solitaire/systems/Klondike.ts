@@ -197,14 +197,12 @@ export default class Klondike extends System {
     this.resetGame();
     this.shuffleDeck();
     this.dealTableau();
-    this.tweens.play();
   }
 
   restartGame() {
     this.hideMenu();
     this.resetGame();
     this.dealTableau();
-    this.tweens.play();
   }
 
   shuffleDeck() {
@@ -224,9 +222,13 @@ export default class Klondike extends System {
       card.stack = -1;
       card.foundation = -1;
     }
+    this.deckCards = [...this.gameDeck];
+    this.placeDeck();
   }
 
   dealTableau() {
+    const delayStep = 50; // ms
+    let delay = 0;
     this.deckCards = [...this.gameDeck];
     this.placeDeck();
     // Deal it out
@@ -237,15 +239,18 @@ export default class Klondike extends System {
         if ( !card ) {
           throw "Out of cards";
         }
-        this.moveToStack( card, stackIdx );
-        if ( stackIdx === row ) {
-          this.faceUpCard(card);
-        }
+        this.moveToStack( card, stackIdx, delay ).then( () => {
+          if ( stackIdx === row ) {
+            this.faceUpCard(card);
+          }
+        });
+        delay += delayStep;
       }
     }
   }
 
   start() {
+    this.tweens.play();
     this.newGame();
   }
 
@@ -255,6 +260,12 @@ export default class Klondike extends System {
 
   resume() {
     this.tweens.resume();
+  }
+
+  stop() {
+    this.tweens.stop();
+    this.tweens.empty();
+    
   }
 
   showMenu() {
@@ -318,6 +329,8 @@ export default class Klondike extends System {
     const eid = card.entity;
     this.discardCards.unshift(card);
     this.faceUpCard( card );
+    // Make sure this card is above both the deck and the discard stack
+    this.Transform.store.z[card.entity] += this.discardCards.length;
     this.tweenTo(
       card.entity,
       this.Transform.store.x[this.discardEntity.id],
@@ -343,7 +356,7 @@ export default class Klondike extends System {
     );
   }
 
-  moveToStack( card:Card, stackIdx:number ) {
+  moveToStack( card:Card, stackIdx:number, delay:number=0 ):Promise<any> {
     const stackId = this.stacks[stackIdx];
     let stackCards = this.stackCards[stackIdx];
     if ( !stackCards ) {
@@ -352,34 +365,34 @@ export default class Klondike extends System {
     card.stack = stackIdx;
     card.foundation = -1;
     stackCards.unshift(card);
-    this.tweenTo(
+    return this.tweenTo(
       card.entity,
       this.Transform.store.x[stackId],
       this.Transform.store.y[stackId] - (stackCards.length - 1) * this.rowHeight,
       this.Transform.store.z[stackId] + stackCards.length,
+      delay,
     );
   }
 
-  tweenTo( eid:number, x:number, y:number, z:number ) {
+  tweenTo( eid:number, x:number, y:number, z:number, delay:number=0 ):Promise<any> {
     const Transform = this.Transform.store;
-    Transform.z[eid] = 1000 + z;
     const tween = shifty.tween({
       from: {
         x: Transform.x[eid],
         y: Transform.y[eid],
       },
-      to: { x, y },
-      duration: 250,
-      render: ( state:{x: number, y:number} ) => {
+      to: { x, y, z },
+      delay,
+      duration: 250, // ms
+      render: ( state:{x: number, y:number, z:number} ) => {
         Transform.x[eid] = state.x;
         Transform.y[eid] = state.y;
       },
     })
-    tween.then( () => {
+    return this.tweens.add(tween).then( () => {
       Transform.z[eid] = z;
       this.tweens.remove(tween);
     });
-    this.tweens.add(tween);
   }
 
   dropCard() {

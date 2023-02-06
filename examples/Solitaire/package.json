@@ -9,6 +9,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "shifty": "^2.19.1"
+    "shifty": "^2.20.0"
   }
 }
