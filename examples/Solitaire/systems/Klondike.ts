@@ -31,6 +31,19 @@ type Card = {
   foundation:number,
 };
 
+type Location = {
+  deck?: boolean,
+  discard?: boolean,
+  stack?: number,
+  foundation?: number,
+};
+
+type UndoItem = {
+  card: Card,
+  from: Location,
+  to: Location,
+};
+
 const raycaster = new three.Raycaster();
 raycaster.layers.set(1); // XXX: Make this face-up cards
 const pointer = new three.Vector3();
@@ -67,6 +80,13 @@ export default class Klondike extends System {
   discardCards:Card[] = [];
   cardBackTextureId:number = -1;
 
+  /**
+   * A stack of steps that have been taken by the user. Each move is
+   * only one card. The undo() function will automatically move any
+   * cards on top of the card being moved.
+   */
+  undoStack:UndoItem[] = [];
+
   drawEntity!:Entity;
   drawEntityPath:string = "";
   discardEntity!:Entity;
@@ -80,6 +100,11 @@ export default class Klondike extends System {
    * The card we are currently dragging
    */
   dragEntity:number = -1;
+
+  /**
+   * The location where we got the card we're dragging
+   */
+  dragFrom:Location = {};
 
   /**
    * Other cards on top of the card we're currently dragging.
@@ -189,7 +214,7 @@ export default class Klondike extends System {
     this.Render.addUIAction( "hideMenu", this.hideMenu.bind(this) );
     this.Render.addUIAction( "newGame", this.newGame.bind(this) );
     this.Render.addUIAction( "restartGame", this.restartGame.bind(this) );
-    // XXX: Undo
+    this.Render.addUIAction( "undo", this.undo.bind(this) );
   }
 
   newGame() {
@@ -274,6 +299,68 @@ export default class Klondike extends System {
 
   hideMenu() {
     this.menuEntity.active = false;
+  }
+
+  addUndoItem( card:Card, from:Location, to:Location ) {
+    this.undoStack.unshift(
+      { card, from, to, },
+    );
+  }
+
+  /**
+   * Remove the top item from the undoStack and reverse the change
+   * inside.
+   */
+  undo() {
+    const undo = this.undoStack.shift();
+    if ( !undo ) {
+      return;
+    }
+
+    // Special case: Deck was flipped from discard
+    if ( undo.to.deck ) {
+
+      return;
+    }
+
+    // Remove the card from its current location
+    if ( undo.to.discard ) {
+      this.discardCards.shift();
+      this.faceDownCard(undo.card);
+    }
+    else if ( undo.to.foundation !== undefined && undo.to.foundation >= 0 ) {
+      this.foundationCards[undo.to.foundation].shift();
+      this.dragEntity = undo.card.entity;
+    }
+    else if ( undo.to.stack !== undefined && undo.to.stack >= 0 ) {
+      // Find the card in the stack and add any followEntities
+      const cardIdx = this.stackCards[ undo.to.stack ].indexOf(undo.card);
+      const moveCards = this.stackCards[ undo.to.stack ].splice( 0, cardIdx + 1 );
+      this.followEntities = moveCards.slice(0, -1).map( card => card.entity );
+    }
+
+    // Restore the card to its former location
+    if ( undo.from.deck ) {
+      // Move back to deck
+      this.deckCards.unshift(undo.card);
+      this.placeDeck();
+    }
+    else if ( undo.from.foundation !== undefined && undo.from.foundation >= 0 ) {
+      // Move card back to foundation. Must only be one card.
+      undo.card.foundation = undo.from.foundation;
+      this.dropCard();
+    }
+    else if ( undo.from.stack !== undefined && undo.from.stack >= 0 ) {
+      // Move card back to stack.
+      // Follow entities have already been set from above
+      undo.card.stack = undo.from.stack;
+      this.dropCard();
+    }
+    else if ( undo.from.discard ) {
+      this.dragEntity = -1;
+      // Move card back to discard.
+      this.moveToDiscard(undo.card);
+    }
   }
 
   placeDeck() {
@@ -395,6 +482,11 @@ export default class Klondike extends System {
     });
   }
 
+  /**
+   * Drop the current card being dragged. This assumes the Card object
+   * for the dragged entity has been updated with the new location of
+   * the card. Any followEntities will be updated as well.
+   */
   dropCard() {
     const dragCard = this.cards[ this.dragEntity ];
     if ( dragCard.stack >= 0 ) {
@@ -444,12 +536,14 @@ export default class Klondike extends System {
       const cardIdx = this.stackCards[ card.stack ].indexOf( card );
       const moveCards = this.stackCards[ card.stack ].splice( 0, cardIdx + 1 );
       this.dragEntity = card.entity;
+      this.dragFrom = { stack: card.stack };
       this.followEntities = moveCards.slice(0, -1).map( card => card.entity );
     }
     else if ( card.foundation >= 0 ) {
       // Cards on foundations can be pulled back into the
       // tableau
       this.dragEntity = card.entity;
+      this.dragFrom = { foundation: card.foundation };
       this.followEntities = [];
       this.foundationCards[ card.foundation ].shift();
     }
@@ -457,6 +551,7 @@ export default class Klondike extends System {
       // Card must be on the discard stack
       this.discardCards.shift();
       this.dragEntity = card.entity;
+      this.dragFrom = { discard: true };
       this.followEntities = [];
     }
 
@@ -497,6 +592,7 @@ export default class Klondike extends System {
           if ( !card.faceUp && card.stack < 0 ) {
             this.deckCards.shift();
             this.moveToDiscard( card );
+            this.addUndoItem( card, { deck: true }, { discard: true } );
           }
           // Any face up card is going to be dragged
           else if ( card.faceUp ) {
@@ -506,6 +602,7 @@ export default class Klondike extends System {
         else if ( eid === this.drawEntity.id && this.deckCards.length === 0 ) {
           // Clicked the bottom under the deck, so move the discard
           // back
+          this.addUndoItem( this.discardCards[0], { discard: true }, { deck: true } );
           this.deckCards = this.discardCards.reverse();
           this.discardCards = [];
           this.placeDeck();
@@ -546,6 +643,7 @@ export default class Klondike extends System {
                 dragCard.suit % 2 !== stackCard.suit % 2 &&
                 dragCard.rank === stackCard.rank - 1
               ) {
+                this.addUndoItem( dragCard, this.dragFrom, { stack: stackCard.stack } );
                 dragCard.stack = stackCard.stack;
                 dragCard.foundation = -1;
               }
@@ -554,6 +652,7 @@ export default class Klondike extends System {
               const foundationCard = this.foundationCards[ overCard.foundation ][0];
               // If our new card is same suit and one rank higher
               if ( dragCard.suit === foundationCard.suit && dragCard.rank === foundationCard.rank + 1 ) {
+                this.addUndoItem( dragCard, this.dragFrom, { foundation: foundationCard.foundation } );
                 dragCard.stack = -1;
                 dragCard.foundation = foundationCard.foundation;
               }
@@ -564,6 +663,7 @@ export default class Klondike extends System {
             if ( ranks[ dragCard.rank ] === "K" ) {
               dragCard.stack = this.stacks.indexOf( overEid );
               dragCard.foundation = -1;
+              this.addUndoItem( dragCard, this.dragFrom, { stack: dragCard.stack } );
             }
           }
           // Are we over an empty foundation?
@@ -571,6 +671,7 @@ export default class Klondike extends System {
             if ( ranks[ dragCard.rank ] === "A" ) {
               dragCard.stack = -1;
               dragCard.foundation = this.foundations.indexOf( overEid );
+              this.addUndoItem( dragCard, this.dragFrom, { foundation: dragCard.foundation } );
             }
           }
         }

@@ -362,8 +362,8 @@
       "path": "Menu Button",
       "components": {
         "Transform": {
-          "sx": "0.02",
-          "sy": "0.02",
+          "sx": "0.01",
+          "sy": "0.01",
           "sz": 1,
           "rx": 0,
           "ry": 0,
@@ -375,7 +375,7 @@
         "UIElement": {
           "width": "",
           "height": "",
-          "backgroundColor": "#5018a5c8",
+          "backgroundColor": "#353536c8",
           "borderWidth": "2px",
           "borderColor": "#949494",
           "borderStyle": "outset",
@@ -384,7 +384,7 @@
           "padding": ""
         },
         "UIImage": {
-          "imagePath": "ui/gear-button.png"
+          "imagePath": "ui/gear.png"
         },
         "UIButton": {
           "action": "showMenu"
@@ -538,6 +538,42 @@
         },
         "UIButton": {
           "action": "newGame"
+        }
+      },
+      "entities": []
+    },
+    {
+      "path": "Undo Button",
+      "active": true,
+      "components": {
+        "Transform": {
+          "sx": "0.01",
+          "sy": "0.01",
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "x": "-6.75",
+          "y": -4,
+          "z": 0
+        },
+        "UIElement": {
+          "width": "",
+          "height": "",
+          "backgroundColor": "#2a2a2ac8",
+          "borderWidth": "2px",
+          "borderColor": "#949494",
+          "borderStyle": "outset",
+          "borderRadius": "8px",
+          "margin": "",
+          "padding": ""
+        },
+        "UIImage": {
+          "imagePath": "ui/return.png"
+        },
+        "UIButton": {
+          "action": "undo"
         }
       },
       "entities": []
