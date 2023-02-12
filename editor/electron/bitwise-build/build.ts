@@ -7,14 +7,17 @@ import { promises as fs } from 'node:fs';
 import * as esbuild from 'esbuild';
 import { fork, ChildProcess } from 'node:child_process';
 
+export type BuildContext = esbuild.BuildContext;
+export type BuildResult = esbuild.BuildResult;
+
 type GameConfig = {};
 
-export async function build( root:string, dest:string, opt:{ [key:string]:any }={} ):Promise<esbuild.BuildResult|undefined> {
+export async function context( root:string, dest:string ):Promise<esbuild.BuildContext|undefined> {
   const src = await buildGameFile(root);
   if ( !src ) {
     return;
   }
-  return esbuild.build({
+  return esbuild.context({
     bundle: true,
     define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
     external: [
@@ -30,8 +33,12 @@ export async function build( root:string, dest:string, opt:{ [key:string]:any }=
     sourcemap: true,
     logLevel: 'info',
     logLimit: 0,
-    ...opt,
   });
+}
+
+export async function build( root:string, dest:string ):Promise<esbuild.BuildResult|undefined> {
+  const ctx = await context(root, dest);
+  return ctx.rebuild();
 }
 
 export function check(root:string):ChildProcess {

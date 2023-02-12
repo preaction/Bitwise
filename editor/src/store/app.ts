@@ -349,7 +349,7 @@ export const useAppStore = defineStore('app', {
         if ( this.buildTimeout ) {
           clearTimeout( this.buildTimeout );
         }
-        this.buildTimeout = setTimeout( () => { this.buildProject(); this.buildTimeout = null }, 4000 );
+        this.buildTimeout = setTimeout( () => { this.buildProject(); this.buildTimeout = null }, 1000 );
       }
     },
 

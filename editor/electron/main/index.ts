@@ -1,10 +1,11 @@
 import { Stats, promises as fs } from 'node:fs';
+import { performance } from 'node:perf_hooks';
 import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
 import { fork, ChildProcess } from 'node:child_process';
 import * as os from 'os'
 import * as path from 'path'
 import { init } from '../bitwise-build/init';
-import { check, build } from '../bitwise-build/build';
+import * as bitwise from '../bitwise-build/build';
 import { release } from '../bitwise-build/release';
 
 // Initialize electron-store
@@ -331,35 +332,49 @@ async function linkModules( root:string ) {
   await p;
 }
 
+let context:BuildContext|null;
+let contextDest = '';
+let contextRoot = '';
 ipcMain.handle('bitwise-build-project', async (event, root) => {
   if ( !win ) {
     return;
   }
+  performance.clearMarks('buildStart');
+  performance.mark('buildStart');
   const webwin = win;
-  return fs.mkdtemp( path.join(os.tmpdir(), 'bitwise-') ).then( async destDir => {
-    const dest = path.join( destDir, 'game.js' );
-
-    await linkModules(root);
-
-    const cp = check( root );
-    cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
-    cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
-    cp.on('error', (err) => {
-      webwin.webContents.send( 'error', err );
-    } );
-
-    return build( root, dest ).then( res => {
-      if ( !res ) {
-        return null;
-      }
-      if ( res.errors?.length > 0 ) {
-        res.errors.map( err => webwin.webContents.send( 'error', err ) );
-      }
-      if ( res.warnings?.length > 0 ) {
-        res.warnings.map( warn => webwin.webContents.send( 'info', `Warning: ${warn}` ) );
-      }
-      return res.errors?.length > 0 ? null : dest;
+  if ( !context || contextRoot != root ) {
+    await fs.mkdtemp( path.join(os.tmpdir(), 'bitwise-') ).then( async destDir => {
+      const dest = path.join( destDir, 'game.js' );
+      await linkModules(root);
+      context = await bitwise.context(root, dest);
+      contextDest = dest;
+      contextRoot = root;
     });
+  }
+
+  const cp = bitwise.check( root );
+  cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
+  cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
+  cp.on('error', (err) => {
+    webwin.webContents.send( 'error', err );
+  } );
+
+  return context.rebuild().then( (res:bitwise.BuildResult) => {
+    performance.measure('buildTime', 'buildStart');
+    if ( !res ) {
+      return null;
+    }
+    if ( res.errors?.length > 0 ) {
+      res.errors.map( err => webwin.webContents.send( 'error', err ) );
+    }
+    if ( res.warnings?.length > 0 ) {
+      res.warnings.map( warn => webwin.webContents.send( 'info', `Warning: ${warn}` ) );
+    }
+    const perfEntries = performance.getEntriesByName('buildTime');
+    console.log( perfEntries[ perfEntries.length - 1 ] );
+    webwin.webContents.send( 'info', perfEntries[ perfEntries.length - 1 ] );
+    performance.clearMeasures('buildTime');
+    return res.errors?.length > 0 ? null : contextDest;
   });
 });
 

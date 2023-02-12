@@ -47,7 +47,7 @@
     "bootstrap-vue-3": "^0.2.6",
     "commonmark": "^0.30.0",
     "electron-store": "^8.1.0",
-    "esbuild": "^0.15.10",
+    "esbuild": "^0.17.7",
     "lodash": "^4.17.21",
     "micromodal": "^0.4.10",
     "npm": "^9.1.3",
