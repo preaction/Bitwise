@@ -474,12 +474,13 @@ export default class Klondike extends System {
 
   tweenTo( eid:number, x:number, y:number, z:number, delay:number=0 ):Promise<any> {
     const Transform = this.Transform.store;
+    Transform.z[eid] = Math.max( Transform.z[eid] + 52, z + 52 );
     const tween = shifty.tween({
       from: {
         x: Transform.x[eid],
         y: Transform.y[eid],
       },
-      to: { x, y, z },
+      to: { x, y },
       delay,
       duration: 250, // ms
       render: ( state:{x: number, y:number, z:number} ) => {
