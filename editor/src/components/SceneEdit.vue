@@ -512,6 +512,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     text-align: center;
+    z-index: 2;
   }
   .build-overlay > * {
     flex: 1 1 100%;

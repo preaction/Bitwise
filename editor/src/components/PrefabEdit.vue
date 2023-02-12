@@ -200,6 +200,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     text-align: center;
+    z-index: 2;
   }
   .prefab-build-overlay > * {
     flex: 1 1 100%;
