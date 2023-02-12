@@ -423,6 +423,8 @@ export default class Klondike extends System {
 
   moveToDiscard( card:Card ) {
     const eid = card.entity;
+    card.stack = -1;
+    card.foundation = -1;
     this.discardCards.unshift(card);
     this.faceUpCard( card );
     // Make sure this card is above both the deck and the discard stack
