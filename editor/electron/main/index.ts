@@ -6,6 +6,7 @@ import * as os from 'os'
 import * as path from 'path'
 import { init } from '../bitwise-build/init';
 import * as bitwise from '../bitwise-build/build';
+import type { BuildContext, BuildResult } from '../bitwise-build/build';
 import { release } from '../bitwise-build/release';
 
 // Initialize electron-store
@@ -332,7 +333,7 @@ async function linkModules( root:string ) {
   await p;
 }
 
-let context:BuildContext|null;
+let context:BuildContext|undefined;
 let contextDest = '';
 let contextRoot = '';
 ipcMain.handle('bitwise-build-project', async (event, root) => {
@@ -358,6 +359,11 @@ ipcMain.handle('bitwise-build-project', async (event, root) => {
   cp.on('error', (err) => {
     webwin.webContents.send( 'error', err );
   } );
+
+  if ( !context ) {
+    webwin.webContents.send( 'error', 'Could not create build context' );
+    return;
+  }
 
   return context.rebuild().then( (res:bitwise.BuildResult) => {
     performance.measure('buildTime', 'buildStart');
@@ -424,7 +430,7 @@ ipcMain.handle('bitwise-release-project', async (event, root, type) => {
     }
     const gameFile = path.join( root, '.build', 'game.js' );
     await linkModules(root);
-    const buildResult = await build( root, gameFile, { sourcemap: false } );
+    const buildResult = await bitwise.build( root, gameFile, { sourcemap: false } );
     if ( !buildResult ) {
       return;
     }

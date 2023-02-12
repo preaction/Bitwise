@@ -12,7 +12,7 @@ export type BuildResult = esbuild.BuildResult;
 
 type GameConfig = {};
 
-export async function context( root:string, dest:string ):Promise<esbuild.BuildContext|undefined> {
+export async function context( root:string, dest:string, opt:{ [key:string]: any }={} ):Promise<esbuild.BuildContext|undefined> {
   const src = await buildGameFile(root);
   if ( !src ) {
     return;
@@ -33,11 +33,15 @@ export async function context( root:string, dest:string ):Promise<esbuild.BuildC
     sourcemap: true,
     logLevel: 'info',
     logLimit: 0,
+    ...opt,
   });
 }
 
-export async function build( root:string, dest:string ):Promise<esbuild.BuildResult|undefined> {
-  const ctx = await context(root, dest);
+export async function build( root:string, dest:string, opt:{ [key:string]:any }={} ):Promise<esbuild.BuildResult|undefined> {
+  const ctx = await context(root, dest, opt);
+  if ( !ctx ) {
+    return;
+  }
   return ctx.rebuild();
 }
 
