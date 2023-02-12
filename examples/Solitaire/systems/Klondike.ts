@@ -42,6 +42,7 @@ type UndoItem = {
   card: Card,
   from: Location,
   to: Location,
+  flip?: boolean,
 };
 
 const raycaster = new three.Raycaster();
@@ -301,9 +302,9 @@ export default class Klondike extends System {
     this.menuEntity.active = false;
   }
 
-  addUndoItem( card:Card, from:Location, to:Location ) {
+  addUndoItem( card:Card, from:Location, to:Location, flip:boolean=false ) {
     this.undoStack.unshift(
-      { card, from, to, },
+      { card, from, to, flip },
     );
   }
 
@@ -316,6 +317,8 @@ export default class Klondike extends System {
     if ( !undo ) {
       return;
     }
+
+    console.log( 'Undoing: ', undo );
 
     // Special case: Deck was flipped from discard
     if ( undo.to.deck ) {
@@ -337,6 +340,8 @@ export default class Klondike extends System {
       const cardIdx = this.stackCards[ undo.to.stack ].indexOf(undo.card);
       const moveCards = this.stackCards[ undo.to.stack ].splice( 0, cardIdx + 1 );
       this.followEntities = moveCards.slice(0, -1).map( card => card.entity );
+      this.dragEntity = undo.card.entity;
+      console.log( 'Undo to cards after undo: ', undo.to.stack, this.stackCards[ undo.to.stack ] );
     }
 
     // Restore the card to its former location
@@ -353,8 +358,12 @@ export default class Klondike extends System {
     else if ( undo.from.stack !== undefined && undo.from.stack >= 0 ) {
       // Move card back to stack.
       // Follow entities have already been set from above
+      if ( undo.flip ) {
+        this.faceDownCard( this.stackCards[ undo.from.stack ][0] );
+      }
       undo.card.stack = undo.from.stack;
       this.dropCard();
+      console.log( 'Undo from cards after undo: ', undo.from.stack, this.stackCards[ undo.from.stack ] );
     }
     else if ( undo.from.discard ) {
       this.dragEntity = -1;
@@ -628,6 +637,7 @@ export default class Klondike extends System {
         // it a click and try to auto-move
         // Try to drop the card where we are
         const dragCard = this.cards[ this.dragEntity ];
+        const undoItem:UndoItem = { from: this.dragFrom, card: dragCard, to: {} }
         const fromStack = dragCard.stack;
         raycaster.setFromCamera( pointer, this.camera );
         const intersects = raycaster.intersectObjects( this.scene._scene.children, true );
@@ -643,7 +653,7 @@ export default class Klondike extends System {
                 dragCard.suit % 2 !== stackCard.suit % 2 &&
                 dragCard.rank === stackCard.rank - 1
               ) {
-                this.addUndoItem( dragCard, this.dragFrom, { stack: stackCard.stack } );
+                undoItem.to = { stack: stackCard.stack };
                 dragCard.stack = stackCard.stack;
                 dragCard.foundation = -1;
               }
@@ -652,7 +662,7 @@ export default class Klondike extends System {
               const foundationCard = this.foundationCards[ overCard.foundation ][0];
               // If our new card is same suit and one rank higher
               if ( dragCard.suit === foundationCard.suit && dragCard.rank === foundationCard.rank + 1 ) {
-                this.addUndoItem( dragCard, this.dragFrom, { foundation: foundationCard.foundation } );
+                undoItem.to = { foundation: foundationCard.foundation };
                 dragCard.stack = -1;
                 dragCard.foundation = foundationCard.foundation;
               }
@@ -663,7 +673,7 @@ export default class Klondike extends System {
             if ( ranks[ dragCard.rank ] === "K" ) {
               dragCard.stack = this.stacks.indexOf( overEid );
               dragCard.foundation = -1;
-              this.addUndoItem( dragCard, this.dragFrom, { stack: dragCard.stack } );
+              undoItem.to = { stack: dragCard.stack };
             }
           }
           // Are we over an empty foundation?
@@ -671,7 +681,7 @@ export default class Klondike extends System {
             if ( ranks[ dragCard.rank ] === "A" ) {
               dragCard.stack = -1;
               dragCard.foundation = this.foundations.indexOf( overEid );
-              this.addUndoItem( dragCard, this.dragFrom, { foundation: dragCard.foundation } );
+              undoItem.to = { foundation: dragCard.foundation };
             }
           }
         }
@@ -679,6 +689,12 @@ export default class Klondike extends System {
         // Flip up the next card in the stack, if needed
         if ( fromStack >= 0 && dragCard.stack != fromStack && this.stackCards[fromStack].length ) {
           this.faceUpCard( this.stackCards[fromStack][0] );
+          undoItem.flip = true;
+        }
+
+        // If we found a place to go...
+        if ( Object.keys( undoItem.to ).length > 0 ) {
+          this.addUndoItem( undoItem.card, undoItem.from, undoItem.to, undoItem.flip );
         }
         this.dropCard();
       }
