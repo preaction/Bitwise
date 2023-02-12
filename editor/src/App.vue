@@ -289,15 +289,15 @@ export default defineComponent({
     },
 
   },
-  mounted() {
+  async mounted() {
     if ( this.hasSessionState ) {
-      this.loadSessionState();
+      await this.loadSessionState();
     }
     if ( !this.currentProject ) {
       this.$refs['projectDialog'].open();
     }
     electron.on( 'error', (ev, err) => console.error(err) );
-    electron.on( 'log', (ev, msg) => console.log(msg) );
+    electron.on( 'info', (ev, msg) => console.log(msg) );
 
     window.addEventListener( 'keydown', this.handleKeydown.bind(this) );
   },

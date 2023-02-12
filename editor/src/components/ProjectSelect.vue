@@ -26,8 +26,8 @@ export default defineComponent({
     ...mapGetters(useAppStore, ['hasStoredState', 'storedStateProject']),
   },
   methods: {
-    loadStoredState() {
-      this.appStore.loadStoredState();
+    async loadStoredState() {
+      await this.appStore.loadStoredState();
       this.$emit('select');
     },
     projectName( path:string ) {
