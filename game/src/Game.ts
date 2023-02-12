@@ -175,7 +175,9 @@ export default class Game extends three.EventDispatcher {
     }
     if ( this.renderer ) {
       this.renderer.dispose();
-      this.renderer = null;
+    }
+    if ( this.ui.renderer ) {
+      this.ui.renderer.domElement.remove();
     }
   }
 
