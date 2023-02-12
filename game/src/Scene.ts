@@ -103,6 +103,12 @@ export default class Scene extends three.EventDispatcher {
    * Render and Physics systems.
    */
   start() {
+    if ( this.state === SceneState.Start || this.state === SceneState.Run ) {
+      return;
+    }
+    else if ( this.state !== SceneState.Stop ) {
+      throw `Cannot start scene in state ${this.state}`;
+    }
     this.dispatchEvent({ type: 'start' });
     for ( const system of this.systems ) {
       system.start();
@@ -111,6 +117,12 @@ export default class Scene extends three.EventDispatcher {
   }
 
   pause() {
+    if ( this.state === SceneState.Pause ) {
+      return;
+    }
+    else if ( this.state !== SceneState.Run ) {
+      throw `Cannot pause scene in state ${this.state}`;
+    }
     this.dispatchEvent({ type: 'pause' });
     for ( const system of this.systems ) {
       system.pause();
@@ -119,6 +131,12 @@ export default class Scene extends three.EventDispatcher {
   }
 
   resume() {
+    if ( this.state === SceneState.Run ) {
+      return;
+    }
+    else if ( this.state !== SceneState.Pause ) {
+      throw `Cannot resume scene in state ${this.state}`;
+    }
     this.dispatchEvent({ type: 'resume' });
     for ( const system of this.systems ) {
       system.resume();
@@ -127,6 +145,9 @@ export default class Scene extends three.EventDispatcher {
   }
 
   stop() {
+    if ( this.state === SceneState.Stop ) {
+      return;
+    }
     this.dispatchEvent({ type: 'stop' });
     for ( const system of this.systems ) {
       system.stop();
