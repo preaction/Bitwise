@@ -5,7 +5,7 @@ export default defineComponent({
   props: ['modelValue', 'scene'],
   data() {
     return {
-      drawEntityPath: '',
+      deckEntityPath: '',
       discardEntityPath: '',
       menuButtonEntityPath: '',
       menuEntityPath: '',
@@ -15,7 +15,7 @@ export default defineComponent({
   watch: {
     // XXX: It is annoying to have to manually emit the update event
     // here...
-    drawEntityPath() {
+    deckEntityPath() {
       this.update();
     },
     discardEntityPath() {
@@ -39,8 +39,8 @@ export default defineComponent({
 <template>
   <div>
     <div class="d-flex justify-content align-items-center">
-      <label class="me-1">Draw</label>
-      <InputGameObject v-model="drawEntityPath" type="entity" drop-effect="link" />
+      <label class="me-1">Deck</label>
+      <InputGameObject v-model="deckEntityPath" type="entity" drop-effect="link" />
     </div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Discard</label>

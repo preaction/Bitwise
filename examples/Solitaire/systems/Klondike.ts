@@ -88,8 +88,8 @@ export default class Klondike extends System {
    */
   undoStack:UndoItem[] = [];
 
-  drawEntity!:Entity;
-  drawEntityPath:string = "";
+  deckEntity!:Entity;
+  deckEntityPath:string = "";
   discardEntity!:Entity;
   discardEntityPath:string = "";
   menuEntity!:Entity;
@@ -112,9 +112,9 @@ export default class Klondike extends System {
    */
   followEntities:number[] = [];
 
-  thaw( data:{drawEntityPath: string, discardEntityPath: string, menuEntityPath: string} ) {
+  thaw( data:{deckEntityPath: string, discardEntityPath: string, menuEntityPath: string} ) {
     // XXX: Annoying to define all system fields in thaw and freeze...
-    this.drawEntityPath = data.drawEntityPath;
+    this.deckEntityPath = data.deckEntityPath;
     this.discardEntityPath = data.discardEntityPath;
     this.menuEntityPath = data.menuEntityPath;
   }
@@ -122,7 +122,7 @@ export default class Klondike extends System {
   freeze():any {
     // XXX: Annoying to define all system fields in thaw and freeze...
     return {
-      drawEntityPath: this.drawEntityPath,
+      deckEntityPath: this.deckEntityPath,
       discardEntityPath: this.discardEntityPath,
       menuEntityPath: this.menuEntityPath,
     };
@@ -154,11 +154,11 @@ export default class Klondike extends System {
     // Add event handlers
 
     // Find entities
-    const drawEntity = this.scene.getEntityByPath( this.drawEntityPath );
-    if ( !drawEntity ) {
-      throw "Missing draw entity";
+    const deckEntity = this.scene.getEntityByPath( this.deckEntityPath );
+    if ( !deckEntity ) {
+      throw "Missing deck entity";
     }
-    this.drawEntity = drawEntity;
+    this.deckEntity = deckEntity;
 
     const discardEntity = this.scene.getEntityByPath( this.discardEntityPath );
     if ( !discardEntity ) {
@@ -175,7 +175,7 @@ export default class Klondike extends System {
     // Load the Deck prefab textures and materials
     this.cardBackTextureId = this.scene.game.load.texture( cardBackImage );
 
-    const drawTransform = this.drawEntity.getComponent( "Transform" );
+    const deckTransform = this.deckEntity.getComponent( "Transform" );
     for ( let suit = 0; suit < suits.length; suit++ ) {
       for ( let rank = 0; rank < ranks.length; rank++ ) {
         const entity = this.scene.addEntity();
@@ -192,11 +192,11 @@ export default class Klondike extends System {
 
         entity.name = `${suits[suit]}_${ranks[rank]}`;
         entity.addComponent( "Transform", {
-          x: drawTransform.x,
-          y: drawTransform.y,
-          z: drawTransform.z,
-          sx: drawTransform.sx,
-          sy: drawTransform.sy,
+          x: deckTransform.x,
+          y: deckTransform.y,
+          z: deckTransform.z,
+          sx: deckTransform.sx,
+          sy: deckTransform.sy,
           sz: 1,
         } );
         entity.addComponent( "Sprite", {
@@ -329,7 +329,6 @@ export default class Klondike extends System {
     // Remove the card from its current location
     if ( undo.to.discard ) {
       this.discardCards.shift();
-      this.faceDownCard(undo.card);
     }
     else if ( undo.to.foundation !== undefined && undo.to.foundation >= 0 ) {
       this.foundationCards[undo.to.foundation].shift();
@@ -346,9 +345,9 @@ export default class Klondike extends System {
 
     // Restore the card to its former location
     if ( undo.from.deck ) {
+      this.dragEntity = -1;
       // Move back to deck
-      this.deckCards.unshift(undo.card);
-      this.placeDeck();
+      this.moveToDeck(undo.card);
     }
     else if ( undo.from.foundation !== undefined && undo.from.foundation >= 0 ) {
       // Move card back to foundation. Must only be one card.
@@ -373,13 +372,13 @@ export default class Klondike extends System {
   }
 
   placeDeck() {
-    const drawTransform = this.drawEntity.getComponent( "Transform" );
+    const deckTransform = this.deckEntity.getComponent( "Transform" );
     for ( let i = this.deckCards.length - 1; i >= 0; i-- ) {
       const card = this.deckCards[i];
       this.faceDownCard( card );
-      this.Transform.store.x[card.entity] = drawTransform.x;
-      this.Transform.store.y[card.entity] = drawTransform.y;
-      this.Transform.store.z[card.entity] = drawTransform.z + (this.deckCards.length - i + 1);
+      this.Transform.store.x[card.entity] = deckTransform.x;
+      this.Transform.store.y[card.entity] = deckTransform.y;
+      this.Transform.store.z[card.entity] = deckTransform.z + (this.deckCards.length - i + 1);
     }
   }
 
@@ -437,6 +436,24 @@ export default class Klondike extends System {
     );
   }
 
+  moveToDeck( card:Card ) {
+    const eid = card.entity;
+    card.stack = -1;
+    card.foundation = -1;
+    this.deckCards.unshift(card);
+    // Make sure this card is above both the deck and the discard stack
+    this.Transform.store.z[card.entity] += this.deckCards.length;
+    this.tweenTo(
+      card.entity,
+      this.Transform.store.x[this.deckEntity.id],
+      this.Transform.store.y[this.deckEntity.id],
+      this.Transform.store.z[this.deckEntity.id] + this.deckCards.length,
+    ).then( () => {
+      console.log( `Facing down` );
+      this.faceDownCard( card );
+    });
+  }
+
   moveToFoundation( card:Card, foundationIdx:number ) {
     const foundationId = this.foundations[foundationIdx];
     let foundationCards = this.foundationCards[foundationIdx];
@@ -489,6 +506,7 @@ export default class Klondike extends System {
       },
     })
     return this.tweens.add(tween).then( () => {
+      console.log( `Tween complete` );
       Transform.z[eid] = z;
       this.tweens.remove(tween);
     });
@@ -611,7 +629,7 @@ export default class Klondike extends System {
             this.startDragCard( card );
           }
         }
-        else if ( eid === this.drawEntity.id && this.deckCards.length === 0 ) {
+        else if ( eid === this.deckEntity.id && this.deckCards.length === 0 ) {
           // Clicked the bottom under the deck, so move the discard
           // back
           this.addUndoItem( this.discardCards[0], { discard: true }, { deck: true } );

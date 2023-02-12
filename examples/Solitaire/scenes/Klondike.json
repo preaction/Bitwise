@@ -594,10 +594,11 @@
     {
       "name": "Klondike",
       "data": {
-        "drawEntityPath": "Deck",
+        "deckEntityPath": "Deck",
         "discardEntityPath": "Discard",
         "menuButtonEntityPath": "Menu Button",
-        "menuEntityPath": "Menu"
+        "menuEntityPath": "Menu",
+        "drawEntityPath": "Deck"
       }
     },
     {
