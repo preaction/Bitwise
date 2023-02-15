@@ -181,7 +181,7 @@ export default class Scene extends three.EventDispatcher {
 
   getSystem<T extends System>(sysType:(new (...args: any[]) => T)):T {
     for ( const sys of this.systems ) {
-      if ( sys.constructor === sysType ) {
+      if ( sys instanceof sysType ) {
         return sys as T;
       }
     }

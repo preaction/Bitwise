@@ -39,14 +39,13 @@ export default defineComponent({
     };
   },
 
-  mounted() {
-    const game = this.editGame = this.createEditorGame( 'edit-canvas' );
-
+  created() {
     let sceneData = toRaw( this.sceneData );
     if ( !sceneData || Object.keys( sceneData ).length === 0 ) {
       // Create a new, blank scene
       // XXX: This data should come from game settings
       sceneData = this.sceneData = {
+        name: 'New Scene',
         components: [
           'Transform', 'Sprite', 'OrthographicCamera', 'RigidBody',
           'BoxCollider', 'UI',
@@ -58,34 +57,43 @@ export default defineComponent({
         ],
         entities: [
           {
-            name: "Camera",
+            path: "Camera",
             type: "Camera",
-            Transform: {
-              z: 2000,
-              rw: 1,
-              sx: 1,
-              sy: 1,
-              sz: 1,
-              path: "Camera",
-            },
-            OrthographicCamera: {
-              frustum: 10,
-              zoom: 1,
-              near: 0,
-              far: 2000,
+            components: {
+              Transform: {
+                z: 2000,
+                rw: 1,
+                sx: 1,
+                sy: 1,
+                sz: 1,
+              },
+              OrthographicCamera: {
+                frustum: 10,
+                zoom: 1,
+                near: 0,
+                far: 2000,
+              },
             },
           },
         ],
       };
-
-      this.update();
     }
+  },
+
+  mounted() {
+    const game = this.editGame = this.createEditorGame( 'edit-canvas' );
 
     const scene = this.editScene = markRaw(game.addScene());
-    this.thawEditScene(sceneData);
+    this.thawEditScene(this.sceneData);
 
     const editor = this.editScene.getSystem( this.systems.EditorRender );
     editor.addEventListener( 'update', () => this.update() );
+
+    // If we've created a new scene, update the tab title and set the
+    // "edited" flag
+    if ( !this.modelValue || Object.keys( this.modelValue ).length === 0 ) {
+      this.update();
+    }
 
     this.$nextTick( async () => {
       this.editGame.start();
@@ -250,14 +258,14 @@ export default defineComponent({
     update() {
       // update() always works with the edit scene
       const sceneData = this.sceneData;
-      if ( this.name !== sceneData.name ) {
+      if ( !this.name || this.name !== sceneData.name ) {
         this.$emit('update:name', sceneData.name);
       }
       this.$emit('update:modelValue', {
         ...toRaw(sceneData),
         name: this.name,
       });
-      this.$refs.scenePanel.refresh();
+      this.$refs.scenePanel?.refresh();
     },
 
     save() {

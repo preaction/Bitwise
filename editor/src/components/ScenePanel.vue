@@ -95,7 +95,7 @@ export default defineComponent({
       else {
         this.sceneTree = {
           ...rootNode,
-          name: this.sceneData?.name || 'New Scene',
+          name: this.sceneData?.name,
           icon: 'fa-film',
         };
       }

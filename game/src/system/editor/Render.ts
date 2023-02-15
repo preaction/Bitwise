@@ -77,9 +77,6 @@ export default class Render extends RenderSystem {
     this.cameraEnterQuery = scene.game.ecs.enterQuery( this.cameraQuery );
     this.cameraExitQuery = scene.game.ecs.exitQuery( this.cameraQuery );
 
-    // Allow canvas to have keyboard focus
-    scene.game.canvas.tabIndex = 1;
-
     this.listeners = {
       wheel: this.onWheel.bind(this),
       pointerdown: this.onPointerDown.bind(this),
@@ -96,6 +93,10 @@ export default class Render extends RenderSystem {
 
   start() {
     super.start();
+
+    // Allow canvas to have keyboard focus
+    this.scene.game.canvas.tabIndex = 1;
+
     this.scene.addEventListener( "resize", (e:three.Event) => {
       this.onResize(e as ResizeEvent);
     });
