@@ -16,6 +16,7 @@ export default class UIImage extends Component {
     // Freeze always gives a texture path
     const data = super.freezeEntity(eid);
     data.imagePath = this.scene.game.load.texturePaths[data.imageId];
+    delete data.imageId;
     return data;
   }
   thawEntity( eid:number, data:{ [key:string]:any }={} ) {
