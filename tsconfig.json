@@ -3,7 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
-    "importHelpers": true,
+    "importHelpers": false,
     "jsx": "preserve",
     "esModuleInterop": true,
     "resolveJsonModule": true,

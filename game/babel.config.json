@@ -1,0 +1,5 @@
+// This is only used by Jest (jest.config.ts) to transpile things in the
+// node_modules directory that use ESM.
+{
+  "presets": ["@babel/preset-env"]
+}
