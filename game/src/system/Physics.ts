@@ -73,7 +73,9 @@ export default class Physics extends System {
 
     const collisionConfiguration = new this.Ammo.btDefaultCollisionConfiguration();
     const dispatcher = new this.Ammo.btCollisionDispatcher(collisionConfiguration);
-    const broadphase = new this.Ammo[ Physics.broadphaseClass[ this.broadphase] ]();
+    // XXX: The Ammo types for btAxisSweep3 do not allow it to be added
+    // to a btDiscreteDynamicsWorld, so we can't use it right now...
+    const broadphase = new this.Ammo.btDbvtBroadphase();
     const solver = new this.Ammo.btSequentialImpulseConstraintSolver();
     this.universe = new this.Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
     const gravity = new this.Ammo.btVector3( this.gravity.x, this.gravity.y, this.gravity.z );
@@ -233,6 +235,7 @@ export default class Physics extends System {
           body.setCollisionFlags( COLLISION_FLAGS.CF_NO_CONTACT_RESPONSE );
         }
 
+        // @ts-ignore // castObject is not declared correctly
         const collisionObject = this.Ammo.castObject( body, this.Ammo.btCollisionObject );
         collisionObject.eid = eid;
         this.collisionObjects[eid] = collisionObject;
@@ -266,7 +269,9 @@ export default class Physics extends System {
     MANIFOLDS:
     for ( let i = 0; i < numManifolds; i ++ ) {
       let contactManifold = dispatcher.getManifoldByIndexInternal( i );
+      // @ts-ignore // castObject is not declared correctly
       let rb0 = this.Ammo.castObject( contactManifold.getBody0(), this.Ammo.btCollisionObject );
+      // @ts-ignore // castObject is not declared correctly
       let rb1 = this.Ammo.castObject( contactManifold.getBody1(), this.Ammo.btCollisionObject );
       const [ from, to ] = rb0.eid < rb1.eid ? [ rb0.eid, rb1.eid ] : [ rb1.eid, rb0.eid ];
 
@@ -350,13 +355,14 @@ export default class Physics extends System {
           const body = this.ghosts[eid];
           const xform = body.getWorldTransform();
           const pos = new this.Ammo.btVector3( transform.x[eid], transform.y[eid], transform.z[eid] );
-          const rot = new this.Ammo.btVector3( transform.rx[eid], transform.ry[eid], transform.rz[eid] );
+          const rot = new this.Ammo.btQuaternion( transform.rx[eid], transform.ry[eid], transform.rz[eid], transform.rw[eid] );
           xform.setOrigin(pos);
           xform.setRotation(rot);
           body.setWorldTransform(xform);
         }
         // Rigidbodies are moved by physics
         else {
+          // @ts-ignore // castObject is not declared correctly
           const body = this.Ammo.castObject( this.bodies[eid], this.Ammo.btRigidBody );
           const xform = new this.Ammo.btTransform();
           const motionState = body.getMotionState();
