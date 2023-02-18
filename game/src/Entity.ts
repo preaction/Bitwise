@@ -43,11 +43,20 @@ export default class Entity {
   _path:string = "New Entity";
   /**
    * path is the full path to this entity.
+   *
+   * Warning: Changing the path while the entity is active will not
+   * change the entity's parent in the Render system! Do not change the
+   * path after an entity is activated.
    */
   get path():string {
     return this._path;
   }
   set path(newPath:string) {
+    // XXX: To make this safer, we should create entities outside
+    // a Scene object. Then the entity can be considered "inactive" and
+    // safe to edit. Once the entity is added to the scene, it may be
+    // activated. Active entities should forbid editing certain
+    // attributes, like path/parent.
     this._path = newPath;
     // Reset the parent cache
     this._parent = undefined;
@@ -72,6 +81,13 @@ export default class Entity {
       this._path = this.name;
     }
     this._parent = newParent;
+  }
+
+  /**
+   * Remove the entity from the scene.
+   */
+  remove():void {
+    this.scene.removeEntity( this.id );
   }
 
   addComponent( name:string, data:{ [key:string]: any } ) {

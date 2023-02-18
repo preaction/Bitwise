@@ -326,6 +326,10 @@ export default class Scene extends three.EventDispatcher {
     return this.entities[id];
   }
 
+  /**
+   * Remove an entity from the scene.
+   * @param id The entity ID
+   */
   removeEntity( id:number ) {
     this.game.ecs.removeEntity( this.world, id );
     delete this.entities[id];

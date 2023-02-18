@@ -270,21 +270,24 @@ export default defineComponent({
         const rowOffsetX = event.offsetX + ( targetLeft - rowLeft );
         const isChild = rowOffsetX > rowWidth / 4;
 
-        // First, fix the scene to reparent the dragged entity
+        // Update the data with the new path
         const dragEntity = this.scene.getEntityByPath(data);
         const dropEntity = this.scene.getEntityByPath(onItem.path);
-
-        dragEntity.parent = isChild ? dropEntity : dropEntity.parent;
+        let newPath = [ isChild ? dropEntity.path : dropEntity.parent?.path, dragEntity.name ].filter( p => !!p ).join('/');
+        const dragEntityData = this.getEntityDataByPath(data);
+        dragEntityData.path = newPath;
         // XXX: Adjust Transform to offset from parent so that entity
         // stays in same place visually
 
-        // Then we can update the data with the new path (XXX: and
-        // Transform)
-        const dragEntityData = this.getEntityDataByPath(data);
-        dragEntityData.path = dragEntity.path;
+        // Then we remove the old entity and add the new entity, to make
+        // sure it gets reparented
+        dragEntity.remove();
+        const newEntity = dropEntity.scene.addEntity();
+        newEntity.thaw(dragEntityData);
 
         this.updateSceneTree();
         // XXX: Expand dropEntity in scene tree if not root
+        // XXX: Focus dragEntity in scene tree
 
         this.update();
       }
