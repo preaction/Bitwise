@@ -8,7 +8,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src/env.d.ts",
-    "src/**/*"
+    "src/**/*",
+    "src/env.d.ts"
   ]
 }
