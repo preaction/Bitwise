@@ -94,6 +94,8 @@ export default class Klondike extends System {
   discardEntityPath:string = "";
   menuEntity!:Entity;
   menuEntityPath:string = "";
+  winEntity!:Entity;
+  winEntityPath:string = "";
 
   rowHeight:number = 0.5;
 
@@ -117,6 +119,7 @@ export default class Klondike extends System {
     this.deckEntityPath = data.deckEntityPath;
     this.discardEntityPath = data.discardEntityPath;
     this.menuEntityPath = data.menuEntityPath;
+    this.winEntityPath = data.winEntityPath;
   }
 
   freeze():any {
@@ -125,6 +128,7 @@ export default class Klondike extends System {
       deckEntityPath: this.deckEntityPath,
       discardEntityPath: this.discardEntityPath,
       menuEntityPath: this.menuEntityPath,
+      winEntityPath: this.winEntityPath,
     };
   }
 
@@ -171,6 +175,12 @@ export default class Klondike extends System {
       throw `Missing menu entity: ${this.menuEntityPath}`;
     }
     this.menuEntity = menuEntity;
+
+    const winEntity = this.scene.getEntityByPath( this.winEntityPath );
+    if ( !winEntity ) {
+      throw `Missing win entity: ${this.winEntityPath}`;
+    }
+    this.winEntity = winEntity;
 
     // Load the Deck prefab textures and materials
     this.cardBackTextureId = this.scene.game.load.texture( cardBackImage );
@@ -250,6 +260,7 @@ export default class Klondike extends System {
     }
     this.deckCards = [...this.gameDeck];
     this.placeDeck();
+    this.winEntity.active = false;
   }
 
   dealTableau() {
@@ -529,7 +540,7 @@ export default class Klondike extends System {
     else if ( dragCard.foundation >= 0 ) {
       this.moveToFoundation( dragCard, dragCard.foundation );
       if ( !this.foundations.find( (f, i) => this.foundationCards[i]?.[0]?.rank != ranks.indexOf("K") ) ) {
-        console.log( "WIN!" );
+        this.winEntity.active = true;
       }
     }
     else {

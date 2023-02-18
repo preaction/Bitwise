@@ -293,15 +293,15 @@
       "type": "Entity",
       "components": {
         "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
+          "sx": "2.799999952316284",
+          "sy": "2.799999952316284",
           "sz": 1,
           "rx": 0,
           "ry": 0,
           "rz": 0,
           "rw": 1,
-          "x": -7.3369059562683105,
-          "y": 3.5,
+          "x": "-7.3369059562683105",
+          "y": "3.5",
           "z": "0"
         },
         "Sprite": {
@@ -577,6 +577,95 @@
         }
       },
       "entities": []
+    },
+    {
+      "path": "Win Dialog",
+      "components": {
+        "Transform": {
+          "sx": "0.03",
+          "sy": "0.03",
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0
+        },
+        "UIElement": {
+          "width": "120px",
+          "height": "120px",
+          "backgroundColor": "#000000ef",
+          "borderWidth": "1px",
+          "borderColor": "#a1a1a1",
+          "borderStyle": "solid",
+          "borderRadius": "10px",
+          "margin": "",
+          "padding": "5px"
+        },
+        "UIContainer": {
+          "flow": "column",
+          "justify": "space-around",
+          "align": "stretch"
+        }
+      },
+      "active": false
+    },
+    {
+      "path": "Win Dialog/Win Text",
+      "components": {
+        "Transform": {
+          "sx": "1",
+          "sy": "1",
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0
+        },
+        "UIElement": {},
+        "UIText": {
+          "text": "You win!",
+          "align": "center"
+        }
+      },
+      "active": true
+    },
+    {
+      "path": "Win Dialog/New Button",
+      "active": true,
+      "components": {
+        "Active": {},
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "UIElement": {
+          "backgroundColor": "#00000000",
+          "width": "",
+          "height": "",
+          "borderStyle": "outset",
+          "borderWidth": "2px",
+          "borderColor": "#cfcfcf",
+          "borderRadius": "5px",
+          "margin": "",
+          "padding": "5px"
+        },
+        "UIText": {
+          "text": "New Deal",
+          "align": "center"
+        },
+        "UIButton": {
+          "action": "newGame"
+        }
+      },
+      "entities": []
     }
   ],
   "components": [
@@ -598,6 +687,7 @@
         "discardEntityPath": "Discard",
         "menuButtonEntityPath": "Menu Button",
         "menuEntityPath": "Menu",
+        "winEntityPath": "Win Dialog",
         "drawEntityPath": "Deck"
       }
     },
