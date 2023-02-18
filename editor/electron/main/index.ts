@@ -11,13 +11,12 @@ import { release } from '../bitwise-build/release';
 
 // Initialize electron-store
 import Store from 'electron-store'
+const appStore = new Store({ name: 'app' });
 ipcMain.on('electron-store-get', async (event, file, val, def) => {
-  const store = new Store({ name: file });
-  event.returnValue = store.get(val, def);
+  event.returnValue = appStore.get(val, def);
 });
 ipcMain.on('electron-store-set', async (event, file, key, val) => {
-  const store = new Store({ name: file });
-  store.set(key, val);
+  appStore.set(key, val);
 });
 
 // Disable GPU Acceleration for Windows 7
@@ -50,14 +49,41 @@ const preload = path.join(__dirname, '../preload/index.js')
 const url = `http://${process.env['VITE_DEV_SERVER_HOST']}:${process.env['VITE_DEV_SERVER_PORT']}`
 const indexHtml = path.join(ROOT_PATH.dist, 'index.html')
 
+type WindowConfig = {
+  x?: number,
+  y?: number,
+  width: number,
+  height: number,
+  maximize: boolean,
+}
 async function createWindow() {
+  // Read window config
+  const winConfig:WindowConfig = appStore.get( 'window', {
+    width: 1024,
+    height: 768,
+    maximize: false,
+  } ) as WindowConfig;
+
   win = new BrowserWindow({
     title: 'Main window',
     icon: path.join(ROOT_PATH.public, 'favicon.ico'),
+    ...winConfig,
     webPreferences: {
       preload,
     },
   })
+  if ( winConfig.maximize ) {
+    if ( win.isFullScreenable() ) {
+      win.setFullScreen(true);
+    }
+    else {
+      win.maximize();
+    }
+  }
+  win.on('close', () => {
+    Object.assign( winConfig, { maximize: win?.isMaximized() }, win?.getNormalBounds() );
+    appStore.set( 'window', winConfig );
+  });
 
   if (app.isPackaged) {
     win.loadFile(indexHtml)
