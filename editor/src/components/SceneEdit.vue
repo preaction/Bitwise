@@ -81,32 +81,7 @@ export default defineComponent({
   },
 
   mounted() {
-    const game = this.editGame = this.createEditorGame( 'edit-canvas' );
-
-    const scene = this.editScene = markRaw(game.addScene());
-    this.thawEditScene(this.sceneData);
-
-    const editor = this.editScene.getSystem( this.systems.EditorRender );
-    editor.addEventListener( 'update', () => this.update() );
-
-    // If we've created a new scene, update the tab title and set the
-    // "edited" flag
-    if ( !this.modelValue || Object.keys( this.modelValue ).length === 0 ) {
-      this.update();
-    }
-
-    this.$nextTick( async () => {
-      this.editGame.start();
-      try {
-        await scene.init();
-        scene.start();
-        scene.update(0);
-      }
-      catch (err) {
-        console.log( `Error calling update(): `, err );
-      }
-      scene.render();
-    } );
+    this.initializeEditor();
   },
 
   unmounted() {
@@ -135,27 +110,17 @@ export default defineComponent({
         } */
       }
       else {
-        // Update the editor game
-        this.editGame.stop();
-        const game = this.editGame = this.createEditorGame( 'edit-canvas' );
-        const scene = this.editScene = markRaw(game.addScene());
-        this.thawEditScene( this.sceneData );
-        this.$nextTick( async () => {
-          this.editGame.start();
-          try {
-            await scene.init();
-            scene.start();
-            scene.update(0);
-          }
-          catch (err) {
-            console.log( `Error calling update(): `, err );
-          }
-          scene.render();
-        } );
-
         // Start the current pane again
         if ( this.playing ) {
           this.play( this.playState );
+
+          // Clear out the current edit game. If the game is playing, the
+          // editor will be reinitialized when the game stops.
+          this.editGame.stop();
+          this.editGame = undefined;
+        }
+        else {
+          this.initializeEditor();
         }
       }
     },
@@ -163,6 +128,39 @@ export default defineComponent({
 
   methods: {
     ...mapActions( useAppStore, ['getFileUrl'] ),
+
+    initializeEditor() {
+      const game = this.editGame = this.createEditorGame( 'edit-canvas' );
+
+      const scene = this.editScene = markRaw(game.addScene());
+      this.thawEditScene(this.sceneData);
+
+      const editor = this.editScene.getSystem( this.systems.EditorRender );
+      editor.addEventListener( 'update', () => this.update() );
+
+      // If we've created a new scene, update the tab title and set the
+      // "edited" flag
+      if ( !this.modelValue || Object.keys( this.modelValue ).length === 0 ) {
+        this.update();
+      }
+
+      // The editor canvas must be visible when the game is started so
+      // that the renderer is created at the correct size. If the canvas
+      // is not visible, the renderer will think it has a canvas with
+      // 0 width and 0 height.
+      this.$nextTick( async () => {
+        this.editGame.start();
+        try {
+          await scene.init();
+          scene.start();
+          scene.update(0);
+        }
+        catch (err) {
+          console.log( `Error calling update(): `, err );
+        }
+        scene.render();
+      } );
+    },
 
     thawEditScene( sceneData:any ) {
       try {
@@ -314,6 +312,12 @@ export default defineComponent({
 
       this.playing = false;
       this.paused = false;
+
+      // If the editor was hidden while the game was reloaded, we need
+      // to re-initialize it in order to get the correct canvas size.
+      if ( !this.editGame ) {
+        this.initializeEditor();
+      }
     },
 
     ondelete( event:KeyboardEvent, update:boolean=true ) {
