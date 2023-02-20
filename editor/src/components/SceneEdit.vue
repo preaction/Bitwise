@@ -126,9 +126,13 @@ export default defineComponent({
   watch: {
     isBuilding(isBuilding) {
       if ( isBuilding ) {
-        if ( this.playing ) {
+        // XXX: Restoring the playState of the scene only works if all
+        // of the Systems know how to do it right, and I'm not sure
+        // I know how to do it right: init() creates a set of objects,
+        // but then thaw() creates a wholly different set of objects...
+        /* if ( this.playing ) {
           this.playState = this.playScene.freeze();
-        }
+        } */
       }
       else {
         // Update the editor game
