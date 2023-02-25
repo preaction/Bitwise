@@ -25,6 +25,7 @@ import System from './System.js';
 import NullSystem from './system/Null.js';
 import NullComponent from './component/Null.js';
 import Entity from './Entity.js';
+import ProgressEvent from './event/ProgressEvent.js';
 
 // SceneState is the current state of the scene.
 export enum SceneState {
@@ -49,7 +50,12 @@ type SceneData = {
   systems: any[],
 };
 
-export default class Scene extends three.EventDispatcher {
+export declare interface Scene {
+  addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
+  addEventListener(event: string, listener: Function): this;
+}
+
+export class Scene extends three.EventDispatcher {
   name:string = 'New Scene';
   game:any;
   state:SceneState = SceneState.Stop;
@@ -296,6 +302,20 @@ export default class Scene extends three.EventDispatcher {
     const system = new cons( name, this );
     system.thaw( data );
     this.systems.push(system);
+    system.addEventListener( 'progress', (progress:ProgressEvent) => this.addProgress( name, progress ) );
+  }
+
+  private systemProgress:{ [key:string]: ProgressEvent } = {};
+  protected addProgress( name:string, progress:ProgressEvent ) {
+    this.systemProgress[name] = progress;
+    const sceneProgress = new ProgressEvent();
+    Object.values(this.systemProgress).forEach(
+      p => {
+        sceneProgress.loaded += p.loaded;
+        sceneProgress.total += p.total;
+      }
+    );
+    this.dispatchEvent(sceneProgress);
   }
 
   /**
@@ -336,3 +356,5 @@ export default class Scene extends three.EventDispatcher {
     this.eids.splice( this.eids.indexOf(id), 1 );
   }
 }
+
+export default Scene;

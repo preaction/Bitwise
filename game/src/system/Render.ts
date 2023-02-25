@@ -14,6 +14,7 @@ import UIButtonComponent from '../component/UIButton.js';
 import UIContainerComponent from '../component/UIContainer.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import { ResizeEvent } from '../Game.js';
+import ProgressEvent from '../event/ProgressEvent.js';
 
 /**
  * The Render class handles rendering most Three.JS Object3D objects.
@@ -62,6 +63,11 @@ export default class Render extends System {
   textures:three.Texture[] = [];
   materials:three.Material[] = [];
   loader = new three.TextureLoader();
+
+  /**
+   * The current load progress during init().
+   */
+  private progress:ProgressEvent = new ProgressEvent();
 
   constructor( name:string, scene:Scene ) {
     super(name, scene);
@@ -148,6 +154,9 @@ export default class Render extends System {
     for ( const eid of elementEids ) {
       this.createUINode(eid);
     }
+
+    // Fire first progress event to establish baseline
+    this.dispatchEvent( this.progress );
 
     return Promise.all( promises );
   }
@@ -426,12 +435,20 @@ export default class Render extends System {
     if ( !path ) {
       throw `Unknown texture ID ${textureId} (${forEid})`;
     }
+    this.progress.total++;
     return new Promise(
       (resolve, reject) => {
         const texture = this.loader.load( path, resolve, undefined, reject ) 
         this.textures[textureId] = texture;
       },
-    )
+    ).then( (value: any) => {
+      this.progress.loaded++;
+      this.dispatchEvent(this.progress);
+      if ( this.progress.loaded == this.progress.total ) {
+        this.progress = new ProgressEvent();
+      }
+      return value;
+    });
   }
 
   update( timeMilli:number ) {
