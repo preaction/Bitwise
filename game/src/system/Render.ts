@@ -13,7 +13,7 @@ import UITextComponent from '../component/UIText.js';
 import UIButtonComponent from '../component/UIButton.js';
 import UIContainerComponent from '../component/UIContainer.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
-import { ResizeEvent } from '../Game.js';
+import ResizeEvent from '../event/ResizeEvent.js';
 import ProgressEvent from '../event/ProgressEvent.js';
 
 /**
@@ -69,6 +69,8 @@ export default class Render extends System {
    */
   private progress:ProgressEvent = new ProgressEvent();
 
+  /**
+   */
   constructor( name:string, scene:Scene ) {
     super(name, scene);
 

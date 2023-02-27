@@ -3,6 +3,13 @@ import * as bitecs from 'bitecs';
 import ActiveComponent from './component/Active.js';
 import Scene from './Scene.js';
 
+/**
+ * Entity is a single "thing" in a {@link Scene}. Entity objects are
+ * mainly an ID used to look up data in a {@link Component}. Entities
+ * can be attached to {@link Component}s, which are then used by {@link
+ * System} classes to provide some behavior (render a sprite, provide
+ * physics, etc...)
+ */
 export default class Entity {
   id:number;
   type:string = "Entity";
@@ -35,6 +42,8 @@ export default class Entity {
     }
   }
 
+  /**
+   */
   constructor(scene:Scene, id:number) {
     this.scene = scene;
     this.id = id;

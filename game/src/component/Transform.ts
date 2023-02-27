@@ -2,6 +2,10 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Defines an entity's transformation in 3D space, including translation
+ * (position), rotation, and scale.
+ */
 export default class Transform extends Component {
   declare store:{
     x: number[],

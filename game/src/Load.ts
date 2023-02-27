@@ -1,13 +1,14 @@
-/**
- * The Load class handles registering asset paths for components to use.
- * Since components work only with numbers, this class maps paths to
- * numeric IDs that can be looked up by systems when needed.
- */
 
 import * as three from 'three';
 
 const DEFAULT_TEXTURE = "data:image/webp;base64,UklGRkAAAABXRUJQVlA4TDMAAAAv/8A/AA/wEP5zxv9cf/6DB2TSNvNvuleZgrGI/pNN2pAH0nbrCYiIvffoe+y9x/3/HQAA";
 
+/**
+ * The Load class handles loading files and registering asset paths for
+ * {@link Component} classes to use. Since components work only with
+ * numbers, this class maps paths to numeric IDs that can be looked up
+ * by {@link System} objects when needed.
+ */
 export default class Load extends three.EventDispatcher {
   /**
    * The base URL to prefix to any URL that does not contain a scheme

@@ -21,6 +21,12 @@ const COLLISION_FLAGS = {
   CF_NO_CONTACT_RESPONSE: 4,
 };
 
+/**
+ * The Physics system provides a 3D physics simulation using the Ammo.js
+ * library (a port of the Bullet physics engine). Entities can add
+ * {@link component.RigidBody} and {@link component.BoxCollider} components to be part of
+ * the physics simulation.
+ */
 export default class Physics extends System {
   static Broadphase = {
     AxisSweep: 0,

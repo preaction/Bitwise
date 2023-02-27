@@ -2,6 +2,9 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Adds a UI-style image to a {@link UIElement}.
+ */
 export default class UIImage extends Component {
   declare store:{
     imageId: number[],

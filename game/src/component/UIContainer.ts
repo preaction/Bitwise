@@ -2,8 +2,12 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Declares a {@link UIElement} as a container and controls how to lay
+ * out the element's children.
+ */
 export default class UIContainer extends Component {
-  declare store:{
+  declare store: {
   };
   get componentData() {
     return {

@@ -6,7 +6,7 @@ import InputSystem from '../Input.js';
 import RenderSystem from '../Render.js';
 import Transform from '../../component/Transform.js';
 import OrthographicCameraComponent from '../../component/OrthographicCamera.js';
-import { ResizeEvent } from '../../Game.js';
+import ResizeEvent from '../../event/ResizeEvent.js';
 
 const raycaster = new three.Raycaster();
 raycaster.layers.set(1);
@@ -24,7 +24,6 @@ const pointer = new three.Vector3();
  * * Click and drag the scene to move the view.
  * * Click to select objects. Selected objects may be dragged or moved
  *   with the arrow keys.
- *
  */
 export default class Render extends RenderSystem {
   /**

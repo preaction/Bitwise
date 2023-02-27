@@ -18,7 +18,8 @@ export type Pointer = {
 /**
  * The Input system handles pointer (mouse or touch) and keyboard input.
  * First, choose what input to track by calling one of the watch
- * commands. Then, the state of that input can be queried
+ * commands. Then, the state of that input can be queried on the state
+ * properties.
  */
 export default class Input extends System {
   protected watchingKeys:{ [key:string]: Set<string> } = {};
@@ -27,6 +28,7 @@ export default class Input extends System {
   /**
    * key holds the state of any keys added to the watch list. "true" if
    * the key is down, "false" if not.
+   * @category state
    */
   key:{ [key:string]: boolean } = {};
 
@@ -34,6 +36,7 @@ export default class Input extends System {
    * keypress holds the keys that have been pressed since the last
    * update cycle. Once the update cycle is finished, the keypress is
    * removed until the key is up and then down again.
+   * @category state
    */
   keypress:{ [key:string]: boolean } = {};
 
@@ -42,6 +45,7 @@ export default class Input extends System {
    * tracked. A mouse pointer is considered active while it is over the
    * game canvas. A touch pointer is considered active while it is
    * pressed.
+   * @category state
    */
   pointers:Pointer[] = [];
 
@@ -54,6 +58,7 @@ export default class Input extends System {
 
   /**
    * Start collecting input from the game canvas.
+   * @category lifecycle
    */
   start() {
     this.scene.addEventListener( 'afterRender', this.clearKeypresses.bind(this) );
@@ -75,6 +80,7 @@ export default class Input extends System {
   /**
    * Stop collecting input from the game canvas. No further changes will
    * be made to the input monitors.
+   * @category lifecycle
    */
   stop() {
     if ( this._downHandler ) {
@@ -119,6 +125,7 @@ export default class Input extends System {
 
   /**
    * Add your own custom event listener to the game canvas element.
+   * @category watch
    */
   on( event:string, fn:(e:Event) => void ) {
     this.scene.game.canvas.addEventListener( event, fn );
@@ -126,13 +133,14 @@ export default class Input extends System {
 
   /**
    * Remove your custom event listener from the game canvas element.
+   * @category watch
    */
   off( event:string, fn:(e:Event) => void ) {
     this.scene.game.canvas.removeEventListener( event, fn );
   }
 
   /**
-   * Register a key to watch. Watched keys are recorded in the <keys>
+   * Register a key to watch. Watched keys are recorded in the {@link keys}
    * property: A value of "true" means the key is down.
    *
    * Key values come from the browser's KeyboardEvent
@@ -145,6 +153,7 @@ export default class Input extends System {
    *
    * @param key The key to watch.
    * @param alias An alias to give the key.
+   * @category watch
    */
   watchKey( key:string, alias:string='' ) {
     if ( !(key in this.watchingKeys) ) {
@@ -154,8 +163,8 @@ export default class Input extends System {
   }
 
   /**
-   * Register a key to watch for presses. Similar to watchKey, watched
-   * key pressed will be recorded in the keypress property: A value of
+   * Register a key to watch for presses. Similar to {@link watchKey}, watched
+   * key pressed will be recorded in the {@link keypress} property: A value of
    * "true" means the key's state changed to "down" during this update
    * cycle. Once the current update cycle is complete, the key is no
    * longer considered pressed unless the key goes "up" and then "down"
@@ -171,12 +180,13 @@ export default class Input extends System {
    *
    * @param key The key to watch.
    * @param alias An alias to give the key.
+   * @category watch
    */
-  watchKeypress( key:string, alias:string='' ) {
-    if ( !(key in this.watchingKeypresses) ) {
+  watchKeypress(key: string, alias: string = '') {
+    if (!(key in this.watchingKeypresses)) {
       this.watchingKeypresses[key] = new Set();
     }
-    this.watchingKeypresses[key].add( alias || key );
+    this.watchingKeypresses[key].add(alias || key);
   }
 
   protected clearKeypresses() {
@@ -189,8 +199,9 @@ export default class Input extends System {
    * pointers to track can be provided (any additional pointers on the
    * device will be ignored).
    *
-   * Pointer state is tracked in the <pointers> array of Pointer
+   * Pointer state is tracked in the {@link pointers} array of Pointer
    * objects.
+   * @category watch
    */
   watchPointer( count:number=0 ) {
     if ( !count ) {

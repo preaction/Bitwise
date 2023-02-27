@@ -10,7 +10,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./system": "./dist/system/index.js",
-    "./component": "./dist/component/index.js"
+    "./component": "./dist/component/index.js",
+    "./event": "./dist/event/index.js"
   },
   "scripts": {
     "build": "tsc",

@@ -4,11 +4,6 @@ import * as bitecs from 'bitecs';
 import Scene from './Scene.js';
 import Component from './Component.js';
 
-export declare interface System {
-  addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
-  addEventListener(event: string, listener: Function): this;
-}
-
 /**
  * System is the main way to customize game behavior. All game mechanics
  * will be implemented in System classes. Systems are registered on the
@@ -18,6 +13,9 @@ export class System extends three.EventDispatcher {
   name:string;
   scene:Scene;
   isNull:boolean = false;
+
+  /**
+   */
   constructor( name:string, scene:Scene ) {
     super();
     this.name = name;
@@ -146,6 +144,11 @@ export class System extends three.EventDispatcher {
    * system's settings. The opposite of freeze().
    */
   thaw(data:any) { }
+}
+
+export declare interface System {
+  addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
+  addEventListener(event: string, listener: Function): this;
 }
 
 export default System;

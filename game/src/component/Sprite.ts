@@ -2,6 +2,10 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Adds a sprite texture to a game object. Sprites are unique in that
+ * they always face the camera and cannot be rotated.
+ */
 export default class Sprite extends Component {
   declare store:{
     textureId: number[],

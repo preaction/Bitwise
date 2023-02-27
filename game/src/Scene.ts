@@ -1,3 +1,51 @@
+import * as three from 'three';
+import * as bitecs from 'bitecs';
+import Component from './Component.js';
+import System from './System.js';
+import NullSystem from './system/Null.js';
+import NullComponent from './component/Null.js';
+import Entity from './Entity.js';
+import ProgressEvent from './event/ProgressEvent.js';
+
+/**
+ * SceneState is the current state of the scene.
+ * @enum
+ */
+export enum SceneState {
+  /**
+   * Stop means the scene is not rendering or updating.
+   */
+  Stop = "STOP",
+  /**
+   * Start means the scene is getting ready to start. The scene will get
+   * one call to render() at the next frame and then its state will be
+   * set to Run.
+   */
+  Start = "START",
+  /**
+   * Run means the scene is getting update() and render() calls, in that
+   * order.
+   */
+  Run = "RUN", // Scene is rendering and updating
+  /**
+   * Pause means the scene is getting render() calls, but not update()
+   * calls.
+   */
+  Pause = "PAUSE",
+}
+
+type SceneData = {
+  name: string,
+  entities: Array<{[key:string]:any}>,
+  components: string[],
+  systems: any[],
+};
+
+export declare interface Scene {
+  addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
+  addEventListener(event: string, listener: Function): this;
+}
+
 /**
  * Scene is the top level of Three.JS Object3D. It also contains
  * a BitECS World, contains the Entities, and holds on to the BitECS
@@ -18,43 +66,6 @@
  *           and the scene begins recieving update() calls.
  *  stop   - This stops the scene.
  */
-import * as three from 'three';
-import * as bitecs from 'bitecs';
-import Component from './Component.js';
-import System from './System.js';
-import NullSystem from './system/Null.js';
-import NullComponent from './component/Null.js';
-import Entity from './Entity.js';
-import ProgressEvent from './event/ProgressEvent.js';
-
-// SceneState is the current state of the scene.
-export enum SceneState {
-  // Stop means the scene is not rendering or updating.
-  Stop = "STOP",
-  // Start means the scene is getting ready to start. The scene will get
-  // one call to render() at the next frame and then its state will be
-  // set to Run.
-  Start = "START",
-  // Run means the scene is getting update() and render() calls, in that
-  // order.
-  Run = "RUN", // Scene is rendering and updating
-  // Pause means the scene is getting render() calls, but not update()
-  // calls.
-  Pause = "PAUSE",
-}
-
-type SceneData = {
-  name: string,
-  entities: Array<{[key:string]:any}>,
-  components: string[],
-  systems: any[],
-};
-
-export declare interface Scene {
-  addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
-  addEventListener(event: string, listener: Function): this;
-}
-
 export class Scene extends three.EventDispatcher {
   name:string = 'New Scene';
   game:any;
@@ -75,6 +86,8 @@ export class Scene extends three.EventDispatcher {
   entities:{ [key:number]: Entity } = {};
   eids:number[] = [];
 
+  /**
+   */
   constructor( game:any ) {
     super();
     this.game = game;

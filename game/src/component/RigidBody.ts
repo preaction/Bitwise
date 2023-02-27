@@ -2,6 +2,12 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Add the entity to the physics simulation (provided by the {@link
+ * system.Physics} system). A rigid body can be moved with physics forces.
+ * Entities should also get a collider component (like {@link
+ * BoxCollider}) to be able to collide with other physical objects.
+ */
 export default class RigidBody extends Component {
   declare store:{
     mass: number[],

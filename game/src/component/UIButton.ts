@@ -2,6 +2,9 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Adds a button to a {@link UIElement}.
+ */
 export default class UIButton extends Component {
   declare store:{
   };

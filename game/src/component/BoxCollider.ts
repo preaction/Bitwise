@@ -2,6 +2,13 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Adds a box-shaped collision area to an entity. Colliders are used by
+ * the {@link system.Physics} system to provide the entity a volume. Entities
+ * that also have the {@link RigidBody} component are movable and have
+ * mass. Entities without a body are static, like platforms or
+ * obstacles.
+ */
 export default class BoxCollider extends Component {
   declare store:{
     trigger: number[],

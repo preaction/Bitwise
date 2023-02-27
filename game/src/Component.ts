@@ -1,11 +1,34 @@
 
 import Scene from './Scene.js';
 
+/**
+ * A Component is a set of data that can be attached to an {@link Entity}. Component
+ * data is used by a {@link System} to provide behavior.
+ *
+ * A single Component instance stores data for all {@link Entity}
+ * objects in a {@link Scene}. Data can be put in the {@link store} or
+ * in custom attributes in the Component subclass.
+ */
 export default abstract class Component {
   world:any;
+
+  /**
+   * The store handles high-performance component data as an object of
+   * pre-allocated, typed arrays. Data in the store can only be numeric
+   * (integers or floats). The type of array to create is declared by
+   * {@link componentData}.
+   *
+   * Component classes can also declare their own properties to store
+   * arbitrary data like strings or objects.
+   */
   store:{ [key:string]: Array<number> }
   scene:Scene;
   isNull:boolean = false;
+
+  /**
+   * Returns a mapping of property to data type. Data types are defined
+   * by bitecs.Types.
+   */
   get componentData():Object { return {} };
 
   constructor( scene:Scene, world:any ) {
@@ -17,12 +40,23 @@ export default abstract class Component {
     return '';
   }
   /**
-   * isHidden allows this component to be hidden from the editor.
+   * isHidden allows this component to be hidden from the editor. Hidden
+   * components cannot be added in the editor and will not appear in the
+   * editor if they are defined on the entity.
    */
   static isHidden:boolean = false;
+
+  /**
+   * Add an entity to this component. Override this method in a subclass
+   * to set up default values for component properties.
+   */
   addEntity( eid:number ) {
     this.scene.game.ecs.addComponent( this.world, this.store, eid );
   }
+
+  /**
+   * Remove an entity from this component.
+   */
   removeEntity( eid:number ) {
     this.scene.game.ecs.removeComponent( this.world, this.store, eid );
   }

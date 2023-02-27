@@ -2,6 +2,8 @@
 import * as three from 'three';
 import Tileset from './Tileset.js';
 
+/**
+ */
 export class Tile extends three.Mesh {
   tileset: Tileset;
   tileIndex: number;

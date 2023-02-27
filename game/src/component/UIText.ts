@@ -2,7 +2,10 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
-export default class UIImage extends Component {
+/**
+ * Adds text to a {@link UIElement}.
+ */
+export default class UIText extends Component {
   declare store:{
   };
   get componentData() {

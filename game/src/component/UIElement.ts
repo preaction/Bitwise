@@ -2,6 +2,10 @@
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
 
+/**
+ * Declare an entity as a UI element. UI elements are rendered
+ * differently from other entities.
+ */
 export default class UIElement extends Component {
   declare store:{
     backgroundColor: number[],

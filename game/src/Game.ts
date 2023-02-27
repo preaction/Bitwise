@@ -52,14 +52,6 @@ const DEFAULT_COMPONENTS = {
 };
 
 /**
- * ResizeEvent is dispatched by Game when the canvas element is resized.
- */
-export interface ResizeEvent extends three.Event {
-  width: number;
-  height: number;
-};
-
-/**
  * Game is main game container. Games are made up of one or many Scenes.
  * Any number of Scenes may be active at once.
  */
@@ -93,6 +85,8 @@ export default class Game extends three.EventDispatcher {
   // XXX: define game constructor options object type
   get config():any { return {} }
 
+  /**
+   */
   constructor( opt:any ) {
     super();
     const conf = this.config;
@@ -293,3 +287,4 @@ export default class Game extends three.EventDispatcher {
     return scene;
   }
 }
+
