@@ -334,12 +334,24 @@ export default class Render extends System {
     if ( imageId ) {
       let img = node.querySelector('img');
       if ( !img ) {
+        // Add an invisible image to take up the necessary room absent
+        // an explicit width/height
         img = document.createElement( 'img' );
+        img.style.visibility = 'hidden';
+        img.style.display = 'block';
         node.appendChild( img );
       }
       if ( img.dataset.imageId != imageId.toString() ) {
         img.src = this.scene.game.load.base + this.scene.game.load.texturePaths[imageId];
         img.dataset.imageId = imageId.toString();
+        node.style.backgroundImage = `url(${img.src}`;
+        const fillType = this.uiImageComponent.fill[eid];
+        if ( fillType === 'stretch' ) {
+          node.style.backgroundSize = '100% 100%';
+        }
+        else {
+          node.style.backgroundRepeat = fillType;
+        }
       }
     }
 

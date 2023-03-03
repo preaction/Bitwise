@@ -1,0 +1,222 @@
+{
+  "name": "Loader",
+  "components": [
+    "Transform",
+    "Sprite",
+    "OrthographicCamera",
+    "RigidBody",
+    "BoxCollider",
+    "UI"
+  ],
+  "systems": [
+    {
+      "name": "Input",
+      "data": {}
+    },
+    {
+      "name": "Render",
+      "data": {}
+    }
+  ],
+  "entities": [
+    {
+      "path": "Camera",
+      "type": "Camera",
+      "components": {
+        "Transform": {
+          "z": 2000,
+          "rw": 1,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "OrthographicCamera": {
+          "frustum": 10,
+          "zoom": 1,
+          "near": 0,
+          "far": 2000
+        }
+      }
+    },
+    {
+      "path": "Progress Container/Progress Bar",
+      "components": {
+        "Transform": {
+          "sx": "1",
+          "sy": "1",
+          "sz": 1,
+          "rx": "0",
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "z": "0",
+          "y": "",
+          "x": ""
+        },
+        "UIElement": {
+          "width": "0%",
+          "height": "",
+          "backgroundColor": "#0000000",
+          "borderWidth": "",
+          "borderColor": "#000000",
+          "borderStyle": "none",
+          "borderRadius": "",
+          "margin": "",
+          "padding": ""
+        },
+        "UIContainer": {
+          "flow": "row",
+          "justify": "space-between",
+          "align": "stretch"
+        }
+      },
+      "active": true
+    },
+    {
+      "path": "Progress Container/Progress Bar/Left End",
+      "components": {
+        "Transform": {
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "x": ""
+        },
+        "UIElement": {
+          "width": "",
+          "height": "",
+          "backgroundColor": "#00000000",
+          "borderWidth": "",
+          "borderColor": "#000000",
+          "borderStyle": "none",
+          "borderRadius": "",
+          "margin": "",
+          "padding": ""
+        },
+        "UIImage": {
+          "imagePath": "ui/barHorizontal_green_left.png",
+          "fill": "repeat-x"
+        }
+      },
+      "active": true
+    },
+    {
+      "path": "Progress Container/Progress Bar/Middle",
+      "components": {
+        "Transform": {},
+        "UIElement": {
+          "width": "100%",
+          "height": "",
+          "backgroundColor": "#00000000",
+          "borderWidth": "",
+          "borderColor": "#000000",
+          "borderStyle": "none",
+          "borderRadius": "",
+          "margin": "",
+          "padding": ""
+        },
+        "UIImage": {
+          "imagePath": "ui/barHorizontal_green_mid.png",
+          "fill": "repeat-x"
+        }
+      },
+      "active": true
+    },
+    {
+      "path": "Loading...",
+      "components": {
+        "UIElement": {
+          "width": "300px",
+          "height": "",
+          "backgroundColor": "#0000000",
+          "borderWidth": "",
+          "borderColor": "#000000",
+          "borderStyle": "none",
+          "borderRadius": "",
+          "margin": "",
+          "padding": ""
+        },
+        "UIText": {
+          "text": "Loading...",
+          "align": "center"
+        },
+        "Transform": {
+          "sx": "0.05",
+          "sy": "0.05",
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "y": "1",
+          "x": ""
+        }
+      },
+      "active": true
+    },
+    {
+      "path": "Progress Container",
+      "components": {
+        "Transform": {
+          "sx": "0.05",
+          "sy": "0.05",
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "y": "-1",
+          "x": "0",
+          "z": "0"
+        },
+        "UIElement": {
+          "width": "300px",
+          "height": "",
+          "backgroundColor": "#00000000",
+          "borderWidth": "",
+          "borderColor": "#000000",
+          "borderStyle": "none",
+          "borderRadius": "",
+          "margin": "",
+          "padding": ""
+        },
+        "UIContainer": {
+          "flow": "row",
+          "justify": "start",
+          "align": "stretch"
+        }
+      },
+      "active": true
+    },
+    {
+      "path": "Progress Container/Progress Bar/Right End",
+      "active": true,
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "UIElement": {
+          "backgroundColor": "#00000000"
+        },
+        "UIImage": {
+          "imagePath": "ui/barHorizontal_green_right.png",
+          "fill": "stretch"
+        }
+      },
+      "entities": []
+    }
+  ],
+  "component": "SceneEdit"
+}
