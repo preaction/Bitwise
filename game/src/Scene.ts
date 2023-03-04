@@ -44,6 +44,8 @@ type SceneData = {
 export declare interface Scene {
   addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
   addEventListener(event: string, listener: Function): this;
+  removeEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
+  removeEventListener(event: string, listener: Function): this;
 }
 
 /**

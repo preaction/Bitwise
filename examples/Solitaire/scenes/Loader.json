@@ -16,6 +16,13 @@
     {
       "name": "Render",
       "data": {}
+    },
+    {
+      "name": "Loader",
+      "data": {
+        "loadScenePath": "scenes/Klondike.json",
+        "progressEntityPath": "Progress Container/Progress Bar"
+      }
     }
   ],
   "entities": [
