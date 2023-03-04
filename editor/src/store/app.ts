@@ -444,6 +444,7 @@ export const useAppStore = defineStore('app', {
           const component = this.components[name];
           if ( component.editorComponent ) {
             const path = this.currentProject + '/' + component.editorComponent;
+            console.log( `Loading editor component for component ${name}: ${path}` );
             this.componentForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
           }
         }
@@ -452,6 +453,7 @@ export const useAppStore = defineStore('app', {
           const system = this.systems[name];
           if ( system.editorComponent ) {
             const path = this.currentProject + '/' + system.editorComponent;
+            console.log( `Loading editor component for system ${name}: ${path}` );
             this.systemForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
           }
         }

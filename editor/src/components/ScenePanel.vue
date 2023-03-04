@@ -343,7 +343,10 @@ export default defineComponent({
         return;
       }
       this.scene.addSystem( name );
-      this.sceneData.systems.push( this.scene.systems[ this.scene.systems.length - 1 ].freeze() );
+      this.sceneData.systems.push({
+        name,
+        data: this.scene.systems[ this.scene.systems.length - 1 ].freeze(),
+      });
       this.update();
     },
 
