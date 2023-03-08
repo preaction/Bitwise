@@ -402,7 +402,7 @@ export default class Render extends System {
    * event listeners.
    */
   stop() {
-    // XXX
+    this.objects.forEach( (obj:three.Object3D) => obj.removeFromParent() );
     this.stopActionListener();
   }
 

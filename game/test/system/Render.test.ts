@@ -82,7 +82,7 @@ describe( 'Render', () => {
     expect( threeSprite ).toBeDefined();
   } );
 
-  test.failing( 'stop() removes objects from three scene', async () => {
+  test( 'stop() removes objects from three scene', async () => {
     await system.init();
     system.start();
     system.stop();
