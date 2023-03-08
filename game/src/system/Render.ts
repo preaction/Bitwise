@@ -430,7 +430,7 @@ export default class Render extends System {
     if ( !this.actionListener ) {
       this.actionListener = this.dispatchAction.bind(this);
     }
-    this.scene.game.ui.renderer.domElement.addEventListener( "click", this.actionListener );
+    this.scene.game.ui?.renderer.domElement.addEventListener( "click", this.actionListener );
   }
 
   /**
@@ -438,7 +438,7 @@ export default class Render extends System {
    * added by addUIAction.
    */
   stopActionListener():void {
-    this.scene.game.ui.renderer.domElement.removeEventListener( "click", this.actionListener );
+    this.scene.game.ui?.renderer.domElement.removeEventListener( "click", this.actionListener );
   }
 
   /**
@@ -537,6 +537,7 @@ export default class Render extends System {
       frustumSize /-2,
       near, far,
     );
+    camera.name = this.scene.getEntityById(eid).path;
     this.cameras[eid] = this.objects[eid] = camera;
     this.updateTransform( eid );
     this.updateCamera( eid );
@@ -569,6 +570,7 @@ export default class Render extends System {
     }
     const material = this.materials[eid] = new three.SpriteMaterial( { map: texture } );
     const sprite = this.objects[eid] = new three.Sprite( material );
+    sprite.name = this.scene.getEntityById(eid).path;
     sprite.userData.eid = eid;
     sprite.layers.enable(1);
     this.updateTransform( eid );

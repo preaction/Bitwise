@@ -1,6 +1,9 @@
 import type { Config } from 'jest';
 const config: Config = {
   preset: 'ts-jest/presets/default-esm',
+  silent: false,
+  verbose: true,
+  useStderr: true,
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
