@@ -3,6 +3,8 @@ import { defineComponent, toRaw } from "vue";
 import { mapStores } from 'pinia';
 import { useAppStore } from "../store/app";
 export default defineComponent({
+  props: [ 'modelValue' ],
+  emits: [ 'update:modelValue' ],
   data() {
     return {
       release: {
@@ -10,7 +12,7 @@ export default defineComponent({
           scene: '',
         },
       },
-      ...this.$modelValue,
+      ...toRaw(this.modelValue),
     };
   },
   computed: {

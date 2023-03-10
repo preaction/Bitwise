@@ -1,6 +1,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 export default defineComponent({
+  props: [ 'modelValue' ],
+  emits: [ 'update:modelValue' ],
   data() {
     return {
       ...this.$modelValue,
