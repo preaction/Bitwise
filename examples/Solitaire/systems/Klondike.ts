@@ -185,6 +185,7 @@ export default class Klondike extends System {
     // Load the Deck prefab textures and materials
     this.cardBackTextureId = this.scene.game.load.texture( cardBackImage );
 
+    const promises = [] as Promise<any>[];
     const deckTransform = this.deckEntity.getComponent( "Transform" );
     for ( let suit = 0; suit < suits.length; suit++ ) {
       for ( let rank = 0; rank < ranks.length; rank++ ) {
@@ -199,6 +200,7 @@ export default class Klondike extends System {
           stack: -1,
           foundation: -1,
         };
+        promises.push( this.Render.loadTexture( card.faceImage ) );
 
         entity.name = `${suits[suit]}_${ranks[rank]}`;
         entity.addComponent( "Transform", {
@@ -226,6 +228,8 @@ export default class Klondike extends System {
     this.Render.addUIAction( "newGame", this.newGame.bind(this) );
     this.Render.addUIAction( "restartGame", this.restartGame.bind(this) );
     this.Render.addUIAction( "undo", this.undo.bind(this) );
+
+    return promises;
   }
 
   newGame() {
