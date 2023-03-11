@@ -49,8 +49,10 @@ export default class Input extends System {
    */
   pointers:Pointer[] = [];
 
-  private _downHandler:null|((e:KeyboardEvent) => void) = null;
-  private _upHandler:null|((e:KeyboardEvent) => void) = null;
+  /**
+   * The registered DOM event handlers being managed by this system.
+   */
+  private handlers: {[key: string]: Function} = {};
 
   constructor( name:string, scene:Scene ) {
     super(name, scene);
@@ -64,16 +66,16 @@ export default class Input extends System {
     this.scene.addEventListener( 'afterRender', this.clearKeypresses.bind(this) );
     this.scene.addEventListener( 'afterRender', this.clearButtonPresses.bind(this) );
     this.scene.game.canvas.tabIndex = 1;
-    this.scene.game.canvas.addEventListener( 'keydown', this._downHandler = this.keydown.bind(this) );
-    this.scene.game.canvas.addEventListener( 'keyup', this._upHandler = this.keyup.bind(this) );
-    this.scene.game.canvas.onpointerover = this.pointerbegin.bind(this);
-    this.scene.game.canvas.onpointerenter = this.pointerbegin.bind(this);
-    this.scene.game.canvas.onpointerdown = this.pointerdown.bind(this);
-    this.scene.game.canvas.onpointermove = this.pointerchange.bind(this);
-    this.scene.game.canvas.onpointerup = this.pointerchange.bind(this);
-    this.scene.game.canvas.onpointercancel = this.pointerend.bind(this);
-    this.scene.game.canvas.onpointerout = this.pointerend.bind(this);
-    this.scene.game.canvas.onpointerleave = this.pointerend.bind(this);
+    this.scene.game.canvas.addEventListener( 'keydown', this.handlers.keydown = this.keydown.bind(this) );
+    this.scene.game.canvas.addEventListener( 'keyup', this.handlers.keyup = this.keyup.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointerover', this.handlers.pointerover = this.pointerbegin.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointerenter', this.handlers.pointerenter = this.pointerbegin.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointerdown', this.handlers.pointerdown = this.pointerdown.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointermove', this.handlers.pointermove = this.pointerchange.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointerup', this.handlers.pointerup = this.pointerchange.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointercancel', this.handlers.pointercancel = this.pointerend.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointerout', this.handlers.pointerout = this.pointerend.bind(this) );
+    this.scene.game.canvas.addEventListener( 'pointerleave', this.handlers.pointerleave = this.pointerend.bind(this) );
     this.scene.game.canvas.style.touchAction = "none";
   }
 
@@ -83,23 +85,13 @@ export default class Input extends System {
    * @category lifecycle
    */
   stop() {
-    if ( this._downHandler ) {
-      this.scene.game.canvas.removeEventListener( 'keydown', this._downHandler );
-      this._downHandler = null;
+    for ( const eventName in this.handlers ) {
+      if ( !this.handlers[eventName] ) {
+        continue;
+      }
+      this.scene.game.canvas.removeEventListener( eventName, this.handlers[eventName] );
+      delete this.handlers[eventName];
     }
-    if ( this._upHandler ) {
-      this.scene.game.canvas.removeEventListener( 'keyup', this._upHandler );
-      this._upHandler = null;
-    }
-    this.scene.game.canvas.onpointerover = null;
-    this.scene.game.canvas.onpointerenter = null;
-    this.scene.game.canvas.onpointerdown = null;
-    this.scene.game.canvas.onpointermove = null;
-    this.scene.game.canvas.onpointerup = null;
-    this.scene.game.canvas.onpointercancel = null;
-    this.scene.game.canvas.onpointerout = null;
-    this.scene.game.canvas.onpointerleave = null;
-    this.scene.game.canvas.style.touchAction = "unset";
   }
 
   protected keydown(e:KeyboardEvent) {
@@ -128,6 +120,8 @@ export default class Input extends System {
    * @category watch
    */
   on( event:string, fn:(e:Event) => void ) {
+    // XXX: This handler should be managed: it should be added if/when
+    // the system is started, and removed when the system is stopped.
     this.scene.game.canvas.addEventListener( event, fn );
   }
 
@@ -136,6 +130,8 @@ export default class Input extends System {
    * @category watch
    */
   off( event:string, fn:(e:Event) => void ) {
+    // XXX: This handler should be managed: it should be added if/when
+    // the system is started, and removed when the system is stopped.
     this.scene.game.canvas.removeEventListener( event, fn );
   }
 
@@ -205,7 +201,7 @@ export default class Input extends System {
    */
   watchPointer( count:number=0 ) {
     if ( !count ) {
-      count = navigator.maxTouchPoints;
+      count = isNaN(navigator.maxTouchPoints) ? 0 : navigator.maxTouchPoints;
       // Add mouse if detected
       if ( matchMedia('(pointer:fine)').matches ) {
         count++;
