@@ -91,4 +91,20 @@ describe( 'Render', () => {
     expect( threeScene.children ).toHaveLength( 0 );
   } );
 
+  test.skip('adds UIElement to UI scene', async () => {
+    // XXX: Skipped because we do not mock enough of WebGL
+    // For this to work, webgl-mock-threejs would need to fix some bits
+    // of WebGL mocking for new things threejs does during init, _and_
+    // the HTMLCanvasElement constructor would need to return a jsdom
+    // element that additionally mocks the other stuff.
+    await scene.game.start();
+
+    const uiElement = scene.addEntity();
+    uiElement.addComponent( 'UIElement', {} );
+    await system.init();
+
+    const uiCanvas = scene.game.ui.renderer.domElement;
+    expect(uiCanvas.querySelector('div')).toBeDefined();
+    console.log( uiCanvas );
+  });
 });
