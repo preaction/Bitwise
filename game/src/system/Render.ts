@@ -362,6 +362,8 @@ export default class Render extends System {
       let span = node.querySelector('span');
       if ( !span ) {
         span = document.createElement( 'span' );
+        // XXX: Allow color in UIText component
+        span.style.color = 'white';
         node.appendChild(span);
       }
       if ( span.innerText != text ) {
