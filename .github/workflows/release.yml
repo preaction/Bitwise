@@ -19,6 +19,12 @@ jobs:
         with:
           node-version: 19
 
+      - name: Build game library
+        working-directory: ./game/
+        run: npm install && npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+
       - name: Build/release Electron app
         working-directory: ./editor/
         run: npm install && npm run build && npx electron-builder
