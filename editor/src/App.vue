@@ -294,7 +294,7 @@ export default defineComponent({
       await this.loadSessionState();
     }
     if ( !this.currentProject ) {
-      this.$refs['projectDialog'].open();
+      this.$nextTick( () => this.$refs['projectDialog'].open() );
     }
     electron.on( 'error', (ev, err) => console.error(err) );
     electron.on( 'info', (ev, msg) => console.log(msg) );
@@ -307,7 +307,7 @@ export default defineComponent({
 <template>
   <div class="app-container">
     <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise">
-      <ProjectSelect @select="load" />
+      <ProjectSelect @select="load" data-test="project-select" />
     </Modal>
 
     <div class="app-sidebar">

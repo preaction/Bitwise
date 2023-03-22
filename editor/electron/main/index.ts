@@ -25,7 +25,8 @@ if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
 // Set application name for Windows 10+ notifications
 if (process.platform === 'win32') app.setAppUserModelId(app.getName())
 
-if (!app.requestSingleInstanceLock()) {
+// Allow "test" NODE_ENV to run as many times as it wants
+if ( (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development' ) && !app.requestSingleInstanceLock()) {
   app.quit()
   process.exit(0)
 }

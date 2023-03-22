@@ -8,10 +8,11 @@ declare module '*.vue' {
 }
 
 type DirectoryItem = {
-  path: string,
   name: string,
   ext: string,
+  path: string,
   icon: string,
+  dragtype: string,
   children?: DirectoryItem[],
 };
 
@@ -47,9 +48,11 @@ declare var electron: {
   removeListener: ( channel:string, cb:Function ) => void;
   deleteTree: ( root:string, path:string ) => Promise<void>;
   renamePath: ( root:string, path:string, dest:string ) => Promise<void>;
-  buildProject: ( root:string, src:string ) => Promise<string>;
+  buildProject: ( root:string ) => Promise<string>;
+  releaseProject: ( root:string, type:string ) => Promise<string>;
   openEditor: ( root:string, file:string ) => Promise<string>;
   listExamples: () => Promise<string[]>;
+  importFiles: ( root:string ) => Promise<OpenDialog[]>;
 };
 
 declare module 'vue3-sfc-loader' {

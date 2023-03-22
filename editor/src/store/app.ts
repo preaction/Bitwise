@@ -33,15 +33,6 @@ type Tab = {
   name: string,
 }
 
-type DirectoryItem = {
-  name: string,
-  ext: string,
-  path: string,
-  icon: string,
-  dragtype: string,
-  children?: DirectoryItem[],
-};
-
 const templates:{ [key:string]: (name:string) => string } = {
   'Component.ts': (name:string):string => {
     return `
@@ -157,7 +148,7 @@ type AppState = {
   systemForms: { [key:string]: any },
   buildTimeout: any,
   _fsWatcher: any,
-  _pendingChanges: [],
+  _pendingChanges: Array<{eventType: string, filename: string}>,
 };
 
 export const useAppStore = defineStore('app', {
@@ -470,7 +461,10 @@ export const useAppStore = defineStore('app', {
       this.openProject(res.filePath);
     },
 
-    async releaseProject( type:string ):Promise<void> {
+    async releaseProject( type:string ):Promise<any> {
+      if ( !this.currentProject ) {
+        return;
+      }
       return electron.releaseProject( this.currentProject, type );
     },
 
@@ -567,7 +561,7 @@ export const useAppStore = defineStore('app', {
           items.splice( i, 1 );
           break;
         }
-        items = items[i].children;
+        items = items[i].children ?? [];
       }
       return electron.deleteTree( this.currentProject, path );
     },
@@ -581,11 +575,17 @@ export const useAppStore = defineStore('app', {
     },
 
     importFiles() {
+      if ( !this.currentProject ) {
+        return [];
+      }
       return electron.importFiles( this.currentProject );
     },
   },
 });
 
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useAppStore, import.meta.hot))
-}
+// XXX: This doesn't work with our current Jest setup, and we're going
+// to get rid of Pinia anyway since it's not really necessary if editors
+// access the electron object directly...
+// if (import.meta?.hot) {
+//   import.meta.hot.accept(acceptHMRUpdate(useAppStore, import.meta.hot))
+// }
