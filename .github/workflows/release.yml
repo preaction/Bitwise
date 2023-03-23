@@ -34,6 +34,7 @@ jobs:
 
       - name: Release Electron app
         working-directory: ./editor/
-        run: npx electron-builder
+        run: ln -s ../node_modules && npx electron-builder
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
