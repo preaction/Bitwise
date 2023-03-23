@@ -4,5 +4,5 @@
     "composite": true,
     "module": "nodenext"
   },
-  "include": ["vite.config.ts", "electron/**/*"]
+  "include": ["package.json", "vite.config.ts", "electron/**/*"]
 }

@@ -16,7 +16,7 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    electron({
+    electron.default({
       main: {
         entry: 'electron/main/index.ts',
         vite: withDebug({

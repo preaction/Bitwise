@@ -1,0 +1,14 @@
+{
+  "workspaces": [
+    "game",
+    "editor"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "concurrently --kill-others 'npm run dev --workspace game' 'npm run dev --workspace editor'",
+    "test": "npm run test:unit --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}

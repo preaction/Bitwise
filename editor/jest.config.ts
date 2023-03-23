@@ -16,9 +16,7 @@ const common: Config = {
       'ts-jest',
       {
         useESM: true,
-        tsconfig: {
-          module: "esnext",
-        },
+        tsconfig: 'tsconfig.app.json',
       },
     ],
     "^.+\\.vue$": "@vue/vue3-jest",

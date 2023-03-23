@@ -2,12 +2,23 @@
   "extends": "@vue/tsconfig/tsconfig.web.json",
   "compilerOptions": {
     "composite": true,
-    "module": "esnext",
-    "moduleResolution": "nodenext"
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "nodenext",
+    "importHelpers": false,
+    "jsx": "preserve",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
   },
   "include": [
-    "env.d.ts",
-    "src/**/*.ts",
-    "src/**/*.vue"
+    "src/env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "test/**/*",
+    "test/**/*.vue"
   ]
 }

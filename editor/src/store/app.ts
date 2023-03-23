@@ -6,7 +6,7 @@
 import * as Vue from 'vue';
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { loadModule } from 'vue3-sfc-loader';
-import { Game, Component, System } from '@fourstar/bitwise';
+import type { Game, Component, System } from '@fourstar/bitwise';
 
 // Core Component Forms
 import TransformEdit from '../components/bitwise/Transform.vue';

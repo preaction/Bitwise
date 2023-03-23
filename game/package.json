@@ -15,8 +15,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest",
-    "watch": "tsc --watch"
+    "test:unit": "jest",
+    "dev": "tsc --watch --preserveWatchOutput"
   },
   "keywords": [
     "gamedev"

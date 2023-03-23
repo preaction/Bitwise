@@ -19,14 +19,21 @@ jobs:
         with:
           node-version: 19
 
-      - name: Build game library
-        working-directory: ./game/
-        run: npm install && npm run build
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
 
-      - name: Build/release Electron app
+      - name: Run tests
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm test
+
+      - name: Release Electron app
         working-directory: ./editor/
-        run: npm install && npm run build && npx electron-builder
+        run: npx electron-builder
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
