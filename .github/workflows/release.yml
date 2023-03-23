@@ -57,9 +57,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
 
+      - name: Fix electron-builder node_modules
+        if: matrix.os == 'windows-latest'
+        working-directory: ./editor/
+        run: cp -R ../node_modules node_modules
+        shell: bash
+
+      - name: Fix electron-builder node_modules
+        if: matrix.os != 'windows-latest'
+        run: ln -s ../node_modules ./editor/node_modules
+
       - name: Release Electron app
         working-directory: ./editor/
-        run: ln -s ../node_modules && npx electron-builder
-        shell: bash
+        run: npx electron-builder
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
