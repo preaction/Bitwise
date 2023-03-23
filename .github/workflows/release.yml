@@ -3,6 +3,36 @@ name: Build/release
 on: push
 
 jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        # windows fails due to jest configuration?
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 19
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+
+      - name: Run tests
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm test
+
   release:
     runs-on: ${{ matrix.os }}
 
@@ -26,11 +56,6 @@ jobs:
         run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
-
-      - name: Run tests
-        uses: coactions/setup-xvfb@v1
-        with:
-          run: npm test
 
       - name: Release Electron app
         working-directory: ./editor/
