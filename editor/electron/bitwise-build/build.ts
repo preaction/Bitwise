@@ -45,9 +45,16 @@ export async function build( root:string, dest:string, opt:{ [key:string]:any }=
   return ctx.rebuild();
 }
 
-export function check(root:string):ChildProcess {
+export async function check(root:string):Promise<ChildProcess> {
   // Check for typescript errors
-  const tsc = path.resolve( root, 'node_modules/typescript/bin/tsc' );
+  let tsc = path.resolve( root, 'node_modules/typescript/bin/tsc' );
+  try {
+    await fs.access(tsc)
+  }
+  catch (err) {
+    tsc = path.resolve( process.resourcesPath, 'node_modules/typescript/bin/tsc' );
+    await fs.access(tsc)
+  }
   const cp = fork( tsc, [ '--noEmit' ], {
     cwd: root,
     stdio: 'overlapped',

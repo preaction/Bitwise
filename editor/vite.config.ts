@@ -1,6 +1,7 @@
 import { rmSync } from 'fs'
 import { join } from 'path'
-import { defineConfig, Plugin, UserConfig } from 'vite'
+import { defineConfig } from 'vite'
+import type { Plugin, UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron'
 import pkg from './package.json'

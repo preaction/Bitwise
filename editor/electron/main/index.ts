@@ -380,7 +380,7 @@ ipcMain.handle('bitwise-build-project', async (event, root) => {
     });
   }
 
-  const cp = bitwise.check( root );
+  const cp = await bitwise.check( root );
   cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
   cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
   cp.on('error', (err) => {

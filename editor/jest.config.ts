@@ -32,12 +32,14 @@ const config: Config = {
     {
       ...common,
       "testMatch": ["**/test/unit/electron/**"],
+      "testPathIgnorePatterns": ["<rootDir>/out"],
       "runner": "@kayahr/jest-electron-runner/main",
       "testEnvironment": "node",
     },
     {
       ...common,
       "testMatch": ["**/test/unit/src/**"],
+      "testPathIgnorePatterns": ["<rootDir>/out"],
       "runner": "@kayahr/jest-electron-runner",
       "testEnvironment": "@kayahr/jest-electron-runner/environment",
     },

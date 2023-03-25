@@ -1,17 +1,16 @@
-name: Build/release
+name: Build/test
 
-on:
-  create:
-    tags:
-      - v*
+on: push
 
 jobs:
-  release:
+  test:
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        # windows fails due to jest configuration?
+        #os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest]
 
     steps:
       - name: Check out Git repository
@@ -30,7 +29,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
 
-      - name: Release Electron app
-        run: npm run -w editor publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
+      - name: Run tests
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm test
+
