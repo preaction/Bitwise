@@ -53,8 +53,8 @@ export default defineComponent({
   <div class="project-select">
     <button v-if="hasStoredState" class="primary resume-project" @click="loadStoredState">Resume {{storedStateProject}}</button>
     <div class="project-buttons">
-      <button @click="newProject">Create Project...</button>
-      <button @click="openProject()">Open Project...</button>
+      <button data-test="newProject" @click="newProject">Create Project...</button>
+      <button data-test="openProject" @click="openProject()">Open Project...</button>
       <MenuButton title="View Example...">
         <ul>
           <li v-for="example, i in examples" @click="openExample(example.path)">{{example.name}}</li>
