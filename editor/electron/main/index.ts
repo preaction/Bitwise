@@ -288,13 +288,13 @@ ipcMain.handle('bitwise-new-file', ( event, root, name, ext, data ) => {
   );
 });
 
-ipcMain.handle('bitwise-save-file', (event, path, data) => {
+ipcMain.handle('bitwise-save-file', (event, root, item, data) => {
   // XXX: Write to new file then rename to avoid losing data
-  return fs.writeFile( path, data );
+  return fs.writeFile( path.join(root, item), data );
 });
 
-ipcMain.handle('bitwise-read-file', (event, path) => {
-  return fs.readFile( path, { encoding: 'utf8' } );
+ipcMain.handle('bitwise-read-file', (event, root, item) => {
+  return fs.readFile( path.join(root, item), { encoding: 'utf8' } );
 });
 
 ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {

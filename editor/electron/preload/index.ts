@@ -28,11 +28,11 @@ contextBridge.exposeInMainWorld('electron', {
   newProject() {
     return ipcRenderer.invoke('bitwise-new-project');
   },
-  readProject( path:string ) {
-    return ipcRenderer.invoke('bitwise-read-project', path);
+  readProject( root:string ) {
+    return ipcRenderer.invoke('bitwise-read-project', root);
   },
-  readFile( path:string ) {
-    return ipcRenderer.invoke('bitwise-read-file', path);
+  readFile( root:string, path:string ) {
+    return ipcRenderer.invoke('bitwise-read-file', root, path);
   },
   importFiles( root:string ) {
     return ipcRenderer.invoke('bitwise-import-files', root);
@@ -40,8 +40,8 @@ contextBridge.exposeInMainWorld('electron', {
   newFile( path:string, name:string, ext:string, data:any ) {
     return ipcRenderer.invoke('bitwise-new-file', path, name, ext, data);
   },
-  saveFile( path:string, data:any ) {
-    return ipcRenderer.invoke('bitwise-save-file', path, data);
+  saveFile( root:string, path:string, data:string ) {
+    return ipcRenderer.invoke('bitwise-save-file', root, path, data);
   },
   on( channel:string, cb:(...args:any[])=>void ) {
     return ipcRenderer.on( channel, cb );

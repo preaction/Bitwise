@@ -479,14 +479,14 @@ export const useAppStore = defineStore('app', {
       if ( !this.currentProject ) {
         throw "No current project";
       }
-      return electron.readFile( this.currentProject + '/' + path );
+      return electron.readFile( this.currentProject, path );
     },
 
     saveFile( path:string, data:Object ) {
       if ( !this.currentProject ) {
         throw "No current project";
       }
-      return electron.saveFile( this.currentProject + '/' + path, data )
+      return electron.saveFile( this.currentProject, path, data )
         .then( res => {
           // XXX: Oh, this is just absolutely wrong: We're not always
           // saving only the current tab when we run saveFile()
@@ -534,7 +534,7 @@ export const useAppStore = defineStore('app', {
             }
             const name = fileName.substring( 0, fileName.indexOf('.') );
             const template = templates[ templateName ](name);
-            await electron.saveFile( this.currentProject + '/' + path, template );
+            await electron.saveFile( project, path, template );
             this.openEditor(path);
           }
         });

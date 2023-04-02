@@ -8,11 +8,7 @@ declare module '*.vue' {
 }
 
 type DirectoryItem = {
-  name: string,
-  ext: string,
   path: string,
-  icon: string,
-  dragtype: string,
   children?: DirectoryItem[],
 };
 
@@ -41,9 +37,9 @@ declare var electron: {
   openProject: () => Promise<OpenDialog>;
   newProject: () => Promise<SaveDialog>;
   readProject: (path: string) => Promise<DirectoryItem[]>;
-  readFile: (path: string) => Promise<string>;
+  readFile: (root: string, path: string) => Promise<string>;
   newFile: ( path:string, name:string, ext:string, data:any ) => Promise<SaveDialog>;
-  saveFile: ( path:string, data:any ) => Promise<SaveDialog>;
+  saveFile: (root: string, path:string, data:any ) => Promise<void>;
   on: ( channel:string, cb:Function ) => void;
   removeListener: ( channel:string, cb:Function ) => void;
   deleteTree: ( root:string, path:string ) => Promise<void>;

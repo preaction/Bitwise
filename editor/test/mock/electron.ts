@@ -23,14 +23,14 @@ class MockElectron {
   readProject(path:string):Promise<DirectoryItem[]> {
     return new Promise( () => [] );
   }
-  readFile(path: string):Promise<string> {
+  readFile(root:string, path: string):Promise<string> {
     return new Promise( () => "" );
   }
   newFile( path:string, name:string, ext:string, data:any ):Promise<SaveDialog> {
     return new Promise( () => ({ canceled: false, filePath: "" }) );
   }
-  saveFile( path:string, data:any ):Promise<SaveDialog> {
-    return new Promise( () => ({ canceled: false, filePath: "" }) );
+  saveFile( root:string, path:string, data:any ):Promise<void> {
+    return new Promise( val => val );
   }
   on( channel:string, cb:Function ) {
     return null;
