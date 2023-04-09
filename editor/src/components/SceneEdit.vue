@@ -1,8 +1,8 @@
 <script lang="ts">
 import { defineComponent, shallowReactive, toRaw, markRaw } from "vue";
 import { mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.js";
-import { Game, Scene } from '@fourstar/bitwise';
+import { useAppStore } from "../store/app.mts";
+import type { Game, Scene } from '@fourstar/bitwise';
 import ScenePanel from './ScenePanel.vue';
 
 /**
@@ -31,7 +31,7 @@ export default defineComponent({
   props: ['modelValue', 'name', 'edited'],
   data() {
     return {
-      sceneData: JSON.parse( JSON.stringify( this.modelValue ) ),
+      sceneData: JSON.parse( JSON.stringify( this.modelValue ?? {} ) ),
       playing: false,
       paused: false,
       editScene: null,

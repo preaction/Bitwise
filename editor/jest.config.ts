@@ -8,11 +8,11 @@ const common: Config = {
   transformIgnorePatterns: [
     'node_modules/(?!three/examples/jsm/.*)',
   ],
-  moduleFileExtensions: ['vue', 'js', 'ts'],
+  moduleFileExtensions: ['vue', 'js', 'ts', 'mts'],
   transform: {
     // '^.+\\.[tj]sx?$' to process js/ts with `ts-jest`
     // '^.+\\.m?[tj]sx?$' to process js/ts/mjs/mts with `ts-jest`
-    '^.+\\.tsx?$': [
+    '^.+\\.m?tsx?$': [
       'ts-jest',
       {
         useESM: true,

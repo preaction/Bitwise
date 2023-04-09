@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { mapStores, mapState, mapGetters, mapActions } from 'pinia';
-import { useAppStore } from '../store/app.ts';
+import { useAppStore } from '../store/app.mts';
 import MenuButton from './MenuButton.vue';
 
 export default defineComponent({

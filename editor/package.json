@@ -7,7 +7,6 @@
   "author": "Doug Bell",
   "license": "MIT",
   "repository": "https://github.com/preaction/bitwise",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",

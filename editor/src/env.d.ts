@@ -38,7 +38,7 @@ declare var electron: {
   newProject: () => Promise<SaveDialog>;
   readProject: (path: string) => Promise<DirectoryItem[]>;
   readFile: (root: string, path: string) => Promise<string>;
-  newFile: ( path:string, name:string, ext:string, data:any ) => Promise<SaveDialog>;
+  newFile: ( path:string, name:string, ext:string ) => Promise<SaveDialog>;
   saveFile: (root: string, path:string, data:any ) => Promise<void>;
   on: ( channel:string, cb:Function ) => void;
   removeListener: ( channel:string, cb:Function ) => void;

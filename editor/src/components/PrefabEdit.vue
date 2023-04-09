@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw, shallowReactive } from "vue";
 import { mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.ts";
+import { useAppStore } from "../store/app.mts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 import ScenePanel from './ScenePanel.vue';
 import * as three from 'three';

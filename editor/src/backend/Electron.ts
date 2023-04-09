@@ -2,9 +2,6 @@ import type Backend from '../Backend.js';
 import Project from '../Project.js';
 import ProjectItem from '../ProjectItem.js';
 
-// XXX: First, make backend with test
-// XXX: Then, make Tab class with test
-// XXX: Then, switch editor tabs to use tab class
 export default class Electron implements Backend {
   private projects:{ [key:string]: Project } = {};
   async listProjects():Promise<Project[]> {

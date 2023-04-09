@@ -26,7 +26,7 @@ class MockElectron {
   readFile(root:string, path: string):Promise<string> {
     return new Promise( () => "" );
   }
-  newFile( path:string, name:string, ext:string, data:any ):Promise<SaveDialog> {
+  newFile( path:string, name:string, ext:string ):Promise<SaveDialog> {
     return new Promise( () => ({ canceled: false, filePath: "" }) );
   }
   saveFile( root:string, path:string, data:any ):Promise<void> {

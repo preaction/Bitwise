@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { mapActions } from 'pinia';
-import { useAppStore } from "../store/app.ts";
+import { useAppStore } from "../store/app.mts";
 export default defineComponent({
   props: ['modelValue'],
   methods: {

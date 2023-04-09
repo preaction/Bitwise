@@ -264,7 +264,6 @@ export const useAppStore = defineStore('app', {
     },
 
     openTab( tab:Tab ) {
-      // XXX: If tab lacks icon, add icon based on Component
       this.openTabs.push( tab );
       this.showTab( this.openTabs.length - 1 );
     },
@@ -358,45 +357,7 @@ export const useAppStore = defineStore('app', {
       }
 
       // XXX: Map component to icon class
-      this.projectItems = await electron.readProject(this.currentProject)
-        .then( async items => {
-          const ignore = (item:DirectoryItem) => {
-            return !item.path.match( /(?:^|\/)\./ ) &&
-              !item.path.match(/(?:^|\/)node_modules(?:$|\/)/) &&
-              !item.path.match(/^(tsconfig|bitwise|package(-lock)?)\.json$/);
-          };
-          const descend = async (item:DirectoryItem) => {
-            if ( item.children && item.children.length ) {
-              // Descend
-              item.children = await Promise.all( item.children.filter( ignore ).map(i => descend(i)) );
-            }
-            else if ( item.ext.match( /\.(?:png|jpe?g|gif)$/ ) ) {
-              item.icon = 'fa-image';
-              item.dragtype = 'image';
-            }
-            else if ( item.ext.match( /\.(?:md|markdown)$/ ) ) {
-              item.icon = 'fa-file-lines';
-              item.dragtype = 'markdown';
-            }
-            else if ( item.ext.match( /\.[jt]s$/ ) ) {
-              item.icon = 'fa-file-code';
-              item.dragtype = 'module';
-            }
-            else if ( item.ext.match( /\.vue$/ ) ) {
-              item.icon = 'fa-file-edit';
-              item.dragtype = 'vue';
-            }
-            else if ( item.ext.match( /\.json$/ ) ) {
-              const json = await this.readFile( item.path );
-              const data = JSON.parse( json );
-              const comp = data.component;
-              item.icon = this.icons[ comp ];
-              item.dragtype = this.dragtypes[ comp ];
-            }
-            return item;
-          };
-          return Promise.all( items.filter( ignore ).map( descend ) );
-        });
+      this.projectItems = await electron.readProject(this.currentProject);
     },
 
     async buildProject() {
@@ -503,10 +464,11 @@ export const useAppStore = defineStore('app', {
         throw "No current project";
       }
       const project = this.currentProject;
-      return electron.newFile( this.currentProject, name, ext, data )
-        .then( res => {
+      return electron.newFile( this.currentProject, name, ext )
+        .then( async ( res ) => {
           if ( !res.canceled ) {
             const name = res.filePath.split('/').pop() as string;
+            await this.saveFile( name, data );
             const tab = this.openTabs[ this.currentTabIndex ];
             tab.name = name;
             tab.src = res.filePath.replace( project, '' );
@@ -524,7 +486,7 @@ export const useAppStore = defineStore('app', {
       }
       const ext = templateName.substring( templateName.lastIndexOf( '.' )+1 );
       const project = this.currentProject;
-      return electron.newFile( this.currentProject, name, ext, '' )
+      return electron.newFile( this.currentProject, name, ext )
         .then( async res => {
           if ( !res.canceled ) {
             const path = res.filePath.replace( project, '' );
@@ -554,10 +516,10 @@ export const useAppStore = defineStore('app', {
       // Pre-delete item from projectItems
       const pathParts = path.split( '/' );
       let items = this.projectItems;
-      while ( pathParts.length ) {
-        const findName = pathParts.shift();
-        const i = items.findIndex( (item:DirectoryItem) => item.name === findName );
-        if ( !pathParts.length ) {
+      for ( let depth = 0; depth < pathParts.length; depth++ ) {
+        const findPath = pathParts.slice(0, depth+1).join('/');
+        const i = items.findIndex( (item:DirectoryItem) => item.path === findPath );
+        if ( depth == pathParts.length ) {
           items.splice( i, 1 );
           break;
         }

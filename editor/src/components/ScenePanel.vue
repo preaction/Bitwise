@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
 import { mapStores, mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.ts";
+import { useAppStore } from "../store/app.mts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 import MenuButton from "./MenuButton.vue";
 

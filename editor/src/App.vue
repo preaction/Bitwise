@@ -2,7 +2,7 @@
 import * as bootstrap from "bootstrap";
 import { defineComponent, markRaw, toRaw } from "vue";
 import { mapStores, mapState, mapActions, mapGetters } from 'pinia';
-import { useAppStore } from "./store/app.ts";
+import { useAppStore } from "./store/app.mts";
 import NewTab from "./components/NewTab.vue";
 import ObjectTree from "./components/ObjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";

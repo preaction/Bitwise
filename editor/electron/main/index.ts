@@ -264,11 +264,10 @@ app.whenReady().then(() => {
   })
 })
 
-ipcMain.handle('bitwise-new-file', ( event, root, name, ext, data ) => {
+ipcMain.handle('bitwise-new-file', ( event, root, name, ext ) => {
   if ( !win ) {
     return;
   }
-  // XXX: Ensure extension on filename
   return dialog.showSaveDialog(win, {
     defaultPath: path.join( root, name ),
     filters: [ { name: ext, extensions: [ext] } ],
@@ -276,12 +275,8 @@ ipcMain.handle('bitwise-new-file', ( event, root, name, ext, data ) => {
   })
   .then(
     (res) => {
-      if ( res.filePath ) {
-        if ( !res.filePath.match( "\\." + ext + "$" ) ) {
-          res.filePath += '.' + ext;
-        }
-        // XXX: Write to new file then rename to avoid losing data
-        return fs.writeFile( res.filePath, data ).then( () => res );
+      if ( res.filePath && !res.filePath.match( "\\." + ext + "$" ) ) {
+        res.filePath += '.' + ext;
       }
       return res
     },

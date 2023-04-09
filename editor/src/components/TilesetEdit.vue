@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.ts";
+import { useAppStore } from "../store/app.mts";
 
 type Tileset = {
   imageSrc: string,
