@@ -4,13 +4,13 @@ import ProjectItem from '../ProjectItem.js';
 
 export default class Electron implements Backend {
   private projects:{ [key:string]: Project } = {};
-  async listProjects():Promise<Project[]> {
+  async listProjects():Promise<string[]> {
     // List the most recent projects
     const projectNames = electron.store.get( 'app', 'recentProjects', [] )
-    return projectNames.map( (name:string) => this.projects[name] = new Project(this, name) );
+    return projectNames;
   }
 
-  async openProject(projectName:string):Promise<void> {
+  async openProject(projectName:string):Promise<Project> {
     // Update the recent projects list
     const projectNames = electron.store.get( 'app', 'recentProjects', [] )
     const i = projectNames.indexOf( projectName );
@@ -21,6 +21,22 @@ export default class Electron implements Backend {
     // Keep the last few projects only
     projectNames.length = Math.min( projectNames.length, 5 );
     electron.store.set( 'app', 'recentProjects', projectNames );
+    return new Project(this, projectName);
+  }
+
+  async saveProject(project:Project):Promise<void> {
+    const jsonData = JSON.stringify( project.state );
+    return this.writeItemData( project.name, "bitwise.json", jsonData );
+  }
+
+  async buildProject(projectName:string):Promise<string> {
+    const gameFile = await electron.buildProject( projectName );
+    return gameFile;
+  }
+
+  async releaseProject(projectName:string, releaseType:string):Promise<void> {
+    await electron.releaseProject( projectName, releaseType );
+    return;
   }
 
   async listItems( projectName:string ):Promise<ProjectItem[]> {
@@ -49,7 +65,7 @@ export default class Electron implements Backend {
         itemType = 'editorComponent';
       }
       else if ( dirItem.path.match( /\.json$/ ) ) {
-        const json = await this.readItem( projectName, dirItem.path );
+        const json = await this.readItemData( projectName, dirItem.path );
         const data = JSON.parse( json );
         itemType = data.component;
       }
@@ -71,18 +87,26 @@ export default class Electron implements Backend {
   }
 
   // read
-  async readItem( projectName:string, itemPath:string ):Promise<string> {
+  async readItemData( projectName:string, itemPath:string ):Promise<string> {
     return electron.readFile( projectName, itemPath );
   }
 
   // write
-  async writeItem( projectName:string, itemPath:string, data:string ):Promise<void> {
+  async writeItemData( projectName:string, itemPath:string, data:string ):Promise<void> {
     return electron.saveFile( projectName, itemPath, data );
   }
 
   // delete
   async deleteItem( projectName:string, itemPath:string ):Promise<void> {
     return electron.deleteTree( projectName, itemPath );
+  }
+
+  async getState( stateName:string, defaultValue:any ):Promise<any>{
+    return electron.store.get( "app", stateName, defaultValue );
+  }
+
+  async setState( stateName:string, data:any ):Promise<void> {
+    return electron.store.set( "app", stateName, data );
   }
 }
 

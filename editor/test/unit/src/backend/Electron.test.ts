@@ -22,12 +22,7 @@ describe( 'backend/Electron', () => {
     test( 'should list recent projects', async () => {
       const backend = new ElectronBackend();
       const result = await backend.listProjects();
-      expect(result).toHaveLength(2);
-      result.forEach( (_, i) => {
-        expect(result[i]).toBeInstanceOf(Project);
-      });
-      expect(result[0].name).toBe(givenProjects[0]);
-      expect(result[1].name).toBe(givenProjects[1]);
+      expect(result).toEqual(givenProjects);
     } );
   });
 
@@ -42,6 +37,14 @@ describe( 'backend/Electron', () => {
       mockGetStore.mockReset();
       mockGetStore.mockReturnValue( [...givenProjects] );
       mockSetStore.mockClear();
+    } );
+
+    test( 'should return project object', async () => {
+      const backend = new ElectronBackend();
+      const projectName = "newProject";
+      const project = await backend.openProject(projectName);
+      expect(project).toBeInstanceOf(Project);
+      expect(project.name).toBe(projectName);
     } );
 
     test( 'should append new projects to recent projects', async () => {
@@ -156,7 +159,7 @@ describe( 'backend/Electron', () => {
     } );
   });
 
-  describe( 'readItem()', () => {
+  describe( 'readItemData()', () => {
     const mockReadFile = jest.fn() as jest.MockedFunction<typeof global.electron.readFile>;
     beforeEach( () => {
       global.electron.readFile = mockReadFile;
@@ -173,13 +176,13 @@ describe( 'backend/Electron', () => {
       });
 
       const backend = new ElectronBackend();
-      const gotData = await backend.readItem( "project", "item.json" );
+      const gotData = await backend.readItemData( "project", "item.json" );
       expect(mockReadFile).toHaveBeenCalledWith("project", "item.json");
       expect(gotData).toBe( itemData[0]);
     });
   });
 
-  describe( 'writeItem()', () => {
+  describe( 'writeItemData()', () => {
     const mockSaveFile = jest.fn() as jest.MockedFunction<typeof global.electron.saveFile>;
     beforeEach( () => {
       global.electron.saveFile = mockSaveFile;
@@ -188,7 +191,7 @@ describe( 'backend/Electron', () => {
 
     test( 'should write item data', async () => {
       const backend = new ElectronBackend();
-      await backend.writeItem( "project", "item.json", "data" );
+      await backend.writeItemData( "project", "item.json", "data" );
       expect(mockSaveFile).toHaveBeenCalledWith("project", "item.json", "data");
     });
   });
@@ -205,5 +208,82 @@ describe( 'backend/Electron', () => {
       await backend.deleteItem( "project", "item.json" );
       expect(mockDeleteTree).toHaveBeenCalledWith("project", "item.json");
     });
+  });
+
+  describe( 'saveProject()', () => {
+    const mockSaveFile = jest.fn() as jest.MockedFunction<typeof global.electron.saveFile>;
+    beforeEach( () => {
+      global.electron.saveFile = mockSaveFile;
+      mockSaveFile.mockReset();
+    } );
+
+    test( 'should write bitwise.json', async () => {
+      const backend = new ElectronBackend();
+      const project = new Project( backend, "newProject" );
+      await backend.saveProject( project );
+      expect( mockSaveFile ).toHaveBeenCalledWith( "newProject", "bitwise.json", "{}" );
+    } );
+  });
+
+  describe( 'buildProject()', () => {
+    const mockBuildProject = jest.fn() as jest.MockedFunction<typeof global.electron.buildProject>;
+    beforeEach( () => {
+      global.electron.buildProject = mockBuildProject;
+      mockBuildProject.mockReset();
+    } );
+
+    test( 'should build project', async () => {
+      const backend = new ElectronBackend();
+      await backend.buildProject( "buildProject" );
+      expect( mockBuildProject ).toHaveBeenCalledWith( "buildProject" );
+    } );
+  });
+
+  describe( 'releaseProject()', () => {
+    const mockReleaseProject = jest.fn() as jest.MockedFunction<typeof global.electron.releaseProject>;
+    beforeEach( () => {
+      global.electron.releaseProject = mockReleaseProject;
+      mockReleaseProject.mockReset();
+    } );
+
+    test( 'should release project', async () => {
+      const backend = new ElectronBackend();
+      await backend.releaseProject( "releaseProject", "zip" );
+      expect( mockReleaseProject ).toHaveBeenCalledWith( "releaseProject", "zip" );
+    } );
+  });
+
+  describe( 'getState()', () => {
+    const expectState = { key: "value" };
+    const mockStoreGet = jest.fn() as jest.MockedFunction<typeof global.electron.store.get>;
+    beforeEach( () => {
+      global.electron.store.get = mockStoreGet;
+      mockStoreGet.mockReset();
+      mockStoreGet.mockReturnValue( new Promise( (resolve) => resolve(expectState) ) );
+    } );
+
+    test( 'should read state', async () => {
+      const backend = new ElectronBackend();
+      const defaultValue = {};
+      const gotState = await backend.getState( "localState", defaultValue );
+      expect( gotState ).toEqual( expectState );
+      expect( mockStoreGet ).toHaveBeenCalledWith( "app", "localState", defaultValue );
+    } );
+  });
+
+  describe( 'setState()', () => {
+    const mockStoreSet = jest.fn() as jest.MockedFunction<typeof global.electron.store.set>;
+    beforeEach( () => {
+      global.electron.store.set = mockStoreSet;
+      mockStoreSet.mockReset();
+      mockStoreSet.mockReturnValue();
+    } );
+
+    test( 'should read state', async () => {
+      const expectState = { key: "value" };
+      const backend = new ElectronBackend();
+      await backend.setState( "localState", expectState );
+      expect( mockStoreSet ).toHaveBeenCalledWith( "app", "localState", expectState );
+    } );
   });
 });

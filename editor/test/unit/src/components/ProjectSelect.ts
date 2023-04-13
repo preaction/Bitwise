@@ -2,13 +2,16 @@ import {describe, expect, test, beforeEach, jest} from '@jest/globals';
 import { mount } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { MockElectron } from '../../../mock/electron.js';
+import MockBackend from '../../../mock/backend.js';
 import ProjectSelect from '../../../../src/components/ProjectSelect.vue';
 
+let backend:MockBackend;
 beforeEach( () => {
   global.electron = new MockElectron();
+  backend = new MockBackend();
 });
 
-describe('App', () => {
+describe('ProjectSelect', () => {
   test( 'create a new project', async () => {
     // Mock the electron.newProject function to return a path
     const dialogResult = {
@@ -20,6 +23,9 @@ describe('App', () => {
     global.electron.newProject = mockNewProject;
 
     const wrapper = mount(ProjectSelect, {
+      provide: {
+        backend,
+      },
       global: {
         plugins: [
           createPinia(),

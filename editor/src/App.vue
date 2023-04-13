@@ -1,8 +1,12 @@
 <script lang="ts">
 import * as bootstrap from "bootstrap";
-import { defineComponent, markRaw, toRaw } from "vue";
+import * as Vue from "vue";
 import { mapStores, mapState, mapActions, mapGetters } from 'pinia';
 import { useAppStore } from "./store/app.mts";
+import { loadModule } from 'vue3-sfc-loader';
+import Tab from './Tab.js';
+import Project from './Project.js';
+import ElectronBackend from './backend/Electron.js';
 import NewTab from "./components/NewTab.vue";
 import ObjectTree from "./components/ObjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
@@ -16,7 +20,27 @@ import MenuButton from "./components/MenuButton.vue";
 import Release from "./components/Release.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
 
-export default defineComponent({
+const vueLoaderOptions = {
+  moduleCache: {
+    vue: Vue,
+  },
+  async getFile(url:string) {
+    const res = await fetch(url);
+    if ( !res.ok ) {
+      throw Object.assign(new Error(res.statusText + ' ' + url), { res });
+    }
+    return {
+      getContentData: (asBinary:boolean) => asBinary ? res.arrayBuffer() : res.text(),
+    }
+  },
+  addStyle(textContent:string) {
+    const style = Object.assign(document.createElement('style'), { textContent });
+    const ref = document.head.getElementsByTagName('style')[0] || null;
+    document.head.insertBefore(style, ref);
+  },
+};
+
+export default Vue.defineComponent({
   components: {
     NewTab,
     ObjectTree,
@@ -32,16 +56,28 @@ export default defineComponent({
     Release,
   },
   data() {
+    const backend = new ElectronBackend();
     return {
+      gameFile: '',
+      gameClass: null,
+      components: [],
+      systems: [],
       consoleLogs: [],
       openConsole: false,
       consoleErrors: 0,
       consoleWarnings: 0,
+      backend,
+    };
+  },
+  provides() {
+    return {
+      backend: this.backend,
+      project: this.project,
     };
   },
   computed: {
     ...mapStores(useAppStore),
-    ...mapState(useAppStore, ['currentProject', 'currentTabIndex', 'openTabs', 'projectItems']),
+    ...mapState(useAppStore, ['project', 'currentTabIndex', 'openTabs', 'projectItems']),
     ...mapGetters(useAppStore, ['hasSessionState']),
     currentTab() {
       return this.openTabs[ this.currentTabIndex ];
@@ -49,22 +85,19 @@ export default defineComponent({
   },
   methods: {
     ...mapActions(useAppStore, ['loadSessionState', 'importFiles']),
-    updateTab(data:Object) {
-      this.currentTab.data = data;
-      this.currentTab.edited = true;
-    },
-    updateTabName(name:string) {
-      this.currentTab.name = name;
-      this.currentTab.edited = true;
+    updateTab(tab:Object) {
+      this.currentTab = tab;
     },
     showTab( index: number ) {
       this.appStore.showTab( index );
     },
-    load() {
+    load( projectName:string ) {
       this.$refs['projectDialog'].close();
+      this.project = this.backend.openProject( projectName );
     },
 
     newTab( name:string, component ) {
+      // New tab creates a new project item and then a tab to go with it
       this.appStore.openTab({
         name,
         component,
@@ -79,7 +112,9 @@ export default defineComponent({
       this.appStore.newModuleFromTemplate( name, template );
     },
 
-    async openTab( item ) {
+    async openTab( item:DirectoryItem ) {
+      const projectItem = this.project.readItem( item.path );
+      const tab = new Tab(projectItem);
       // Determine what kind of component to use
       const ext = item.ext;
       if ( ext === '.json' ) {
@@ -146,7 +181,7 @@ export default defineComponent({
         await this.appStore.newFile(
           tab.name,
           'json',
-          JSON.stringify( toRaw( tab.data ), null, 2 ),
+          JSON.stringify( Vue.toRaw( tab.data ), null, 2 ),
         );
         return;
       }
@@ -216,7 +251,7 @@ export default defineComponent({
         ext: 'json',
         icon: 'fa-gear',
         src: 'bitwise.json',
-        data: toRaw(this.appStore.gameConfig),
+        data: Vue.toRaw(this.appStore.gameConfig),
         edited: false,
       });
     },
@@ -228,7 +263,7 @@ export default defineComponent({
         icon: 'fa-file-export',
         edited: false,
         src: 'bitwise.json',
-        data: toRaw(this.appStore.gameConfig),
+        data: Vue.toRaw(this.appStore.gameConfig),
       });
     },
 
@@ -286,6 +321,56 @@ export default defineComponent({
             return;
         }
       }
+    },
+
+    async buildProject() {
+      const gameFile = await this.backend.buildProject( this.project.name );
+      if ( !gameFile ) {
+        throw 'Error building project';
+      }
+
+      try {
+        const mod = await import( /* @vite-ignore */ 'bfile://' + gameFile );
+        if ( this.gameFile ) {
+          electron.deleteTree( this.project.name, this.gameFile );
+        }
+        this.gameFile = gameFile;
+        this.gameClass = mod.default;
+      }
+      catch (e) {
+        console.error( `Could not load game class: ${e}` );
+      }
+
+      if ( this.gameClass ) {
+        try {
+          const game = new this.gameClass({});
+          this.components = game.components;
+          this.systems = game.systems;
+        }
+        catch (e) {
+          console.log( `Could not create new game: ${e}` );
+        }
+
+        for ( const name in this.components ) {
+          const component = this.components[name];
+          if ( component.editorComponent ) {
+            const path = this.currentProject + '/' + component.editorComponent;
+            console.log( `Loading editor component for component ${name}: ${path}` );
+            this.componentForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
+          }
+        }
+
+        for ( const name in this.systems ) {
+          const system = this.systems[name];
+          if ( system.editorComponent ) {
+            const path = this.currentProject + '/' + system.editorComponent;
+            console.log( `Loading editor component for system ${name}: ${path}` );
+            this.systemForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
+          }
+        }
+      }
+
+      this.isBuilding = false;
     },
 
   },
@@ -369,12 +454,10 @@ export default defineComponent({
 
     <component class="app-main" v-if="currentTab"
       ref="currentTab"
-      :is="currentTab.component" :edited="currentTab.edited"
+      :is="currentTab.component"
       :key="currentTab.src"
-      v-model:name="currentTab.name"
-      v-model="currentTab.data"
+      v-model="currentTab"
       @update:modelValue="updateTab"
-      @update:name="updateTabName"
       @save="saveTab"
     />
 

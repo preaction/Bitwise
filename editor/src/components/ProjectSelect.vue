@@ -1,10 +1,13 @@
 <script lang="ts">
+// XXX: Fix ProjectSelect, App, and other tab editors to work with Tab
+// objects
 import { defineComponent } from "vue";
 import { mapStores, mapState, mapGetters, mapActions } from 'pinia';
 import { useAppStore } from '../store/app.mts';
 import MenuButton from './MenuButton.vue';
 
 export default defineComponent({
+  inject: ['backend'],
   data() {
     return {
       recentProjects: [],
@@ -18,7 +21,7 @@ export default defineComponent({
   async mounted() {
     // Create a copy of the recent projects list so that it doesn't
     // immediately change when we select one
-    this.recentProjects = this.appStore.recentProjects.slice();
+    this.recentProjects = this.backend.listProjects().slice(0,5);
     this.examples = await electron.listExamples();
   },
   computed: {

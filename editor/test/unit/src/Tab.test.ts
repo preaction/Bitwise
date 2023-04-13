@@ -26,17 +26,17 @@ describe( 'Tab', () => {
   });
 
   describe( 'writeFile', () => {
-    const mockWriteItem = jest.fn() as jest.MockedFunction<typeof backend.writeItem>;
+    const mockWriteItemData = jest.fn() as jest.MockedFunction<typeof backend.writeItemData>;
     beforeEach( () => {
-      mockWriteItem.mockClear();
-      backend.writeItem = mockWriteItem;
+      mockWriteItemData.mockClear();
+      backend.writeItemData = mockWriteItemData;
     });
 
     test( 'should write file', async () => {
       const tab = new Tab(projectItem);
       const data = { component: "SceneEdit" };
       await tab.writeFile(data);
-      expect( backend.writeItem ).toHaveBeenCalledWith(
+      expect( backend.writeItemData ).toHaveBeenCalledWith(
         project.name, projectItem.path, JSON.stringify(data),
       );
     });
@@ -57,7 +57,7 @@ describe( 'Tab', () => {
       expect( global.electron.newFile ).toHaveBeenCalledWith(
         project.name, "", ".json",
       );
-      expect( backend.writeItem ).toHaveBeenCalledWith(
+      expect( backend.writeItemData ).toHaveBeenCalledWith(
         project.name, newFilePath, JSON.stringify(data),
       );
     });
@@ -74,7 +74,7 @@ describe( 'Tab', () => {
       tab.name = 'New Scene';
       const data = { component: "SceneEdit" };
       await tab.writeFile(data);
-      expect( backend.writeItem ).toHaveBeenCalledWith(
+      expect( backend.writeItemData ).toHaveBeenCalledWith(
         project.name, "scene/New Scene.json", JSON.stringify(data),
       );
       expect( backend.deleteItem ).toHaveBeenCalledWith(

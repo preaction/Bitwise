@@ -11,13 +11,13 @@ export default class ProjectItem {
     this.type = type;
   }
   async read():Promise<string> {
-    return this.project.backend.readItem( this.project.name, this.path );
+    return this.project.backend.readItemData( this.project.name, this.path );
   }
   async readJSON():Promise<any> {
     return this.read().then( data => JSON.parse(data) );
   }
   async write( data:string ):Promise<void> {
-    return this.project.backend.writeItem( this.project.name, this.path, data );
+    return this.project.backend.writeItemData( this.project.name, this.path, data );
   }
   async writeJSON( data:any ):Promise<void> {
     return this.write( JSON.stringify(data) );
