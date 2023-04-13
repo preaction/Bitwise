@@ -1,7 +1,7 @@
 
 import type IBackend from "../../src/Backend.js";
-import Project from "../../src/Project.js";
-import type ProjectItem from "../../src/ProjectItem.js";
+import Project from "../../src/model/Project.js";
+import type ProjectItem from "../../src/model/ProjectItem.js";
 
 export default class Backend implements IBackend {
   async listProjects():Promise<string[]> {

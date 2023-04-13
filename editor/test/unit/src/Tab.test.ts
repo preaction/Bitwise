@@ -1,9 +1,9 @@
 
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
 import { MockElectron } from '../../mock/electron.js';
-import Project from '../../../src/Project.js';
-import ProjectItem from '../../../src/ProjectItem.js';
-import Tab from '../../../src/Tab.js';
+import Project from '../../../src/model/Project.js';
+import ProjectItem from '../../../src/model/ProjectItem.js';
+import Tab from '../../../src/model/Tab.js';
 import MockBackend from '../../mock/backend.js';
 
 let backend:MockBackend, project:Project, projectItem:ProjectItem;

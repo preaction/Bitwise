@@ -2,7 +2,7 @@
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
 import { MockElectron } from '../../../mock/electron.js';
 import ElectronBackend from '../../../../src/backend/Electron.js';
-import Project from '../../../../src/Project.js';
+import Project from '../../../../src/model/Project.js';
 
 beforeEach( () => {
   global.electron = new MockElectron();

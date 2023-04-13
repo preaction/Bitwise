@@ -1,6 +1,6 @@
 
 import type ProjectItem from './ProjectItem.js';
-import type IBackend from './Backend.js';
+import type IBackend from '../Backend.js';
 
 // XXX: Now, make Tab class with test. Must create mock backend. Should
 // use Project and ProjectItem classes.

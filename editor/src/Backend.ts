@@ -1,5 +1,5 @@
-import type Project from "./Project.js";
-import type ProjectItem from "./ProjectItem.js";
+import type Project from "./model/Project.js";
+import type ProjectItem from "./model/ProjectItem.js";
 
 export default interface Backend {
   listProjects():Promise<string[]>;

@@ -1,6 +1,6 @@
 import type Backend from '../Backend.js';
-import Project from '../Project.js';
-import ProjectItem from '../ProjectItem.js';
+import Project from '../model/Project.js';
+import ProjectItem from '../model/ProjectItem.js';
 
 export default class Electron implements Backend {
   private projects:{ [key:string]: Project } = {};

@@ -1,5 +1,5 @@
 
-import type IBackend from './Backend.js';
+import type IBackend from '../Backend.js';
 import type ProjectItem from './ProjectItem.js';
 export default class Project {
   backend:IBackend;
