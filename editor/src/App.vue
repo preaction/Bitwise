@@ -60,6 +60,7 @@ export default Vue.defineComponent({
     return {
       gameFile: '',
       gameClass: null,
+      isBuilding: false,
       components: [],
       systems: [],
       consoleLogs: [],
@@ -73,6 +74,9 @@ export default Vue.defineComponent({
     return {
       backend: this.backend,
       project: this.project,
+      gameClass: Vue.computed( () => Vue.toRaw(this.gameClass) ),
+      isBuilding: Vue.computed( () => this.isBuilding ),
+      baseUrl: Vue.computed( () => `bfile://${this.project.name}` );
     };
   },
   computed: {
@@ -378,7 +382,7 @@ export default Vue.defineComponent({
     if ( this.hasSessionState ) {
       await this.loadSessionState();
     }
-    if ( !this.currentProject ) {
+    if ( !this.project.name ) {
       this.$nextTick( () => this.$refs['projectDialog'].open() );
     }
     electron.on( 'error', (ev, err) => console.error(err) );

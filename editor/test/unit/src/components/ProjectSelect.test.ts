@@ -23,10 +23,10 @@ describe('ProjectSelect', () => {
     global.electron.newProject = mockNewProject;
 
     const wrapper = mount(ProjectSelect, {
-      provide: {
-        backend,
-      },
       global: {
+        provide: {
+          backend,
+        },
         plugins: [
           createPinia(),
         ],

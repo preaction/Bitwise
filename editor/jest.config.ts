@@ -1,7 +1,7 @@
 import type { Config } from 'jest';
 
 const common: Config = {
-  preset: 'ts-jest/presets/default-esm',
+  preset: 'ts-jest/presets/js-with-babel-esm',
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
@@ -9,6 +9,7 @@ const common: Config = {
     'node_modules/(?!three/examples/jsm/.*)',
   ],
   moduleFileExtensions: ['vue', 'js', 'ts', 'mts'],
+  extensionsToTreatAsEsm: ['.ts', '.mts'],
   transform: {
     // '^.+\\.[tj]sx?$' to process js/ts with `ts-jest`
     // '^.+\\.m?[tj]sx?$' to process js/ts/mjs/mts with `ts-jest`
@@ -31,14 +32,14 @@ const config: Config = {
   "projects": [
     {
       ...common,
-      "testMatch": ["**/test/unit/electron/**"],
+      "testMatch": ["**/test/unit/electron/**/?(*.)+(spec|test).[jt]s?(x)"],
       "testPathIgnorePatterns": ["<rootDir>/out"],
       "runner": "@kayahr/jest-electron-runner/main",
       "testEnvironment": "node",
     },
     {
       ...common,
-      "testMatch": ["**/test/unit/src/**"],
+      "testMatch": ["**/test/unit/src/**/?(*.)+(spec|test).[jt]s?(x)"],
       "testPathIgnorePatterns": ["<rootDir>/out"],
       "runner": "@kayahr/jest-electron-runner",
       "testEnvironment": "@kayahr/jest-electron-runner/environment",

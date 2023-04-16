@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, shallowReactive, toRaw, markRaw } from "vue";
+import { defineComponent, toRaw, markRaw } from "vue";
 import { mapState, mapActions } from 'pinia';
 import { useAppStore } from "../store/app.mts";
 import type { Game, Scene } from '@fourstar/bitwise';
@@ -34,10 +34,14 @@ export default defineComponent({
       sceneData: JSON.parse( JSON.stringify( this.modelValue ?? {} ) ),
       playing: false,
       paused: false,
+      editGame: null,
       editScene: null,
+      playGame: null,
       playScene: null,
     };
   },
+
+  inject: ['project', 'gameClass', 'isBuilding', 'baseUrl'],
 
   created() {
     let sceneData = toRaw( this.sceneData );
@@ -92,7 +96,6 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapState( useAppStore, ['gameClass', 'isBuilding', 'systems', 'components'] ),
     scene() {
       return this.playing ? this.playScene : this.editScene;
     },
@@ -127,15 +130,13 @@ export default defineComponent({
   },
 
   methods: {
-    ...mapActions( useAppStore, ['getFileUrl'] ),
-
     initializeEditor() {
       const game = this.editGame = this.createEditorGame( 'edit-canvas' );
 
       const scene = this.editScene = markRaw(game.addScene());
       this.thawEditScene(this.sceneData);
 
-      const editor = this.editScene.getSystem( this.systems.EditorRender );
+      const editor = this.editScene.getSystem( game.systems.EditorRender );
       editor.addEventListener( 'update', () => this.update() );
 
       // If we've created a new scene, update the tab title and set the
@@ -188,7 +189,7 @@ export default defineComponent({
       const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
-          base: this.getFileUrl(""),
+          base: this.baseUrl,
         },
         // XXX: Get from game settings
         renderer: {
@@ -220,7 +221,7 @@ export default defineComponent({
       const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
-          base: this.getFileUrl(""),
+          base: this.baseUrl,
         },
         data: {
           // XXX: Get from game settings
@@ -326,7 +327,7 @@ export default defineComponent({
       }
       event.preventDefault();
       const scene = this.editScene;
-      const editor = scene.getSystem( this.systems.EditorRender );
+      const editor = scene.getSystem( this.editGame.systems.EditorRender );
       const eids:number[] = editor.getSelectedEntityIds();
       eids.forEach( eid => scene.removeEntity(eid) );
       editor.clearSelected();
@@ -357,7 +358,7 @@ export default defineComponent({
       }
       event.preventDefault();
       const scene = this.editScene;
-      const editor = scene.getSystem( this.systems.EditorRender );
+      const editor = scene.getSystem( this.editGame.systems.EditorRender );
       const eids:number[] = editor.getSelectedEntityIds();
       const frozenEntities = eids.map( eid => scene.entities[eid].freeze() );
       // Clear the path so they are put at the root
