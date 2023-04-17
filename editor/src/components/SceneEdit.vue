@@ -1,9 +1,8 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import { mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.mts";
 import type { Game, Scene } from '@fourstar/bitwise';
 import ScenePanel from './ScenePanel.vue';
+import Tab from "../model/Tab";
 
 /**
  * SceneEdit is the scene editor tab. The scene JSON file contains the
@@ -28,10 +27,15 @@ export default defineComponent({
   components: {
     ScenePanel,
   },
-  props: ['modelValue', 'name', 'edited'],
+  props: {
+    modelValue: Tab,
+  },
+  emits: ['update:modelValue'],
   data() {
     return {
-      sceneData: JSON.parse( JSON.stringify( this.modelValue ?? {} ) ),
+      sceneData: {},
+      loadPromise: Promise.resolve() as Promise<any>,
+      loading: true,
       playing: false,
       paused: false,
       editGame: null,
@@ -41,50 +45,23 @@ export default defineComponent({
     };
   },
 
-  inject: ['project', 'gameClass', 'isBuilding', 'baseUrl'],
+  inject: ['project', 'gameClass', 'isBuilding', 'baseUrl', 'backend'],
 
-  created() {
-    let sceneData = toRaw( this.sceneData );
-    if ( !sceneData || Object.keys( sceneData ).length === 0 ) {
-      // Create a new, blank scene
-      // XXX: This data should come from game settings
-      sceneData = this.sceneData = {
-        name: 'New Scene',
-        components: [
-          'Transform', 'Sprite', 'OrthographicCamera', 'RigidBody',
-          'BoxCollider', 'UI',
-        ],
-        systems: [
-          { name: 'Input', data: {} },
-          { name: 'Physics', data: {} },
-          { name: 'Render', data: {} },
-        ],
-        entities: [
-          {
-            path: "Camera",
-            type: "Camera",
-            components: {
-              Transform: {
-                z: 2000,
-                rw: 1,
-                sx: 1,
-                sy: 1,
-                sz: 1,
-              },
-              OrthographicCamera: {
-                frustum: 10,
-                zoom: 1,
-                near: 0,
-                far: 2000,
-              },
-            },
-          },
-        ],
-      };
-    }
+  async created() {
+    this.loadPromise = this.modelValue.readFile();
   },
 
-  mounted() {
+  async mounted() {
+    try {
+      this.sceneData = await this.loadPromise;
+    }
+    catch (err) {
+      console.log( `Error loading scene data: ${err}` );
+    }
+    if ( !this.sceneData || Object.keys(this.sceneData).length <= 0 ) {
+      this.initializeScene();
+      this.update({ name: 'NewScene', ext: '.json' });
+    }
     this.initializeEditor();
   },
 
@@ -130,6 +107,42 @@ export default defineComponent({
   },
 
   methods: {
+    initializeScene() {
+      this.sceneData = {
+        name: 'NewScene',
+        components: [
+          'Transform', 'Sprite', 'OrthographicCamera', 'RigidBody',
+          'BoxCollider', 'UI',
+        ],
+        systems: [
+          { name: 'Input', data: {} },
+          { name: 'Physics', data: {} },
+          { name: 'Render', data: {} },
+        ],
+        entities: [
+          {
+            path: "Camera",
+            type: "Camera",
+            components: {
+              Transform: {
+                z: 2000,
+                rw: 1,
+                sx: 1,
+                sy: 1,
+                sz: 1,
+              },
+              OrthographicCamera: {
+                frustum: 10,
+                zoom: 1,
+                near: 0,
+                far: 2000,
+              },
+            },
+          },
+        ],
+      };
+    },
+
     initializeEditor() {
       const game = this.editGame = this.createEditorGame( 'edit-canvas' );
 
@@ -258,21 +271,20 @@ export default defineComponent({
       }
     },
 
-    update() {
-      // update() always works with the edit scene
-      const sceneData = this.sceneData;
-      if ( !this.name || this.name !== sceneData.name ) {
-        this.$emit('update:name', sceneData.name);
-      }
+    update(tabProps:any={}) {
       this.$emit('update:modelValue', {
-        ...toRaw(sceneData),
-        name: this.name,
+        ...toRaw(this.modelValue),
+        edited: true,
+        ...tabProps,
       });
-      this.$refs.scenePanel?.refresh();
     },
 
-    save() {
-      this.$emit('save');
+    async save() {
+      await this.modelValue.writeFile( this.sceneData );
+      this.$emit('update:modelValue', {
+        ...toRaw(this.modelValue),
+        edited: false,
+      });
     },
 
     play(playState) {
@@ -420,7 +432,7 @@ export default defineComponent({
     <div class="tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Scene editor toolbar">
         <button type="button" class="btn btn-outline-dark btn-sm me-1"
-          :disabled="!edited" @click="save"
+          @click="save" data-test="save"
         >
           <i class="fa fa-save"></i>
         </button>

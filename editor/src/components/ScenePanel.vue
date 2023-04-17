@@ -1,7 +1,5 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import { mapStores, mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.mts";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 import MenuButton from "./MenuButton.vue";
 
@@ -39,8 +37,12 @@ export default defineComponent({
     this.select( this.sceneTree );
   },
   computed: {
-    ...mapStores(useAppStore),
-    ...mapState( useAppStore, ['components', 'systems', 'componentForms', 'systemForms'] ),
+    components() {
+      return this.scene?.game.components || {};
+    },
+    systems() {
+      return this.scene?.game.systems || {};
+    },
     availableComponents() {
       return Object.keys( this.components ).filter( c => !this.components[c].isNull && !this.components[c].isHidden );
     },
@@ -60,6 +62,9 @@ export default defineComponent({
       this.updateSceneTree();
     },
     updateSceneTree() {
+      if ( !this.sceneData || !Object.keys(this.sceneData).length ) {
+        return;
+      }
       // Find all the entities and build tree items for them
       const rootNode = {
         path: '',
