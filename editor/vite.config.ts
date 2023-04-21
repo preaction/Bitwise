@@ -1,5 +1,4 @@
 import { rmSync } from 'fs'
-import { join } from 'path'
 import { defineConfig } from 'vite'
 import type { Plugin, UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -17,34 +16,35 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    electron({
-      main: {
-        entry: 'electron/main/index.ts',
-        vite: withDebug({
-          build: {
-            outDir: 'dist/electron/main',
-          },
-        }),
-      },
-      preload: {
-        input: {
-          // You can configure multiple preload here
-          index: join(__dirname, 'electron/preload/index.ts'),
-        },
+    electron([
+      {
+        // Main-Process entry file of the Electron App.
+        entry: 'electron/main.ts',
         vite: {
           build: {
             // For Debug
             sourcemap: 'inline',
-            outDir: 'dist/electron/preload',
+            outDir: 'dist/electron',
           },
         },
       },
-    }),
+      {
+        entry: 'electron/preload.ts',
+        vite: {
+          build: {
+            // For Debug
+            sourcemap: 'inline',
+            outDir: 'dist/electron',
+          },
+        },
+        onstart(options) {
+          // Notify the Renderer-Process to reload the page when the Preload-Scripts build is complete, 
+          // instead of restarting the entire Electron App.
+          options.reload()
+        },
+      },
+    ]),
   ],
-  server: {
-    host: pkg.env.VITE_DEV_SERVER_HOST,
-    port: pkg.env.VITE_DEV_SERVER_PORT,
-  },
 })
 
 function withDebug(config: UserConfig): UserConfig {

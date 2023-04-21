@@ -2,12 +2,11 @@
   "name": "@fourstar/bitwise-editor",
   "productName": "Bitwise Editor",
   "version": "0.3.0",
-  "main": "dist/electron/main/index.js",
+  "main": "dist/electron/main.js",
   "description": "Editor for the Bitwise game framework",
   "author": "Doug Bell",
   "license": "MIT",
   "repository": "https://github.com/preaction/bitwise",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
@@ -47,7 +46,7 @@
     "playwright": "^1.27.1",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
-    "vite": "^4.2.1",
+    "vite": "^4.3.1",
     "vite-plugin-electron": "^0.11.1"
   },
   "env": {

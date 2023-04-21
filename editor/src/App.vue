@@ -76,7 +76,7 @@ export default Vue.defineComponent({
       project: this.project,
       gameClass: Vue.computed( () => Vue.toRaw(this.gameClass) ),
       isBuilding: Vue.computed( () => this.isBuilding ),
-      baseUrl: Vue.computed( () => `bfile://${this.project.name}` );
+      baseUrl: Vue.computed( () => `bfile://${this.project.name}` ),
     };
   },
   computed: {

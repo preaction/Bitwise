@@ -4,10 +4,10 @@ import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
 import { fork, ChildProcess } from 'node:child_process';
 import * as os from 'os'
 import * as path from 'path'
-import { init } from '../bitwise-build/init';
-import * as bitwise from '../bitwise-build/build';
-import type { BuildContext, BuildResult } from '../bitwise-build/build';
-import { release } from '../bitwise-build/release';
+import { init } from './bitwise-build/init';
+import * as bitwise from './bitwise-build/build';
+import type { BuildContext, BuildResult } from './bitwise-build/build';
+import { release } from './bitwise-build/release';
 
 // Initialize electron-store
 import Store from 'electron-store'
@@ -38,16 +38,16 @@ if ( (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'develop
 
 export const ROOT_PATH = {
   // /dist
-  dist: path.join(__dirname, '../..'),
+  dist: path.join(__dirname, '../dist'),
   // /dist or /public
-  public: path.join(__dirname, app.isPackaged ? '../..' : '../../../public'),
+  public: path.join(__dirname, app.isPackaged ? '../dist' : '../dist/public'),
 }
 
 let win: BrowserWindow | null = null
 // Here, you can also use other preload
-const preload = path.join(__dirname, '../preload/index.js')
+const preload = path.join(__dirname, './preload.js')
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin
-const url = `http://${process.env['VITE_DEV_SERVER_HOST']}:${process.env['VITE_DEV_SERVER_PORT']}`
+const url = process.env['VITE_DEV_SERVER_URL']
 const indexHtml = path.join(ROOT_PATH.dist, 'index.html')
 
 type WindowConfig = {
