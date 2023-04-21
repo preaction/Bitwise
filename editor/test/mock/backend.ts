@@ -26,7 +26,7 @@ export default class Backend implements IBackend {
     return "";
   }
   async writeItemData(projectName:string, itemPath:string, data:string):Promise<void> {
-    return;
+    throw "writeItemData not mocked";
   }
   async deleteItem(projectName:string, itemPath:string):Promise<void> {
     return;

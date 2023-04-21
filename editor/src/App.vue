@@ -89,8 +89,8 @@ export default Vue.defineComponent({
   },
   methods: {
     ...mapActions(useAppStore, ['loadSessionState', 'importFiles']),
-    updateTab(tab:Object) {
-      this.currentTab = tab;
+    updateTab(tabUpdate:Object) {
+      Object.assign(this.currentTab, tabUpdate);
     },
     showTab( index: number ) {
       this.appStore.showTab( index );
@@ -461,7 +461,7 @@ export default Vue.defineComponent({
       :is="currentTab.component"
       :key="currentTab.src"
       v-model="currentTab"
-      @update:modelValue="updateTab"
+      @update="updateTab"
       @save="saveTab"
     />
 

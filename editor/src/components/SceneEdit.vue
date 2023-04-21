@@ -30,7 +30,7 @@ export default defineComponent({
   props: {
     modelValue: Tab,
   },
-  emits: ['update:modelValue'],
+  emits: ['update'],
   data() {
     return {
       sceneData: {},
@@ -73,6 +73,9 @@ export default defineComponent({
   },
 
   computed: {
+    edited():boolean {
+      return this.modelValue.edited;
+    },
     scene() {
       return this.playing ? this.playScene : this.editScene;
     },
@@ -151,12 +154,6 @@ export default defineComponent({
 
       const editor = this.editScene.getSystem( game.systems.EditorRender );
       editor.addEventListener( 'update', () => this.update() );
-
-      // If we've created a new scene, update the tab title and set the
-      // "edited" flag
-      if ( !this.modelValue || Object.keys( this.modelValue ).length === 0 ) {
-        this.update();
-      }
 
       // The editor canvas must be visible when the game is started so
       // that the renderer is created at the correct size. If the canvas
@@ -272,8 +269,7 @@ export default defineComponent({
     },
 
     update(tabProps:any={}) {
-      this.$emit('update:modelValue', {
-        ...toRaw(this.modelValue),
+      this.$emit('update', {
         edited: true,
         ...tabProps,
       });
@@ -281,8 +277,8 @@ export default defineComponent({
 
     async save() {
       await this.modelValue.writeFile( this.sceneData );
-      this.$emit('update:modelValue', {
-        ...toRaw(this.modelValue),
+      this.$emit('update', {
+        ...this.modelValue,
         edited: false,
       });
     },
@@ -432,7 +428,7 @@ export default defineComponent({
     <div class="tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Scene editor toolbar">
         <button type="button" class="btn btn-outline-dark btn-sm me-1"
-          @click="save" data-test="save"
+          :disabled="!edited" @click="save" data-test="save"
         >
           <i class="fa fa-save"></i>
         </button>
