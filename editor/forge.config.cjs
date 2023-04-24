@@ -52,6 +52,8 @@ module.exports = {
       await fs.cp('../examples', path.join(buildPath, 'examples'), { recursive: true });
       // And add the icon image (needed on linux)
       await fs.cp('../images/icon.png', path.join(buildPath, 'images', 'icon.png'), { recursive: true });
+      // Also add some of the node modules
+      await fs.cp('../node_modules', path.join(buildPath, 'node_modules'), { recursive: true });
     },
   },
 };

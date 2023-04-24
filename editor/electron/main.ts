@@ -231,7 +231,6 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
       const changes:{eventType: string, filename:string}[] = [];
       let timeoutId;
       for await (const event of watcher) {
-        console.log( 'Watcher event:', event );
         changes.push( event );
         if ( timeoutId ) {
           clearTimeout( timeoutId );
@@ -334,12 +333,12 @@ async function linkModules( root:string ) {
   const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
   const dependencies:string[] = [
     '@types/three',
+    'three',
+    'bitecs',
+    'ammojs-typed',
     'typescript',
     'tslib',
     '@fourstar/bitwise',
-    '@fourstar/bitwise/node_modules/three',
-    '@fourstar/bitwise/node_modules/bitecs',
-    '@fourstar/bitwise/node_modules/ammojs-typed',
   ];
   const p = new Promise( (resolve, reject) => {
     const cp = fork(
