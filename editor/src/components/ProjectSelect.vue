@@ -21,7 +21,7 @@ export default defineComponent({
   async mounted() {
     // Create a copy of the recent projects list so that it doesn't
     // immediately change when we select one
-    this.recentProjects = this.backend.listProjects().slice(0,5);
+    this.recentProjects = ( await this.backend.listProjects() ).slice(0,3);
     this.examples = await electron.listExamples();
   },
   computed: {
@@ -65,7 +65,7 @@ export default defineComponent({
       </MenuButton>
     </div>
     <h4 class="recent-heading">Recent Projects</h4>
-    <div class="recent-buttons">
+    <div class="recent-buttons" data-test="recent-projects">
       <button v-for="project in recentProjects" @click="openProject(project)">
         {{ projectName(project) }}
       </button>

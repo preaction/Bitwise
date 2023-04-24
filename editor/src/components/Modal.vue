@@ -3,11 +3,6 @@ import { defineComponent } from "vue";
 import MicroModal from 'micromodal';
 export default defineComponent({
   props: [ 'id', 'title', 'show' ],
-  mounted() {
-    if ( this.$props.show ) {
-      this.open();
-    }
-  },
   methods: {
     open() {
       MicroModal.show( this.id );
@@ -21,7 +16,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <div :id="id" class="modal" aria-hidden="true">
+  <div :id="id" class="modal" :class="show ? 'is-open' : ''" aria-hidden="true">
     <div tabindex="-1" class="modal__overlay">
       <div role="dialog" aria-modal="true" :aria-labelledby="id + '-title'" class="modal__container" >
         <header class="modal__header">

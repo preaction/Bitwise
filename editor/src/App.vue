@@ -70,7 +70,7 @@ export default Vue.defineComponent({
       backend,
     };
   },
-  provides() {
+  provide() {
     return {
       backend: this.backend,
       project: this.project,
@@ -382,9 +382,6 @@ export default Vue.defineComponent({
     if ( this.hasSessionState ) {
       await this.loadSessionState();
     }
-    if ( !this.project.name ) {
-      this.$nextTick( () => this.$refs['projectDialog'].open() );
-    }
     electron.on( 'error', (ev, err) => console.error(err) );
     electron.on( 'info', (ev, msg) => console.log(msg) );
 
@@ -395,7 +392,7 @@ export default Vue.defineComponent({
 
 <template>
   <div class="app-container">
-    <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise">
+    <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise" data-test="project-select-modal" show="!(project?.name)">
       <ProjectSelect @select="load" data-test="project-select" />
     </Modal>
 

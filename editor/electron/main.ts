@@ -418,7 +418,7 @@ ipcMain.handle('bitwise-resources-path', (event) => {
 ipcMain.handle('bitwise-list-examples', async ():Promise<{name:string, path:string}[]> => {
   const resourcesPath = path.resolve(
     __dirname.replace( 'app.asar', '' ),
-    app.isPackaged ? '../../..' : '../../../..',
+    app.isPackaged ? '../..' : '../../..',
   );
   return fs.readdir( path.join( resourcesPath, 'examples' ) )
     .then( (names) => {

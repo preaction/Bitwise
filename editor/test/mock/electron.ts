@@ -54,7 +54,7 @@ class MockElectron {
     return new Promise( () => "" );
   }
   listExamples():Promise<string[]> {
-    return new Promise( () => [""] );
+    return new Promise( () => [] );
   }
   importFiles( root:string ):Promise<undefined[]> {
     return new Promise( () => ({canceled: false, filePaths: [""] }) );

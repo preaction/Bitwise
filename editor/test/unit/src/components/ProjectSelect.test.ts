@@ -1,5 +1,5 @@
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { MockElectron } from '../../../mock/electron.js';
 import MockBackend from '../../../mock/backend.js';
@@ -12,6 +12,37 @@ beforeEach( () => {
 });
 
 describe('ProjectSelect', () => {
+  test( 'list projects', async () => {
+    const projectList = [
+      "Project One",
+      "Project Two",
+      "Project Three",
+    ];
+    const mockListProjects = jest.fn() as jest.MockedFunction<typeof backend.listProjects>;
+    mockListProjects.mockReturnValue( Promise.resolve( projectList ) );
+    backend.listProjects = mockListProjects;
+
+    const wrapper = mount(ProjectSelect, {
+      global: {
+        provide: {
+          backend,
+        },
+        plugins: [
+          createPinia(),
+        ],
+      },
+    });
+    await flushPromises();
+    expect( backend.listProjects ).toHaveBeenCalled();
+
+    const recents = wrapper.findAll( '[data-test=recent-projects] > button' );
+    expect( recents ).toHaveLength( projectList.length );
+    expect( recents[0].text() ).toEqual( projectList[0].substring( projectList[0].lastIndexOf('/') ) );
+    expect( recents[1].text() ).toEqual( projectList[1].substring( projectList[1].lastIndexOf('/') ) );
+    expect( recents[2].text() ).toEqual( projectList[2].substring( projectList[2].lastIndexOf('/') ) );
+
+  });
+
   test( 'create a new project', async () => {
     // Mock the electron.newProject function to return a path
     const dialogResult = {
