@@ -392,7 +392,7 @@ export default Vue.defineComponent({
 
 <template>
   <div class="app-container">
-    <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise" data-test="project-select-modal" show="!(project?.name)">
+    <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise" :show="!(project?.name)">
       <ProjectSelect @select="load" data-test="project-select" />
     </Modal>
 

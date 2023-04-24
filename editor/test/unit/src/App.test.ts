@@ -16,6 +16,7 @@ describe('App', () => {
   test('has data', () => {
     expect(typeof App.data).toBe('function')
   });
+
   test('shows project dialog', async () => {
     const wrapper = mount(App, {
       provide: {
@@ -29,9 +30,11 @@ describe('App', () => {
     });
     await flushPromises();
     await wrapper.vm.$nextTick();
-    const modal = wrapper.get('[data-test=project-select-modal]');
+
+    const modal = wrapper.getComponent({ ref: 'projectDialog' });
     expect( modal ).toBeDefined();
-    expect( modal.attributes('class') ).toMatch(/is-open/);
+    expect( modal.props('show') ).toBeTruthy();
   });
+
 });
 
