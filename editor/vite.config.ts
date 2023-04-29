@@ -21,6 +21,9 @@ export default defineConfig({
             sourcemap: 'inline',
             outDir: 'dist/electron',
             rollupOptions: {
+              output: {
+                entryFileNames: "[name].cjs",
+              },
               external: ['esbuild'],
             },
           },
@@ -33,6 +36,11 @@ export default defineConfig({
             // For Debug
             sourcemap: 'inline',
             outDir: 'dist/electron',
+            rollupOptions: {
+              output: {
+                entryFileNames: "[name].cjs",
+              },
+            },
           },
         },
         onstart(options) {

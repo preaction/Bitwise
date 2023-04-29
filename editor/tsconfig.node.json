@@ -2,7 +2,7 @@
   "extends": "@vue/tsconfig/tsconfig.node.json",
   "compilerOptions": {
     "composite": true,
-    "module": "nodenext",
+    "module": "commonjs",
     "allowJs": true
   },
   "include": ["package.json", "vite.config.ts", "electron/**/*"]
