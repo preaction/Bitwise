@@ -1,35 +1,41 @@
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
 import { mount, flushPromises } from '@vue/test-utils';
-import { createPinia } from 'pinia';
 import { MockElectron } from '../../../mock/electron.js';
 import MockBackend from '../../../mock/backend.js';
 import ProjectSelect from '../../../../src/components/ProjectSelect.vue';
 
 let backend:MockBackend;
+const mockNewProject = jest.fn() as jest.MockedFunction<typeof global.electron.newProject>;
+const mockOpenProject = jest.fn() as jest.MockedFunction<typeof global.electron.openProject>;
+const mockListProjects = jest.fn() as jest.MockedFunction<typeof backend.listProjects>;
 beforeEach( () => {
+  mockListProjects.mockReset();
+  mockListProjects.mockResolvedValue( [] );
+  mockNewProject.mockReset();
+  mockOpenProject.mockReset();
+
   global.electron = new MockElectron();
+  global.electron.newProject = mockNewProject;
+  global.electron.openProject = mockOpenProject;
+
   backend = new MockBackend();
+  backend.listProjects = mockListProjects;
 });
 
 describe('ProjectSelect', () => {
-  test( 'list projects', async () => {
+  test( 'list recent projects and select one', async () => {
     const projectList = [
       "Project One",
       "Project Two",
-      "Project Three",
+      "Directory/Project Three",
     ];
-    const mockListProjects = jest.fn() as jest.MockedFunction<typeof backend.listProjects>;
-    mockListProjects.mockReturnValue( Promise.resolve( projectList ) );
-    backend.listProjects = mockListProjects;
+    mockListProjects.mockResolvedValue( projectList );
 
     const wrapper = mount(ProjectSelect, {
       global: {
         provide: {
           backend,
         },
-        plugins: [
-          createPinia(),
-        ],
       },
     });
     await flushPromises();
@@ -37,41 +43,100 @@ describe('ProjectSelect', () => {
 
     const recents = wrapper.findAll( '[data-test=recent-projects] > button' );
     expect( recents ).toHaveLength( projectList.length );
-    expect( recents[0].text() ).toEqual( projectList[0].substring( projectList[0].lastIndexOf('/') ) );
-    expect( recents[1].text() ).toEqual( projectList[1].substring( projectList[1].lastIndexOf('/') ) );
-    expect( recents[2].text() ).toEqual( projectList[2].substring( projectList[2].lastIndexOf('/') ) );
+    expect( recents[0].text() ).toEqual( projectList[0].split('/').pop() );
+    expect( recents[1].text() ).toEqual( projectList[1].split('/').pop() );
+    expect( recents[2].text() ).toEqual( projectList[2].split('/').pop() );
 
+    await wrapper.find('[data-test=recent-projects] > button').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect( wrapper.emitted().select ).toHaveLength(1);
+    expect( wrapper.emitted().select[0] ).toEqual([projectList[0]]);
   });
 
   test( 'create a new project', async () => {
-    // Mock the electron.newProject function to return a path
     const dialogResult = {
       canceled: false,
       filePath: 'My Game',
     };
-    const mockNewProject = jest.fn() as jest.MockedFunction<typeof global.electron.newProject>;
-    mockNewProject.mockReturnValue( new Promise( (resolve) => resolve(dialogResult) ) );
-    global.electron.newProject = mockNewProject;
+    mockNewProject.mockResolvedValue(dialogResult);
 
     const wrapper = mount(ProjectSelect, {
       global: {
         provide: {
           backend,
         },
-        plugins: [
-          createPinia(),
-        ],
       },
     });
-    // Click the Create Project button ([data-test=create])
     await wrapper.find('[data-test=newProject]').trigger('click');
 
-    // Verify the electron.newProject function was called
     expect( global.electron.newProject ).toHaveBeenCalled();
     await wrapper.vm.$nextTick();
-    // Verify the select event was emitted
     expect( wrapper.emitted().select ).toHaveLength(1);
+    expect( wrapper.emitted().select[0] ).toEqual(["My Game"]);
   });
 
+  test( 'cancel the create new project dialog', async () => {
+    const dialogResult = {
+      canceled: true,
+      filePath: '',
+    };
+    mockNewProject.mockResolvedValue(dialogResult);
+
+    const wrapper = mount(ProjectSelect, {
+      global: {
+        provide: {
+          backend,
+        },
+      },
+    });
+    await wrapper.find('[data-test=newProject]').trigger('click');
+
+    expect( global.electron.newProject ).toHaveBeenCalled();
+    await wrapper.vm.$nextTick();
+    expect( wrapper.emitted() ).not.toHaveProperty('select');
+  });
+
+  test( 'open a project folder', async () => {
+    const dialogResult = {
+      canceled: false,
+      filePaths: ['My Game'],
+    };
+    mockOpenProject.mockResolvedValue(dialogResult);
+
+    const wrapper = mount(ProjectSelect, {
+      global: {
+        provide: {
+          backend,
+        },
+      },
+    });
+    await wrapper.find('[data-test=openProject]').trigger('click');
+
+    expect( global.electron.openProject ).toHaveBeenCalled();
+    await wrapper.vm.$nextTick();
+    expect( wrapper.emitted().select ).toHaveLength(1);
+    expect( wrapper.emitted().select[0] ).toEqual(["My Game"]);
+  });
+
+  test( 'cancel the open a project folder dialog', async () => {
+    const dialogResult = {
+      canceled: true,
+      filePaths: [],
+    };
+    mockOpenProject.mockResolvedValue(dialogResult);
+
+    const wrapper = mount(ProjectSelect, {
+      global: {
+        provide: {
+          backend,
+        },
+      },
+    });
+    await wrapper.find('[data-test=openProject]').trigger('click');
+
+    expect( global.electron.openProject ).toHaveBeenCalled();
+    await wrapper.vm.$nextTick();
+    expect( wrapper.emitted() ).not.toHaveProperty( 'select' );
+  });
 });
 

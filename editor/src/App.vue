@@ -90,6 +90,10 @@ export default Vue.defineComponent({
     hasSessionState():boolean {
       return !!sessionStorage.getItem('currentProject');
     },
+    hasStoredState():boolean {
+      const state = electron.store.get( 'app', 'savedState', {} );
+      return !!state.currentProject;
+    },
   },
   methods: {
     ...mapActions(useAppStore, ['importFiles']),
@@ -452,7 +456,7 @@ export default Vue.defineComponent({
 <template>
   <div class="app-container">
     <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise" :show="!(project?.name)">
-      <ProjectSelect @select="load" data-test="project-select" />
+      <ProjectSelect @select="load" @restore="loadStoredState" :can-restore="hasStoredState" data-test="project-select" />
     </Modal>
 
     <div class="app-sidebar">

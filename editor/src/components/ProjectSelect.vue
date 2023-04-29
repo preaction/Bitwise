@@ -2,8 +2,6 @@
 // XXX: Fix ProjectSelect, App, and other tab editors to work with Tab
 // objects
 import { defineComponent } from "vue";
-import { mapStores, mapState, mapGetters, mapActions } from 'pinia';
-import { useAppStore } from '../store/app.mts';
 import MenuButton from './MenuButton.vue';
 
 export default defineComponent({
@@ -14,7 +12,8 @@ export default defineComponent({
       examples: [],
     };
   },
-  emits: [ 'select' ],
+  props: [ 'canRestore' ],
+  emits: [ 'select', 'restore' ],
   components: {
     MenuButton,
   },
@@ -24,29 +23,30 @@ export default defineComponent({
     this.recentProjects = ( await this.backend.listProjects() ).slice(0,3);
     this.examples = await electron.listExamples();
   },
-  computed: {
-    ...mapStores(useAppStore),
-    ...mapGetters(useAppStore, ['hasStoredState', 'storedStateProject']),
-  },
   methods: {
     async loadStoredState() {
-      await this.appStore.loadStoredState();
-      this.$emit('select');
+      this.$emit('restore');
     },
     projectName( path:string ) {
       return path?.split('/').pop();
     },
     async newProject() {
-      await this.appStore.newProject();
-      this.$emit('select');
+      const res = await electron.newProject();
+      if ( !res.canceled ) {
+        this.openProject(res.filePath);
+      }
     },
-    async openProject( project?:string ) {
-      await this.appStore.openProject( project );
-      this.$emit('select');
+    async openProjectFolder( project?:string ) {
+      const res = await electron.openProject();
+      if ( !res.canceled ) {
+        this.openProject(res.filePaths[0]);
+      }
+    },
+    openProject( project:string ) {
+      this.$emit('select', project);
     },
     async openExample( path:string ) {
-      await this.appStore.openProject( path );
-      this.$emit('select');
+      this.openProject(path);
     },
   },
 });
@@ -54,10 +54,10 @@ export default defineComponent({
 
 <template>
   <div class="project-select">
-    <button v-if="hasStoredState" class="primary resume-project" @click="loadStoredState">Resume {{storedStateProject}}</button>
+    <button v-if="canRestore" class="primary resume-project" @click="loadStoredState">Resume {{storedStateProject}}</button>
     <div class="project-buttons">
       <button data-test="newProject" @click="newProject">Create Project...</button>
-      <button data-test="openProject" @click="openProject()">Open Project...</button>
+      <button data-test="openProject" @click="openProjectFolder()">Open Project...</button>
       <MenuButton title="View Example...">
         <ul>
           <li v-for="example, i in examples" @click="openExample(example.path)">{{example.name}}</li>
