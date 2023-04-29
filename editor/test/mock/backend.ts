@@ -23,7 +23,7 @@ export default class Backend implements IBackend {
     return [];
   }
   async readItemData(projectName:string, itemPath:string):Promise<string> {
-    return "";
+    return "{}";
   }
   async writeItemData(projectName:string, itemPath:string, data:string):Promise<void> {
     throw "writeItemData not mocked";

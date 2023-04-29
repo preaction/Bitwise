@@ -1,6 +1,7 @@
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
 import { mount, flushPromises } from '@vue/test-utils';
 import { MockElectron } from '../../../mock/electron.js';
+import MockGame from '../../../mock/game.js';
 import { Game } from '@fourstar/bitwise';
 import Project from '../../../../src/model/Project.js';
 import MockBackend from'../../../mock/backend.js';
@@ -11,6 +12,7 @@ import ProjectItem from '../../../../src/model/ProjectItem.js';
 let backend:MockBackend, project:Project, provide:any;
 beforeEach( () => {
   global.electron = new MockElectron();
+  global.confirm = () => true;
   backend = new MockBackend();
   project = new Project( backend, "testProject" );
   provide = {
@@ -18,7 +20,7 @@ beforeEach( () => {
     project,
     baseUrl: 'testProject',
     isBuilding: false,
-    gameClass: Game,
+    gameClass: MockGame,
   };
 });
 
@@ -31,6 +33,7 @@ describe('SceneEdit', () => {
     backend.writeItemData = mockWriteItemData;
 
     mockReadItemData = jest.fn() as jest.MockedFunction<typeof backend.readItemData>;
+    mockReadItemData.mockResolvedValue( "{}" );
     backend.readItemData = mockReadItemData;
 
     mockNewFile = jest.fn() as jest.MockedFunction<typeof global.electron.newFile>;

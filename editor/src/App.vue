@@ -6,7 +6,7 @@ import { useAppStore } from "./store/app.mts";
 import { loadModule } from 'vue3-sfc-loader';
 import Tab from './model/Tab.js';
 import Project from './model/Project.js';
-import ElectronBackend from './backend/Electron.js';
+import type ProjectItem from './model/ProjectItem.js';
 import NewTab from "./components/NewTab.vue";
 import ObjectTree from "./components/ObjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
@@ -55,9 +55,12 @@ export default Vue.defineComponent({
     MenuButton,
     Release,
   },
+  props: ['backend'],
   data() {
-    const backend = new ElectronBackend();
     return {
+      currentTabIndex: 0,
+      openTabs: [] as Tab[],
+      projectItems: [] as ProjectItem[],
       gameFile: '',
       gameClass: null,
       isBuilding: false,
@@ -67,13 +70,13 @@ export default Vue.defineComponent({
       openConsole: false,
       consoleErrors: 0,
       consoleWarnings: 0,
-      backend,
+      project: new Project(Vue.toRaw(this.backend), ''),
     };
   },
   provide() {
     return {
       backend: this.backend,
-      project: this.project,
+      project: Vue.computed( () => this.project ),
       gameClass: Vue.computed( () => Vue.toRaw(this.gameClass) ),
       isBuilding: Vue.computed( () => this.isBuilding ),
       baseUrl: Vue.computed( () => `bfile://${this.project.name}` ),
@@ -81,89 +84,132 @@ export default Vue.defineComponent({
   },
   computed: {
     ...mapStores(useAppStore),
-    ...mapState(useAppStore, ['project', 'currentTabIndex', 'openTabs', 'projectItems']),
-    ...mapGetters(useAppStore, ['hasSessionState']),
-    currentTab() {
+    currentTab():Tab {
       return this.openTabs[ this.currentTabIndex ];
+    },
+    hasSessionState():boolean {
+      return !!sessionStorage.getItem('currentProject');
     },
   },
   methods: {
-    ...mapActions(useAppStore, ['loadSessionState', 'importFiles']),
+    ...mapActions(useAppStore, ['importFiles']),
+
+    saveSessionState():void {
+      if ( !this.project ) {
+        return;
+      }
+      sessionStorage.setItem('currentProject', this.project.name || '');
+      sessionStorage.setItem('openTabs', JSON.stringify( this.openTabs, null, 2 ) );
+      sessionStorage.setItem('currentTabIndex', this.currentTabIndex.toString());
+    },
+
+    async loadSessionState():Promise<void> {
+      const currentProject = sessionStorage.getItem('currentProject') || '';
+      // Fetch tab info before we open the project. Opening the project
+      // will reset the app tabs, so we have to set them after opening.
+      const openTabs = sessionStorage.getItem('openTabs') || "[]";
+      const currentTabIndex = sessionStorage.getItem('currentTabIndex') || "0";
+
+      if ( !currentProject ) {
+        return;
+      }
+
+      await this.openProject( currentProject );
+      this.openTabs = JSON.parse(openTabs);
+      this.showTab( parseInt( currentTabIndex ) );
+    },
+
+    async openProject( name:string ) {
+      this.project = await this.backend.openProject( name );
+      this.projectItems = await this.project.listItems();
+      this.buildProject();
+    },
+
+    saveStoredState() {
+      const { project, openTabs, currentTabIndex } = this;
+      electron.store.set( 'app', 'savedState', {
+        currentProject: Vue.toRaw(project.name),
+        openTabs: Vue.toRaw(openTabs),
+        currentTabIndex: Vue.toRaw(currentTabIndex),
+      } );
+    },
+
+    async loadStoredState():Promise<void> {
+      const state = electron.store.get( 'app', 'savedState', {} );
+      if ( !state.currentProject ) {
+        return;
+      }
+      await this.openProject( state.currentProject );
+      this.openTabs = state.openTabs;
+      this.showTab( state.currentTabIndex );
+    },
+
     updateTab(tabUpdate:Object) {
       Object.assign(this.currentTab, tabUpdate);
     },
+
     showTab( index: number ) {
-      this.appStore.showTab( index );
+      this.currentTabIndex = index;
+      this.saveSessionState();
+      this.saveStoredState();
     },
-    load( projectName:string ) {
+
+    async load( projectName:string ) {
       this.$refs['projectDialog'].close();
-      this.project = this.backend.openProject( projectName );
+      await this.openProject( projectName );
+      this.saveSessionState();
+      this.saveStoredState();
     },
 
     newTab( name:string, component ) {
       // New tab creates a new project item and then a tab to go with it
-      this.appStore.openTab({
+      const tab = {
         name,
         component,
         icon: this.appStore.icons[component],
         ext: '.json',
         data: {},
         edited: true,
-      });
+      };
+      this.openTabs.push( tab );
+      this.showTab( this.openTabs.length - 1 );
+      this.saveSessionState();
+      this.saveStoredState();
     },
 
     newModule( name:string, template:string ) {
       this.appStore.newModuleFromTemplate( name, template );
     },
 
-    async openTab( item:DirectoryItem ) {
-      const projectItem = this.project.readItem( item.path );
+    async openTab( item:{ path: string} ) {
+      if ( item.path.match( /\.([tj]s)$/ ) ) {
+        this.appStore.openEditor(item.path);
+        return;
+      }
+
+      const projectItem = this.projectItems.find( i => i.path === item.path );
+      if ( !projectItem ) {
+        throw `Cannot find project item ${item.path}`;
+      }
       const tab = new Tab(projectItem);
       // Determine what kind of component to use
-      const ext = item.ext;
+      const ext = tab.ext;
       if ( ext === '.json' ) {
         // JSON files are game objects
-        // Fetch the file to decide which tab component to use
-        const fileContent = await this.appStore.readFile(item.path);
-        const data = JSON.parse( fileContent );
-        const tab = {
-          name: item.name,
-          ext,
-          icon: this.appStore.icons[data.component],
-          src: item.path,
-          component: data.component,
-          data: data,
-          edited: false,
-        };
-        this.appStore.openTab(tab);
+        tab.component = projectItem.type;
+        tab.icon = this.appStore.icons[projectItem.type];
       }
       else if ( ext.match( /\.(png|gif|jpe?g)$/ ) ) {
-        const tab = {
-          name: item.name.replace( /\.(png|gif|jpe?g)$/, '' ),
-          ext,
-          icon: 'fa-image',
-          src: item.path,
-          component: "ImageView",
-          data: item.path,
-          edited: false,
-        };
-        this.appStore.openTab(tab);
+        tab.component = "ImageView";
+        tab.icon = 'fa-image';
       }
       else if ( ext.match( /\.(md|markdown)$/ ) ) {
-        const tab = {
-          name: item.name.replace( /\.(md|markdown)$/, '' ),
-          ext,
-          icon: 'fa-file-lines',
-          src: item.path,
-          component: "MarkdownView",
-          data: await this.appStore.readFile(item.path),
-          edited: false,
-        };
-        this.appStore.openTab(tab);
+        tab.component = "MarkdownView";
+        tab.icon = 'fa-file-lines';
       }
-      else if ( ext.match( /\.([tj]s)$/ ) ) {
-        this.appStore.openEditor(item.path);
-      }
+
+      this.openTabs.push(tab);
+      this.showTab( this.openTabs.length - 1 );
     },
 
     closeTab( i:number ) {
@@ -174,7 +220,19 @@ export default Vue.defineComponent({
           return;
         }
       }
-      this.appStore.closeTab( this.openTabs[i] );
+
+      for ( let i = 0; i < this.openTabs.length; i++ ) {
+        if ( this.openTabs[i] === tab ) {
+          this.openTabs.splice(i, 1);
+          if ( this.currentTabIndex >= this.openTabs.length ) {
+            this.showTab( this.openTabs.length - 1 );
+          }
+          break;
+        }
+      }
+
+      this.saveSessionState();
+      this.saveStoredState();
     },
 
     async saveTab() {
@@ -249,7 +307,7 @@ export default Vue.defineComponent({
     },
 
     async showGameConfigTab() {
-      this.appStore.openTab({
+      this.openTab({
         name: "Game Config",
         component: "GameConfig",
         ext: 'json',
@@ -261,7 +319,7 @@ export default Vue.defineComponent({
     },
 
     showReleaseTab() {
-      this.appStore.openTab({
+      this.openTab({
         name: "Release",
         component: "Release",
         icon: 'fa-file-export',
@@ -330,7 +388,7 @@ export default Vue.defineComponent({
     async buildProject() {
       const gameFile = await this.backend.buildProject( this.project.name );
       if ( !gameFile ) {
-        throw 'Error building project';
+        throw 'Error building project: No game file returned';
       }
 
       try {
@@ -378,6 +436,7 @@ export default Vue.defineComponent({
     },
 
   },
+
   async mounted() {
     if ( this.hasSessionState ) {
       await this.loadSessionState();
@@ -427,7 +486,7 @@ export default Vue.defineComponent({
           </ul>
         </MenuButton>
       </div>
-      <ObjectTree dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile" class="app-sidebar-item">
+      <ObjectTree ref="projectTree" dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile" class="app-sidebar-item">
         <template #menu="{item}">
           <MenuButton>
             <template #button>
@@ -442,7 +501,7 @@ export default Vue.defineComponent({
     </div>
 
     <header class="app-tabbar">
-      <nav>
+      <nav ref="tabBar">
         <a v-for="tab, i in openTabs" href="#"
           @click.prevent="showTab(i)" :key="tab.src"
           :aria-current="i === currentTabIndex ? 'true' : ''"

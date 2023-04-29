@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import BootstrapVue3 from 'bootstrap-vue-3';
+import ElectronBackend from './backend/Electron.js';
 
 import 'bootstrap/dist/js/bootstrap.bundle.js';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -15,13 +16,17 @@ import InputGameObject from './components/InputGameObject.vue';
 import BinaryToggle from './components/BinaryToggle.vue';
 
 const pinia = createPinia()
+const backend = new ElectronBackend();
 
-createApp(App)
-  .use(pinia)
+const app = createApp(App, { backend });
+app.config.unwrapInjectedRef = true;
+
+app.use(pinia)
   .use(BootstrapVue3)
   .component( 'InputGameObject', InputGameObject )
-  .component( 'BinaryToggle', BinaryToggle )
-  .mount('#app')
-  .$nextTick(() => {
-    postMessage({ payload: 'removeLoading' }, '*')
-  });
+  .component( 'BinaryToggle', BinaryToggle );
+
+const component = app.mount('#app');
+component.$nextTick(() => {
+  postMessage({ payload: 'removeLoading' }, '*')
+});

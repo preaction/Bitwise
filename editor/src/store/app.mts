@@ -198,9 +198,6 @@ export const useAppStore = defineStore('app', {
   },
 
   getters: {
-    hasSessionState():boolean {
-      return !!sessionStorage.getItem('currentProject');
-    },
     hasStoredState():boolean {
       return !!electron.store.get( 'app', 'savedState', false );
     },
@@ -211,76 +208,6 @@ export const useAppStore = defineStore('app', {
   },
 
   actions: {
-    saveSessionState():void {
-      sessionStorage.setItem('currentProject', this.currentProject || '');
-      sessionStorage.setItem('openTabs', JSON.stringify( this.openTabs, null, 2 ) );
-      sessionStorage.setItem('currentTabIndex', this.currentTabIndex.toString());
-    },
-
-    async loadSessionState():Promise<void> {
-      const currentProject = sessionStorage.getItem('currentProject');
-      // Fetch tab info before we open the project. Opening the project
-      // will reset the app tabs, so we have to set them after opening.
-      const openTabs = sessionStorage.getItem('openTabs');
-      const currentTabIndex = sessionStorage.getItem('currentTabIndex');
-
-      if ( !currentProject ) {
-        return;
-      }
-
-      await this.openProject( currentProject );
-
-      if ( openTabs ) {
-        this.openTabs = JSON.parse(openTabs);
-      }
-      if ( currentTabIndex ) {
-        this.showTab( parseInt( currentTabIndex ) );
-      }
-    },
-
-    async loadStoredState():Promise<void> {
-      const state = electron.store.get( 'app', 'savedState', {} );
-      if ( !state.currentProject ) {
-        return;
-      }
-      await this.openProject( state.currentProject );
-      this.openTabs = state.openTabs;
-      this.showTab( state.currentTabIndex );
-    },
-
-    saveStoredState() {
-      const { currentProject, openTabs, currentTabIndex } = this;
-      electron.store.set( 'app', 'savedState', {
-        currentProject: Vue.toRaw(currentProject),
-        openTabs: Vue.toRaw(openTabs),
-        currentTabIndex: Vue.toRaw(currentTabIndex),
-      } );
-    },
-
-    showTab( index:number ) {
-      this.currentTabIndex = index;
-      this.saveSessionState();
-      this.saveStoredState();
-    },
-
-    openTab( tab:Tab ) {
-      this.openTabs.push( tab );
-      this.showTab( this.openTabs.length - 1 );
-    },
-
-    closeTab( tab:Tab ) {
-      for ( let i = 0; i < this.openTabs.length; i++ ) {
-        if ( this.openTabs[i] === tab ) {
-          this.openTabs.splice(i, 1);
-          if ( this.currentTabIndex >= this.openTabs.length ) {
-            this.showTab( this.openTabs.length - 1 );
-          }
-          break;
-        }
-      }
-      this.saveSessionState();
-      this.saveStoredState();
-    },
 
     async openProject( path:string='' ) {
       if ( this._fsWatcher ) {
@@ -292,18 +219,8 @@ export const useAppStore = defineStore('app', {
       }
       this.currentProject = path;
 
-      this.saveSessionState();
-      this.saveStoredState();
-
-      // Update the recent projects list
-      const i = this.recentProjects.indexOf( path );
-      if ( i >= 0 ) {
-        this.recentProjects.splice(i, 1);
-      }
-      this.recentProjects.unshift( path );
-      // Keep the last few projects only
-      this.recentProjects.length = Math.min( this.recentProjects.length, 5 );
-      electron.store.set( 'app', 'recentProjects', Vue.toRaw(this.recentProjects) );
+      // this.saveSessionState();
+      // this.saveStoredState();
 
       // Load up project files
       await this.readProject();
@@ -454,8 +371,8 @@ export const useAppStore = defineStore('app', {
           const tab = this.openTabs[ this.currentTabIndex ];
           tab.edited = false;
 
-          this.saveSessionState();
-          this.saveStoredState();
+          // this.saveSessionState();
+          // this.saveStoredState();
         } );
     },
 
@@ -474,8 +391,8 @@ export const useAppStore = defineStore('app', {
             tab.src = res.filePath.replace( project, '' );
             tab.edited = false;
 
-            this.saveSessionState();
-            this.saveStoredState();
+            // this.saveSessionState();
+            // this.saveStoredState();
           }
         });
     },

@@ -4,6 +4,7 @@ const common: Config = {
   preset: 'ts-jest/presets/js-with-babel-esm',
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^bfile://(.+)$': '<rootDir>/$1',
   },
   transformIgnorePatterns: [
     'node_modules/(?!three/examples/jsm/.*)',
@@ -41,8 +42,10 @@ const config: Config = {
       ...common,
       "testMatch": ["**/test/unit/src/**/?(*.)+(spec|test).[jt]s?(x)"],
       "testPathIgnorePatterns": ["<rootDir>/out"],
-      "runner": "@kayahr/jest-electron-runner",
-      "testEnvironment": "@kayahr/jest-electron-runner/environment",
+      "testEnvironment": "jest-environment-jsdom",
+      "testEnvironmentOptions": {
+        "customExportConditions": ["node", "node-addons"],
+      },
     },
   ],
 };

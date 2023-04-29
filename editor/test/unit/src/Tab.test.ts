@@ -9,6 +9,7 @@ import MockBackend from '../../mock/backend.js';
 let backend:MockBackend, project:Project, projectItem:ProjectItem;
 beforeEach( () => {
   global.electron = new MockElectron();
+  global.confirm = () => true;
   backend = new MockBackend();
   project = new Project(backend, "test");
   projectItem = new ProjectItem(project, "scene.json", "SceneEdit");
