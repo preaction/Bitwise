@@ -2,6 +2,7 @@
 import {jest} from '@jest/globals';
 
 export default class MockGame {
+  components = {}
   systems = {}
   constructor() {}
   addScene() {

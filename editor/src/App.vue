@@ -66,6 +66,8 @@ export default Vue.defineComponent({
       isBuilding: false,
       components: [],
       systems: [],
+      componentForms: {},
+      systemForms: {},
       consoleLogs: [],
       openConsole: false,
       consoleErrors: 0,
@@ -79,11 +81,14 @@ export default Vue.defineComponent({
       project: Vue.computed( () => this.project ),
       gameClass: Vue.computed( () => Vue.toRaw(this.gameClass) ),
       isBuilding: Vue.computed( () => this.isBuilding ),
-      baseUrl: Vue.computed( () => `bfile://${this.project.name}` ),
+      baseUrl: Vue.computed( () => this.baseUrl ),
     };
   },
   computed: {
     ...mapStores(useAppStore),
+    baseUrl():string {
+      return `bfile://${this.project.name}`;
+    },
     currentTab():Tab {
       return this.openTabs[ this.currentTabIndex ];
     },
@@ -185,13 +190,29 @@ export default Vue.defineComponent({
       this.appStore.newModuleFromTemplate( name, template );
     },
 
+    findProjectItem( findPath:string ):ProjectItem|void {
+      const findParts = findPath.split('/');
+      let items = this.projectItems;
+      for ( let i = 0; i < findParts.length; i++ ) {
+        const itemPath = findParts.slice(0,i+1).join('/');
+        const item = items.find( item => item.path === itemPath );
+        if ( !item ) {
+          return;
+        }
+        if ( item.path === findPath ) {
+          return item;
+        }
+        items = item.children;
+      }
+    },
+
     async openTab( item:{ path: string} ) {
       if ( item.path.match( /\.([tj]s)$/ ) ) {
         this.appStore.openEditor(item.path);
         return;
       }
 
-      const projectItem = this.projectItems.find( i => i.path === item.path );
+      const projectItem = this.findProjectItem( item.path );
       if ( !projectItem ) {
         throw `Cannot find project item ${item.path}`;
       }
@@ -239,45 +260,6 @@ export default Vue.defineComponent({
       this.saveStoredState();
     },
 
-    async saveTab() {
-      const tab = this.currentTab;
-      tab.data.component = tab.component;
-      // No src? Open save as dialog
-      if ( !tab.src ) {
-        await this.appStore.newFile(
-          tab.name,
-          'json',
-          JSON.stringify( Vue.toRaw( tab.data ), null, 2 ),
-        );
-        return;
-      }
-      // Name changes? Write new file and delete old
-      if ( tab.src != tab.name + tab.ext && !tab.src.endsWith('/' + tab.name + tab.ext) ) {
-        const oldSrc = tab.src;
-        const newSrc = oldSrc.replace( oldSrc.substring( oldSrc.lastIndexOf( '/' ) + 1 ), tab.name + tab.ext );
-        try {
-          await this.appStore.readFile( newSrc );
-          // If we've got a file, the file exists.
-          // Ask to overwrite
-          if ( !confirm( `File ${newSrc} exists. Overwrite?` ) ) {
-            return;
-          }
-        }
-        catch (e) {
-          // File does not exist, continue...
-        }
-        tab.src = newSrc;
-        await this.appStore.saveFile( tab.src, JSON.stringify( tab.data, null, 2 ) );
-        await this.appStore.deleteTree( oldSrc );
-        return;
-      }
-      // Otherwise, just write the data!
-      await this.appStore.saveFile(
-        tab.src,
-        JSON.stringify( tab.data, null, 2 ),
-      );
-    },
-
     showFileDropdown( event:MouseEvent ) {
       if ( this._showingDropdown ) {
         this._showingDropdown.hide();
@@ -306,7 +288,7 @@ export default Vue.defineComponent({
 
     deleteFile( item:Object ) {
       if ( confirm( `Are you sure you want to delete "${item.name}"?` ) ) {
-        this.appStore.deleteTree( item.path );
+        this.backend.deleteItem( this.project.name, item.path );
       }
     },
 
@@ -397,10 +379,6 @@ export default Vue.defineComponent({
 
       try {
         const mod = await import( /* @vite-ignore */ 'bfile://' + gameFile );
-        if ( this.gameFile ) {
-          electron.deleteTree( this.project.name, this.gameFile );
-        }
-        this.gameFile = gameFile;
         this.gameClass = mod.default;
       }
       catch (e) {
@@ -420,18 +398,16 @@ export default Vue.defineComponent({
         for ( const name in this.components ) {
           const component = this.components[name];
           if ( component.editorComponent ) {
-            const path = this.currentProject + '/' + component.editorComponent;
-            console.log( `Loading editor component for component ${name}: ${path}` );
-            this.componentForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
+            const path = this.baseUrl + '/' + component.editorComponent;
+            this.componentForms[name] = await loadModule( path, vueLoaderOptions );
           }
         }
 
         for ( const name in this.systems ) {
           const system = this.systems[name];
           if ( system.editorComponent ) {
-            const path = this.currentProject + '/' + system.editorComponent;
-            console.log( `Loading editor component for system ${name}: ${path}` );
-            this.systemForms[name] = await loadModule( `bfile://${path}`, vueLoaderOptions );
+            const path = this.baseUrl + '/' + system.editorComponent;
+            this.systemForms[name] = await loadModule( path, vueLoaderOptions );
           }
         }
       }
@@ -522,7 +498,6 @@ export default Vue.defineComponent({
       :key="currentTab.src"
       v-model="currentTab"
       @update="updateTab"
-      @save="saveTab"
     />
 
     <div class="console" :style="openConsole ? 'top: -50vh' : ''">

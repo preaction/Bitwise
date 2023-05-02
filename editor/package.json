@@ -51,8 +51,7 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "vite": "^4.3.1",
-    "vite-plugin-electron": "^0.11.1",
-    "webgl-mock-threejs": "^0.0.1"
+    "vite-plugin-electron": "^0.11.1"
   },
   "env": {
     "VITE_DEV_SERVER_HOST": "127.0.0.1",

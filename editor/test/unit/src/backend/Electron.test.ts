@@ -89,19 +89,29 @@ describe( 'backend/Electron', () => {
         {
           path: 'README.md',
         },
+        {
+          path: 'ui',
+          children: [
+            {
+              path: 'button.png',
+            },
+          ],
+        },
       ];
-      mockReadProject.mockReturnValue(
-        new Promise( (resolve) => resolve(dirItems) ),
-      );
+      mockReadProject.mockResolvedValue( dirItems );
 
       const backend = new ElectronBackend();
       const gotItems = await backend.listItems( "project" );
       expect(mockReadProject).toHaveBeenCalledWith("project");
-      expect(gotItems).toHaveLength(2);
+      expect(gotItems).toHaveLength(3);
       expect(gotItems[0].path).toBe(dirItems[0].path);
       expect(gotItems[0].type).toBe("image");
       expect(gotItems[1].path).toBe(dirItems[1].path);
       expect(gotItems[1].type).toBe("markdown");
+      expect(gotItems[2].path).toBe(dirItems[2].path);
+      expect(gotItems[2].type).toBe("directory");
+      expect(gotItems[2].children[0].path).toBe(dirItems[2].children?.[0].path);
+      expect(gotItems[2].children[0].type).toBe("image");
     } );
 
     test( 'should open JSON files to find type info', async () => {

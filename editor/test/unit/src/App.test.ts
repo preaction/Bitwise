@@ -1,14 +1,17 @@
-import {describe, expect, test, beforeEach, jest} from '@jest/globals';
+import {describe, expect, test, beforeEach, afterEach, jest, beforeAll} from '@jest/globals';
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { MockElectron } from '../../mock/electron.js';
-import MockBackend from'../../mock/backend.js';
+import MockBackend from '../../mock/backend.js';
+import MockGame from '../../mock/game.js';
 import App from '../../../src/App.vue';
 import SceneEdit from '../../../src/components/SceneEdit.vue';
 import ProjectSelect from '../../../src/components/ProjectSelect.vue';
 import Tab from '../../../src/model/Tab.js';
 import Project from '../../../src/model/Project.js';
 import ProjectItem from '../../../src/model/ProjectItem.js';
+
+jest.mock("../../mock/game.ts");
 
 let backend:MockBackend, project:Project;
 const mockListItems = jest.fn() as jest.MockedFunction<typeof backend.listItems>;
@@ -25,7 +28,7 @@ beforeEach( () => {
   backend.openProject = mockOpenProject;
   backend.buildProject = mockBuildProject;
 
-  project = new Project( backend, "Project" );
+  project = new Project( backend, "Project Name" );
   mockOpenProject.mockReturnValue( Promise.resolve( project ) );
 });
 
@@ -56,93 +59,208 @@ describe('App', () => {
     expect( modal.props('show') ).toBeTruthy();
   });
 
-  test('loads selected project', async () => {
-    const projectItems = [
-      new ProjectItem( project, "OldScene.json", "SceneEdit" ),
-    ];
-    mockListItems.mockResolvedValue( projectItems );
-
-    mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
-    jest.mock("../../mock/game.ts");
-
-    const wrapper = mount(App, {
-      attachTo: document.body,
-      props: { backend },
-      global: {
-        config: {
-          unwrapInjectedRef: true,
-        },
-        plugins: [
-          createPinia(),
-        ],
-      },
+  describe('loading project code', () => {
+    let projectItems = [] as ProjectItem[];
+    const MockedGame = jest.mocked( MockGame );
+    beforeEach( async () => {
+      projectItems = [
+        new ProjectItem( project, "OldScene.json", "SceneEdit" ),
+      ];
+      mockListItems.mockResolvedValue( projectItems );
+      mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
+      global.fetch = jest.fn() as jest.MockedFunction<typeof global.fetch>;
     });
-    await flushPromises();
-    await wrapper.vm.$nextTick();
+    afterEach( () => {
+      mockListItems.mockReset();
+      mockBuildProject.mockReset();
+      MockedGame.mockReset();
+    } );
 
-    const modal = wrapper.getComponent(ProjectSelect);
-    modal.vm.$emit('select', project.name);
-    await flushPromises();
-    await wrapper.vm.$nextTick();
+    test( 'builds and loads game class', async () => {
+      const wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+        global: {
+          config: {
+            unwrapInjectedRef: true,
+          },
+          plugins: [
+            createPinia(),
+          ],
+        },
+      });
+      await flushPromises();
+      await wrapper.vm.$nextTick();
 
-    expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
-    expect( wrapper.vm.project.name ).toBe(project.name);
+      const modal = wrapper.getComponent(ProjectSelect);
+      modal.vm.$emit('select', project.name);
+      await flushPromises();
+      await wrapper.vm.$nextTick();
 
-    expect( mockListItems ).toHaveBeenCalled();
+      expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
+      expect( wrapper.vm.project.name ).toBe(project.name);
 
-    // XXX: Saves session info
-    // XXX: Saves state info
+      expect( mockListItems ).toHaveBeenCalled();
+
+      // XXX: Saves session info
+      // XXX: Saves state info
+    });
+
+    test( 'loads system and component forms', async () => {
+      MockedGame.mockImplementation( () => {
+        const MockGame = jest.requireActual<typeof import('../../mock/game.js')>('../../mock/game.js').default;
+        const game = new MockGame();
+        game.components = {
+          TestComponent: { editorComponent: 'test/mock/componentEditForm.vue' },
+        };
+        game.systems = {
+          TestSystem: { editorComponent: 'test/mock/systemEditForm.vue' },
+        };
+        return jest.mocked( game );
+      });
+      const mockFetch = jest.spyOn( global, "fetch" );
+      // @ts-ignore
+      mockFetch.mockImplementationOnce( () => {
+        return Promise.resolve({
+          ok: true,
+          text: () => '',
+        });
+      });
+      // @ts-ignore
+      mockFetch.mockImplementationOnce( () => {
+        return Promise.resolve({
+          ok: true,
+          text: () => '',
+        });
+      });
+
+      const wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+        global: {
+          config: {
+            unwrapInjectedRef: true,
+          },
+          plugins: [
+            createPinia(),
+          ],
+        },
+      });
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      const modal = wrapper.getComponent(ProjectSelect);
+      modal.vm.$emit('select', project.name);
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      expect( mockFetch ).toHaveBeenCalledTimes(2);
+      expect( mockFetch.mock.calls[0] ).toEqual([ 'bfile://Project Name/test/mock/componentEditForm.vue' ]);
+      expect( mockFetch.mock.calls[1] ).toEqual([ 'bfile://Project Name/test/mock/systemEditForm.vue' ]);
+    });
   });
 
-  test('loads scene in new tab', async () => {
-    const projectItems = [
-      new ProjectItem( project, "OldScene.json", "SceneEdit" ),
-    ];
-    mockListItems.mockReturnValueOnce( Promise.resolve( projectItems ) );
+  describe('can load items from project tree', () => {
+    let projectItems:ProjectItem[] = [];
 
-    mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
-    jest.mock("../../mock/game.ts");
-
-    const wrapper = mount(App, {
-      attachTo: document.body,
-      props: { backend },
-      global: {
-        config: {
-          unwrapInjectedRef: true,
-        },
-        plugins: [
-          createPinia(),
-        ],
-        stubs: {
-          SceneEdit: true,
-        },
-      },
-    });
-    await flushPromises();
-    await wrapper.vm.$nextTick();
-
-    // Double-click an item in the project tree
-    const item:DirectoryItem = { path: 'OldScene.json' };
-    const projectTree = wrapper.getComponent({ ref: 'projectTree' });
-    projectTree.vm.ondblclickitem( item );
-    await flushPromises();
-    await wrapper.vm.$nextTick();
-
-    // Opens tab w/ correct info
-    const tabBar = wrapper.get({ ref: 'tabBar' });
-    const tabElement = tabBar.get( 'a:last-child' );
-    expect( tabElement.text() ).toBe( "OldScene" );
-    expect( tabElement.attributes('aria-current') ).toBe('true');
-
-    // Shows current tab
-    const editorTab = wrapper.getComponent(SceneEdit);
-    expect( editorTab.vm.modelValue ).toBeInstanceOf( Tab );
-    expect( editorTab.vm.modelValue ).toMatchObject({
-      src: "OldScene.json",
+    beforeEach( () => {
+      projectItems = [
+        new ProjectItem( project, "directory", "directory" ),
+        new ProjectItem( project, "LoadScene.json", "SceneEdit" ),
+      ];
+      projectItems[0].children = [
+        new ProjectItem( project, "directory/OldScene.json", "SceneEdit" ),
+      ];
+      mockListItems.mockReset().mockResolvedValue( projectItems );
+      mockBuildProject.mockReset().mockResolvedValue( "test/mock/game.ts" );
+      jest.mock("../../mock/game.ts");
     });
 
-    // XXX: Saves session info
-    // XXX: Saves state info
+    test( 'can load scene from root', async () => {
+      const wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+        global: {
+          config: {
+            unwrapInjectedRef: true,
+          },
+          plugins: [
+            createPinia(),
+          ],
+          stubs: {
+            SceneEdit: true,
+          },
+        },
+      });
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Double-click an item in the project tree
+      const item:DirectoryItem = { path: 'LoadScene.json' };
+      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
+      projectTree.vm.ondblclickitem( item );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Opens tab w/ correct info
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElement = tabBar.get( 'a:last-child' );
+      expect( tabElement.text() ).toBe( "LoadScene" );
+      expect( tabElement.attributes('aria-current') ).toBe('true');
+
+      // Shows current tab
+      const editorTab = wrapper.getComponent(SceneEdit);
+      expect( editorTab.vm.modelValue ).toBeInstanceOf( Tab );
+      expect( editorTab.vm.modelValue ).toMatchObject({
+        src: "LoadScene.json",
+      });
+
+      // XXX: Saves session info
+      // XXX: Saves state info
+    });
+
+    test( 'can load scene from directory', async () => {
+      const wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+        global: {
+          config: {
+            unwrapInjectedRef: true,
+          },
+          plugins: [
+            createPinia(),
+          ],
+          stubs: {
+            SceneEdit: true,
+          },
+        },
+      });
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Double-click an item in the project tree
+      const item:DirectoryItem = { path: 'directory/OldScene.json' };
+      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
+      projectTree.vm.ondblclickitem( item );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Opens tab w/ correct info
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElement = tabBar.get( 'a:last-child' );
+      expect( tabElement.text() ).toBe( "OldScene" );
+      expect( tabElement.attributes('aria-current') ).toBe('true');
+
+      // Shows current tab
+      const editorTab = wrapper.getComponent(SceneEdit);
+      expect( editorTab.vm.modelValue ).toBeInstanceOf( Tab );
+      expect( editorTab.vm.modelValue ).toMatchObject({
+        src: "directory/OldScene.json",
+      });
+
+      // XXX: Saves session info
+      // XXX: Saves state info
+    });
   });
 });
 
