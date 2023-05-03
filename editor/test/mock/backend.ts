@@ -32,7 +32,7 @@ export default class Backend implements IBackend {
     return;
   }
   async getState(stateName:string, defaultValue:any) {
-    return {};
+    return defaultValue || {};
   }
   async setState(stateName:string, data:any) {
     return;

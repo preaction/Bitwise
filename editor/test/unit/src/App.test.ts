@@ -17,20 +17,29 @@ let backend:MockBackend, project:Project;
 const mockListItems = jest.fn() as jest.MockedFunction<typeof backend.listItems>;
 const mockOpenProject = jest.fn() as jest.MockedFunction<typeof backend.openProject>;
 const mockBuildProject = jest.fn() as jest.MockedFunction<typeof backend.buildProject>;
+const mockGetState = jest.fn() as jest.MockedFunction<typeof backend.getState>;
+const mockSetState = jest.fn() as jest.MockedFunction<typeof backend.setState>;
 beforeEach( () => {
   mockListItems.mockReset();
   mockOpenProject.mockReset();
   mockBuildProject.mockReset();
+  mockGetState.mockReset().mockResolvedValue({});
+  mockSetState.mockReset();
 
   global.electron = new MockElectron();
   backend = new MockBackend();
   backend.listItems = mockListItems;
   backend.openProject = mockOpenProject;
   backend.buildProject = mockBuildProject;
+  backend.getState = mockGetState;
+  backend.setState = mockSetState;
 
   project = new Project( backend, "Project Name" );
   mockOpenProject.mockReturnValue( Promise.resolve( project ) );
 });
+afterEach( () => {
+  sessionStorage.clear();
+} );
 
 describe('App', () => {
   // Inspect the raw component options
@@ -101,9 +110,6 @@ describe('App', () => {
       expect( wrapper.vm.project.name ).toBe(project.name);
 
       expect( mockListItems ).toHaveBeenCalled();
-
-      // XXX: Saves session info
-      // XXX: Saves state info
     });
 
     test( 'loads system and component forms', async () => {
@@ -162,6 +168,7 @@ describe('App', () => {
 
   describe('can load items from project tree', () => {
     let projectItems:ProjectItem[] = [];
+    const cleanup = [] as Array<()=>void>;
 
     beforeEach( () => {
       projectItems = [
@@ -174,6 +181,10 @@ describe('App', () => {
       mockListItems.mockReset().mockResolvedValue( projectItems );
       mockBuildProject.mockReset().mockResolvedValue( "test/mock/game.ts" );
       jest.mock("../../mock/game.ts");
+    });
+    afterEach( () => {
+      cleanup.forEach( c => c() );
+      cleanup.length = 0;
     });
 
     test( 'can load scene from root', async () => {
@@ -192,8 +203,16 @@ describe('App', () => {
           },
         },
       });
+      cleanup.push( wrapper.unmount.bind(wrapper) );
       await flushPromises();
       await wrapper.vm.$nextTick();
+
+      const modal = wrapper.getComponent(ProjectSelect);
+      modal.vm.$emit('select', project.name);
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+      expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
+      expect( mockListItems ).toHaveBeenCalled();
 
       // Double-click an item in the project tree
       const item:DirectoryItem = { path: 'LoadScene.json' };
@@ -204,9 +223,10 @@ describe('App', () => {
 
       // Opens tab w/ correct info
       const tabBar = wrapper.get({ ref: 'tabBar' });
-      const tabElement = tabBar.get( 'a:last-child' );
-      expect( tabElement.text() ).toBe( "LoadScene" );
-      expect( tabElement.attributes('aria-current') ).toBe('true');
+      const tabElements = tabBar.findAll( 'a' );
+      expect( tabElements ).toHaveLength(1);
+      expect( tabElements[0].text() ).toBe( "LoadScene" );
+      expect( tabElements[0].attributes('aria-current') ).toBe('true');
 
       // Shows current tab
       const editorTab = wrapper.getComponent(SceneEdit);
@@ -216,7 +236,10 @@ describe('App', () => {
       });
 
       // XXX: Saves session info
-      // XXX: Saves state info
+      // Saves state info
+      expect( mockSetState ).toHaveBeenCalled();
+      expect( mockSetState.mock.lastCall?.[0] ).toBe("app");
+      expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
     });
 
     test( 'can load scene from directory', async () => {
@@ -235,8 +258,16 @@ describe('App', () => {
           },
         },
       });
+      cleanup.push( wrapper.unmount.bind(wrapper) );
       await flushPromises();
       await wrapper.vm.$nextTick();
+
+      const modal = wrapper.getComponent(ProjectSelect);
+      modal.vm.$emit('select', project.name);
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+      expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
+      expect( mockListItems ).toHaveBeenCalled();
 
       // Double-click an item in the project tree
       const item:DirectoryItem = { path: 'directory/OldScene.json' };
@@ -247,9 +278,10 @@ describe('App', () => {
 
       // Opens tab w/ correct info
       const tabBar = wrapper.get({ ref: 'tabBar' });
-      const tabElement = tabBar.get( 'a:last-child' );
-      expect( tabElement.text() ).toBe( "OldScene" );
-      expect( tabElement.attributes('aria-current') ).toBe('true');
+      const tabElements = tabBar.findAll( 'a' );
+      expect( tabElements ).toHaveLength(1);
+      expect( tabElements[0].text() ).toBe( "OldScene" );
+      expect( tabElements[0].attributes('aria-current') ).toBe('true');
 
       // Shows current tab
       const editorTab = wrapper.getComponent(SceneEdit);
@@ -259,7 +291,9 @@ describe('App', () => {
       });
 
       // XXX: Saves session info
-      // XXX: Saves state info
+      // Saves state info
+      expect( mockSetState.mock.lastCall?.[0] ).toBe("app");
+      expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
     });
   });
 });

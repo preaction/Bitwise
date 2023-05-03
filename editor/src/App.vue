@@ -136,7 +136,7 @@ export default Vue.defineComponent({
 
     saveStoredState() {
       const { project, openTabs, currentTabIndex } = this;
-      electron.store.set( 'app', 'savedState', {
+      this.backend.setState( 'app', {
         currentProject: Vue.toRaw(project.name),
         openTabs: Vue.toRaw(openTabs),
         currentTabIndex: Vue.toRaw(currentTabIndex),
@@ -144,7 +144,7 @@ export default Vue.defineComponent({
     },
 
     async loadStoredState():Promise<void> {
-      const state = electron.store.get( 'app', 'savedState', {} );
+      const state = await this.backend.getState( 'app', {} );
       if ( !state.currentProject ) {
         return;
       }
