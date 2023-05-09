@@ -20,6 +20,12 @@ import MenuButton from "./components/MenuButton.vue";
 import Release from "./components/Release.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
 
+type AppState = {
+  currentProject: string,
+  openTabs: Array<{ path:string, component:string }>,
+  currentTabIndex: number,
+};
+
 const vueLoaderOptions = {
   moduleCache: {
     vue: Vue,
@@ -95,9 +101,12 @@ export default Vue.defineComponent({
     hasSessionState():boolean {
       return !!sessionStorage.getItem('currentProject');
     },
-    hasStoredState():boolean {
-      const state = electron.store.get( 'app', 'savedState', {} );
-      return !!state.currentProject;
+    appState():AppState {
+      return Vue.toRaw({
+        currentProject: this.project.name,
+        openTabs: this.openTabs.map( t => ({ component: t.component, path: t.src }) ),
+        currentTabIndex: this.currentTabIndex,
+      });
     },
   },
   methods: {
@@ -107,9 +116,10 @@ export default Vue.defineComponent({
       if ( !this.project ) {
         return;
       }
-      sessionStorage.setItem('currentProject', this.project.name || '');
-      sessionStorage.setItem('openTabs', JSON.stringify( this.openTabs, null, 2 ) );
-      sessionStorage.setItem('currentTabIndex', this.currentTabIndex.toString());
+      const { currentProject, openTabs, currentTabIndex } = this.appState;
+      sessionStorage.setItem('currentProject', currentProject);
+      sessionStorage.setItem('openTabs', JSON.stringify( openTabs, null, 2 ) );
+      sessionStorage.setItem('currentTabIndex', currentTabIndex.toString());
     },
 
     async loadSessionState():Promise<void> {
@@ -122,10 +132,21 @@ export default Vue.defineComponent({
       if ( !currentProject ) {
         return;
       }
+      await this.restoreState({
+        currentProject,
+        openTabs: JSON.parse( openTabs ),
+        currentTabIndex: parseInt( currentTabIndex ),
+      });
+    },
 
-      await this.openProject( currentProject );
-      this.openTabs = JSON.parse(openTabs);
-      this.showTab( parseInt( currentTabIndex ) );
+    async restoreState( appState:AppState ) {
+      await this.openProject( appState.currentProject );
+      for ( const tab of appState.openTabs || [] ) {
+        this.openTab( tab );
+      }
+      if ( "currentTabIndex" in appState ) {
+        this.showTab( appState.currentTabIndex );
+      }
     },
 
     async openProject( name:string ) {
@@ -135,12 +156,7 @@ export default Vue.defineComponent({
     },
 
     saveStoredState() {
-      const { project, openTabs, currentTabIndex } = this;
-      this.backend.setState( 'app', {
-        currentProject: Vue.toRaw(project.name),
-        openTabs: Vue.toRaw(openTabs),
-        currentTabIndex: Vue.toRaw(currentTabIndex),
-      } );
+      this.backend.setState( 'app', this.appState );
     },
 
     async loadStoredState():Promise<void> {
@@ -148,9 +164,7 @@ export default Vue.defineComponent({
       if ( !state.currentProject ) {
         return;
       }
-      await this.openProject( state.currentProject );
-      this.openTabs = state.openTabs;
-      this.showTab( state.currentTabIndex );
+      await this.restoreState( state );
     },
 
     updateTab(tabUpdate:Object) {
@@ -206,7 +220,7 @@ export default Vue.defineComponent({
       }
     },
 
-    async openTab( item:{ path: string} ) {
+    async openTab( item:{ path: string, component: string } ) {
       if ( item.path.match( /\.([tj]s)$/ ) ) {
         this.appStore.openEditor(item.path);
         return;
@@ -217,20 +231,26 @@ export default Vue.defineComponent({
         throw `Cannot find project item ${item.path}`;
       }
       const tab = new Tab(projectItem);
-      // Determine what kind of component to use
-      const ext = tab.ext;
-      if ( ext === '.json' ) {
-        // JSON files are game objects
-        tab.component = projectItem.type;
-        tab.icon = this.appStore.icons[projectItem.type];
+      if ( item.component ) {
+        tab.component = item.component;
+        tab.icon = this.appStore.icons[item.component];
       }
-      else if ( ext.match( /\.(png|gif|jpe?g)$/ ) ) {
-        tab.component = "ImageView";
-        tab.icon = 'fa-image';
-      }
-      else if ( ext.match( /\.(md|markdown)$/ ) ) {
-        tab.component = "MarkdownView";
-        tab.icon = 'fa-file-lines';
+      else {
+        // Determine what kind of component to use
+        const ext = tab.ext;
+        if ( ext === '.json' ) {
+          // JSON files are game objects
+          tab.component = projectItem.type;
+          tab.icon = this.appStore.icons[projectItem.type];
+        }
+        else if ( ext.match( /\.(png|gif|jpe?g)$/ ) ) {
+          tab.component = "ImageView";
+          tab.icon = 'fa-image';
+        }
+        else if ( ext.match( /\.(md|markdown)$/ ) ) {
+          tab.component = "MarkdownView";
+          tab.icon = 'fa-file-lines';
+        }
       }
 
       this.openTabs.push(tab);
@@ -432,7 +452,7 @@ export default Vue.defineComponent({
 <template>
   <div class="app-container">
     <Modal ref="projectDialog" id="projectDialog" title="Welcome to Bitwise" :show="!(project?.name)">
-      <ProjectSelect @select="load" @restore="loadStoredState" :can-restore="hasStoredState" data-test="project-select" />
+      <ProjectSelect @select="load" @restore="loadStoredState" data-test="project-select" />
     </Modal>
 
     <div class="app-sidebar">

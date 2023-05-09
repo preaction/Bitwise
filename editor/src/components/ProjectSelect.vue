@@ -8,16 +8,18 @@ export default defineComponent({
   inject: ['backend'],
   data() {
     return {
+      restoreProject: '',
       recentProjects: [],
       examples: [],
     };
   },
-  props: [ 'canRestore' ],
+  props: [],
   emits: [ 'select', 'restore' ],
   components: {
     MenuButton,
   },
   async mounted() {
+    this.restoreProject = (await this.backend.getState('app', {})).currentProject;
     // Create a copy of the recent projects list so that it doesn't
     // immediately change when we select one
     this.recentProjects = ( await this.backend.listProjects() ).slice(0,3);
@@ -54,7 +56,11 @@ export default defineComponent({
 
 <template>
   <div class="project-select">
-    <button v-if="canRestore" class="primary resume-project" @click="loadStoredState">Resume {{storedStateProject}}</button>
+    <button v-if="restoreProject" class="primary resume-project" @click="loadStoredState"
+      data-test="resumeProject"
+    >
+      Resume {{restoreProject}}
+    </button>
     <div class="project-buttons">
       <button data-test="newProject" @click="newProject">Create Project...</button>
       <button data-test="openProject" @click="openProjectFolder()">Open Project...</button>
