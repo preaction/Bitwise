@@ -3,6 +3,16 @@ import { defineComponent } from "vue";
 import MicroModal from 'micromodal';
 export default defineComponent({
   props: [ 'id', 'title', 'show' ],
+  watch: {
+    show(newValue:boolean) {
+      if ( newValue ) {
+        this.open();
+      }
+      else {
+        this.close();
+      }
+    },
+  },
   mounted() {
     if ( this.show ) {
       this.$nextTick( this.open )
