@@ -375,13 +375,21 @@ ipcMain.handle('bitwise-build-project', async (event, root) => {
   }
 
   const cp = await bitwise.check( root );
-  cp.stderr?.on( 'data', (buf) => webwin.webContents.send('error', buf.toString()) );
-  cp.stdout?.on( 'data', (buf) => webwin.webContents.send('log', buf.toString()) );
+  cp.stderr?.on( 'data', (buf) => {
+    console.error(buf.toString());
+    webwin.webContents.send('error', buf.toString());
+  });
+  cp.stdout?.on( 'data', (buf) => {
+    console.log(buf.toString());
+    webwin.webContents.send('log', buf.toString());
+  });
   cp.on('error', (err) => {
+    console.error(err);
     webwin.webContents.send( 'error', err );
   } );
 
   if ( !context ) {
+    console.error('Could not create build context');
     webwin.webContents.send( 'error', 'Could not create build context' );
     return;
   }
@@ -392,14 +400,19 @@ ipcMain.handle('bitwise-build-project', async (event, root) => {
       return null;
     }
     if ( res.errors?.length > 0 ) {
-      res.errors.map( err => webwin.webContents.send( 'error', err ) );
+      res.errors.map( err => {
+        console.error(err);
+        webwin.webContents.send( 'error', err );
+      });
     }
     if ( res.warnings?.length > 0 ) {
-      res.warnings.map( warn => webwin.webContents.send( 'info', `Warning: ${warn}` ) );
+      res.warnings.map( warn => {
+        console.log(warn);
+        webwin.webContents.send( 'info', `Warning: ${warn}` );
+      });
     }
     const perfEntries = performance.getEntriesByName('buildTime');
-    console.log( perfEntries[ perfEntries.length - 1 ] );
-    webwin.webContents.send( 'info', perfEntries[ perfEntries.length - 1 ] );
+    webwin.webContents.send( 'info', JSON.stringify(perfEntries[ perfEntries.length - 1 ]) );
     performance.clearMeasures('buildTime');
     return res.errors?.length > 0 ? null : contextDest;
   });

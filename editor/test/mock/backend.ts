@@ -1,7 +1,7 @@
 
+import type {DirectoryItem} from "../../src/Backend.js";
 import type IBackend from "../../src/Backend.js";
 import Project from "../../src/model/Project.js";
-import type ProjectItem from "../../src/model/ProjectItem.js";
 
 export default class Backend implements IBackend {
   async listProjects():Promise<string[]> {
@@ -19,7 +19,7 @@ export default class Backend implements IBackend {
   async releaseProject(projectName:string, releaseType:string) {
     return;
   }
-  async listItems(projectName:string):Promise<ProjectItem[]> {
+  async listItems(projectName:string):Promise<DirectoryItem[]> {
     return [];
   }
   async readItemData(projectName:string, itemPath:string):Promise<string> {

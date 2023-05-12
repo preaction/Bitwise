@@ -6,6 +6,9 @@ export default class ProjectItem {
   type:string;
   children:ProjectItem[] = [];
   constructor( project:Project, path:string, type:string ) {
+    if ( !project ) {
+      throw new Error("ProjectItem: Project must be given to constructor");
+    }
     this.project = project;
     this.path = path;
     this.type = type;

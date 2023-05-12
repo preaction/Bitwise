@@ -1,6 +1,7 @@
 import type { Config } from 'jest';
 
 const common: Config = {
+  slowTestThreshold: 60,
   preset: 'ts-jest/presets/js-with-babel-esm',
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',

@@ -1,6 +1,6 @@
 import type Backend from '../Backend.js';
+import type { DirectoryItem } from '../Backend.js';
 import Project from '../model/Project.js';
-import ProjectItem from '../model/ProjectItem.js';
 
 export default class Electron implements Backend {
   private projects:{ [key:string]: Project } = {};
@@ -39,51 +39,24 @@ export default class Electron implements Backend {
     return;
   }
 
-  async listItems( projectName:string ):Promise<ProjectItem[]> {
+  async listItems( projectName:string ):Promise<DirectoryItem[]> {
     const ignore = (dirItem:DirectoryItem) => {
       return !dirItem.path.match( /(?:^|\/)\./ ) &&
         !dirItem.path.match(/(?:^|\/)node_modules(?:$|\/)/) &&
         !dirItem.path.match(/^(tsconfig|bitwise|package(-lock)?)\.json$/);
     };
 
-    const descend = async (dirItem:DirectoryItem) => {
-      let itemType:string;
+    const descend = (dirItem:DirectoryItem) => {
       if ( dirItem.children?.length ) {
-        // Descend
-        itemType = 'directory';
+        dirItem.children = dirItem.children.filter( ignore ).map((i:DirectoryItem) => descend(i));
       }
-      else if ( dirItem.path.match( /\.(?:png|jpe?g|gif)$/ ) ) {
-        itemType = 'image';
-      }
-      else if ( dirItem.path.match( /\.(?:md|markdown)$/ ) ) {
-        itemType = 'markdown';
-      }
-      else if ( dirItem.path.match( /\.[jt]s$/ ) ) {
-        itemType = 'gameModule';
-      }
-      else if ( dirItem.path.match( /\.vue$/ ) ) {
-        itemType = 'editorComponent';
-      }
-      else if ( dirItem.path.match( /\.json$/ ) ) {
-        const json = await this.readItemData( projectName, dirItem.path );
-        const data = JSON.parse( json );
-        itemType = data.component;
-      }
-      else {
-        itemType = 'unknown';
-      }
-      const projectItem = new ProjectItem( this.projects[projectName], dirItem.path, itemType );
-      if ( dirItem.children?.length ) {
-        projectItem.children = await Promise.all( dirItem.children.filter( ignore ).map((i:DirectoryItem) => descend(i)) );
-      }
-      return projectItem;
+      return dirItem;
     };
 
-    const projectItems = await electron.readProject(projectName)
+    return await electron.readProject(projectName)
       .then( async ( items:DirectoryItem[] ) => {
-        return Promise.all( items.filter( ignore ).map( descend ) );
+        return items.filter( ignore ).map( descend );
       });
-    return projectItems;
   }
 
   // read

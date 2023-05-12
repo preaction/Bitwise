@@ -2,6 +2,7 @@ import {describe, expect, test, beforeEach, afterEach, jest, beforeAll} from '@j
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { MockElectron } from '../../mock/electron.js';
+import type { DirectoryItem } from '../../../src/Backend.js';
 import MockBackend from '../../mock/backend.js';
 import MockGame from '../../mock/game.js';
 import App from '../../../src/App.vue';
@@ -10,11 +11,10 @@ import type Modal from '../../../src/components/Modal.vue';
 import ProjectSelect from '../../../src/components/ProjectSelect.vue';
 import Tab from '../../../src/model/Tab.js';
 import Project from '../../../src/model/Project.js';
-import ProjectItem from '../../../src/model/ProjectItem.js';
 
 jest.mock("../../mock/game.ts");
 
-let backend:MockBackend, project:Project, projectItems: ProjectItem[];
+let backend:MockBackend, project:Project, projectItems: DirectoryItem[];
 const MockedGame = jest.mocked( MockGame );
 const cleanup = [] as Array<()=>void>;
 const mockListItems = jest.fn() as jest.MockedFunction<typeof backend.listItems>;
@@ -22,6 +22,7 @@ const mockOpenProject = jest.fn() as jest.MockedFunction<typeof backend.openProj
 const mockBuildProject = jest.fn() as jest.MockedFunction<typeof backend.buildProject>;
 const mockGetState = jest.fn() as jest.MockedFunction<typeof backend.getState>;
 const mockSetState = jest.fn() as jest.MockedFunction<typeof backend.setState>;
+const mockReadItemData = jest.fn() as jest.MockedFunction<typeof backend.readItemData>;
 beforeEach( () => {
   global.fetch = jest.fn() as jest.MockedFunction<typeof global.fetch>
   mockGetState.mockResolvedValue({});
@@ -33,18 +34,22 @@ beforeEach( () => {
   backend.buildProject = mockBuildProject;
   backend.getState = mockGetState;
   backend.setState = mockSetState;
+  backend.readItemData = mockReadItemData;
 
   project = new Project( backend, "Project Name" );
   mockOpenProject.mockReturnValue( Promise.resolve( project ) );
 
   projectItems = [
-    new ProjectItem( project, "directory", "directory" ),
-    new ProjectItem( project, "LoadScene.json", "SceneEdit" ),
+    { path: "directory", children: [] },
+    { path: "LoadScene.json" },
   ];
   projectItems[0].children = [
-    new ProjectItem( project, "directory/OldScene.json", "SceneEdit" ),
+    { path: "directory/OldScene.json" },
   ];
   mockListItems.mockResolvedValue( projectItems );
+  mockReadItemData.mockImplementation( async (projectName:string, itemPath:string) => {
+    return Promise.resolve('{ "component": "SceneEdit" }');
+  } );
   mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
 });
 

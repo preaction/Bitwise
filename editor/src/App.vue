@@ -441,7 +441,9 @@ export default Vue.defineComponent({
     if ( this.hasSessionState ) {
       await this.loadSessionState();
     }
-    electron.on( 'error', (ev, err) => console.error(err) );
+    electron.on( 'error', (ev, err) => {
+      console.trace(ev, err);
+    });
     electron.on( 'info', (ev, msg) => console.log(msg) );
 
     window.addEventListener( 'keydown', this.handleKeydown.bind(this) );

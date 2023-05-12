@@ -2,6 +2,7 @@
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
 import { MockElectron } from '../../../mock/electron.js';
 import ElectronBackend from '../../../../src/backend/Electron.js';
+import type { DirectoryItem } from '../../../../src/Backend.js';
 import Project from '../../../../src/model/Project.js';
 
 beforeEach( () => {
@@ -105,13 +106,9 @@ describe( 'backend/Electron', () => {
       expect(mockReadProject).toHaveBeenCalledWith("project");
       expect(gotItems).toHaveLength(3);
       expect(gotItems[0].path).toBe(dirItems[0].path);
-      expect(gotItems[0].type).toBe("image");
       expect(gotItems[1].path).toBe(dirItems[1].path);
-      expect(gotItems[1].type).toBe("markdown");
       expect(gotItems[2].path).toBe(dirItems[2].path);
-      expect(gotItems[2].type).toBe("directory");
-      expect(gotItems[2].children[0].path).toBe(dirItems[2].children?.[0].path);
-      expect(gotItems[2].children[0].type).toBe("image");
+      expect(gotItems[2].children?.[0].path).toBe(dirItems[2].children?.[0].path);
     } );
 
     test( 'should open JSON files to find type info', async () => {
@@ -139,7 +136,6 @@ describe( 'backend/Electron', () => {
       expect(mockReadProject).toHaveBeenCalledWith("project");
       expect(gotItems).toHaveLength(1);
       expect(gotItems[0].path).toBe(dirItems[0].path);
-      expect(gotItems[0].type).toBe(itemData[0].component);
     } );
 
     test( 'should descend into directories', async () => {
@@ -162,10 +158,8 @@ describe( 'backend/Electron', () => {
       expect(mockReadProject).toHaveBeenCalledWith("project");
       expect(gotItems).toHaveLength(1);
       expect(gotItems[0].path).toBe(dirItems[0].path);
-      expect(gotItems[0].type).toBe("directory");
       expect(gotItems[0].children).toHaveLength(1);
-      expect(gotItems[0].children[0].path).toBe(dirItems[0].children?.[0].path);
-      expect(gotItems[0].children[0].type).toBe("image");
+      expect(gotItems[0].children?.[0].path).toBe(dirItems[0].children?.[0].path);
     } );
   });
 

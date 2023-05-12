@@ -7,11 +7,6 @@ declare module '*.vue' {
   export default component
 }
 
-type DirectoryItem = {
-  path: string,
-  children?: DirectoryItem[],
-};
-
 type SaveDialog = {
   canceled: boolean,
   filePath: string,
