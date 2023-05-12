@@ -241,6 +241,18 @@ describe( 'backend/Electron', () => {
       await backend.buildProject( "buildProject" );
       expect( mockBuildProject ).toHaveBeenCalledWith( "buildProject" );
     } );
+
+    test( 'should emit buildstart and buildend events', async () => {
+      mockBuildProject.mockResolvedValueOnce("GameFile.js");
+      const backend = new ElectronBackend();
+      const buildStart = jest.fn();
+      const buildEnd = jest.fn();
+      backend.on( 'buildstart', buildStart );
+      backend.on( 'buildend', buildEnd );
+      await backend.buildProject( "buildProject" );
+      expect( buildStart ).toHaveBeenCalled();
+      expect( buildEnd ).toHaveBeenCalledWith( "GameFile.js" );
+    } );
   });
 
   describe( 'releaseProject()', () => {

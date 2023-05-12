@@ -1,9 +1,8 @@
 import type Backend from '../Backend.js';
 import type { DirectoryItem } from '../Backend.js';
 import Project from '../model/Project.js';
-
-export default class Electron implements Backend {
-  private projects:{ [key:string]: Project } = {};
+import {EventEmitter} from 'events';
+export default class Electron extends EventEmitter implements Backend {
   async listProjects():Promise<string[]> {
     // List the most recent projects
     const projectNames = electron.store.get( 'app', 'recentProjects', [] )
@@ -30,7 +29,9 @@ export default class Electron implements Backend {
   }
 
   async buildProject(projectName:string):Promise<string> {
+    this.emit('buildstart');
     const gameFile = await electron.buildProject( projectName );
+    this.emit('buildend', gameFile);
     return gameFile;
   }
 
