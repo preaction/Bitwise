@@ -3,14 +3,34 @@ import type IBackend from '../Backend.js';
 import type { DirectoryItem } from '../Backend.js';
 import ProjectItem from './ProjectItem.js';
 
-export default class Project {
+import {EventEmitter} from 'events';
+import type {Game} from '@fourstar/bitwise';
+
+export default class Project extends EventEmitter {
   backend:IBackend;
   name:string;
   state:{ [key:string]: any } = {};
+  private gameFile:string|null = null;
+  private gameClass:typeof Game|null = null;
   constructor( backend:IBackend, name:string ) {
+    super();
     this.backend = backend;
     this.name = name;
   }
+
+  async loadGameClass():Promise<typeof Game> {
+    this.emit( 'loadstart' );
+    if ( !this.gameFile ) {
+      this.gameFile = await this.backend.buildProject( this.name );
+      if ( !this.gameFile ) {
+        throw 'Error building project: No game file returned';
+      }
+    }
+    const mod = await import( /* @vite-ignore */ this.gameFile );
+    this.emit( 'loadend', mod.default );
+    return mod.default;
+  }
+
   async listItems():Promise<ProjectItem[]> {
     const descend = async (dirItem:DirectoryItem) => {
       let itemType:string;

@@ -243,16 +243,21 @@ describe( 'backend/Electron', () => {
     } );
 
     test( 'should emit buildstart and buildend events', async () => {
-      mockBuildProject.mockResolvedValueOnce("GameFile.js");
+      mockBuildProject.mockResolvedValueOnce("bfile://GameFile.js");
       const backend = new ElectronBackend();
       const buildStart = jest.fn();
       const buildEnd = jest.fn();
       backend.on( 'buildstart', buildStart );
       backend.on( 'buildend', buildEnd );
       await backend.buildProject( "buildProject" );
-      expect( buildStart ).toHaveBeenCalled();
-      expect( buildEnd ).toHaveBeenCalledWith( "GameFile.js" );
+      expect( buildStart ).toHaveBeenCalledWith( "buildProject" );
+      expect( buildEnd ).toHaveBeenCalledWith( "buildProject", "bfile://GameFile.js" );
     } );
+
+    test.todo( 'should use the last build for multiple concurrent builds' );
+    // Every call to buildProject() invalidates any currently
+    // in-progress calls, so we should make sure only the last build
+    // is used.
   });
 
   describe( 'releaseProject()', () => {

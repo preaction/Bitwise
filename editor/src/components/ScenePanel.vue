@@ -340,7 +340,7 @@ export default defineComponent({
     },
 
     hasSystem( name:string ) {
-      return !!this.sceneData.systems.find( s => s.name === name );
+      return !!this.sceneData?.systems?.find( s => s.name === name );
     },
 
     addSystem( name:string ) {

@@ -4,6 +4,9 @@ import { MockElectron } from '../../../mock/electron.js';
 import ElectronBackend from '../../../../src/backend/Electron.js';
 import type { DirectoryItem } from '../../../../src/Backend.js';
 import Project from '../../../../src/model/Project.js';
+import MockGame from '../../../mock/game.js';
+
+jest.mock('../../../mock/game.js');
 
 beforeEach( () => {
   global.electron = new MockElectron();
@@ -110,4 +113,26 @@ describe( 'Project', () => {
       expect(gotItems[0].children?.[0].type).toBe("image");
     } );
   });
+
+  describe.skip( 'loadGameClass()', () => {
+    // XXX: Skipped because the dynamic import does not work in
+    // node/Jest
+    const mockBuildProject = jest.fn() as jest.MockedFunction<typeof global.electron.buildProject>;
+    beforeEach( () => {
+      global.electron.buildProject = mockBuildProject;
+      mockBuildProject.mockReset();
+    } );
+
+    test( 'should load game class', async () => {
+      mockBuildProject.mockResolvedValue( '../../../mock/game.js' );
+      const backend = new ElectronBackend();
+      const project = new Project(backend, "projectName");
+      const gameClass = await project.loadGameClass();
+      expect( gameClass ).toBeInstanceOf( typeof MockGame );
+    });
+
+    test.todo( 'should emit loadstart/loadend events' );
+    test.todo( 'should reload game class after backend build' );
+    test.todo( 'should return same class to multiple concurrent callers' );
+  } );
 });

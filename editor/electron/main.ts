@@ -414,7 +414,7 @@ ipcMain.handle('bitwise-build-project', async (event, root) => {
     const perfEntries = performance.getEntriesByName('buildTime');
     webwin.webContents.send( 'info', JSON.stringify(perfEntries[ perfEntries.length - 1 ]) );
     performance.clearMeasures('buildTime');
-    return res.errors?.length > 0 ? null : contextDest;
+    return res.errors?.length > 0 ? null : `bfile://${contextDest}`;
   });
 });
 

@@ -7,6 +7,7 @@ import * as Vue from 'vue';
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { loadModule } from 'vue3-sfc-loader';
 import type { Game, Component, System } from '@fourstar/bitwise';
+import type { DirectoryItem } from '../Backend.js';
 
 // Core Component Forms
 import TransformEdit from '../components/bitwise/Transform.vue';
@@ -288,7 +289,7 @@ export const useAppStore = defineStore('app', {
       }
 
       try {
-        const mod = await import( /* @vite-ignore */ 'bfile://' + gameFile );
+        const mod = await import( /* @vite-ignore */ gameFile );
         if ( this.gameFile ) {
           electron.deleteTree( this.currentProject, this.gameFile );
         }

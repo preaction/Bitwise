@@ -4,6 +4,7 @@ import * as Vue from "vue";
 import { mapStores, mapState, mapActions, mapGetters } from 'pinia';
 import { useAppStore } from "./store/app.mts";
 import { loadModule } from 'vue3-sfc-loader';
+import type { Component, Game, System } from '@fourstar/bitwise';
 import Tab from './model/Tab.js';
 import Project from './model/Project.js';
 import type ProjectItem from './model/ProjectItem.js';
@@ -19,6 +20,7 @@ import Modal from "./components/Modal.vue";
 import MenuButton from "./components/MenuButton.vue";
 import Release from "./components/Release.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
+import type {VueElement} from "vue";
 
 type AppState = {
   currentProject: string,
@@ -68,12 +70,11 @@ export default Vue.defineComponent({
       openTabs: [] as Tab[],
       projectItems: [] as ProjectItem[],
       gameFile: '',
-      gameClass: null,
       isBuilding: false,
-      components: [],
-      systems: [],
-      componentForms: {},
-      systemForms: {},
+      components: {} as {[key:string]: typeof Component},
+      systems: {} as {[key:string]: typeof System},
+      componentForms: {} as {[key:string]: typeof VueElement },
+      systemForms: {} as {[key:string]: typeof VueElement },
       consoleLogs: [],
       openConsole: false,
       consoleErrors: 0,
@@ -85,15 +86,19 @@ export default Vue.defineComponent({
     return {
       backend: this.backend,
       project: Vue.computed( () => this.project ),
-      gameClass: Vue.computed( () => Vue.toRaw(this.gameClass) ),
       isBuilding: Vue.computed( () => this.isBuilding ),
       baseUrl: Vue.computed( () => this.baseUrl ),
     };
   },
+  watch: {
+    'project.gameClass': function( ) {
+      console.log( `App.vue got new gameClass` );
+    },
+  },
   computed: {
     ...mapStores(useAppStore),
     baseUrl():string {
-      return `bfile://${this.project.name}`;
+      return `bfile://${this.project.name}/`;
     },
     currentTab():Tab {
       return this.openTabs[ this.currentTabIndex ];
@@ -392,33 +397,23 @@ export default Vue.defineComponent({
     },
 
     async buildProject() {
-      const gameFile = await this.backend.buildProject( this.project.name );
-      if ( !gameFile ) {
-        throw 'Error building project: No game file returned';
-      }
+      const gameClass = await this.project.loadGameClass() as typeof Game;
 
-      try {
-        const mod = await import( /* @vite-ignore */ 'bfile://' + gameFile );
-        this.gameClass = mod.default;
-      }
-      catch (e) {
-        console.error( `Could not load game class: ${e}` );
-      }
-
-      if ( this.gameClass ) {
+      if ( gameClass ) {
         try {
-          const game = new this.gameClass({});
+          const game = new gameClass({});
           this.components = game.components;
           this.systems = game.systems;
         }
         catch (e) {
           console.log( `Could not create new game: ${e}` );
+          return;
         }
 
         for ( const name in this.components ) {
           const component = this.components[name];
           if ( component.editorComponent ) {
-            const path = this.baseUrl + '/' + component.editorComponent;
+            const path = this.baseUrl + component.editorComponent;
             this.componentForms[name] = await loadModule( path, vueLoaderOptions );
           }
         }
@@ -426,7 +421,7 @@ export default Vue.defineComponent({
         for ( const name in this.systems ) {
           const system = this.systems[name];
           if ( system.editorComponent ) {
-            const path = this.baseUrl + '/' + system.editorComponent;
+            const path = this.baseUrl + system.editorComponent;
             this.systemForms[name] = await loadModule( path, vueLoaderOptions );
           }
         }

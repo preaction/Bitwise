@@ -38,6 +38,7 @@ export default defineComponent({
       loading: true,
       playing: false,
       paused: false,
+      gameClass: null as typeof Game | null,
       editGame: null,
       editScene: null,
       playGame: null,
@@ -45,7 +46,7 @@ export default defineComponent({
     };
   },
 
-  inject: ['project', 'gameClass', 'isBuilding', 'baseUrl', 'backend'],
+  inject: ['project', 'isBuilding', 'baseUrl', 'backend'],
 
   async created() {
     this.loadPromise = this.modelValue.readFile();
@@ -62,7 +63,15 @@ export default defineComponent({
       this.initializeScene();
       this.update({ name: 'NewScene', ext: '.json' });
     }
-    this.initializeEditor();
+    try {
+      this.gameClass = await this.project.loadGameClass();
+    }
+    catch (err) {
+      console.log( `Error loading game class: ${err}` );
+    }
+    if ( this.gameClass ) {
+      this.initializeEditor();
+    }
   },
 
   unmounted() {
@@ -196,7 +205,7 @@ export default defineComponent({
     // The player game is sized according to the game settings and uses
     // the runtime systems
     createPlayerGame( canvas:string, opt:Object ):Game {
-      const game = new this.gameClass({
+      const game = new this.project.gameClass({
         canvas: this.$refs[canvas],
         loader: {
           base: this.baseUrl,
@@ -227,7 +236,7 @@ export default defineComponent({
 
     // The editor game is sized to fit the screen and uses some custom
     // editor systems.
-    createEditorGame( canvas:string, opt:Object ):Game {
+    createEditorGame( canvas:string, opt:Object={} ):Game {
       const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {

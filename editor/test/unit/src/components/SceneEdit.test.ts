@@ -1,4 +1,5 @@
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
+import * as Vue from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { MockElectron } from '../../../mock/electron.js';
 import MockGame from '../../../mock/game.js';
@@ -167,6 +168,5 @@ describe('SceneEdit', () => {
     expect( wrapper.emitted()['update'] ).toHaveLength(1);
     expect( wrapper.emitted()['update'][0] ).toMatchObject([{edited: false}]);
   });
-
 });
 

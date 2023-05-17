@@ -13,6 +13,7 @@ import Tab from '../../../src/model/Tab.js';
 import Project from '../../../src/model/Project.js';
 
 jest.mock("../../mock/game.ts");
+const MockGameConstructor = jest.requireActual<typeof import('../../mock/game.js')>('../../mock/game.js').default;
 
 let backend:MockBackend, project:Project, projectItems: DirectoryItem[];
 const MockedGame = jest.mocked( MockGame );
@@ -20,6 +21,7 @@ const cleanup = [] as Array<()=>void>;
 const mockListItems = jest.fn() as jest.MockedFunction<typeof backend.listItems>;
 const mockOpenProject = jest.fn() as jest.MockedFunction<typeof backend.openProject>;
 const mockBuildProject = jest.fn() as jest.MockedFunction<typeof backend.buildProject>;
+const mockLoadGameClass = jest.fn() as jest.MockedFunction<typeof project.loadGameClass>;
 const mockGetState = jest.fn() as jest.MockedFunction<typeof backend.getState>;
 const mockSetState = jest.fn() as jest.MockedFunction<typeof backend.setState>;
 const mockReadItemData = jest.fn() as jest.MockedFunction<typeof backend.readItemData>;
@@ -38,6 +40,7 @@ beforeEach( () => {
 
   project = new Project( backend, "Project Name" );
   mockOpenProject.mockReturnValue( Promise.resolve( project ) );
+  project.loadGameClass = mockLoadGameClass;
 
   projectItems = [
     { path: "directory", children: [] },
@@ -60,6 +63,7 @@ afterEach( () => {
   mockListItems.mockReset();
   mockOpenProject.mockReset();
   mockBuildProject.mockReset();
+  mockLoadGameClass.mockReset();
   mockGetState.mockReset();
   mockSetState.mockReset();
   MockedGame.mockReset();
@@ -118,12 +122,15 @@ describe('App', () => {
       expect( wrapper.vm.project.name ).toBe(project.name);
 
       expect( mockListItems ).toHaveBeenCalled();
+
+      expect( mockLoadGameClass ).toHaveBeenCalled();
     });
 
     test( 'loads system and component forms', async () => {
+      // @ts-ignore
+      mockLoadGameClass.mockResolvedValue( MockedGame );
       MockedGame.mockImplementation( () => {
-        const MockGame = jest.requireActual<typeof import('../../mock/game.js')>('../../mock/game.js').default;
-        const game = new MockGame();
+        const game = new MockGameConstructor();
         game.components = {
           TestComponent: { editorComponent: 'test/mock/componentEditForm.vue' },
         };
@@ -340,6 +347,8 @@ describe('App', () => {
       await flushPromises();
       await wrapper.vm.$nextTick();
 
+      expect( wrapper.vm.gameClass ).not.toBeNull();
+
       // Opens tab w/ correct info
       const tabBar = wrapper.get({ ref: 'tabBar' });
       const tabElements = tabBar.findAll( 'a' );
@@ -394,6 +403,7 @@ describe('App', () => {
       expect( projectDialog.props('show') ).toBe(false);
       expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
       expect( mockListItems ).toHaveBeenCalled();
+      expect( wrapper.vm.gameClass ).not.toBeNull();
     });
 
     test( 'restores tabs', async () => {
@@ -431,6 +441,8 @@ describe('App', () => {
       await resumeButton.trigger('click');
       await flushPromises();
       await wrapper.vm.$nextTick();
+
+      expect( wrapper.vm.gameClass ).not.toBeNull();
 
       // Opens tab w/ correct info
       const tabBar = wrapper.get({ ref: 'tabBar' });

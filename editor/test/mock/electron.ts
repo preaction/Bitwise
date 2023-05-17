@@ -1,3 +1,6 @@
+
+import type { DirectoryItem } from '../../src/Backend.js';
+
 /**
  * This is a simple mock object imitating the API exposed to the
  * Electron renderer process as the 'electron' global. This is set up in
