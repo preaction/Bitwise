@@ -7,6 +7,7 @@ export default class MockGame {
   constructor() {}
   addScene() {
     return {
+      game: this as MockGame,
       thaw: jest.fn(),
       init: jest.fn(),
       getSystem: jest.fn().mockImplementation( () => {

@@ -122,6 +122,7 @@ export default defineComponent({
     initializeScene() {
       this.sceneData = {
         name: 'NewScene',
+        component: 'SceneEdit',
         components: [
           'Transform', 'Sprite', 'OrthographicCamera', 'RigidBody',
           'BoxCollider', 'UI',

@@ -136,7 +136,7 @@ export default defineComponent({
       <span v-else-if="isFolder" class="me-1">
         <i class="fa" @click.stop="toggleChildren" :class="showChildren ? 'fa-folder-open' : 'fa-folder'"></i>
       </span>
-      <span class="flex-fill">{{ name }}</span>
+      <span class="flex-fill" data-test="name">{{ name }}</span>
       <span class="object-tree-item__menu">
         <slot name="menu" :item="item" />
       </span>

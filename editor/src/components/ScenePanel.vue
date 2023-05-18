@@ -2,6 +2,7 @@
 import { defineComponent, toRaw, markRaw } from "vue";
 import ObjectTreeItem from './ObjectTreeItem.vue';
 import MenuButton from "./MenuButton.vue";
+import type {Scene} from "@fourstar/bitwise";
 
 /**
  * ScenePanel handles showing the scene entity tree and rendering the
@@ -15,13 +16,11 @@ export default defineComponent({
     MenuButton,
   },
   props: ['modelValue', 'scene', 'isPrefab'],
-  emits: ['update:modelValue', 'update'],
+  emits: {'update:modelValue': null, 'update': null},
+
+  inject: ['systemForms', 'componentForms'],
   data() {
     return {
-      sceneData: JSON.parse( JSON.stringify( toRaw( this.modelValue ) ) ),
-      // XXX: sceneTree should not be stored, but should be a computed
-      // value so it is automatically recalculated
-      sceneTree: {},
       selectedSceneItem: null,
       selectedEntityData: null,
       selectedEntity: null,
@@ -33,38 +32,10 @@ export default defineComponent({
     }
   },
   mounted() {
-    this.updateSceneTree();
     this.select( this.sceneTree );
   },
   computed: {
-    components() {
-      return this.scene?.game.components || {};
-    },
-    systems() {
-      return this.scene?.game.systems || {};
-    },
-    availableComponents() {
-      return Object.keys( this.components ).filter( c => !this.components[c].isNull && !this.components[c].isHidden );
-    },
-    availableSystems() {
-      return Object.keys( this.systems ).filter( s => !this.systems[s].isNull && !s.match(/^Editor/) );
-    },
-    selectedEntityComponents() {
-      if ( !this.selectedEntityData ) {
-        return [];
-      }
-      return Object.keys( this.selectedEntityData.components );
-    },
-  },
-
-  methods: {
-    refresh() {
-      this.updateSceneTree();
-    },
-    updateSceneTree() {
-      if ( !this.sceneData || !Object.keys(this.sceneData).length ) {
-        return;
-      }
+    sceneTree() {
       // Find all the entities and build tree items for them
       const rootNode = {
         path: '',
@@ -72,7 +43,7 @@ export default defineComponent({
         data: {},
         children: [],
       };
-      for ( const entity of this.sceneData.entities ) {
+      for ( const entity of this.modelValue?.entities ?? [] ) {
         const pathParts = entity.path.split(/\//);
         let treeNode = rootNode;
         for ( let i = 0; i < pathParts.length; i++ ) {
@@ -94,18 +65,36 @@ export default defineComponent({
         treeNode.icon = this.icons[ entity.type ] || this.icons.default;
       }
 
-      if ( this.isPrefab ) {
-        this.sceneTree = rootNode.children[0];
-      }
-      else {
-        this.sceneTree = {
+      let sceneTree = this.isPrefab
+        ? rootNode.children[0]
+        : {
           ...rootNode,
-          name: this.sceneData?.name,
+          name: this.modelValue?.name,
           icon: 'fa-film',
         };
-      }
+      return sceneTree;
     },
+    components() {
+      return this.scene?.game.components || {};
+    },
+    systems() {
+      return this.scene?.game.systems || {};
+    },
+    availableComponents() {
+      return Object.keys( this.components ).filter( c => !this.components[c].isNull && !this.components[c].isHidden );
+    },
+    availableSystems() {
+      return Object.keys( this.systems ).filter( s => !this.systems[s].isNull && !s.match(/^Editor/) );
+    },
+    selectedEntityComponents() {
+      if ( !this.selectedEntityData ) {
+        return [];
+      }
+      return Object.keys( this.selectedEntityData.components );
+    },
+  },
 
+  methods: {
     select(item) {
       if ( !this.isPrefab && this.sceneTree === item ) {
         this.selectedEntity = null;
@@ -179,12 +168,11 @@ export default defineComponent({
       }
       // XXX: Fix this to ensure entity path is unique before adding
       // entity
-      this.sceneData.entities.push( entityData );
+      this.modelValue.entities.push( entityData );
 
       const entity = this.scene.addEntity();
       entity.thaw( entityData );
 
-      this.updateSceneTree();
       this.selectByPath(entityData.path);
 
       this.update();
@@ -194,7 +182,7 @@ export default defineComponent({
       const name = event.target.value;
       this.sceneTree.name = name;
       this.scene.name = name;
-      this.sceneData.name = name;
+      this.modelValue.name = name;
       this.update();
     },
 
@@ -211,9 +199,9 @@ export default defineComponent({
         if ( this.selectedEntity?.path === entityData.path ) {
           this.select( this.sceneTree );
         }
-        for ( let i = 0; i < this.sceneData.entities.length; i++ ) {
-          if ( this.sceneData.entities[i].path === entityData.path ) {
-            this.sceneData.entities.splice( i, 1 );
+        for ( let i = 0; i < this.modelValue.entities.length; i++ ) {
+          if ( this.modelValue.entities[i].path === entityData.path ) {
+            this.modelValue.entities.splice( i, 1 );
             break;
           }
         }
@@ -235,13 +223,12 @@ export default defineComponent({
       }
       const entity = this.scene.addEntity();
       entity.thaw( entityData );
-      this.sceneData.entities.push( entity.freeze() );
-      this.updateSceneTree();
+      this.modelValue.entities.push( entity.freeze() );
       this.update();
     },
 
     updateSystem( idx:number, data:Object ) {
-      this.sceneData.systems[idx].data = data;
+      this.modelValue.systems[idx].data = data;
       this.scene.systems[idx].thaw( data );
       this.update();
     },
@@ -290,7 +277,6 @@ export default defineComponent({
         const newEntity = dropEntity.scene.addEntity();
         newEntity.thaw(dragEntityData);
 
-        this.updateSceneTree();
         // XXX: Expand dropEntity in scene tree if not root
         // XXX: Focus dragEntity in scene tree
 
@@ -331,8 +317,8 @@ export default defineComponent({
       if ( data ) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
-        const systemData = this.sceneData.systems.splice(data, 1);
-        this.sceneData.systems.splice( index, 0, ...systemData );
+        const systemData = this.modelValue.systems.splice(data, 1);
+        this.modelValue.systems.splice( index, 0, ...systemData );
         const system = this.scene.systems.splice(data, 1);
         this.scene.systems.splice( index, 0, ...system );
         this.update();
@@ -340,7 +326,7 @@ export default defineComponent({
     },
 
     hasSystem( name:string ) {
-      return !!this.sceneData?.systems?.find( s => s.name === name );
+      return !!this.modelValue?.systems?.find( s => s.name === name );
     },
 
     addSystem( name:string ) {
@@ -348,7 +334,7 @@ export default defineComponent({
         return;
       }
       this.scene.addSystem( name );
-      this.sceneData.systems.push({
+      this.modelValue.systems.push({
         name,
         data: this.scene.systems[ this.scene.systems.length - 1 ].freeze(),
       });
@@ -356,10 +342,9 @@ export default defineComponent({
     },
 
     removeSystem( idx:number ) {
-      this.sceneData.systems.splice( idx, 1 );
+      this.modelValue.systems.splice( idx, 1 );
       this.scene.systems.splice( idx, 1 );
       this.update();
-      this.updateSceneTree();
     },
 
     updateEntityName() {
@@ -401,8 +386,8 @@ export default defineComponent({
 
     update() {
       this.$emit( 'update:modelValue', {
-        ...toRaw(this.sceneData),
-        name: this.sceneTree.name,
+        ...toRaw(this.modelValue),
+        name: this.modelValue.name,
       } );
       this.$emit( 'update' );
     },
@@ -488,9 +473,9 @@ export default defineComponent({
       <h5>Scene</h5>
       <div class="d-flex justify-content-between align-items-center">
         <label class="me-1">Name</label>
-        <input v-model="sceneTree.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
+        <input v-model="modelValue.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
       </div>
-      <div v-for="s, idx in sceneData.systems" :key="s.name" class="system-form">
+      <div v-for="s, idx in modelValue.systems" :key="s.name" class="system-form">
         <div class="mb-1 d-flex justify-content-between align-items-center"
           draggable="true" @dragstart="startDragSystem( $event, idx )"
           @dragover="dragOverSystem( $event, idx )" @drop="dropSystem( $event, idx )"

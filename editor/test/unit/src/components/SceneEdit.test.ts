@@ -7,6 +7,7 @@ import { Game } from '@fourstar/bitwise';
 import Project from '../../../../src/model/Project.js';
 import MockBackend from'../../../mock/backend.js';
 import SceneEdit from '../../../../src/components/SceneEdit.vue';
+import ScenePanel from '../../../../src/components/ScenePanel.vue';
 import Tab from '../../../../src/model/Tab.js';
 import ProjectItem from '../../../../src/model/ProjectItem.js';
 
@@ -61,6 +62,15 @@ describe('SceneEdit', () => {
     expect( wrapper.emitted() ).toHaveProperty('update');
     expect( wrapper.emitted()['update'] ).toHaveLength(1);
     expect( wrapper.emitted()['update'][0] ).toMatchObject([{edited: true, name: "NewScene", ext: '.json'}]);
+    expect( wrapper.getComponent( ScenePanel ).props('modelValue') ).toMatchObject(
+      expect.objectContaining({
+        name: "NewScene",
+        component: "SceneEdit",
+        entities: expect.arrayContaining([]),
+        components: expect.arrayContaining([]),
+        systems: expect.arrayContaining([]),
+      }),
+    );
 
     // Click the Save button
     const saveButton = wrapper.get('button[data-test=save]');
@@ -105,6 +115,7 @@ describe('SceneEdit', () => {
     expect( wrapper.emitted() ).not.toHaveProperty('update');
     let saveButton = wrapper.get('button[data-test=save]');
     expect( saveButton.attributes() ).toHaveProperty( 'disabled' );
+    expect( wrapper.getComponent( ScenePanel ).props('modelValue') ).toEqual( sceneData );
 
     // Click the Save button
     wrapper.vm.modelValue.edited = true;

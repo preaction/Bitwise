@@ -22,6 +22,21 @@ import Release from "./components/Release.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
 import type {VueElement} from "vue";
 
+// Core Component Forms
+import TransformEdit from './components/bitwise/Transform.vue';
+import OrthographicCameraEdit from './components/bitwise/OrthographicCamera.vue';
+import SpriteEdit from './components/bitwise/Sprite.vue';
+import RigidBodyEdit from './components/bitwise/RigidBody.vue';
+import BoxColliderEdit from './components/bitwise/BoxCollider.vue';
+import UIElementEdit from './components/bitwise/UIElement.vue';
+import UIImageEdit from './components/bitwise/UIImage.vue';
+import UITextEdit from './components/bitwise/UIText.vue';
+import UIButtonEdit from './components/bitwise/UIButton.vue';
+import UIContainerEdit from './components/bitwise/UIContainer.vue';
+
+// Core System forms
+import PhysicsEdit from './components/bitwise/system/Physics.vue';
+
 type AppState = {
   currentProject: string,
   openTabs: Array<{ path:string, component:string }>,
@@ -73,8 +88,21 @@ export default Vue.defineComponent({
       isBuilding: false,
       components: {} as {[key:string]: typeof Component},
       systems: {} as {[key:string]: typeof System},
-      componentForms: {} as {[key:string]: typeof VueElement },
-      systemForms: {} as {[key:string]: typeof VueElement },
+      componentForms: Vue.markRaw({
+        "Transform": TransformEdit,
+        "OrthographicCamera": OrthographicCameraEdit,
+        "Sprite": SpriteEdit,
+        "RigidBody": RigidBodyEdit,
+        "BoxCollider": BoxColliderEdit,
+        "UIElement": UIElementEdit,
+        "UIImage": UIImageEdit,
+        "UIText": UITextEdit,
+        "UIButton": UIButtonEdit,
+        "UIContainer": UIContainerEdit,
+      }) as {[key:string]: typeof VueElement },
+      systemForms: Vue.markRaw({
+        "Physics": PhysicsEdit,
+      }) as {[key:string]: typeof VueElement },
       consoleLogs: [],
       openConsole: false,
       consoleErrors: 0,
@@ -88,6 +116,8 @@ export default Vue.defineComponent({
       project: Vue.computed( () => this.project ),
       isBuilding: Vue.computed( () => this.isBuilding ),
       baseUrl: Vue.computed( () => this.baseUrl ),
+      systemForms: Vue.computed( () => this.systemForms ),
+      componentForms: Vue.computed( () => this.componentForms ),
     };
   },
   watch: {
