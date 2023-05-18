@@ -34,7 +34,7 @@ export default class Project extends EventEmitter {
   async listItems():Promise<ProjectItem[]> {
     const descend = async (dirItem:DirectoryItem) => {
       let itemType:string;
-      if ( dirItem.children?.length ) {
+      if ( dirItem.children ) {
         // Descend
         itemType = 'directory';
       }
@@ -59,7 +59,7 @@ export default class Project extends EventEmitter {
         itemType = 'unknown';
       }
       const projectItem = new ProjectItem( this, dirItem.path, itemType );
-      if ( dirItem.children?.length ) {
+      if ( dirItem.children ) {
         projectItem.children = await Promise.all( dirItem.children.map((i:DirectoryItem) => descend(i)) );
       }
       return projectItem;

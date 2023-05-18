@@ -4,10 +4,11 @@ import { app, BrowserWindow, shell, ipcMain, dialog, protocol } from 'electron'
 import { fork, ChildProcess } from 'node:child_process';
 import * as os from 'os'
 import * as path from 'path'
-import { init } from './bitwise-build/init';
-import * as bitwise from './bitwise-build/build';
-import type { BuildContext, BuildResult } from './bitwise-build/build';
-import { release } from './bitwise-build/release';
+import { init } from './bitwise-build/init.js';
+import * as bitwise from './bitwise-build/build.js';
+import { getProjectTree } from './bitwise-build/project.js';
+import type { BuildContext, BuildResult } from './bitwise-build/build.js';
+import { release } from './bitwise-build/release.js';
 
 // Initialize electron-store
 import Store from 'electron-store'
@@ -88,7 +89,7 @@ async function createWindow() {
 
   if (app.isPackaged) {
     win.loadFile(indexHtml)
-  } else {
+  } else if ( url ) {
     win.loadURL(url)
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
@@ -180,40 +181,6 @@ ipcMain.handle('bitwise-new-project', event => {
   );
 });
 
-type projectFile = {
-  name: string,
-  ext: string,
-  path: string,
-  isDirectory: boolean,
-  children?: projectFile[],
-};
-
-async function descend( filePath:string, root:string='' ):Promise<projectFile[]> {
-  if ( root == '' ) {
-    root = filePath;
-    filePath = '';
-  }
-  return fs.readdir( path.join(root, filePath), { withFileTypes: true })
-  .then( async (paths) => {
-    return Promise.all(
-      paths.map( async p => {
-        const ext = p.isFile() ? p.name.substring( p.name.lastIndexOf( '.' ) ) : '';
-        const item:projectFile = {
-          name: p.name.substring( 0, p.name.length - ext.length ),
-          ext,
-          path: path.join( filePath, p.name ),
-          isDirectory: false,
-        };
-        if ( p.isDirectory() ) {
-          item.isDirectory = true;
-          item.children = await descend( item.path, root );
-        }
-        return item;
-      })
-    );
-  });
-}
-
 let aborter:AbortController;
 ipcMain.handle('bitwise-read-project', (event, path) => {
   if ( !win ) {
@@ -249,7 +216,7 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
       throw err;
     }
   })();
-  return descend(path);
+  return getProjectTree(path);
 });
 
 // Register a protocol to allow reading files from the project root

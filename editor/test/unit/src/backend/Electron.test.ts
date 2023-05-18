@@ -106,7 +106,9 @@ describe( 'backend/Electron', () => {
       expect(mockReadProject).toHaveBeenCalledWith("project");
       expect(gotItems).toHaveLength(3);
       expect(gotItems[0].path).toBe(dirItems[0].path);
+      expect(gotItems[0]).not.toHaveProperty("children");
       expect(gotItems[1].path).toBe(dirItems[1].path);
+      expect(gotItems[1]).not.toHaveProperty("children");
       expect(gotItems[2].path).toBe(dirItems[2].path);
       expect(gotItems[2].children?.[0].path).toBe(dirItems[2].children?.[0].path);
     } );

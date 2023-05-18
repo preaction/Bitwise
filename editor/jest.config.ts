@@ -34,9 +34,19 @@ const config: Config = {
   "projects": [
     {
       ...common,
+      transform: {
+        // '^.+\\.[tj]sx?$' to process js/ts with `ts-jest`
+        // '^.+\\.m?[tj]sx?$' to process js/ts/mjs/mts with `ts-jest`
+        '^.+\\.m?tsx?$': [
+          'ts-jest',
+          {
+            useESM: true,
+            tsconfig: 'tsconfig.node.json',
+          },
+        ],
+      },
       "testMatch": ["**/test/unit/electron/**/?(*.)+(spec|test).[jt]s?(x)"],
       "testPathIgnorePatterns": ["<rootDir>/out"],
-      "runner": "@kayahr/jest-electron-runner/main",
       "testEnvironment": "node",
     },
     {

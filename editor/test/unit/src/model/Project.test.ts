@@ -39,6 +39,10 @@ describe( 'Project', () => {
             },
           ],
         },
+        {
+          path: 'logs',
+          children: [],
+        },
       ];
       mockReadProject.mockResolvedValue( dirItems );
 
@@ -46,15 +50,20 @@ describe( 'Project', () => {
       const project = new Project(backend, "projectName");
       const gotItems = await project.listItems();
       expect(mockReadProject).toHaveBeenCalledWith(project.name);
-      expect(gotItems).toHaveLength(3);
+      expect(gotItems).toHaveLength(4);
       expect(gotItems[0].path).toBe(dirItems[0].path);
       expect(gotItems[0].type).toBe("image");
+      expect(gotItems[0].children).toBeFalsy();
       expect(gotItems[1].path).toBe(dirItems[1].path);
       expect(gotItems[1].type).toBe("markdown");
+      expect(gotItems[1].children).toBeFalsy();
       expect(gotItems[2].path).toBe(dirItems[2].path);
       expect(gotItems[2].type).toBe("directory");
-      expect(gotItems[2].children[0].path).toBe(dirItems[2].children?.[0].path);
-      expect(gotItems[2].children[0].type).toBe("image");
+      expect(gotItems[2].children?.[0].path).toBe(dirItems[2].children?.[0].path);
+      expect(gotItems[2].children?.[0].type).toBe("image");
+      expect(gotItems[3].path).toBe(dirItems[3].path);
+      expect(gotItems[3].type).toBe("directory");
+      expect(gotItems[3].children).toHaveLength(0);
     } );
 
     test( 'should open JSON files to find type info', async () => {

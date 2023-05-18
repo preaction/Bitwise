@@ -1,9 +1,12 @@
 {
   "extends": "@vue/tsconfig/tsconfig.node.json",
   "compilerOptions": {
-    "composite": true,
+    "lib": [ "esnext" ],
+    "target": "esnext",
     "module": "commonjs",
+    "moduleResolution": "nodenext",
+    "composite": true,
     "allowJs": true
   },
-  "include": ["package.json", "vite.config.ts", "electron/**/*"]
+  "include": ["package.json", "vite.config.ts", "electron/*", "electron/**/*"]
 }
