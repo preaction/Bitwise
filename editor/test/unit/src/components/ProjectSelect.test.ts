@@ -8,11 +8,13 @@ let backend:MockBackend;
 const mockNewProject = jest.fn() as jest.MockedFunction<typeof global.electron.newProject>;
 const mockOpenProject = jest.fn() as jest.MockedFunction<typeof global.electron.openProject>;
 const mockListProjects = jest.fn() as jest.MockedFunction<typeof backend.listProjects>;
+const mockGetState = jest.fn() as jest.MockedFunction<typeof backend.getState>;
 beforeEach( () => {
   mockListProjects.mockReset();
   mockListProjects.mockResolvedValue( [] );
   mockNewProject.mockReset();
   mockOpenProject.mockReset();
+  mockGetState.mockReset();
 
   global.electron = new MockElectron();
   global.electron.newProject = mockNewProject;
@@ -20,6 +22,8 @@ beforeEach( () => {
 
   backend = new MockBackend();
   backend.listProjects = mockListProjects;
+  backend.getState = mockGetState;
+  mockGetState.mockResolvedValue({});
 });
 
 describe('ProjectSelect', () => {
@@ -137,6 +141,29 @@ describe('ProjectSelect', () => {
     expect( global.electron.openProject ).toHaveBeenCalled();
     await wrapper.vm.$nextTick();
     expect( wrapper.emitted() ).not.toHaveProperty( 'select' );
+  });
+
+  test( 'resume project', async () => {
+    const projectName = "ProjectName";
+    const projectPath = `/path/to/${projectName}`;
+    mockGetState.mockResolvedValue({
+      currentProject: projectPath,
+    });
+
+    const wrapper = mount(ProjectSelect, {
+      global: {
+        provide: {
+          backend,
+        },
+      },
+    });
+    await flushPromises();
+
+    const resume = wrapper.get( '[data-test=resumeProject]' );
+    expect( resume.text() ).toBe( `Resume ${projectName}` );
+
+    await resume.trigger('click');
+    expect( wrapper.emitted().restore ).toHaveLength(1);
   });
 });
 

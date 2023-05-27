@@ -59,7 +59,7 @@ export default defineComponent({
     <button v-if="restoreProject" class="primary resume-project" @click="loadStoredState"
       data-test="resumeProject"
     >
-      Resume {{restoreProject}}
+      Resume {{projectName(restoreProject)}}
     </button>
     <div class="project-buttons">
       <button data-test="newProject" @click="newProject">Create Project...</button>
