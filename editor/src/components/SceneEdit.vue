@@ -206,7 +206,7 @@ export default defineComponent({
     // The player game is sized according to the game settings and uses
     // the runtime systems
     createPlayerGame( canvas:string, opt:Object ):Game {
-      const game = new this.project.gameClass({
+      const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
           base: this.baseUrl,
@@ -312,8 +312,6 @@ export default defineComponent({
         await this.playScene.init();
         this.playScene.start();
         this.$refs['play-canvas'].focus();
-        // Get any entities created by scene start
-        this.$refs.scenePanel.refresh();
       } );
     },
 
@@ -443,19 +441,19 @@ export default defineComponent({
           <i class="fa fa-save"></i>
         </button>
         <div class="btn-group" role="group" aria-label="Play/pause">
-          <button type="button" class="btn btn-sm"
+          <button type="button" class="btn btn-sm" data-test="stop"
             :class="!playing ? 'btn-danger' : 'btn-outline-danger'"
             :disabled="!playing" @click="stop"
           >
             <i class="fa fa-stop"></i>
           </button>
-          <button type="button" class="btn btn-sm"
+          <button type="button" class="btn btn-sm" data-test="play"
             :class="playing && !paused ? 'btn-success' : 'btn-outline-success'"
             :disabled="playing && !paused" @click="play()"
           >
             <i class="fa fa-play"></i>
           </button>
-          <button type="button" class="btn btn-sm"
+          <button type="button" class="btn btn-sm" data-test="pause"
             :class="playing && paused ? 'btn-warning' : 'btn-outline-warning'"
             :disabled="!playing || ( playing && paused )" @click="pause"
           >

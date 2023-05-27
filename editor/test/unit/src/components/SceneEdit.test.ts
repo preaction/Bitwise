@@ -1,9 +1,7 @@
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
-import * as Vue from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { MockElectron } from '../../../mock/electron.js';
 import MockGame from '../../../mock/game.js';
-import { Game } from '@fourstar/bitwise';
 import Project from '../../../../src/model/Project.js';
 import MockBackend from'../../../mock/backend.js';
 import SceneEdit from '../../../../src/components/SceneEdit.vue';
@@ -87,97 +85,122 @@ describe('SceneEdit', () => {
     expect( wrapper.emitted()['update'][1] ).toMatchObject([{edited: false, src: newFilePath, name: "NewScene", ext: ".json"}]);
   });
 
-  test('edit an existing scene', async () => {
-    const sceneData = {
-      name: "OldScene",
-      components: [ 'Transform', 'Sprite', 'OrthographicCamera', 'UI' ],
-      systems: [
-        { name: 'Input', data: {} },
-        { name: 'Render', data: {} },
-      ],
-      entities: [],
-    };
-    mockWriteItemData.mockReturnValueOnce( Promise.resolve() );
-    mockReadItemData.mockReturnValueOnce( Promise.resolve(JSON.stringify(sceneData)) );
+  describe( 'existing scene', () => {
+    let sceneData:any, modelValue:Tab;
+    beforeEach( () => {
+      sceneData = {
+        name: "OldScene",
+        components: [ 'Transform', 'Sprite', 'OrthographicCamera', 'UI' ],
+        systems: [
+          { name: 'Input', data: {} },
+          { name: 'Render', data: {} },
+        ],
+        entities: [],
+      };
+      modelValue = new Tab(new ProjectItem(project, "OldScene.json", "SceneEdit"));
+      mockReadItemData.mockReturnValueOnce( Promise.resolve(JSON.stringify(sceneData)) );
+      mockWriteItemData.mockReturnValueOnce( Promise.resolve() );
+    } );
 
-    const modelValue = new Tab(new ProjectItem(project, "OldScene.json", "SceneEdit"));
-    const wrapper = mount(SceneEdit, {
-      shallow: true,
-      props: {
-        modelValue,
-      },
-      global: {
-        provide,
-      },
+    test('open an existing scene', async () => {
+      const wrapper = mount(SceneEdit, {
+        shallow: true,
+        props: {
+          modelValue,
+        },
+        global: {
+          provide,
+        },
+      });
+      await flushPromises();
+      // No update event emitted for existing scene
+      expect( wrapper.emitted() ).not.toHaveProperty('update');
+      let saveButton = wrapper.get('button[data-test=save]');
+      expect( saveButton.attributes() ).toHaveProperty( 'disabled' );
+      expect( wrapper.getComponent( ScenePanel ).props('modelValue') ).toEqual( sceneData );
     });
-    await flushPromises();
-    // No update event emitted for existing scene
-    expect( wrapper.emitted() ).not.toHaveProperty('update');
-    let saveButton = wrapper.get('button[data-test=save]');
-    expect( saveButton.attributes() ).toHaveProperty( 'disabled' );
-    expect( wrapper.getComponent( ScenePanel ).props('modelValue') ).toEqual( sceneData );
 
-    // Click the Save button
-    wrapper.vm.modelValue.edited = true;
-    await wrapper.vm.$nextTick();
-    expect( saveButton.attributes() ).not.toHaveProperty( 'disabled' );
-    await saveButton.trigger('click');
-    await flushPromises();
+    test('save an existing scene', async () => {
+      modelValue.edited = true;
+      const wrapper = mount(SceneEdit, {
+        shallow: true,
+        props: {
+          modelValue,
+        },
+        global: {
+          provide,
+        },
+      });
+      await flushPromises();
 
-    // Verify the scene was saved
-    expect( mockWriteItemData ).toHaveBeenCalled();
-    expect( mockWriteItemData.mock.calls[0][0] ).toEqual( project.name );
-    expect( mockWriteItemData.mock.calls[0][1] ).toEqual(modelValue.src);
-    expect( wrapper.emitted() ).toHaveProperty('update');
-    expect( wrapper.emitted()['update'] ).toHaveLength(1);
-    expect( wrapper.emitted()['update'][0] ).toMatchObject([{edited: false}]);
+      // Click the Save button
+      let saveButton = wrapper.get('button[data-test=save]');
+      expect( saveButton.attributes() ).not.toHaveProperty( 'disabled' );
+      await saveButton.trigger('click');
+      await flushPromises();
+
+      // Verify the scene was saved
+      expect( mockWriteItemData ).toHaveBeenCalled();
+      expect( mockWriteItemData.mock.calls[0][0] ).toEqual( project.name );
+      expect( mockWriteItemData.mock.calls[0][1] ).toEqual(modelValue.src);
+      expect( wrapper.emitted() ).toHaveProperty('update');
+      expect( wrapper.emitted()['update'] ).toHaveLength(1);
+      expect( wrapper.emitted()['update'][0] ).toMatchObject([{edited: false}]);
+    });
+
+    test('rename a scene', async () => {
+      modelValue.name = "NewScene";
+      modelValue.edited = true;
+      sceneData.name = 'NewScene';
+      const wrapper = mount(SceneEdit, {
+        shallow: true,
+        props: {
+          modelValue,
+        },
+        global: {
+          provide,
+        },
+      });
+      await flushPromises();
+
+      let saveButton = wrapper.get('button[data-test=save]');
+      expect( saveButton.attributes() ).not.toHaveProperty( 'disabled' );
+      await saveButton.trigger('click');
+      await flushPromises();
+
+      // Verify the scene was saved
+      expect( mockWriteItemData ).toHaveBeenCalled();
+      expect( mockWriteItemData.mock.calls[0][0] ).toEqual( project.name );
+      expect( mockWriteItemData.mock.calls[0][1] ).toEqual(modelValue.src);
+      expect( wrapper.emitted() ).toHaveProperty('update');
+      expect( wrapper.emitted()['update'] ).toHaveLength(1);
+      expect( wrapper.emitted()['update'][0] ).toMatchObject([{edited: false}]);
+    });
+
+    test('play scene', async () => {
+      const wrapper = mount(SceneEdit, {
+        shallow: true,
+        props: {
+          modelValue,
+        },
+        global: {
+          provide,
+        },
+      });
+      await flushPromises();
+
+      wrapper.setData( { gameClass: MockGame } );
+
+      let playButton = wrapper.get('button[data-test=play]');
+      expect( playButton.attributes() ).not.toHaveProperty( 'disabled' );
+      await playButton.trigger('click');
+      await flushPromises();
+
+      // Verify the scene is playing
+
+    });
+
   });
 
-  test('rename a scene', async () => {
-    const sceneData = {
-      name: "OldScene",
-      components: [ 'Transform', 'Sprite', 'OrthographicCamera', 'UI' ],
-      systems: [
-        { name: 'Input', data: {} },
-        { name: 'Render', data: {} },
-      ],
-      entities: [],
-    };
-    mockWriteItemData.mockReturnValueOnce( Promise.resolve() );
-    mockReadItemData.mockReturnValueOnce( Promise.resolve(JSON.stringify(sceneData)) );
-
-    const modelValue = new Tab(new ProjectItem(project, "OldScene.json", "SceneEdit"));
-    const wrapper = mount(SceneEdit, {
-      shallow: true,
-      props: {
-        modelValue,
-      },
-      global: {
-        provide,
-      },
-    });
-    await flushPromises();
-    // No update event emitted for existing scene
-    expect( wrapper.emitted() ).not.toHaveProperty('update');
-    let saveButton = wrapper.get('button[data-test=save]');
-    expect( saveButton.attributes() ).toHaveProperty( 'disabled' );
-
-    // Rename
-    wrapper.vm.modelValue.name = "NewScene";
-    // Click the Save button
-    wrapper.vm.modelValue.edited = true;
-    await wrapper.vm.$nextTick();
-    expect( saveButton.attributes() ).not.toHaveProperty( 'disabled' );
-    await saveButton.trigger('click');
-    await flushPromises();
-
-    // Verify the scene was saved
-    expect( mockWriteItemData ).toHaveBeenCalled();
-    expect( mockWriteItemData.mock.calls[0][0] ).toEqual( project.name );
-    expect( mockWriteItemData.mock.calls[0][1] ).toEqual(modelValue.src);
-    expect( wrapper.emitted() ).toHaveProperty('update');
-    expect( wrapper.emitted()['update'] ).toHaveLength(1);
-    expect( wrapper.emitted()['update'][0] ).toMatchObject([{edited: false}]);
-  });
 });
 
