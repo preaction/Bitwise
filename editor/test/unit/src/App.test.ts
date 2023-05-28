@@ -1,5 +1,5 @@
 import {describe, expect, test, beforeEach, afterEach, jest, beforeAll} from '@jest/globals';
-import { flushPromises, mount } from '@vue/test-utils';
+import { flushPromises, mount, VueWrapper } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { MockElectron } from '../../mock/electron.js';
 import type { DirectoryItem } from '../../../src/Backend.js';
@@ -45,6 +45,7 @@ beforeEach( () => {
   projectItems = [
     { path: "directory", children: [] },
     { path: "LoadScene.json" },
+    { path: "System.ts" },
   ];
   projectItems[0].children = [
     { path: "directory/OldScene.json" },
@@ -181,9 +182,10 @@ describe('App', () => {
     });
   });
 
-  describe('can load items from project tree', () => {
-    test( 'can load scene from root', async () => {
-      const wrapper = mount(App, {
+  describe('can open items from project tree', () => {
+    let wrapper:VueWrapper;
+    beforeEach( async () => {
+      wrapper = mount(App, {
         attachTo: document.body,
         props: { backend },
         global: {
@@ -206,9 +208,9 @@ describe('App', () => {
       modal.vm.$emit('select', project.name);
       await flushPromises();
       await wrapper.vm.$nextTick();
-      expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
-      expect( mockListItems ).toHaveBeenCalled();
+    } );
 
+    test( 'can open scene from root', async () => {
       // Double-click an item in the project tree
       const item:DirectoryItem = { path: 'LoadScene.json' };
       const projectTree = wrapper.getComponent({ ref: 'projectTree' });
@@ -237,33 +239,7 @@ describe('App', () => {
       expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
     });
 
-    test( 'can load scene from directory', async () => {
-      const wrapper = mount(App, {
-        attachTo: document.body,
-        props: { backend },
-        global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
-          stubs: {
-            SceneEdit: true,
-          },
-        },
-      });
-      cleanup.push( wrapper.unmount.bind(wrapper) );
-      await flushPromises();
-      await wrapper.vm.$nextTick();
-
-      const modal = wrapper.getComponent(ProjectSelect);
-      modal.vm.$emit('select', project.name);
-      await flushPromises();
-      await wrapper.vm.$nextTick();
-      expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
-      expect( mockListItems ).toHaveBeenCalled();
-
+    test( 'can open scene from directory', async () => {
       // Double-click an item in the project tree
       const item:DirectoryItem = { path: 'directory/OldScene.json' };
       const projectTree = wrapper.getComponent({ ref: 'projectTree' });
@@ -289,6 +265,25 @@ describe('App', () => {
       // Saves state info
       expect( mockSetState.mock.lastCall?.[0] ).toBe("app");
       expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
+    });
+
+    test( 'can open code', async () => {
+      // Electron shell.openPath returns "" on success
+      const mockOpenEditor = jest.spyOn( global.electron, 'openEditor' ).mockResolvedValue("");
+      // Double-click an item in the project tree
+      const item:DirectoryItem = { path: 'System.ts' };
+      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
+      projectTree.vm.ondblclickitem( item );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Tries to open editor
+      expect( mockOpenEditor ).toHaveBeenCalledWith( project.name, item.path );
+
+      // Does not open tab
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElements = tabBar.findAll( 'a' );
+      expect( tabElements ).toHaveLength(0);
     });
   });
 

@@ -255,9 +255,13 @@ export default Vue.defineComponent({
       }
     },
 
+    openEditor( item:{ path: string } ) {
+      return electron.openEditor( this.project.name, item.path );
+    },
+
     async openTab( item:{ path: string, component: string } ) {
       if ( item.path.match( /\.([tj]s)$/ ) ) {
-        this.appStore.openEditor(item.path);
+        this.openEditor(item);
         return;
       }
 
