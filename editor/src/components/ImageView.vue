@@ -1,15 +1,11 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapActions } from 'pinia';
-import { useAppStore } from "../store/app.mts";
 export default defineComponent({
   props: ['modelValue'],
-  methods: {
-    ...mapActions( useAppStore, ['getFileUrl'] ),
-  },
+  inject: ['baseUrl'],
 });
 </script>
 
 <template>
-  <img :src="getFileUrl(modelValue)" />
+  <img :src="baseUrl + '/' + modelValue.src" />
 </template>
