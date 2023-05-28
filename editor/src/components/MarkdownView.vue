@@ -5,13 +5,22 @@ export default defineComponent({
   props: ['modelValue'],
   data() {
     return {
+      markdown: '',
       reader: new commonmark.Parser(),
       writer: new commonmark.HtmlRenderer({ safe: true }),
     };
   },
+  async mounted() {
+    try {
+      this.markdown = await this.modelValue.projectItem.read();
+    }
+    catch (err) {
+      console.log( `Error loading markdown data: ${err}` );
+    }
+  },
   computed: {
     html() {
-      return this.writer.render( this.reader.parse( this.modelValue ) );
+      return this.writer.render( this.reader.parse( this.markdown ) );
     },
   },
 });
