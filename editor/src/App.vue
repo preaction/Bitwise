@@ -260,7 +260,7 @@ export default Vue.defineComponent({
     },
 
     async openTab( item:{ path: string, component: string } ) {
-      if ( item.path.match( /\.([tj]s)$/ ) ) {
+      if ( !item.component && item.path.match( /\.([tj]s)$/ ) ) {
         this.openEditor(item);
         return;
       }
@@ -351,27 +351,30 @@ export default Vue.defineComponent({
       }
     },
 
-    async showGameConfigTab() {
-      this.openTab({
+    showGameConfigTab() {
+      const tab = {
         name: "Game Config",
         component: "GameConfig",
         ext: 'json',
         icon: 'fa-gear',
         src: 'bitwise.json',
-        data: Vue.toRaw(this.appStore.gameConfig),
         edited: false,
-      });
+      };
+      this.openTabs.push(tab);
+      this.showTab( this.openTabs.length - 1 );
     },
 
     showReleaseTab() {
-      this.openTab({
+      const tab = {
         name: "Release",
         component: "Release",
         icon: 'fa-file-export',
-        edited: false,
         src: 'bitwise.json',
-        data: Vue.toRaw(this.appStore.gameConfig),
-      });
+        ext: 'json',
+        edited: false,
+      };
+      this.openTabs.push(tab);
+      this.showTab( this.openTabs.length - 1 );
     },
 
     toggleConsole() {
@@ -511,9 +514,9 @@ export default Vue.defineComponent({
             <i class="fa fa-gear"></i>
           </template>
           <ul>
-            <li @click="showGameConfigTab">Game Config</li>
+            <li data-test="game-config" @click="showGameConfigTab">Game Config</li>
             <li class="hr"><hr></li>
-            <li @click="showReleaseTab">Release...</li>
+            <li data-test="release" @click="showReleaseTab">Release...</li>
           </ul>
         </MenuButton>
       </div>

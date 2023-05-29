@@ -197,6 +197,7 @@ describe('App', () => {
           ],
           stubs: {
             SceneEdit: true,
+            Release: true,
           },
         },
       });
@@ -284,6 +285,46 @@ describe('App', () => {
       const tabBar = wrapper.get({ ref: 'tabBar' });
       const tabElements = tabBar.findAll( 'a' );
       expect( tabElements ).toHaveLength(0);
+    });
+
+    test( 'can open game config', async () => {
+      const configButton = wrapper.get('[data-test=game-config]');
+      await configButton.trigger( 'click' );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Opens tab w/ correct info
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElements = tabBar.findAll( 'a' );
+      expect( tabElements ).toHaveLength(1);
+      expect( tabElements[0].text() ).toBe( "Game Config" );
+      expect( tabElements[0].attributes('aria-current') ).toBe('true');
+
+      // XXX: Saves session info
+      // Saves state info
+      expect( mockSetState ).toHaveBeenCalled();
+      expect( mockSetState.mock.lastCall?.[0] ).toBe("app");
+      expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
+    });
+
+    test( 'can open release tab', async () => {
+      const configButton = wrapper.get('[data-test=release]');
+      await configButton.trigger( 'click' );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Opens tab w/ correct info
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElements = tabBar.findAll( 'a' );
+      expect( tabElements ).toHaveLength(1);
+      expect( tabElements[0].text() ).toBe( "Release" );
+      expect( tabElements[0].attributes('aria-current') ).toBe('true');
+
+      // XXX: Saves session info
+      // Saves state info
+      expect( mockSetState ).toHaveBeenCalled();
+      expect( mockSetState.mock.lastCall?.[0] ).toBe("app");
+      expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
     });
   });
 
