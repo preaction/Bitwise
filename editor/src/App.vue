@@ -509,7 +509,7 @@ export default Vue.defineComponent({
             <i class="fa fa-file-import"></i>
           </button>
         </div>
-        <MenuButton title="Project">
+        <MenuButton title="Project Menu">
           <template #title>
             <i class="fa fa-gear"></i>
           </template>
@@ -520,7 +520,7 @@ export default Vue.defineComponent({
           </ul>
         </MenuButton>
       </div>
-      <ObjectTree ref="projectTree" dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile" class="app-sidebar-item">
+      <ObjectTree ref="projectTree" dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile" class="app-sidebar-item" data-testid="projectTree">
         <template #menu="{item}">
           <MenuButton>
             <template #button>

@@ -27,9 +27,33 @@ if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
 if (process.platform === 'win32') app.setAppUserModelId(app.getName())
 
 // Allow "test" NODE_ENV to run as many times as it wants
-if ( (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development' ) && !app.requestSingleInstanceLock()) {
-  app.quit()
-  process.exit(0)
+if ( process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development' ) {
+  if (!app.requestSingleInstanceLock()) {
+    app.quit()
+    process.exit(0)
+  }
+
+  app.on('window-all-closed', () => {
+    win = null
+    if (process.platform !== 'darwin') app.quit()
+  })
+
+  app.on('second-instance', () => {
+    if (win) {
+      // Focus on the main window if the user tried to open another
+      if (win.isMinimized()) win.restore()
+      win.focus()
+    }
+  })
+
+  app.on('activate', () => {
+    const allWindows = BrowserWindow.getAllWindows()
+    if (allWindows.length) {
+      allWindows[0].focus()
+    } else {
+      createWindow()
+    }
+  })
 }
 
 // Remove electron security warnings
@@ -39,9 +63,9 @@ if ( (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'develop
 
 export const ROOT_PATH = {
   // /dist
-  dist: path.join(__dirname, '../dist'),
+  dist: path.join(__dirname, '../'),
   // /dist or /public
-  public: path.join(__dirname, app.isPackaged ? '../dist' : '../dist/public'),
+  public: path.join(__dirname, app.isPackaged ? '../' : '../public'),
 }
 
 let win: BrowserWindow | null = null
@@ -87,7 +111,7 @@ async function createWindow() {
     appStore.set( 'window', winConfig );
   });
 
-  if (app.isPackaged) {
+  if (app.isPackaged || !url) {
     win.loadFile(indexHtml)
   } else if ( url ) {
     win.loadURL(url)
@@ -108,28 +132,6 @@ async function createWindow() {
 }
 
 app.whenReady().then(createWindow)
-
-app.on('window-all-closed', () => {
-  win = null
-  if (process.platform !== 'darwin') app.quit()
-})
-
-app.on('second-instance', () => {
-  if (win) {
-    // Focus on the main window if the user tried to open another
-    if (win.isMinimized()) win.restore()
-    win.focus()
-  }
-})
-
-app.on('activate', () => {
-  const allWindows = BrowserWindow.getAllWindows()
-  if (allWindows.length) {
-    allWindows[0].focus()
-  } else {
-    createWindow()
-  }
-})
 
 // new window example arg: new windows url
 ipcMain.handle('open-win', (event, arg) => {

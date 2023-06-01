@@ -1,1 +1,7 @@
-{"release":{"zip":{"scene":"scenes/Loader.json"}}}
+{
+  "release": {
+    "zip": {
+      "scene": "scenes/Loader.json"
+    }
+  }
+}

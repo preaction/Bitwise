@@ -64,7 +64,7 @@ export default defineComponent({
       <h6>Itch.io Browser Game</h6>
       <div>
         <label class="me-2">Initial Scene</label>
-        <InputGameObject v-model="release.zip.scene" type="scene" style="width: 30vw"/>
+        <InputGameObject data-testid="inputScene" v-model="release.zip.scene" type="scene" style="width: 30vw"/>
       </div>
       <button @click="releaseGame('zip')">Release</button>
     </section>
