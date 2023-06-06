@@ -1,21 +1,24 @@
 import { _electron } from 'playwright';
 import { test, expect } from '@playwright/test';
-import type {OpenDialogOptions} from 'electron';
+import os from 'node:os';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 process.env.NODE_ENV = 'playwright';
 
 test('open and release a project', async () => {
   const app = await _electron.launch({ args: ['dist/electron/main.cjs'] });
+  const projectPath = path.join( process.cwd(), '../examples/Solitaire');
 
   // Override dialog method to open Solitaire
-  await app.evaluate(async ({ dialog }) => {
+  await app.evaluate(async ({ dialog }, projectPath) => {
     dialog.showOpenDialog = () => {
       return Promise.resolve({
         canceled: false,
-        filePaths: ['../examples/Solitaire'],
+        filePaths: [projectPath],
       });
     };
-  });
+  }, projectPath);
 
   const page = await app.firstWindow();
   page.on('console', console.log);
@@ -43,11 +46,23 @@ test('open and release a project', async () => {
   await sceneInput.hover();
   await page.mouse.up();
 
+  // Override dialog method to save Solitaire zip file
+  const tmpdir = await fs.mkdtemp(path.join(os.tmpdir(),'bitwise-'));
+  const zipPath = path.join( tmpdir, 'Solitaire.zip' );
+  await app.evaluate(async ({ dialog }, zipPath:string) => {
+    dialog.showSaveDialog = () => {
+      return Promise.resolve({
+        canceled: false,
+        filePath: zipPath,
+      });
+    };
+  }, zipPath);
+
   // Release
   await page.locator('#release-zip button').click();
-  // XXX: Save zip file somewhere
-  // XXX: Unzip it and load it into a new browser context to test that it
-  // works
+  await page.waitForSelector('#release-zip button:not([disabled])');
+  const stat = await fs.stat( zipPath );
+  expect( stat.size ).toBeGreaterThan(0);
 
   await app.close();
 })

@@ -19,7 +19,7 @@ async function getFiles(dir:string):Promise<string[]> {
   return Array.prototype.concat(...files);
 }
 
-async function releaseZip( root:string, gameFile:string, dest:string ):Promise<any> {
+async function releaseZip( root:string, gameFilePath:string, dest:string ):Promise<any> {
   const gameConfigJson = await fs.readFile( path.join( root, 'bitwise.json' ), "utf-8" );
   const conf = JSON.parse( gameConfigJson );
   const initialScene = conf.release.zip.scene;
@@ -29,25 +29,8 @@ async function releaseZip( root:string, gameFile:string, dest:string ):Promise<a
   const archive = archiver('zip', {});
   archive.pipe(output);
 
-  // Add code file
-  archive.file( gameFile, { name: path.relative( root, gameFile ) } );
-
-  // Add all non-code files
-  const allFiles = await getFiles(root);
-  for ( const file of allFiles ) {
-    // All code has already been bundled up into the gameFile
-    if ( file.match(/[.](?:[tj]s|vue|js\.map)$|\/node_modules\/?/) ) {
-      continue;
-    }
-    // And we don't need these metadata files either...
-    if ( file.match(/(?:package(-lock)?|bitwise|tsconfig).json$/) ) {
-      continue;
-    }
-    archive.file(file, { name: path.relative( root, file ) });
-  }
-
   // Build index.html that starts the game's main scene
-  const index = `<!DOCTYPE html>
+  const index = Buffer.from(`<!DOCTYPE html>
 <html>
   <head>
     <style>
@@ -78,7 +61,7 @@ async function releaseZip( root:string, gameFile:string, dest:string ):Promise<a
       <canvas id="game"></canvas>
     </div>
     <script type="module">
-      import Game from './${path.relative( root, gameFile )}';
+      import Game from './${path.relative( root, gameFilePath )}';
       const game = window.game = new Game({
         canvas: document.getElementById('game'),
         loader: {
@@ -94,10 +77,9 @@ async function releaseZip( root:string, gameFile:string, dest:string ):Promise<a
       game.start();
     </script>
   </body>
-</html>`;
+</html>`);
 
-  archive.append( index, { name: 'index.html' } );
-  return new Promise( (resolve, reject) => {
+  return new Promise( async (resolve, reject) => {
     output.on('close', function() {
       resolve(true);
     });
@@ -125,6 +107,33 @@ async function releaseZip( root:string, gameFile:string, dest:string ):Promise<a
     archive.on('error', function(err) {
       reject(err);
     });
+
+    // Add code file
+    const gameFile = await fs.open( gameFilePath, "r" );
+    const gameStream = gameFile.createReadStream();
+    archive.append( gameStream, { name: path.relative( root, gameFilePath ) } );
+
+    // Add all non-code files
+    const allFiles = await getFiles(root);
+    for ( const file of allFiles ) {
+      // All code has already been bundled up into the gameFile
+      if ( file.match(/[.](?:[tj]s|vue|js\.map)$|\/node_modules\/?/) ) {
+        continue;
+      }
+      // And we don't need these metadata files either...
+      if ( file.match(/(?:package(-lock)?|bitwise|tsconfig).json$/) ) {
+        continue;
+      }
+      // Or these OS-specific files
+      if ( file.match(/(?:\.DS_Store)$/) ) {
+        continue;
+      }
+      const fh = await fs.open( file, "r" );
+      const inStream = fh.createReadStream();
+      archive.append( inStream, { name: path.relative( root, file ) } );
+    }
+
+    archive.append( index, { name: 'index.html' } );
     archive.finalize();
   });
 }

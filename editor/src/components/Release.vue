@@ -8,6 +8,7 @@ export default defineComponent({
   inject: ['project', 'backend'],
   data() {
     return {
+      busy: false,
       release: {
         zip: {
           scene: '',
@@ -36,6 +37,7 @@ export default defineComponent({
       return this.backend as Backend;
     },
     async releaseGame( type:string ) {
+      this.busy = true;
       let newConfig = {
         release: toRaw(this.release),
       };
@@ -51,7 +53,7 @@ export default defineComponent({
       await Promise.all([
         backend.writeItemData( this.projectName, 'bitwise.json', JSON.stringify(newConfig, null, 2) ),
         backend.releaseProject( this.projectName, 'zip' ),
-      ]);
+      ]).then( () => { this.busy = false } );
     },
   },
 });
@@ -66,7 +68,7 @@ export default defineComponent({
         <label class="me-2">Initial Scene</label>
         <InputGameObject data-testid="inputScene" v-model="release.zip.scene" type="scene" style="width: 30vw"/>
       </div>
-      <button @click="releaseGame('zip')">Release</button>
+      <button @click="releaseGame('zip')" :disabled="busy">Release</button>
     </section>
   </div>
 </template>

@@ -360,6 +360,7 @@ describe('App', () => {
     test( 'loads open tabs', async () => {
       const tabs = [
         { component: 'SceneEdit', path: 'LoadScene.json' },
+        // { component: 'Release', path: 'bitwise.json' },
       ];
       sessionStorage.setItem('currentProject', project.name);
       sessionStorage.setItem('openTabs', JSON.stringify(tabs));
@@ -445,6 +446,7 @@ describe('App', () => {
     test( 'restores tabs', async () => {
       const tabs = [
         { component: 'SceneEdit', path: 'LoadScene.json' },
+        // { component: 'Release', path: 'bitwise.json' },
       ];
       mockGetState.mockResolvedValue({
         currentProject: project.name,
