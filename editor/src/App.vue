@@ -81,6 +81,7 @@ export default Vue.defineComponent({
   props: ['backend'],
   data() {
     return {
+      platform: "",
       currentTabIndex: 0,
       openTabs: [] as Tab[],
       projectItems: [] as ProjectItem[],
@@ -127,6 +128,9 @@ export default Vue.defineComponent({
   },
   computed: {
     ...mapStores(useAppStore),
+    isMac():boolean {
+      return this.platform === "darwin";
+    },
     baseUrl():string {
       return `bfile://${this.project.name}/`;
     },
@@ -410,7 +414,7 @@ export default Vue.defineComponent({
 
     handleKeydown( event:KeyboardEvent ) {
       // For MacOS, handle Cmd+*, for everything else, Ctrl+*
-      if ( ( electron.isMac && event.metaKey ) || ( !electron.isMac && event.ctrlKey ) ) {
+      if ( ( this.isMac && event.metaKey ) || ( !this.isMac && event.ctrlKey ) ) {
         switch ( event.key ) {
           case "x":
             this.$refs['currentTab'].oncut?.(event);
@@ -470,6 +474,7 @@ export default Vue.defineComponent({
   },
 
   async mounted() {
+    this.platform = await electron.platform();
     if ( this.hasSessionState ) {
       await this.loadSessionState();
     }

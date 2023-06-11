@@ -63,7 +63,7 @@ if ( process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'developm
 
 export const ROOT_PATH = {
   // /dist
-  dist: path.join(__dirname, '../'),
+  dist: path.join(__dirname, app.isPackaged ? '../' : '../../'),
   // /dist or /public
   public: path.join(__dirname, app.isPackaged ? '../' : '../public'),
 }
@@ -413,6 +413,10 @@ ipcMain.handle('bitwise-list-examples', async ():Promise<{name:string, path:stri
     .then( (infos:{name:string, path:string, stat:Stats}[]) => {
       return infos.filter( i => i.stat.isDirectory() ).map( i => ({ name: i.name, path: i.path }) );
     });
+});
+
+ipcMain.handle('bitwise-get-platform', (event) => {
+  return os.platform();
 });
 
 ipcMain.handle('bitwise-release-project', async (event, root, type) => {

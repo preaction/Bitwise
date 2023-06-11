@@ -2,12 +2,16 @@
 
 const path = require('path');
 const fs = require('fs/promises');
-const { bundle } = require('./bundler');
 
 module.exports = {
   packagerConfig: {
-    prune: false, // required for the workaround below to work
+    asar: true,
+    prune: false,
     icon: '../images/icon',
+    overwrite: true,
+    extraResource: [
+      '../examples',
+    ],
   },
   makers: [
     {
@@ -37,23 +41,24 @@ module.exports = {
       }
     }
   ],
-  hooks: {
-    packageAfterCopy: async (
-      /** @type {any} */ forgeConfig,
-      /** @type {string} */ buildPath,
-      /** @type {string} */ electronVersion,
-      /** @type {string} */ platform,
-      /** @type {string} */ arch,
-    ) => {
-      // this is a workaround until we find a proper solution
-      // for running electron-forge in a mono repository
-      await bundle(__dirname, buildPath);
-      // Also add the examples folder
-      await fs.cp('../examples', path.join(buildPath, 'examples'), { recursive: true });
-      // And add the icon image (needed on linux)
-      await fs.cp('../images/icon.png', path.join(buildPath, 'images', 'icon.png'), { recursive: true });
-      // Also add some of the node modules
-      await fs.cp('../node_modules', path.join(buildPath, 'node_modules'), { recursive: true });
+  plugins: [
+    {
+      name: '@electron-forge/plugin-auto-unpack-natives',
+      config: {}
     },
+    {
+      name: '@electron-forge/plugin-vite',
+      config: {
+        build: [],
+        renderer: [
+          {
+            name: 'main_window',
+            config: 'vite.config.ts',
+          },
+        ],
+      },
+    },
+  ],
+  hooks: {
   },
 };

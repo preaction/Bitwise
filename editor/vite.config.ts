@@ -3,12 +3,14 @@ import { defineConfig } from 'vite'
 import type { Plugin, UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron'
-import pkg from './package.json'
 
 rmSync('dist', { recursive: true, force: true }) // v14.14.0
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    outDir: 'dist',
+  },
   plugins: [
     vue(),
     electron([

@@ -20,9 +20,7 @@ type OpenDialog = {
 };
 
 declare var electron: {
-  isMac: boolean;
-  isLinux: boolean;
-  isWindows: boolean;
+  platform: () => Promise<string>,
   store: {
     get: (file: string, key: string, def?: any) => any;
     set: (file: string, key: string, val: any) => void;

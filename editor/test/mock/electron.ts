@@ -10,10 +10,11 @@ import type { DirectoryItem } from '../../src/Backend.js';
  * specific test and replace the global function(s) as needed.
  */
 class MockElectron {
+  static PLATFORM = "darwin";
   store:MockStore = new MockStore();
-  isMac:boolean = false;
-  isLinux:boolean = false;
-  isWindows:boolean = false;
+  platform():Promise<string> {
+    return Promise.resolve(MockElectron.PLATFORM);
+  }
   resourcesPath():Promise<string> {
     return new Promise( () => "" );
   }

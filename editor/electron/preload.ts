@@ -1,13 +1,11 @@
 
 // Initialize electron-store
-const { contextBridge, ipcRenderer } = require('electron');
-const path = require('path');
-const os = require('os');
+import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electron', {
-  isMac: os.platform() === "darwin",
-  isWindows: os.platform() === "win32",
-  isLinux: os.platform() === "linux",
+  platform():Promise<string> {
+    return ipcRenderer.invoke('bitwise-get-platform');
+  },
   store: {
     get(file:string, val:string, def:any) {
       return ipcRenderer.sendSync('electron-store-get', file, val, def);
