@@ -1,9 +1,9 @@
 name: Build/release
 
 on:
-  create:
-    tags:
-      - v*
+  push:
+    branches:
+      - main
 
 jobs:
   release:
@@ -23,14 +23,9 @@ jobs:
           node-version: 19
 
       - name: Install dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run build
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
+        run: npm install && npm run install
 
       - name: Release Electron app
-        run: npm run -w editor publish
+        run: npm run package
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}

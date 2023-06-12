@@ -14,10 +14,7 @@
     "check": "tsc -p src --noEmit",
     "test:unit": "jest",
     "test:e2e": "vite build && playwright test",
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "publish": "electron-forge publish",
-    "make": "electron-forge make"
+    "package": "npm run build && npx electron-builder"
   },
   "engines": {
     "node": ">=14.17.0"
