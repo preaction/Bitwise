@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "concurrently --kill-others 'cd game && npm run dev' 'cd editor && npm run dev'",
+    "dev": "DEBUG=bitwise:* concurrently --names game,edit --kill-others 'cd game && npm run dev' 'cd editor && npm run dev'",
     "test": "cd game && npm run test:unit && cd ../editor && npm run test:unit",
     "test:e2e": "cd editor && npm run test:e2e",
     "package": "cd editor && npm run package"

@@ -25,6 +25,7 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/preset-env": "^7.20.2",
+    "@types/debug": "^4.1.8",
     "@types/jest": "^29.4.0",
     "@types/three": "^0.146.0",
     "global-jsdom": "^8.7.0",
@@ -37,6 +38,7 @@
   "dependencies": {
     "ammojs-typed": "^1.0.6",
     "bitecs": "^0.3.38",
+    "debug": "^4.3.4",
     "three": "^0.146.0"
   },
   "bundleDependencies": [

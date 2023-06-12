@@ -4,8 +4,11 @@
 
 import * as path from 'path';
 import { promises as fs } from 'node:fs';
+import Debug from 'debug';
+const debug = Debug('bitwise:build');
 
 export async function init( projectRoot:string ) {
+  debug( "Initializing new project in %s", projectRoot );
   const tsconfig = buildTsconfig();
   const confPath = path.join( projectRoot, 'tsconfig.json' );
   return fs.writeFile( confPath, JSON.stringify(tsconfig, null, 2) );

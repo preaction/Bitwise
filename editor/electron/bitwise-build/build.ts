@@ -6,6 +6,8 @@ import * as path from 'node:path';
 import { promises as fs } from 'node:fs';
 import * as esbuild from 'esbuild';
 import { fork, ChildProcess } from 'node:child_process';
+import Debug from 'debug';
+const debug = Debug('bitwise:build');
 
 export type BuildContext = esbuild.BuildContext;
 export type BuildResult = esbuild.BuildResult;
@@ -17,7 +19,7 @@ export async function context( root:string, dest:string, opt:{ [key:string]: any
   if ( !src ) {
     return;
   }
-  return esbuild.context({
+  const ctx = {
     bundle: true,
     define: { Ammo: '{ "ENVIRONMENT": "WEB" }' },
     external: [
@@ -34,10 +36,13 @@ export async function context( root:string, dest:string, opt:{ [key:string]: any
     logLevel: 'info',
     logLimit: 0,
     ...opt,
-  });
+  };
+  debug("Creating esbuild context: %o", ctx );
+  return esbuild.context(ctx);
 }
 
 export async function build( root:string, dest:string, opt:{ [key:string]:any }={} ):Promise<esbuild.BuildResult|undefined> {
+  debug("Building %s (root: %s)", dest, root);
   const ctx = await context(root, dest, opt);
   if ( !ctx ) {
     return;
@@ -47,14 +52,8 @@ export async function build( root:string, dest:string, opt:{ [key:string]:any }=
 
 export async function check(root:string):Promise<ChildProcess> {
   // Check for typescript errors
-  let tsc = path.resolve( root, 'node_modules/typescript/bin/tsc' );
-  try {
-    await fs.access(tsc)
-  }
-  catch (err) {
-    tsc = path.resolve( process.resourcesPath, 'node_modules/typescript/bin/tsc' );
-    await fs.access(tsc)
-  }
+  let tsc = require.resolve("typescript");
+  debug("Using typescript at ", tsc);
   const cp = fork( tsc, [ '--noEmit' ], {
     cwd: root,
     stdio: 'overlapped',
@@ -63,6 +62,7 @@ export async function check(root:string):Promise<ChildProcess> {
 }
 
 async function buildGameFile( projectRoot:string ):Promise<string|undefined> {
+  debug( "Building game file in %s", projectRoot );
   const findModules:((dir:string) => Promise<{name: string, path:string}[]>) = async (dir) => {
     const dirents = await fs.readdir(dir, { withFileTypes: true });
     const files = await Promise.all(
@@ -77,6 +77,7 @@ async function buildGameFile( projectRoot:string ):Promise<string|undefined> {
   }
 
   const modules = await findModules( projectRoot );
+  debug( "Found modules: %o", modules );
   const confPath = path.join( projectRoot, 'bitwise.json' );
   let gameConf = {};
   try {
@@ -86,11 +87,13 @@ async function buildGameFile( projectRoot:string ):Promise<string|undefined> {
   catch (e) {
     console.warn( `Could not read project config: ${e}` );
   }
+  debug( "Game coniguration: %o", gameConf );
 
   const gameJs = buildGameJs( projectRoot, gameConf, modules );
   // The game file must be written to the root of the project
   // directory for `import` directives to work correctly.
   const gamePath = path.join( projectRoot, '.bitwise.js' );
+  debug( "Writing game file to %s", gamePath );
   return fs.writeFile( gamePath, gameJs ).then( () => gamePath );
 };
 
@@ -145,6 +148,7 @@ function buildGameJs(projectRoot:string, config:GameConfig, moduleItems:{name:st
     };
   `;
 
+  // Remove the extra indentation
   return gameFile.replaceAll(/\n {4}/g, "\n");
 }
 

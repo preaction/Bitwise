@@ -9,6 +9,8 @@ import * as bitwise from './bitwise-build/build.js';
 import { getProjectTree } from './bitwise-build/project.js';
 import type { BuildContext, BuildResult } from './bitwise-build/build.js';
 import { release } from './bitwise-build/release.js';
+import Debug from 'debug';
+const debug = Debug('bitwise:electron');
 
 // Initialize electron-store
 import Store from 'electron-store'
@@ -66,6 +68,8 @@ export const ROOT_PATH = {
   dist: path.join(__dirname, app.isPackaged ? '../' : '../../'),
   // /dist or /public
   public: path.join(__dirname, app.isPackaged ? '../' : '../public'),
+  // /node_modules
+  node_modules: path.resolve( __dirname.replace( 'app.asar', '' ), '../../node_modules' ),
 }
 
 let win: BrowserWindow | null = null
@@ -299,7 +303,7 @@ async function linkModules( root:string ) {
   // We do "npm link --force" to make absolutely sure that the game and
   // the framework rely on the exact same file, so esbuild will not
   // bundle it twice.
-  const modulesDir = path.resolve( __dirname.replace( 'app.asar', '' ), '../../../node_modules' );
+  const modulesDir = ROOT_PATH.node_modules;
   const dependencies:string[] = [
     '@types/three',
     'three',
@@ -309,6 +313,7 @@ async function linkModules( root:string ) {
     'tslib',
     '@fourstar/bitwise',
   ];
+  debug( "Linking modules from %s to %s", modulesDir, root );
   const p = new Promise( (resolve, reject) => {
     const cp = fork(
       require.resolve("npm"),
