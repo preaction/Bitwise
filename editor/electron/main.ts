@@ -281,7 +281,7 @@ ipcMain.handle('bitwise-import-files', (event, root) => {
     properties: [ 'openDirectory' ],
   })
   .then( async (res) => {
-    const promises = [];
+    const promises = [] as Array<Promise<string>>;
     for ( const src of res.filePaths ) {
       // If path is a directory, copy to a new directory with the same
       // name in the root
@@ -290,7 +290,7 @@ ipcMain.handle('bitwise-import-files', (event, root) => {
       if ( stat.isDirectory() ) {
         dest = path.join( dest, path.basename( src ) );
       }
-      promises.push( fs.cp( src, dest, { recursive: true } ) );
+      promises.push( fs.cp( src, dest, { recursive: true } ).then( () => dest ) );
     }
     return Promise.all(promises);
   });

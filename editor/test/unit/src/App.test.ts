@@ -497,5 +497,31 @@ describe('App', () => {
       });
     });
   });
+
+  describe('can import files from local filesystem', () => {
+    const mockImportFiles = jest.fn() as jest.MockedFunction<typeof electron.importFiles>;
+    beforeEach( () => {
+      mockImportFiles.mockReset();
+      electron.importFiles = mockImportFiles;
+    });
+
+    test( 'electron import function is called', async () => {
+      mockImportFiles.mockResolvedValue(
+        ["/imported/file.png"],
+      );
+      const wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+      });
+      cleanup.push( wrapper.unmount.bind(wrapper) );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      const importButton = wrapper.get('[data-test=import-files]');
+      await importButton.trigger('click');
+      expect( mockImportFiles ).toHaveBeenCalled();
+    } );
+
+  });
 });
 

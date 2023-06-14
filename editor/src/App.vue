@@ -149,7 +149,11 @@ export default Vue.defineComponent({
     },
   },
   methods: {
-    ...mapActions(useAppStore, ['importFiles']),
+    importFiles():Promise<any> {
+      // TODO: This should use the Backend to copy the files from the
+      // local filesystem.
+      return electron.importFiles( this.project.name );
+    },
 
     saveSessionState():void {
       if ( !this.project ) {
@@ -510,7 +514,7 @@ export default Vue.defineComponent({
               <li @click="newModule('NewSystemForm', 'Component.vue')">System Form</li>
             </ul>
           </MenuButton>
-          <button class="menu-button" title="Import" @click="importFiles">
+          <button class="menu-button" title="Import" @click="importFiles" data-test="import-files">
             <i class="fa fa-file-import"></i>
           </button>
         </div>

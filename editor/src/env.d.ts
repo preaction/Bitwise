@@ -41,7 +41,7 @@ declare var electron: {
   releaseProject: ( root:string, type:string ) => Promise<string>;
   openEditor: ( root:string, file:string ) => Promise<string>;
   listExamples: () => Promise<string[]>;
-  importFiles: ( root:string ) => Promise<undefined[]>;
+  importFiles: ( root:string ) => Promise<string[]>;
 };
 
 declare module 'vue3-sfc-loader' {
