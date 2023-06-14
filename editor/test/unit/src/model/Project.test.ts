@@ -5,6 +5,8 @@ import ElectronBackend from '../../../../src/backend/Electron.js';
 import type { DirectoryItem } from '../../../../src/Backend.js';
 import Project from '../../../../src/model/Project.js';
 import MockGame from '../../../mock/game.js';
+import Texture from '../../../../src/model/projectitem/Texture.js';
+import Atlas from '../../../../src/model/projectitem/Atlas.js';
 
 jest.mock('../../../mock/game.js');
 
@@ -121,6 +123,49 @@ describe( 'Project', () => {
       expect(gotItems[0].children?.[0].path).toBe(dirItems[0].children?.[0].path);
       expect(gotItems[0].children?.[0].type).toBe("image");
     } );
+
+    test( 'should read image atlas files to build item', async () => {
+      const dirItems:DirectoryItem[] = [
+        {
+          path: 'atlas.xml',
+        },
+        {
+          path: 'sprite.png',
+        },
+      ];
+      mockReadProject.mockReturnValue(
+        new Promise( (resolve) => resolve(dirItems) ),
+      );
+
+      // The data for files in dirItems that will be read, in order
+      const itemData:any[] = [
+        `<TextureAtlas imagePath="sprite.png">
+          <SubTexture name="texture_01.png" x="0" y="0" width="10" height="10"/>
+          <SubTexture name="texture_02.png" x="20" y="20" width="10" height="10"/>
+        </TextureAtlas>
+        `,
+      ];
+      itemData.forEach( data => {
+        mockReadFile.mockReturnValue(
+          new Promise( (resolve) => resolve(data) ),
+        );
+      });
+
+      const backend = new ElectronBackend();
+      const project = new Project( backend, "projectName" );
+      const gotItems = await project.listItems();
+      expect(mockReadProject).toHaveBeenCalledWith(project.name);
+      expect(gotItems).toHaveLength(2);
+      expect(gotItems[0].path).toBe(dirItems[0].path);
+      expect(gotItems[0].type).toBe("atlas");
+      expect(gotItems[0]).toBeInstanceOf(Atlas);
+      expect(gotItems[0].children).toHaveLength(2);
+      expect(gotItems[0].children?.[0]).toBeInstanceOf(Texture);
+      expect(gotItems[0].children?.[0].path).toBe("atlas.xml#texture_01.png");
+      expect(gotItems[0].children?.[1]).toBeInstanceOf(Texture);
+      expect(gotItems[0].children?.[1].path).toBe("atlas.xml#texture_02.png");
+    } );
+
   });
 
   describe.skip( 'loadGameClass()', () => {
