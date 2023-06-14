@@ -53,20 +53,46 @@ describe( 'Project', () => {
       const gotItems = await project.listItems();
       expect(mockReadProject).toHaveBeenCalledWith(project.name);
       expect(gotItems).toHaveLength(4);
+      expect(gotItems[0]).toBeInstanceOf(Texture);
       expect(gotItems[0].path).toBe(dirItems[0].path);
-      expect(gotItems[0].type).toBe("image");
+      expect(gotItems[0].type).toBe("texture");
       expect(gotItems[0].children).toBeFalsy();
       expect(gotItems[1].path).toBe(dirItems[1].path);
       expect(gotItems[1].type).toBe("markdown");
       expect(gotItems[1].children).toBeFalsy();
       expect(gotItems[2].path).toBe(dirItems[2].path);
       expect(gotItems[2].type).toBe("directory");
+      expect(gotItems[2].children?.[0]).toBeInstanceOf(Texture);
       expect(gotItems[2].children?.[0].path).toBe(dirItems[2].children?.[0].path);
-      expect(gotItems[2].children?.[0].type).toBe("image");
+      expect(gotItems[2].children?.[0].type).toBe("texture");
       expect(gotItems[3].path).toBe(dirItems[3].path);
       expect(gotItems[3].type).toBe("directory");
       expect(gotItems[3].children).toHaveLength(0);
     } );
+
+    test( 'should set properties for Texture items', async () => {
+      const dirItems:DirectoryItem[] = [
+        {
+          path: 'image.png',
+        },
+      ];
+      mockReadProject.mockReturnValue(
+        new Promise( (resolve) => resolve(dirItems) ),
+      );
+      mockReadProject.mockResolvedValue( dirItems );
+
+      const backend = new ElectronBackend();
+      const project = new Project(backend, "projectName");
+      const gotItems = await project.listItems();
+      expect(mockReadProject).toHaveBeenCalledWith(project.name);
+      expect(gotItems).toHaveLength(1);
+      const texture = gotItems[0] as Texture;
+      expect(texture).toBeInstanceOf(Texture);
+      expect(texture.x).toBe(0);
+      expect(texture.y).toBe(0);
+      expect(texture.width).toBeNull();
+      expect(texture.height).toBeNull();
+    });
 
     test( 'should open JSON files to find type info', async () => {
       const dirItems:DirectoryItem[] = [
@@ -120,8 +146,9 @@ describe( 'Project', () => {
       expect(gotItems[0].path).toBe(dirItems[0].path);
       expect(gotItems[0].type).toBe("directory");
       expect(gotItems[0].children).toHaveLength(1);
+      expect(gotItems[0].children?.[0]).toBeInstanceOf(Texture);
       expect(gotItems[0].children?.[0].path).toBe(dirItems[0].children?.[0].path);
-      expect(gotItems[0].children?.[0].type).toBe("image");
+      expect(gotItems[0].children?.[0].type).toBe("texture");
     } );
 
     test( 'should read image atlas files to build item', async () => {

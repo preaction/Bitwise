@@ -6,6 +6,7 @@ import Atlas from './projectitem/Atlas.js';
 
 import {EventEmitter} from 'events';
 import type {Game} from '@fourstar/bitwise';
+import Texture from './projectitem/Texture.js';
 
 /**
  * Project is the main model class. This class manages project items and
@@ -65,7 +66,7 @@ export default class Project extends EventEmitter {
         projectItem = new ProjectItem( this, dirItem.path, "directory" );
       }
       else if ( dirItem.path.match( /\.(?:png|jpe?g|gif)$/ ) ) {
-        projectItem = new ProjectItem( this, dirItem.path, "image" );
+        projectItem = new Texture( this, dirItem.path );
       }
       else if ( dirItem.path.match( /\.(?:md|markdown)$/ ) ) {
         projectItem = new ProjectItem( this, dirItem.path, "markdown" );

@@ -6,6 +6,7 @@ import MockBackend from '../../mock/backend.js';
 import MockGame from '../../mock/game.js';
 import App from '../../../src/App.vue';
 import SceneEdit from '../../../src/components/SceneEdit.vue';
+import ImageView from '../../../src/components/ImageView.vue';
 import type Modal from '../../../src/components/Modal.vue';
 import ProjectSelect from '../../../src/components/ProjectSelect.vue';
 import Tab from '../../../src/model/Tab.js';
@@ -45,6 +46,7 @@ beforeEach( () => {
     { path: "directory", children: [] },
     { path: "LoadScene.json" },
     { path: "System.ts" },
+    { path: "UI.png" },
   ];
   projectItems[0].children = [
     { path: "directory/OldScene.json" },
@@ -288,6 +290,33 @@ describe('App', () => {
       expect( tabElements ).toHaveLength(1);
       expect( tabElements[0].text() ).toBe( "Release" );
       expect( tabElements[0].attributes('aria-current') ).toBe('true');
+
+      // XXX: Saves session info
+      // Saves state info
+      expect( mockSetState ).toHaveBeenCalled();
+      expect( mockSetState.mock.lastCall?.[0] ).toBe("app");
+      expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
+    });
+
+    test( 'can open image viewer', async () => {
+      const item:DirectoryItem = { path: 'UI.png' };
+      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
+      projectTree.vm.ondblclickitem( item );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Opens tab w/ correct info
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElements = tabBar.findAll( 'a' );
+      expect( tabElements ).toHaveLength(1);
+      expect( tabElements[0].text() ).toBe( "UI" );
+      expect( tabElements[0].attributes('aria-current') ).toBe('true');
+
+      const viewerTab = wrapper.getComponent(ImageView);
+      expect( viewerTab.vm.modelValue ).toBeInstanceOf( Tab );
+      expect( viewerTab.vm.modelValue ).toMatchObject({
+        src: "UI.png",
+      });
 
       // XXX: Saves session info
       // Saves state info
