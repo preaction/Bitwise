@@ -1,8 +1,6 @@
 <script lang="ts">
 import * as bootstrap from "bootstrap";
 import * as Vue from "vue";
-import { mapStores, mapState, mapActions, mapGetters } from 'pinia';
-import { useAppStore } from "./store/app.mts";
 import { loadModule } from 'vue3-sfc-loader';
 import type { Component, Game, System } from '@fourstar/bitwise';
 import Tab from './model/Tab.js';
@@ -13,7 +11,6 @@ import ObjectTree from "./components/ObjectTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
 import MarkdownView from "./components/MarkdownView.vue";
-import TilesetEdit from "./components/TilesetEdit.vue";
 import SceneEdit from "./components/SceneEdit.vue";
 import GameConfig from "./components/GameConfig.vue";
 import Modal from "./components/Modal.vue";
@@ -43,6 +40,83 @@ type AppState = {
   currentTabIndex: number,
 };
 
+const templates:{ [key:string]: (name:string) => string } = {
+  'Component.ts': (name:string):string => {
+    return `
+import * as bitecs from 'bitecs';
+import { Component } from '@fourstar/bitwise';
+
+export default class ${name} extends Component {
+  get componentData() {
+    return {
+      // fieldName: bitecs.Types.f32
+    };
+  }
+
+  declare store: {
+    // fieldName: number[],
+  }
+
+  static get editorComponent():string {
+    // Path to the .vue component, if any
+    return '';
+  }
+}
+`;
+  },
+  'System.ts': (name:string):string => {
+    return `
+import * as three from 'three';
+import * as bitecs from 'bitecs';
+import { Scene, System } from '@fourstar/bitwise';
+
+export default class ${name} extends System {
+  init() {
+    // Get references to Components and Systems from this.scene
+    // Create queries with bitecs.Query
+    // Add event handlers
+  }
+
+  update( timeMilli:number ) {
+    // Perform updates
+  }
+
+  static get editorComponent():string {
+    // Path to the .vue component, if any
+    return '';
+  }
+}
+`;
+  },
+  'Component.vue': (name:string):string => {
+    return '<scr' + `ipt lang="ts">
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  props: ['modelValue', 'scene'],
+  data() {
+    return {
+      ...this.modelValue,
+    };
+  },
+  methods: {
+    update() {
+      this.$emit( 'update:modelValue', this.$data );
+      this.$emit( 'update', this.$data );
+    },
+  },
+});
+</scr` + `ipt>
+<template>
+  <div>
+  </div>
+</template>
+<style>
+</style>
+`;
+  },
+};
+
 const vueLoaderOptions = {
   moduleCache: {
     vue: Vue,
@@ -70,7 +144,6 @@ export default Vue.defineComponent({
     ProjectSelect,
     ImageView,
     MarkdownView,
-    TilesetEdit,
     SceneEdit,
     GameConfig,
     PrefabEdit,
@@ -109,6 +182,11 @@ export default Vue.defineComponent({
       consoleErrors: 0,
       consoleWarnings: 0,
       project: new Project(Vue.toRaw(this.backend), ''),
+      icons: {
+        SceneEdit: 'fa-film',
+        TilesetEdit: 'fa-grid-2-plus',
+        PrefabEdit: 'fa-cubes',
+      },
     };
   },
   provide() {
@@ -119,6 +197,8 @@ export default Vue.defineComponent({
       baseUrl: Vue.computed( () => this.baseUrl ),
       systemForms: Vue.computed( () => this.systemForms ),
       componentForms: Vue.computed( () => this.componentForms ),
+      projectItems: Vue.computed( () => this.projectItems ),
+      openTab: (tab:Tab) => this.openTab(tab),
     };
   },
   watch: {
@@ -127,7 +207,6 @@ export default Vue.defineComponent({
     },
   },
   computed: {
-    ...mapStores(useAppStore),
     isMac():boolean {
       return this.platform === "darwin";
     },
@@ -232,7 +311,7 @@ export default Vue.defineComponent({
       const tab = {
         name,
         component,
-        icon: this.appStore.icons[component],
+        icon: this.icons[component],
         ext: '.json',
         data: {},
         edited: true,
@@ -243,8 +322,22 @@ export default Vue.defineComponent({
       this.saveStoredState();
     },
 
-    newModule( name:string, template:string ) {
-      this.appStore.newModuleFromTemplate( name, template );
+    async newModule( name:string, templateName:string ) {
+      const ext = templateName.substring( templateName.lastIndexOf( '.' )+1 );
+      return electron.newFile( this.project.name, name, ext )
+        .then( async res => {
+          if ( !res.canceled ) {
+            const path = res.filePath.replace( this.project.name, '' );
+            const fileName = path.split('/').pop();
+            if ( !fileName ) {
+              return;
+            }
+            const name = fileName.substring( 0, fileName.indexOf('.') );
+            const template = templates[ templateName ](name);
+            await electron.saveFile( this.project.name, path, template );
+            this.openEditor({ path });
+          }
+        });
     },
 
     findProjectItem( findPath:string ):ProjectItem|void {
@@ -280,7 +373,7 @@ export default Vue.defineComponent({
       const tab = new Tab(projectItem);
       if ( item.component ) {
         tab.component = item.component;
-        tab.icon = this.appStore.icons[item.component];
+        tab.icon = this.icons[item.component];
       }
       else {
         // Determine what kind of component to use
@@ -288,7 +381,7 @@ export default Vue.defineComponent({
         if ( ext === '.json' ) {
           // JSON files are game objects
           tab.component = projectItem.type;
-          tab.icon = this.appStore.icons[projectItem.type];
+          tab.icon = this.icons[projectItem.type];
         }
         else if ( ext.match( /\.(png|gif|jpe?g)$/ ) ) {
           tab.component = "ImageView";
@@ -409,11 +502,16 @@ export default Vue.defineComponent({
         }
         let destination = destItem.isDirectory ? destItem.path : parentPath;
         destination += '/' + data.split('/').pop();
-        this.appStore.renamePath( data, destination );
+        this.renamePath( data, destination );
       }
       else {
         event.dataTransfer.dropEffect = "";
       }
+    },
+
+    renamePath( path:string, dest:string ) {
+      // XXX: Pre-move item in projectItems
+      return electron.renamePath( this.project.name, path, dest );
     },
 
     handleKeydown( event:KeyboardEvent ) {

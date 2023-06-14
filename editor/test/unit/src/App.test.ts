@@ -1,6 +1,5 @@
 import {describe, expect, test, beforeEach, afterEach, jest, beforeAll} from '@jest/globals';
 import { flushPromises, mount, VueWrapper } from '@vue/test-utils';
-import { createPinia } from 'pinia';
 import { MockElectron } from '../../mock/electron.js';
 import type { DirectoryItem } from '../../../src/Backend.js';
 import MockBackend from '../../mock/backend.js';
@@ -80,14 +79,6 @@ describe('App', () => {
     const wrapper = mount(App, {
       attachTo: document.body,
       props: { backend },
-      global: {
-        config: {
-          unwrapInjectedRef: true,
-        },
-        plugins: [
-          createPinia(),
-        ],
-      },
     });
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -102,14 +93,6 @@ describe('App', () => {
       const wrapper = mount(App, {
         attachTo: document.body,
         props: { backend },
-        global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
-        },
       });
       await flushPromises();
       await wrapper.vm.$nextTick();
@@ -159,14 +142,6 @@ describe('App', () => {
       const wrapper = mount(App, {
         attachTo: document.body,
         props: { backend },
-        global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
-        },
       });
       await flushPromises();
       await wrapper.vm.$nextTick();
@@ -189,12 +164,6 @@ describe('App', () => {
         attachTo: document.body,
         props: { backend },
         global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
           stubs: {
             SceneEdit: true,
             Release: true,
@@ -336,12 +305,6 @@ describe('App', () => {
         attachTo: document.body,
         props: { backend },
         global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
           stubs: {
             SceneEdit: true,
           },
@@ -369,12 +332,6 @@ describe('App', () => {
         attachTo: document.body,
         props: { backend },
         global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
           stubs: {
             SceneEdit: true,
           },
@@ -412,12 +369,6 @@ describe('App', () => {
         attachTo: document.body,
         props: { backend },
         global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
           stubs: {
             SceneEdit: true,
           },
@@ -458,12 +409,6 @@ describe('App', () => {
         attachTo: document.body,
         props: { backend },
         global: {
-          config: {
-            unwrapInjectedRef: true,
-          },
-          plugins: [
-            createPinia(),
-          ],
           stubs: {
             SceneEdit: true,
           },

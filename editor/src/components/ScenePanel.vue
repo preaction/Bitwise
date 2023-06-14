@@ -18,7 +18,7 @@ export default defineComponent({
   props: ['modelValue', 'scene', 'isPrefab'],
   emits: {'update:modelValue': null, 'update': null},
 
-  inject: ['systemForms', 'componentForms'],
+  inject: ['systemForms', 'componentForms', 'projectItems', 'openTab'],
   data() {
     return {
       selectedSceneItem: null,
@@ -368,16 +368,15 @@ export default defineComponent({
       const eName = eData.path.split('/').slice(0, -1)[0];
       let filename = eName + '.json';
       let suffix = 1;
-      while ( this.appStore.projectItems.includes( filename ) ) {
+      while ( this.projectItems.includes( filename ) ) {
         filename = eName + (suffix++) + '.json';
       }
       // Don't write the file yet, just open a new tab on the prefab
       // editor
-      this.appStore.openTab({
+      this.openTab({
         src: filename,
         name: filename.replace( '.json', '' ),
         component: "PrefabEdit",
-        icon: this.appStore.icons["PrefabEdit"],
         ext: '.json',
         data: eData,
         edited: true,

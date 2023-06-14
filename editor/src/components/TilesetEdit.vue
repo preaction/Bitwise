@@ -1,7 +1,5 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapState, mapActions } from 'pinia';
-import { useAppStore } from "../store/app.mts";
 
 type Tileset = {
   imageSrc: string,
@@ -25,7 +23,6 @@ export default defineComponent({
     this.$emit( 'update:modelValue', this.$data );
   },
   methods: {
-    ...mapActions( useAppStore, ['getFileUrl'] ),
     dragover(event) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "link";

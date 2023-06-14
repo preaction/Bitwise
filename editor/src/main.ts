@@ -1,5 +1,4 @@
 import { createApp } from 'vue';
-import { createPinia } from 'pinia';
 import BootstrapVue3 from 'bootstrap-vue-3';
 import ElectronBackend from './backend/Electron.js';
 
@@ -15,14 +14,14 @@ import App from './App.vue';
 import InputGameObject from './components/InputGameObject.vue';
 import BinaryToggle from './components/BinaryToggle.vue';
 
-const pinia = createPinia()
 const backend = new ElectronBackend();
 
 const app = createApp(App, { backend });
 app.config.unwrapInjectedRef = true;
 
-app.use(pinia)
-  .use(BootstrapVue3)
+app.use(BootstrapVue3)
+  // XXX: These are components that are used in custom editor
+  // components. We should probably find a better way to register these.
   .component( 'InputGameObject', InputGameObject )
   .component( 'BinaryToggle', BinaryToggle );
 
