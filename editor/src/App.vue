@@ -273,7 +273,7 @@ export default Vue.defineComponent({
 
     async openProject( name:string ) {
       this.project = await this.backend.openProject( name );
-      this.projectItems = await this.project.listItems();
+      this.projectItems = this.project.items;
       this.buildProject();
     },
 

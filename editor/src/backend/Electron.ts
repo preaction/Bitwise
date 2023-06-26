@@ -10,6 +10,10 @@ export default class Electron extends EventEmitter implements Backend {
   }
 
   async openProject(projectName:string):Promise<Project> {
+    // Populate the initial project items
+    const project = new Project(this, projectName);
+    await project.inflateItems( await this.listItems(projectName) );
+
     // Update the recent projects list
     const projectNames = electron.store.get( 'app', 'recentProjects', [] )
     const i = projectNames.indexOf( projectName );
@@ -20,7 +24,8 @@ export default class Electron extends EventEmitter implements Backend {
     // Keep the last few projects only
     projectNames.length = Math.min( projectNames.length, 5 );
     electron.store.set( 'app', 'recentProjects', projectNames );
-    return new Project(this, projectName);
+
+    return project;
   }
 
   async saveProject(project:Project):Promise<void> {
@@ -56,7 +61,8 @@ export default class Electron extends EventEmitter implements Backend {
 
     return await electron.readProject(projectName)
       .then( async ( items:DirectoryItem[] ) => {
-        return items.filter( ignore ).map( descend );
+        const outItems = items.filter( ignore ).map( descend );
+        return outItems;
       });
   }
 

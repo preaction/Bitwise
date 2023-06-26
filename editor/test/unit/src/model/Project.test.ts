@@ -15,17 +15,14 @@ beforeEach( () => {
 });
 
 describe( 'Project', () => {
-  describe( 'listItems()', () => {
-    const mockReadProject = jest.fn() as jest.MockedFunction<typeof global.electron.readProject>;
+  describe( 'inflateItems()', () => {
     const mockReadFile = jest.fn() as jest.MockedFunction<typeof global.electron.readFile>;
     beforeEach( () => {
-      global.electron.readProject = mockReadProject;
-      mockReadProject.mockReset();
       global.electron.readFile = mockReadFile;
       mockReadFile.mockReset();
     } );
 
-    test('should list project items', async () => {
+    test('should inflate project items from DirectoryItem', async () => {
       const dirItems:DirectoryItem[] = [
         {
           path: 'sprite.png',
@@ -46,12 +43,10 @@ describe( 'Project', () => {
           children: [],
         },
       ];
-      mockReadProject.mockResolvedValue( dirItems );
 
       const backend = new ElectronBackend();
       const project = new Project(backend, "projectName");
-      const gotItems = await project.listItems();
-      expect(mockReadProject).toHaveBeenCalledWith(project.name);
+      const gotItems = await project.inflateItems(dirItems);
       expect(gotItems).toHaveLength(4);
       expect(gotItems[0]).toBeInstanceOf(Texture);
       expect(gotItems[0].path).toBe(dirItems[0].path);
@@ -68,6 +63,7 @@ describe( 'Project', () => {
       expect(gotItems[3].path).toBe(dirItems[3].path);
       expect(gotItems[3].type).toBe("directory");
       expect(gotItems[3].children).toHaveLength(0);
+      expect(project.items).toEqual(gotItems);
     } );
 
     test( 'should set properties for Texture items', async () => {
@@ -76,15 +72,10 @@ describe( 'Project', () => {
           path: 'image.png',
         },
       ];
-      mockReadProject.mockReturnValue(
-        new Promise( (resolve) => resolve(dirItems) ),
-      );
-      mockReadProject.mockResolvedValue( dirItems );
 
       const backend = new ElectronBackend();
       const project = new Project(backend, "projectName");
-      const gotItems = await project.listItems();
-      expect(mockReadProject).toHaveBeenCalledWith(project.name);
+      const gotItems = await project.inflateItems(dirItems);
       expect(gotItems).toHaveLength(1);
       const texture = gotItems[0] as Texture;
       expect(texture).toBeInstanceOf(Texture);
@@ -92,6 +83,7 @@ describe( 'Project', () => {
       expect(texture.y).toBe(0);
       expect(texture.width).toBeNull();
       expect(texture.height).toBeNull();
+      expect(project.items).toEqual(gotItems);
     });
 
     test( 'should open JSON files to find type info', async () => {
@@ -100,27 +92,20 @@ describe( 'Project', () => {
           path: 'scene.json',
         },
       ];
-      mockReadProject.mockReturnValue(
-        new Promise( (resolve) => resolve(dirItems) ),
-      );
 
       // The JSON data for .json files in dirItems, in order
       const itemData:any[] = [
         { "component": "SceneEdit" },
       ];
-      itemData.forEach( data => {
-        mockReadFile.mockReturnValue(
-          new Promise( (resolve) => resolve(JSON.stringify(data)) ),
-        );
-      });
+      itemData.map( data => JSON.stringify(data) ).forEach( json => mockReadFile.mockResolvedValue(json) );
 
       const backend = new ElectronBackend();
       const project = new Project( backend, "projectName" );
-      const gotItems = await project.listItems();
-      expect(mockReadProject).toHaveBeenCalledWith(project.name);
+      const gotItems = await project.inflateItems(dirItems);
       expect(gotItems).toHaveLength(1);
       expect(gotItems[0].path).toBe(dirItems[0].path);
       expect(gotItems[0].type).toBe(itemData[0].component);
+      expect(project.items).toEqual(gotItems);
     } );
 
     test( 'should descend into directories', async () => {
@@ -134,14 +119,10 @@ describe( 'Project', () => {
           ],
         },
       ];
-      mockReadProject.mockReturnValue(
-        new Promise( (resolve) => resolve(dirItems) ),
-      );
 
       const backend = new ElectronBackend();
       const project = new Project( backend, "projectName" );
-      const gotItems = await project.listItems();
-      expect(mockReadProject).toHaveBeenCalledWith("projectName");
+      const gotItems = await project.inflateItems(dirItems);
       expect(gotItems).toHaveLength(1);
       expect(gotItems[0].path).toBe(dirItems[0].path);
       expect(gotItems[0].type).toBe("directory");
@@ -149,6 +130,7 @@ describe( 'Project', () => {
       expect(gotItems[0].children?.[0]).toBeInstanceOf(Texture);
       expect(gotItems[0].children?.[0].path).toBe(dirItems[0].children?.[0].path);
       expect(gotItems[0].children?.[0].type).toBe("texture");
+      expect(project.items).toEqual(gotItems);
     } );
 
     test( 'should read image atlas files to build item', async () => {
@@ -160,9 +142,6 @@ describe( 'Project', () => {
           path: 'sprite.png',
         },
       ];
-      mockReadProject.mockReturnValue(
-        new Promise( (resolve) => resolve(dirItems) ),
-      );
 
       // The data for files in dirItems that will be read, in order
       const itemData:any[] = [
@@ -172,16 +151,11 @@ describe( 'Project', () => {
         </TextureAtlas>
         `,
       ];
-      itemData.forEach( data => {
-        mockReadFile.mockReturnValue(
-          new Promise( (resolve) => resolve(data) ),
-        );
-      });
+      itemData.forEach( data => mockReadFile.mockResolvedValue( data ) );
 
       const backend = new ElectronBackend();
       const project = new Project( backend, "projectName" );
-      const gotItems = await project.listItems();
-      expect(mockReadProject).toHaveBeenCalledWith(project.name);
+      const gotItems = await project.inflateItems(dirItems);
       expect(gotItems).toHaveLength(2);
       expect(gotItems[0].path).toBe(dirItems[0].path);
       expect(gotItems[0].type).toBe("atlas");
@@ -191,6 +165,7 @@ describe( 'Project', () => {
       expect(gotItems[0].children?.[0].path).toBe("atlas.xml#texture_01.png");
       expect(gotItems[0].children?.[1]).toBeInstanceOf(Texture);
       expect(gotItems[0].children?.[1].path).toBe("atlas.xml#texture_02.png");
+      expect(project.items).toEqual(gotItems);
     } );
 
   });

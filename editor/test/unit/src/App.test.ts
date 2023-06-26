@@ -18,29 +18,28 @@ const MockGameConstructor = jest.requireActual<typeof import('../../mock/game.js
 let backend:MockBackend, project:Project, projectItems: DirectoryItem[];
 const MockedGame = jest.mocked( MockGame );
 const cleanup = [] as Array<()=>void>;
-const mockListItems = jest.fn() as jest.MockedFunction<typeof backend.listItems>;
 const mockOpenProject = jest.fn() as jest.MockedFunction<typeof backend.openProject>;
 const mockBuildProject = jest.fn() as jest.MockedFunction<typeof backend.buildProject>;
 const mockLoadGameClass = jest.fn() as jest.MockedFunction<typeof project.loadGameClass>;
 const mockGetState = jest.fn() as jest.MockedFunction<typeof backend.getState>;
 const mockSetState = jest.fn() as jest.MockedFunction<typeof backend.setState>;
 const mockReadItemData = jest.fn() as jest.MockedFunction<typeof backend.readItemData>;
-beforeEach( () => {
+beforeEach( async () => {
   global.fetch = jest.fn() as jest.MockedFunction<typeof global.fetch>
   mockGetState.mockResolvedValue({});
 
   global.electron = new MockElectron();
   backend = new MockBackend();
-  backend.listItems = mockListItems;
   backend.openProject = mockOpenProject;
   backend.buildProject = mockBuildProject;
   backend.getState = mockGetState;
   backend.setState = mockSetState;
   backend.readItemData = mockReadItemData;
 
-  project = new Project( backend, "Project Name" );
-  mockOpenProject.mockReturnValue( Promise.resolve( project ) );
-  project.loadGameClass = mockLoadGameClass;
+  mockReadItemData.mockImplementation( async (projectName:string, itemPath:string) => {
+    return Promise.resolve('{ "component": "SceneEdit" }');
+  } );
+  mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
 
   projectItems = [
     { path: "directory", children: [] },
@@ -51,18 +50,17 @@ beforeEach( () => {
   projectItems[0].children = [
     { path: "directory/OldScene.json" },
   ];
-  mockListItems.mockResolvedValue( projectItems );
-  mockReadItemData.mockImplementation( async (projectName:string, itemPath:string) => {
-    return Promise.resolve('{ "component": "SceneEdit" }');
-  } );
-  mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
+
+  project = new Project( backend, "Project Name" );
+  await project.inflateItems( projectItems );
+  mockOpenProject.mockReturnValue( Promise.resolve( project ) );
+  project.loadGameClass = mockLoadGameClass;
 });
 
 afterEach( () => {
   cleanup.forEach( c => c() );
   cleanup.length = 0;
   sessionStorage.clear();
-  mockListItems.mockReset();
   mockOpenProject.mockReset();
   mockBuildProject.mockReset();
   mockLoadGameClass.mockReset();
@@ -106,8 +104,6 @@ describe('App', () => {
 
       expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
       expect( wrapper.vm.project.name ).toBe(project.name);
-
-      expect( mockListItems ).toHaveBeenCalled();
 
       expect( mockLoadGameClass ).toHaveBeenCalled();
     });
@@ -346,7 +342,6 @@ describe('App', () => {
       const projectDialog = wrapper.getComponent<typeof Modal>({ ref: 'projectDialog' });
       expect( projectDialog.props('show') ).toBe(false);
       expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
-      expect( mockListItems ).toHaveBeenCalled();
     });
 
     test( 'loads open tabs', async () => {
@@ -410,7 +405,6 @@ describe('App', () => {
       const projectDialog = wrapper.getComponent<typeof Modal>({ ref: 'projectDialog' });
       expect( projectDialog.props('show') ).toBe(true);
       expect( mockOpenProject ).not.toHaveBeenCalled();
-      expect( mockListItems ).not.toHaveBeenCalled();
 
       const modal = wrapper.getComponent(ProjectSelect);
       modal.vm.$emit('restore');
@@ -419,7 +413,6 @@ describe('App', () => {
 
       expect( projectDialog.props('show') ).toBe(false);
       expect( mockOpenProject ).toHaveBeenCalledWith(project.name);
-      expect( mockListItems ).toHaveBeenCalled();
       expect( wrapper.vm.gameClass ).not.toBeNull();
     });
 

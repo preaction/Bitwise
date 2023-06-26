@@ -4,6 +4,7 @@ import { MockElectron } from '../../../mock/electron.js';
 import ElectronBackend from '../../../../src/backend/Electron.js';
 import type { DirectoryItem } from '../../../../src/Backend.js';
 import Project from '../../../../src/model/Project.js';
+import ProjectItem from '../../../../src/model/ProjectItem.js';
 
 beforeEach( () => {
   global.electron = new MockElectron();
@@ -31,13 +32,15 @@ describe( 'backend/Electron', () => {
     const givenProjects = [ "projectOne", "games/projectTwo" ];
     const mockGetStore = jest.fn() as jest.MockedFunction<typeof global.electron.store.get>;
     const mockSetStore = jest.fn() as jest.MockedFunction<typeof global.electron.store.set>;
-
+    const mockReadProject = jest.fn() as jest.MockedFunction<typeof global.electron.readProject>;
     beforeEach( () => {
       global.electron.store.get = mockGetStore;
       global.electron.store.set = mockSetStore;
+      global.electron.readProject = mockReadProject;
       mockGetStore.mockReset();
       mockGetStore.mockReturnValue( [...givenProjects] );
       mockSetStore.mockClear();
+      mockReadProject.mockReset().mockResolvedValue([]);
     } );
 
     test( 'should return project object', async () => {
@@ -46,6 +49,28 @@ describe( 'backend/Electron', () => {
       const project = await backend.openProject(projectName);
       expect(project).toBeInstanceOf(Project);
       expect(project.name).toBe(projectName);
+    } );
+
+    test( 'should populate project with items', async () => {
+      const dirItems:DirectoryItem[] = [
+        {
+          path: 'sprite.png',
+        },
+        {
+          path: 'README.md',
+        },
+      ];
+      mockReadProject.mockReset().mockResolvedValue(dirItems);
+
+      const backend = new ElectronBackend();
+      const projectName = "newProject";
+      const project = await backend.openProject(projectName);
+      expect(mockReadProject).toHaveBeenCalledWith(projectName);
+      expect(project.items).toHaveLength(dirItems.length);
+      expect(project.items[0]).toBeInstanceOf(ProjectItem);
+      expect(project.items[0]?.path).toBe(dirItems[0].path);
+      expect(project.items[1]).toBeInstanceOf(ProjectItem);
+      expect(project.items[1]?.path).toBe(dirItems[1].path);
     } );
 
     test( 'should append new projects to recent projects', async () => {
@@ -74,12 +99,9 @@ describe( 'backend/Electron', () => {
 
   describe( 'listItems()', () => {
     const mockReadProject = jest.fn() as jest.MockedFunction<typeof global.electron.readProject>;
-    const mockReadFile = jest.fn() as jest.MockedFunction<typeof global.electron.readFile>;
     beforeEach( () => {
       global.electron.readProject = mockReadProject;
       mockReadProject.mockReset();
-      global.electron.readFile = mockReadFile;
-      mockReadFile.mockReset();
     } );
 
     test('should list project items', async () => {
@@ -113,33 +135,6 @@ describe( 'backend/Electron', () => {
       expect(gotItems[2].children?.[0].path).toBe(dirItems[2].children?.[0].path);
     } );
 
-    test( 'should open JSON files to find type info', async () => {
-      const dirItems:DirectoryItem[] = [
-        {
-          path: 'scene.json',
-        },
-      ];
-      mockReadProject.mockReturnValue(
-        new Promise( (resolve) => resolve(dirItems) ),
-      );
-
-      // The JSON data for .json files in dirItems, in order
-      const itemData:any[] = [
-        { "component": "SceneEdit" },
-      ];
-      itemData.forEach( data => {
-        mockReadFile.mockReturnValue(
-          new Promise( (resolve) => resolve(JSON.stringify(data)) ),
-        );
-      });
-
-      const backend = new ElectronBackend();
-      const gotItems = await backend.listItems( "project" );
-      expect(mockReadProject).toHaveBeenCalledWith("project");
-      expect(gotItems).toHaveLength(1);
-      expect(gotItems[0].path).toBe(dirItems[0].path);
-    } );
-
     test( 'should descend into directories', async () => {
       const dirItems:DirectoryItem[] = [
         {
@@ -151,9 +146,7 @@ describe( 'backend/Electron', () => {
           ],
         },
       ];
-      mockReadProject.mockReturnValue(
-        new Promise( (resolve) => resolve(dirItems) ),
-      );
+      mockReadProject.mockResolvedValue( dirItems );
 
       const backend = new ElectronBackend();
       const gotItems = await backend.listItems( "project" );

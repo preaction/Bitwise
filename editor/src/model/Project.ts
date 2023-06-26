@@ -26,6 +26,13 @@ export default class Project extends EventEmitter {
    * meaning to the Backend.
    */
   name:string;
+
+  /**
+   * All of the items in this project. Use inflateItems() to add
+   * ProjectItem objects to this array.
+   */
+  readonly items:ProjectItem[] = [];
+
   state:{ [key:string]: any } = {};
   private gameFile:string|null = null;
   private gameClass:typeof Game|null = null;
@@ -58,7 +65,13 @@ export default class Project extends EventEmitter {
     return mod.default;
   }
 
-  async listItems():Promise<ProjectItem[]> {
+  /**
+   * inflateItems creates ProjectItem objects from the given
+   * DirectoryItem objects and adds them to the project's items array.
+   * This is used by the backend when opening the project and listing
+   * its contents.
+   */
+  async inflateItems( items:DirectoryItem[] ):Promise<ProjectItem[]> {
     const descend = async (dirItem:DirectoryItem) => {
       let projectItem:ProjectItem|null = null;
       if ( dirItem.children ) {
@@ -98,10 +111,8 @@ export default class Project extends EventEmitter {
       return projectItem;
     };
 
-    const projectItems = await this.backend.listItems( this.name )
-      .then( async ( items:DirectoryItem[] ) => {
-        return Promise.all( items.map( descend ) );
-      });
+    const projectItems = await Promise.all( items.map( descend ) );
+    this.items.push( ...projectItems );
     return projectItems;
   }
 }
