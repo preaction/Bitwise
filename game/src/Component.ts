@@ -73,6 +73,10 @@ export default abstract class Component {
   thawEntity( eid:number, data:{ [key:string]: any }={} ):void {
     this.addEntity( eid );
     for ( const k in data ) {
+      if ( !this.store[k] ) {
+        console.warn( 'Unknown attribute: ', k );
+        continue;
+      }
       this.store[k][eid] = data[k];
     }
   }
