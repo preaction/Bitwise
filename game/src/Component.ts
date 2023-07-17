@@ -74,7 +74,7 @@ export default abstract class Component {
     this.addEntity( eid );
     for ( const k in data ) {
       if ( !this.store[k] ) {
-        console.warn( 'Unknown attribute: ', k );
+        console.warn( 'Unknown attribute:', k, 'for component:', this.constructor.name );
         continue;
       }
       this.store[k][eid] = data[k];

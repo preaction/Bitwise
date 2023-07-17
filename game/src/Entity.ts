@@ -61,11 +61,11 @@ export default class Entity {
     return this._path;
   }
   set path(newPath:string) {
-    // XXX: To make this safer, we should create entities outside
-    // a Scene object. Then the entity can be considered "inactive" and
-    // safe to edit. Once the entity is added to the scene, it may be
-    // activated. Active entities should forbid editing certain
-    // attributes, like path/parent.
+    if ( !newPath ) {
+      throw "Entity.path must be non-empty string";
+    }
+    // XXX: This should fire an event so things that depend on the
+    // hierarchy can update themselves
     this._path = newPath;
     // Reset the parent cache
     this._parent = undefined;
@@ -172,8 +172,12 @@ export default class Entity {
    * freeze().
    */
   thaw( data:any ) {
-    this.path = data.path;
-    this.type = data.type;
+    if ( "path" in data ) {
+      this.path = data.path;
+    }
+    if ( "type" in data ) {
+      this.type = data.type;
+    }
     this.active = "active" in data ? data.active : true;
     for ( const c in data.components ) {
       if ( !this.scene.components[c] ) {
