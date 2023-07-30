@@ -9,13 +9,13 @@ import ProjectItem from '../ProjectItem.js';
 export default class Texture extends ProjectItem {
   constructor( project:Project, path:string ) {
     super( project, path, "texture" );
+    this.src = path;
   }
   /**
    * The source URI of the image containing this texture.
    */
-  get src():string {
-    return this.path.replace( /#.+$/, '' );
-  }
+  src:string;
+
   /**
    * The width of this Texture. If null, the rest of the Image should be
    * used.

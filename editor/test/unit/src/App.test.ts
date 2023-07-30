@@ -39,8 +39,16 @@ beforeEach( async () => {
   const mockData:{[key:string]: string} = {
     'LoadScene.json': '{ "component": "SceneEdit" }',
     'directory/OldScene.json': '{ "component": "SceneEdit" }',
+    'sheet.xml': `<?xml version="1.0" encoding="UTF-8"?>
+      <TextureAtlas imagePath="sprite.png">
+        <SubTexture name="tile.png" x="0" y="0" width="10" height="10"/>
+      </TextureAtlas>
+    `,
   };
   mockReadItemData.mockImplementation( async (projectName:string, itemPath:string) => {
+    if ( !mockData[itemPath] ) {
+      throw `No mock data for path ${itemPath}`;
+    }
     return Promise.resolve(mockData[itemPath]);
   } );
   mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
@@ -50,6 +58,8 @@ beforeEach( async () => {
     { path: "LoadScene.json" },
     { path: "System.ts" },
     { path: "UI.png" },
+    { path: "sheet.xml" },
+    { path: "sprite.png" },
   ];
   projectItems[0].children = [
     { path: "directory/OldScene.json" },
@@ -316,6 +326,33 @@ describe('App', () => {
       expect( viewerTab.vm.modelValue ).toBeInstanceOf( Tab );
       expect( viewerTab.vm.modelValue ).toMatchObject({
         src: "UI.png",
+      });
+
+      // XXX: Saves session info
+      // Saves state info
+      expect( mockSetState ).toHaveBeenCalled();
+      expect( mockSetState.mock.lastCall?.[0] ).toBe("app");
+      expect( mockSetState.mock.lastCall?.[1] ).toMatchObject({ currentTabIndex: 0 });
+    });
+
+    test( 'can open sprite from sprite sheet', async () => {
+      const item:DirectoryItem = { path: 'sheet.xml/tile.png' };
+      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
+      projectTree.vm.ondblclickitem( item );
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Opens tab w/ correct info
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElements = tabBar.findAll( 'a' );
+      expect( tabElements ).toHaveLength(1);
+      expect( tabElements[0].text() ).toBe( "tile" );
+      expect( tabElements[0].attributes('aria-current') ).toBe('true');
+
+      const viewerTab = wrapper.getComponent(ImageView);
+      expect( viewerTab.vm.modelValue ).toBeInstanceOf( Tab );
+      expect( viewerTab.vm.modelValue ).toMatchObject({
+        src: "sheet.xml/tile.png",
       });
 
       // XXX: Saves session info

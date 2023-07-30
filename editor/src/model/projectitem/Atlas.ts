@@ -15,10 +15,15 @@ export default class Atlas extends ProjectItem {
    * Build an Atlas from the given XMLDocument. Chainable.
    */
   parseDOM( dom:XMLDocument ):Atlas {
+    const imagePath = this.path.replace(
+      /(\/?)[^\/]+$/,
+      `$1${dom.documentElement.getAttribute('imagePath')}`,
+    );
     this.children = [];
     for ( const node of dom.querySelectorAll('SubTexture') ) {
-      const texturePath = `${this.path}#${node.getAttribute("name")}`;
+      const texturePath = `${this.path}/${node.getAttribute("name")}`;
       const texture = new Texture( this.project, texturePath );
+      texture.src = imagePath;
       texture.x = parseInt( node.getAttribute("x") || "0" );
       texture.y = parseInt( node.getAttribute("y") || "0" );
       const width = node.getAttribute("width");

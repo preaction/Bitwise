@@ -352,6 +352,9 @@ export default Vue.defineComponent({
         if ( item.path === findPath ) {
           return item;
         }
+        if ( !item.children?.length ) {
+          throw `Could not find project item "${findPath}"`;
+        }
         items = item.children;
       }
     },

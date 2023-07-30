@@ -162,9 +162,11 @@ describe( 'Project', () => {
       expect(gotItems[0]).toBeInstanceOf(Atlas);
       expect(gotItems[0].children).toHaveLength(2);
       expect(gotItems[0].children?.[0]).toBeInstanceOf(Texture);
-      expect(gotItems[0].children?.[0].path).toBe("atlas.xml#texture_01.png");
+      expect(gotItems[0].children?.[0].path).toBe("atlas.xml/texture_01.png");
+      expect((gotItems[0].children?.[0] as Texture).src).toBe("sprite.png");
       expect(gotItems[0].children?.[1]).toBeInstanceOf(Texture);
-      expect(gotItems[0].children?.[1].path).toBe("atlas.xml#texture_02.png");
+      expect(gotItems[0].children?.[1].path).toBe("atlas.xml/texture_02.png");
+      expect((gotItems[0].children?.[1] as Texture).src).toBe("sprite.png");
       expect(project.items).toEqual(gotItems);
     } );
 

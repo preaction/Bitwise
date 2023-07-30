@@ -1,16 +1,21 @@
 
-import {describe, test, expect} from '@jest/globals';
+import {describe, test, expect, beforeEach, jest} from '@jest/globals';
 import { flushPromises, mount } from '@vue/test-utils';
 import MockBackend from '../../../mock/backend.js';
 import Project from '../../../../src/model/Project.js';
 import ImageView from '../../../../src/components/ImageView.vue';
 import Texture from '../../../../src/model/projectitem/Texture.js';
 import Tab from '../../../../src/model/Tab.js';
+import type Backend from '../../../../src/Backend.js';
 
-const backend = new MockBackend();
-const project = new Project(backend, "ProjectName");
-const baseUrl = `https://example.game/${project.name}`;
-const provide = { backend, project, baseUrl };
+let backend:Backend, project:Project, provide:{[key:string]:any}, baseUrl:string;
+
+beforeEach( () => {
+  backend = new MockBackend();
+  project = new Project(backend, "ProjectName");
+  baseUrl = `https://example.game/${project.name}`;
+  provide = { backend, project, baseUrl };
+} );
 
 describe( 'ImageView', () => {
   test( 'shows an image', async () => {
@@ -27,9 +32,13 @@ describe( 'ImageView', () => {
     expect( img.attributes('src') ).toBe( `${baseUrl}/image.png` );
   });
 
-  test.skip( 'shows an image from an atlas', async () => {
-    // XXX: Mock project.getItem to get texture atlas
-    const projectItem = new Texture(project, "atlas.xml#texture_01.png");
+  test( 'shows an image from an atlas', async () => {
+    const projectItem = new Texture(project, "atlas.xml/texture_01.png");
+    projectItem.src = "image.png";
+    projectItem.x = 10;
+    projectItem.y = 10;
+    projectItem.width = 100;
+    projectItem.height = 100;
     const tab = new Tab( projectItem );
     const wrapper = mount( ImageView, {
       props: {
@@ -40,6 +49,6 @@ describe( 'ImageView', () => {
     await flushPromises();
     const img = wrapper.get('img');
     expect( img.attributes('src') ).toBe( `${baseUrl}/image.png` );
-    // XXX: Check for crop at x/y/width/height
+    expect( img.attributes('style') ).toMatch( /M\s+10\s+10\s+h\s+100\s+v\s+100\s+h\s+-100\s+Z/ );
   });
 });
