@@ -36,8 +36,12 @@ beforeEach( async () => {
   backend.setState = mockSetState;
   backend.readItemData = mockReadItemData;
 
+  const mockData:{[key:string]: string} = {
+    'LoadScene.json': '{ "component": "SceneEdit" }',
+    'directory/OldScene.json': '{ "component": "SceneEdit" }',
+  };
   mockReadItemData.mockImplementation( async (projectName:string, itemPath:string) => {
-    return Promise.resolve('{ "component": "SceneEdit" }');
+    return Promise.resolve(mockData[itemPath]);
   } );
   mockBuildProject.mockResolvedValue( "test/mock/game.ts" );
 
