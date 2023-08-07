@@ -31,13 +31,17 @@ export default defineComponent({
 });
 </script>
 <template>
-  <input readonly class="gameobject-input flex-fill col-1 text-end" :value="displayName" placeholder="Drag/Drop Here"
+  <span class="gameobject-input flex-fill col-1 text-end"
     @dragover="dragover" @drop="drop"
-  />
+  >{{displayName || "Drag/Drop Here"}}</span>
 </template>
 <style>
   .gameobject-input {
     cursor: default;
+    border: 1px inset var(--bw-border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    padding: 1px 2px;
   }
 </style>
 
