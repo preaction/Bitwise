@@ -2,6 +2,7 @@ import {describe, expect, test} from '@jest/globals';
 import Game from '../../src/Game';
 import Scene from '../../src/Scene';
 import UIImage from '../../src/component/UIImage';
+import Texture from '../../src/Texture';
 
 test('freezeEntity', () => {
   const game = new Game({
@@ -35,5 +36,7 @@ test('thawEntity', () => {
 
   expect(component.fill[entity.id]).toEqual(givenData.fill);
   const imageId = component.store.imageId[ entity.id ];
-  expect(game.load.texturePaths[imageId]).toEqual(givenData.imagePath);
+
+  const texture = Texture.getById(imageId);
+  expect(texture.src).toEqual(givenData.imagePath);
 });

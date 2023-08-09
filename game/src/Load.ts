@@ -1,5 +1,8 @@
 
 import * as three from 'three';
+import Asset from './Asset.js';
+import Texture from './Texture.js';
+import Atlas from './Atlas.js';
 
 const DEFAULT_TEXTURE = "data:image/webp;base64,UklGRkAAAABXRUJQVlA4TDMAAAAv/8A/AA/wEP5zxv9cf/6DB2TSNvNvuleZgrGI/pNN2pAH0nbrCYiIvffoe+y9x/3/HQAA";
 
@@ -16,28 +19,44 @@ export default class Load extends three.EventDispatcher {
    */
   base:string;
 
-  /**
-   * A map of texture paths to ID numbers.
-   */
-  textureIds:{ [key:string]: number } = {};
-  /**
-   * A map of texture ID numbers to paths
-   */
-  texturePaths:string[] = [];
-
-  constructor( opt:{base:string} ) {
+  constructor( opt:{base?:string}={} ) {
     super();
     this.base = opt.base || '';
+    Texture.defaultTexture = new Texture( this, DEFAULT_TEXTURE );
+  }
 
-    // Load default texture as texture ID 0
-    this.texture( DEFAULT_TEXTURE );
+  /**
+   * Loads the Asset at the given path. Creates an Asset object (or one
+   * of its subclasses) based on the path or (if necessary) contents of
+   * the file.
+   */
+  async asset( path:string ):Promise<Asset> {
+    if ( path.match( /\.(?:png|jpe?g|gif)$/ ) || path.match( /^data:image/ ) ) {
+      return new Texture( this, path );
+    }
+    else if ( path.match( /\.xml$/ ) ) {
+      const xml = await this.text( path );
+      const dom = new DOMParser().parseFromString(xml, "application/xml");
+      if ( dom.documentElement.tagName.toLowerCase() === "textureatlas" ) {
+        return new Atlas( this, path ).parseDOM(dom);
+      }
+    }
+    return new Asset( this, path );
+  }
+
+  /**
+   * Load the text file at the given path. Returns a Promise that
+   * resolves to the text and rejects on any error.
+   */
+  async text( path:string ):Promise<string> {
+    return fetch(this.base + path).then( res => res.text() );
   }
 
   /**
    * Load the JSON file at the given path. Returns a Promise that
    * resolves to the parsed JSON and rejects on any error.
    */
-  json( path:string ):Promise<any> {
+  async json( path:string ):Promise<any> {
     return fetch(this.base + path).then( res => res.json() );
   }
 
@@ -49,12 +68,7 @@ export default class Load extends three.EventDispatcher {
    * must be loaded by the renderer when needed.
    */
   texture( path:string ):number {
-    let textureId = this.texturePaths.indexOf( path );
-    if ( textureId < 0 ) {
-      this.texturePaths.push( path );
-      textureId = this.texturePaths.length - 1;
-      this.textureIds[ path ] = textureId;
-    }
-    return textureId;
+    const texture = new Texture( this, path );
+    return texture.textureId;
   }
 }

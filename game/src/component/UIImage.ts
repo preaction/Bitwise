@@ -1,6 +1,7 @@
 
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
+import Texture from '../Texture.js';
 
 /**
  * How an image should fill the element.
@@ -45,7 +46,7 @@ export default class UIImage extends Component {
   freezeEntity( eid:number ) {
     // Freeze always gives a texture path
     const data = super.freezeEntity(eid);
-    data.imagePath = this.scene.game.load.texturePaths[data.imageId];
+    data.imagePath = Texture.getById(data.imageId).path;
     delete data.imageId;
     data.fill = this.fill[eid] || 'stretch';
     return data;

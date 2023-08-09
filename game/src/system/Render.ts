@@ -15,6 +15,7 @@ import UIContainerComponent from '../component/UIContainer.js';
 import OrthographicCameraComponent from '../component/OrthographicCamera.js';
 import ResizeEvent from '../event/ResizeEvent.js';
 import ProgressEvent from '../event/ProgressEvent.js';
+import Texture from '../Texture.js';
 
 /**
  * The Render class handles rendering most Three.JS Object3D objects.
@@ -342,7 +343,7 @@ export default class Render extends System {
         node.appendChild( img );
       }
       if ( img.dataset.imageId != imageId.toString() ) {
-        img.src = this.scene.game.load.base + this.scene.game.load.texturePaths[imageId];
+        img.src = Texture.getById(imageId).src;
         img.dataset.imageId = imageId.toString();
         node.style.backgroundImage = `url(${img.src}`;
         const fillType = this.uiImageComponent.fill[eid];
@@ -447,14 +448,14 @@ export default class Render extends System {
    * Load the texture and prepare it to be rendered.
    */
   async loadTexture( textureId:number, forEid:string|number="preload" ):Promise<three.Texture> {
-    const path = this.scene.game.load.texturePaths[textureId];
-    if ( !path ) {
+    const src = Texture.getById(textureId).src;
+    if ( !src ) {
       throw `Unknown texture ID ${textureId} (${forEid})`;
     }
     this.progress.total++;
     return new Promise(
       (resolve, reject) => {
-        const texture = this.loader.load( path, resolve, undefined, reject ) 
+        const texture = this.loader.load( src, resolve, undefined, reject ) 
         this.textures[textureId] = texture;
       },
     ).then( (value: any) => {

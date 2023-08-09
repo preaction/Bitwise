@@ -1,6 +1,7 @@
 
 import * as bitecs from 'bitecs';
 import Component from '../Component.js';
+import Texture from '../Texture.js';
 
 /**
  * Adds a sprite texture to a game object. Sprites are unique in that
@@ -20,7 +21,7 @@ export default class Sprite extends Component {
   freezeEntity( eid:number ) {
     // Freeze always gives a texture path
     const data = super.freezeEntity(eid);
-    data.texturePath = this.scene.game.load.texturePaths[data.textureId];
+    data.texturePath = Texture.getById(data.textureId).path;
     delete data.textureId;
     return data;
   }
