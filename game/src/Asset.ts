@@ -1,7 +1,7 @@
 
 import Load from './Load.js';
 
-export type AssetProps = {
+export type AssetProps = string | {
   path: string,
   [key: string]: any,
 };
@@ -10,26 +10,28 @@ export type AssetRef = {
   path: string,
   [key: string]: any,
 };
-type AssetConstructor<T extends Asset> = new ( load:Load, props:AssetProps ) => T;
 
 /**
  * Asset is the base class of a single game resource. Assets may be
  * actual (files and folders) or virtual (slices of an image).
  */
 export default class Asset {
-  static classes:{ [key:string]: AssetConstructor<any> } = {};
-  static register<T extends Asset>( cls:AssetConstructor<T> ) {
+  static classes:{ [key:string]: typeof Asset } = {};
+  static register( cls:typeof Asset ) {
     if ( Asset.classes[ cls.name ] && Asset.classes[ cls.name ] != cls ) {
       throw `Another Asset named ${cls.name} already registered!`;
     }
     Asset.classes[cls.name] = cls;
   }
-  static deref<T extends Asset>( load:Load, ref:AssetRef ):T {
+  static async deref( load:Load, ref:AssetRef ):Promise<Asset> {
     const cons = Asset.classes[ ref.$asset ];
     if ( !cons ) {
       throw `Unknown asset type "${ref.$asset}"`;
     }
-    return new cons( load, ref );
+    if ( this !== Asset ) {
+      return new cons( load, ref );
+    }
+    return cons.deref( load, ref );
   }
 
   /**
@@ -47,7 +49,7 @@ export default class Asset {
    */
   children?:Asset[];
 
-  constructor( load:Load, props:string|AssetProps="" ) {
+  constructor( load:Load, props:AssetProps="" ) {
     if ( !load ) {
       throw new Error("Asset: Load object must be given to constructor");
     }

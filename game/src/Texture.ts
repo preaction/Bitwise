@@ -1,4 +1,5 @@
-import Asset from "./Asset";
+import Asset, {AssetProps, AssetRef} from "./Asset";
+import Atlas from "./Atlas";
 import Load from "./Load";
 
 export default class Texture extends Asset {
@@ -35,16 +36,31 @@ export default class Texture extends Asset {
    */
   y:number = 0;
 
-  constructor( load:Load, path:string ) {
-    super(load, path);
-    this.src = ( path.match(/^[a-z]+:/) ? '' : load.base ) + path;
+  /**
+   * The Atlas containing this Texture, if any.
+   */
+  atlas:Atlas|null = null;
+
+  static async deref( load:Load, props:AssetProps ):Promise<Texture> {
+    // If we're loading a texture from an atlas, load the atlas first.
+    // This will incidentally create Textures for everything in the
+    // Atlas, which we will then copy.
+    if ( typeof props !== 'string' && props.atlas ) {
+      await load.asset( props.atlas );
+    }
+    return new Texture( load, props );
+  }
+
+  constructor( load:Load, props:AssetProps ) {
+    super(load, props);
+    this.src = ( this.path.match(/^[a-z]+:/) ? '' : load.base ) + this.path;
     this.textureId = Texture.loadedTextures.length;
 
-    if ( Texture.loadedTexturePaths[path] ) {
-      Object.assign( this, Texture.loadedTexturePaths[path] );
+    if ( this.path && Texture.loadedTexturePaths[this.path] ) {
+      Object.assign( this, Texture.loadedTexturePaths[this.path] );
     }
     else {
-      Texture.loadedTexturePaths[path] = this;
+      Texture.loadedTexturePaths[this.path] = this;
       Texture.loadedTextures.push( this );
     }
   }
@@ -55,4 +71,14 @@ export default class Texture extends Asset {
   static getById( id:number ):Texture {
     return Texture.loadedTextures[id] || Texture.defaultTexture;
   }
+
+  ref():AssetRef {
+    const ref = super.ref();
+    if ( this.atlas ) {
+      ref.atlas = this.atlas.path;
+    }
+    return ref;
+  }
 }
+
+Asset.register( Texture );

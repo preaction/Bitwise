@@ -50,21 +50,21 @@ describe('Asset', () => {
       expect( ref.path ).toBe( path );
     } );
 
-    test('deref()', () => {
+    test('deref()', async () => {
       const path = "path/to/asset";
       const ref = {
         $asset: MockAsset.name,
         path,
       };
-      const asset = Asset.deref( load, ref );
+      const asset = await Asset.deref( load, ref );
       expect( asset ).toBeInstanceOf(MockAsset)
       expect( asset.path ).toBe( path );
     } );
 
-    test('roundtrip', () => {
+    test('roundtrip', async () => {
       const asset = new MockAsset(load, { path: "" });
       const ref = asset.ref();
-      expect( Asset.deref( load, ref ) ).toEqual( asset );
+      expect( await Asset.deref( load, ref ) ).toEqual( asset );
     });
   });
 });

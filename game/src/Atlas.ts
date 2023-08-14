@@ -9,6 +9,11 @@ export default class Atlas extends Asset {
   declare children:Texture[];
 
   /**
+   * The path to the image containing these textures.
+   */
+  imagePath!:string;
+
+  /**
    * Build an Atlas from the given XMLDocument. Chainable.
    */
   parseDOM( dom:XMLDocument ):Atlas {
@@ -16,6 +21,7 @@ export default class Atlas extends Asset {
       /(\/?)[^\/]+$/,
       `$1${dom.documentElement.getAttribute('imagePath')}`,
     );
+    this.imagePath = imagePath;
     this.children = [];
     for ( const node of dom.querySelectorAll('SubTexture') ) {
       const texturePath = `${this.path}/${node.getAttribute("name")}`;
@@ -23,6 +29,7 @@ export default class Atlas extends Asset {
       texture.src = imagePath;
       texture.x = parseInt( node.getAttribute("x") || "0" );
       texture.y = parseInt( node.getAttribute("y") || "0" );
+      texture.atlas = this;
       const width = node.getAttribute("width");
       if ( width ) {
         texture.width = parseInt(width);
@@ -36,3 +43,5 @@ export default class Atlas extends Asset {
     return this;
   }
 }
+
+Asset.register( Atlas );
