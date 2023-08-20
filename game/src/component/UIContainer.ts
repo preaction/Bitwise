@@ -25,7 +25,7 @@ export default class UIContainer extends Component {
     data.align = this.align[eid];
     return data;
   }
-  thawEntity( eid:number, data:{ [key:string]:any }={} ) {
+  async thawEntity( eid:number, data:{ [key:string]:any }={} ) {
     data = {...data};
     this.flow[eid] = data?.flow;
     delete data?.flow;
@@ -33,6 +33,6 @@ export default class UIContainer extends Component {
     delete data?.justify;
     this.align[eid] = data?.align;
     delete data?.align;
-    super.thawEntity( eid, data );
+    return super.thawEntity( eid, data );
   }
 }

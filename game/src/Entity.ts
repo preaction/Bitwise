@@ -99,16 +99,16 @@ export default class Entity {
     this.scene.removeEntity( this.id );
   }
 
-  addComponent( name:string, data:{ [key:string]: any } ) {
+  async addComponent( name:string, data:{ [key:string]: any } ) {
     if ( !this.scene.components[name] ) {
       this.scene.addComponent( name );
     }
     const component = this.scene.components[name];
     component.addEntity( this.id );
-    this.setComponent(name, data);
+    return this.setComponent(name, data);
   }
 
-  setComponent( name:string, data:{ [key:string]: any } ) {
+  async setComponent( name:string, data:{ [key:string]: any } ) {
     return this.scene.components[name].thawEntity( this.id, data );
   }
 
@@ -171,7 +171,9 @@ export default class Entity {
    * Deserialize this entity and any descendants. The opposite of
    * freeze().
    */
-  thaw( data:any ) {
+  async thaw( data:any ) {
+    const promises:Promise<any>[] = [];
+
     if ( "path" in data ) {
       this.path = data.path;
     }
@@ -183,7 +185,7 @@ export default class Entity {
       if ( !this.scene.components[c] ) {
         this.scene.addComponent(c);
       }
-      this.scene.components[c].thawEntity(this.id, data.components[c]);
+      promises.push( this.scene.components[c].thawEntity(this.id, data.components[c]) );
     }
     // XXX: Remove any components from this entity which are not in the
     // given data
@@ -203,7 +205,7 @@ export default class Entity {
           if ( !this.scene.components[c] ) {
             this.scene.addComponent(c);
           }
-          this.scene.components[c].thawEntity(eData.id, eData.components[c]);
+          promises.push( this.scene.components[c].thawEntity(eData.id, eData.components[c]) );
         }
         // XXX: Remove any components from this entity which are not in the
         // given data
@@ -211,5 +213,6 @@ export default class Entity {
       }
     }
     // XXX: Remove any descendant entities not found in data
+    return Promise.all(promises);
   }
 }

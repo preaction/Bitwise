@@ -21,7 +21,7 @@ test('freezeEntity', () => {
   expect(data).toStrictEqual(expectData);
 });
 
-test('thawEntity', () => {
+test('thawEntity', async () => {
   const game = new Game({
     components: {
       UIImage: UIImage,
@@ -32,7 +32,7 @@ test('thawEntity', () => {
   const entity = scene.addEntity();
   const givenData = { imagePath: 'example.jpg', fill: 'stretch' };
   const component = scene.getComponent( UIImage );
-  component.thawEntity( entity.id, givenData );
+  await component.thawEntity( entity.id, givenData );
 
   expect(component.fill[entity.id]).toEqual(givenData.fill);
   const imageId = component.store.imageId[ entity.id ];

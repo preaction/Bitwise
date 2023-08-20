@@ -29,19 +29,19 @@ describe('Component.thawEntity', () => {
     entity = scene.addEntity();
   } );
 
-  test( 'thaws entity data', () => {
+  test( 'thaws entity data', async () => {
     const eid = entity.id;
     const data = { x: 0, y: 2 };
-    component.thawEntity(eid, data);
+    await component.thawEntity(eid, data);
     expect( component.store.x[eid] ).toBe( data.x );
     expect( component.store.y[eid] ).toBe( data.y );
   });
 
-  test( 'accepts unknown entity fields', () => {
+  test( 'accepts unknown entity fields', async () => {
     jest.spyOn(console, 'warn').mockImplementation( () => {} )
     const eid = entity.id;
     const data = { x: 0, y: 2, UNKNOWN: 0 };
-    expect( () => component.thawEntity(eid, data) ).not.toThrow();
+    expect( async () => await component.thawEntity(eid, data) ).not.toThrow();
     expect( component.store.x[eid] ).toBe( data.x );
     expect( component.store.y[eid] ).toBe( data.y );
     expect( console.warn ).toHaveBeenCalledTimes( 1 );

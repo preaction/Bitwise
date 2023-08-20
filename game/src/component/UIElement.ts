@@ -36,7 +36,7 @@ export default class UIElement extends Component {
     data.padding = this.padding[eid];
     return data;
   }
-  thawEntity(eid: number, data?: {[key: string]: any;}): void {
+  async thawEntity(eid: number, data?: {[key: string]: any;}) {
     data = {...data};
     if ( data?.backgroundColor?.startsWith('#') ) {
       data.backgroundColor = parseInt( data.backgroundColor.slice(1), 16 );

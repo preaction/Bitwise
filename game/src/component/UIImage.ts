@@ -51,13 +51,13 @@ export default class UIImage extends Component {
     data.fill = this.fill[eid] || 'stretch';
     return data;
   }
-  thawEntity( eid:number, data:{ [key:string]:any }={} ) {
+  async thawEntity( eid:number, data:{ [key:string]:any }={} ) {
     this.fill[eid] = data.fill || 'stretch';
     // Thaw can work with an ID or a path
     let imageId = data.imageId;
     if ( !imageId && data.imagePath ) {
       imageId = this.scene.game.load.texture( data.imagePath );
     }
-    super.thawEntity( eid, {imageId} );
+    return super.thawEntity( eid, {imageId} );
   }
 }

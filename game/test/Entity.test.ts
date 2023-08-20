@@ -19,25 +19,25 @@ describe('Entity.path', () => {
 });
 
 describe( 'Entity.thaw', () => {
-  test( 'thaw() updates entity properties', () => {
+  test( 'thaw() updates entity properties', async () => {
     const data = {
       path: "New Path",
       type: "TestEntity",
       active: false,
     };
-    entity.thaw( data );
+    await entity.thaw( data );
     expect( entity.path ).toBe( data.path );
     expect( entity.type ).toBe( data.type );
     expect( entity.active ).toBe( data.active );
   } );
 
-  test( 'thaw() does not update properties not in data', () => {
+  test( 'thaw() does not update properties not in data', async () => {
     const original = {
       path: entity.path,
       type: entity.type,
       active: entity.active,
     };
-    entity.thaw( {} );
+    await entity.thaw( {} );
     expect( entity.path ).toBe( original.path );
     expect( entity.type ).toBe( original.type );
     expect( entity.active ).toBe( original.active );

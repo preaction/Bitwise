@@ -26,12 +26,12 @@ export default class UIText extends Component {
     data.align = this.align[eid];
     return data;
   }
-  thawEntity( eid:number, data:{ [key:string]:any }={} ) {
+  async thawEntity( eid:number, data:{ [key:string]:any }={} ) {
     data = {...data};
     this.text[eid] = data?.text;
     delete data?.text;
     this.align[eid] = data?.align;
     delete data?.align;
-    super.thawEntity( eid, data );
+    return super.thawEntity( eid, data );
   }
 }

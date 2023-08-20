@@ -70,7 +70,7 @@ export default abstract class Component {
    * example, the Sprite component thaws texture paths by using the Load
    * object to get a texture ID.
    */
-  thawEntity( eid:number, data:{ [key:string]: any }={} ):void {
+  async thawEntity( eid:number, data:{ [key:string]: any }={} ):Promise<void> {
     this.addEntity( eid );
     for ( const k in data ) {
       if ( !this.store[k] ) {

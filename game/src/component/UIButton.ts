@@ -23,10 +23,10 @@ export default class UIButton extends Component {
     data.action = this.action[eid];
     return data;
   }
-  thawEntity( eid:number, data:{ [key:string]:any }={} ) {
+  async thawEntity( eid:number, data:{ [key:string]:any }={} ) {
     data = {...data};
     this.action[eid] = data?.action;
     delete data?.action;
-    super.thawEntity( eid, data );
+    return super.thawEntity( eid, data );
   }
 }

@@ -278,7 +278,9 @@ export class Scene extends three.EventDispatcher {
   /**
    * Load the scene from the given data. The opposite of freeze().
    */
-  thaw( data:SceneData ) {
+  async thaw( data:SceneData ) {
+    const promises:Promise<any>[] = [];
+
     this.name = data.name;
     for ( const name of data.components ) {
       this.addComponent( name );
@@ -303,10 +305,12 @@ export class Scene extends three.EventDispatcher {
           console.error( `Component ${c} not registered on scene` );
           continue;
         }
-        this.components[c].thawEntity(eData.id, eData.components[c]);
+        promises.push( this.components[c].thawEntity(eData.id, eData.components[c]) );
       }
       delete eData.id;
     }
+
+    return Promise.all(promises);
   }
 
   addSystem( name:string, data:any={} ) {
