@@ -795,6 +795,7 @@ button.primary {
   background: var(--bw-background-color);
   color: var(--bw-color);
   margin: 0.3em 0;
+  overflow-y: scroll;
 }
 
 .app-main {
