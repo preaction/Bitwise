@@ -7,7 +7,7 @@ import Tab from './model/Tab.js';
 import Project from './model/Project.js';
 import type ProjectItem from './model/ProjectItem.js';
 import NewTab from "./components/NewTab.vue";
-import ObjectTree from "./components/ObjectTree.vue";
+import AssetTree from "./components/AssetTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
 import MarkdownView from "./components/MarkdownView.vue";
@@ -140,7 +140,7 @@ const vueLoaderOptions = {
 export default Vue.defineComponent({
   components: {
     NewTab,
-    ObjectTree,
+    AssetTree,
     ProjectSelect,
     ImageView,
     MarkdownView,
@@ -630,18 +630,20 @@ export default Vue.defineComponent({
           </ul>
         </MenuButton>
       </div>
-      <ObjectTree ref="projectTree" dragtype="file" :ondblclickitem="openTab" :items="projectItems" :ondropitem="onDropFile" class="app-sidebar-item" data-testid="projectTree">
-        <template #menu="{item}">
-          <MenuButton>
-            <template #button>
-              <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu-button"></i>
-            </template>
-            <ul>
-              <li @click="deleteFile(item)">Delete</li>
-            </ul>
-          </MenuButton>
-        </template>
-      </ObjectTree>
+      <div data-testid="projectTree" ref="projectTree" class="app-sidebar-item">
+        <AssetTree v-for="item in projectItems" :ondblclick="openTab" :asset="item" :ondrop="onDropFile">
+          <template #menu="{asset}">
+            <MenuButton>
+              <template #button>
+                <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu-button"></i>
+              </template>
+              <ul>
+                <li @click="deleteFile(asset)">Delete</li>
+              </ul>
+            </MenuButton>
+          </template>
+        </AssetTree>
+      </div>
     </div>
 
     <header class="app-tabbar">

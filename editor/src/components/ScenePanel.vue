@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import ObjectTreeItem from './ObjectTreeItem.vue';
+import AssetTree from './AssetTree.vue';
 import MenuButton from "./MenuButton.vue";
 import type {Scene} from "@fourstar/bitwise";
 
@@ -12,7 +12,7 @@ import type {Scene} from "@fourstar/bitwise";
  */
 export default defineComponent({
   components: {
-    ObjectTreeItem,
+    AssetTree,
     MenuButton,
   },
   props: ['modelValue', 'scene', 'isPrefab'],
@@ -416,22 +416,22 @@ export default defineComponent({
       </MenuButton>
     </div>
     <div class="scene-tree">
-      <ObjectTreeItem ref="tree" dragtype="entity" :item="sceneTree" :expand="true" :onclickitem="select"
-        :ondragover="dragOverEntity" :ondropitem="dropEntity"
+      <AssetTree ref="tree" :asset="sceneTree" :expand="true" :onclick="select"
+        :ondragover="dragOverEntity" :ondrop="dropEntity"
       >
-        <template #menu="{item}">
+        <template #menu="{asset}">
           <MenuButton>
             <template #button>
               <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu-button"></i>
             </template>
             <ul>
-              <li @click="createPrefab(item)">Create Prefab</li>
-              <li @click="duplicateEntity(item)">Duplicate</li>
-              <li @click="deleteEntity(item)">Delete</li>
+              <li @click="createPrefab(asset)">Create Prefab</li>
+              <li @click="duplicateEntity(asset)">Duplicate</li>
+              <li @click="deleteEntity(asset)">Delete</li>
             </ul>
           </MenuButton>
         </template>
-      </ObjectTreeItem>
+      </AssetTree>
     </div>
     <div class="entity-pane" v-if="selectedEntityData">
       <h5>{{ selectedEntityData.type || "Unknown Type" }}</h5>

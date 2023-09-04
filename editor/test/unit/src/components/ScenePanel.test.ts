@@ -5,7 +5,7 @@ import * as Vue from "vue";
 import { MockElectron } from '../../../mock/electron.js';
 import MockGame from '../../../mock/game.js';
 import ScenePanel from '../../../../src/components/ScenePanel.vue';
-import ObjectTreeItem from '../../../../src/components/ObjectTreeItem.vue';
+import AssetTree from '../../../../src/components/AssetTree.vue';
 
 import TransformEdit from '../../../../src/components/bitwise/Transform.vue';
 import OrthographicCameraEdit from '../../../../src/components/bitwise/OrthographicCamera.vue';
@@ -77,7 +77,7 @@ describe('ScenePanel', () => {
     await flushPromises();
     await wrapper.vm.$nextTick();
 
-    const tree = wrapper.getComponent(ObjectTreeItem);
+    const tree = wrapper.getComponent(AssetTree);
     expect( tree.get( '[data-test=name]' ).text() ).toBe( modelValue.name );
   });
 
@@ -105,9 +105,9 @@ describe('ScenePanel', () => {
     await flushPromises();
     await wrapper.vm.$nextTick();
 
-    let tree = wrapper.getComponent(ObjectTreeItem);
+    let tree = wrapper.getComponent(AssetTree);
     expect( tree.get( '[data-test=name]' ).text() ).toBe( modelValue.name );
-    expect( tree.findAllComponents(ObjectTreeItem) ).toHaveLength(0);
+    expect( tree.findAllComponents(AssetTree) ).toHaveLength(0);
 
     const entities = [
       {
@@ -135,9 +135,9 @@ describe('ScenePanel', () => {
       },
     });
 
-    tree = wrapper.getComponent(ObjectTreeItem);
+    tree = wrapper.getComponent(AssetTree);
     expect( tree.get( '[data-test=name]' ).text() ).toBe( modelValue.name );
-    expect( tree.findAllComponents(ObjectTreeItem) ).not.toHaveLength(0);
+    expect( tree.findAllComponents(AssetTree) ).not.toHaveLength(0);
   });
 });
 

@@ -2,6 +2,7 @@ import {describe, expect, test, beforeEach, afterEach, jest, beforeAll} from '@j
 import { flushPromises, mount, VueWrapper } from '@vue/test-utils';
 import { MockElectron } from '../../mock/electron.js';
 import type { DirectoryItem } from '../../../src/Backend.js';
+import AssetTree from '../../../src/components/AssetTree.vue';
 import MockBackend from '../../mock/backend.js';
 import MockGame from '../../mock/game.js';
 import App from '../../../src/App.vue';
@@ -14,6 +15,22 @@ import Project from '../../../src/model/Project.js';
 
 jest.mock("../../mock/game.ts");
 const MockGameConstructor = jest.requireActual<typeof import('../../mock/game.js')>('../../mock/game.js').default;
+
+const findAsset = async ( wrapper:VueWrapper, path:string ) => {
+  const pathParts = path.split('/');
+  for ( var i = 0; i < pathParts.length; i++ ) {
+    const pathPart = pathParts.slice(0, i+1).join('/');
+    const assetTree = wrapper.findAllComponents(AssetTree).find( (wrapper) => wrapper.props('asset').path == pathPart );
+    if ( !assetTree ) {
+      throw `Could not find AssetTree for asset path "${pathPart} (looking for ${path})"`;
+    }
+    if ( i == pathParts.length - 1 ) {
+      return assetTree;
+    }
+    await assetTree.get('.show-children').trigger('click');
+  }
+  throw `Could not find AssetTree for asset path "${path}"`;
+};
 
 let backend:MockBackend, project:Project, projectItems: DirectoryItem[];
 const MockedGame = jest.mocked( MockGame );
@@ -194,9 +211,8 @@ describe('App', () => {
 
     test( 'can open scene from root', async () => {
       // Double-click an item in the project tree
-      const item:DirectoryItem = { path: 'LoadScene.json' };
-      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
-      projectTree.vm.ondblclickitem( item );
+      const assetTree = await findAsset( wrapper, 'LoadScene.json' );
+      assetTree.vm.ondblclick( assetTree.props('asset') );
       await flushPromises();
       await wrapper.vm.$nextTick();
 
@@ -223,9 +239,8 @@ describe('App', () => {
 
     test( 'can open scene from directory', async () => {
       // Double-click an item in the project tree
-      const item:DirectoryItem = { path: 'directory/OldScene.json' };
-      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
-      projectTree.vm.ondblclickitem( item );
+      const assetTree = await findAsset( wrapper, 'directory/OldScene.json' );
+      assetTree.vm.ondblclick( assetTree.props('asset') );
       await flushPromises();
       await wrapper.vm.$nextTick();
 
@@ -253,14 +268,14 @@ describe('App', () => {
       // Electron shell.openPath returns "" on success
       const mockOpenEditor = jest.spyOn( global.electron, 'openEditor' ).mockResolvedValue("");
       // Double-click an item in the project tree
-      const item:DirectoryItem = { path: 'System.ts' };
-      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
-      projectTree.vm.ondblclickitem( item );
+      const assetPath = 'System.ts';
+      const assetTree = await findAsset( wrapper, assetPath );
+      assetTree.vm.ondblclick( assetTree.props('asset') );
       await flushPromises();
       await wrapper.vm.$nextTick();
 
       // Tries to open editor
-      expect( mockOpenEditor ).toHaveBeenCalledWith( project.name, item.path );
+      expect( mockOpenEditor ).toHaveBeenCalledWith( project.name, assetPath );
 
       // Does not open tab
       const tabBar = wrapper.get({ ref: 'tabBar' });
@@ -309,9 +324,8 @@ describe('App', () => {
     });
 
     test( 'can open image viewer', async () => {
-      const item:DirectoryItem = { path: 'UI.png' };
-      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
-      projectTree.vm.ondblclickitem( item );
+      const assetTree = await findAsset( wrapper, 'UI.png' );
+      assetTree.vm.ondblclick( assetTree.props('asset') );
       await flushPromises();
       await wrapper.vm.$nextTick();
 
@@ -336,9 +350,8 @@ describe('App', () => {
     });
 
     test( 'can open sprite from sprite sheet', async () => {
-      const item:DirectoryItem = { path: 'sheet.xml/tile.png' };
-      const projectTree = wrapper.getComponent({ ref: 'projectTree' });
-      projectTree.vm.ondblclickitem( item );
+      const assetTree = await findAsset( wrapper, 'sheet.xml/tile.png' );
+      assetTree.vm.ondblclick( assetTree.props('asset') );
       await flushPromises();
       await wrapper.vm.$nextTick();
 
