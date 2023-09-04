@@ -1,10 +1,7 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw, shallowReactive } from "vue";
-import ObjectTreeItem from './ObjectTreeItem.vue';
 import ScenePanel from './ScenePanel.vue';
-import * as three from 'three';
-import * as bitecs from 'bitecs';
-import { Game, Scene } from '@fourstar/bitwise';
+import { Game } from '@fourstar/bitwise';
 
 export default defineComponent({
   components: {
@@ -60,7 +57,7 @@ export default defineComponent({
     },
 
     // XXX: Duplicate from SceneEdit. Should be moved to store or library
-    createEditorGame( canvas:string, opt:Object ):Game {
+    createEditorGame( canvas:string, opt:Object={} ):Game {
       const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
