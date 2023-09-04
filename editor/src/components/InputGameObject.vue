@@ -8,10 +8,16 @@ export default defineComponent({
       this.$emit( 'update', data );
     },
     dragover(event:DragEvent) {
+      if ( !event.dataTransfer ) {
+        return;
+      }
       event.preventDefault();
       event.dataTransfer.dropEffect = this.dropEffect || "link";
     },
     async drop(event:DragEvent) {
+      if ( !event.dataTransfer ) {
+        return;
+      }
       const data = event.dataTransfer.getData(`bitwise/${this.type}`);
       if ( data ) {
         event.preventDefault();
