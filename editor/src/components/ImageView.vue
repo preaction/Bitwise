@@ -1,13 +1,13 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import type Texture from "../model/projectitem/Texture";
+import type {Texture} from '@fourstar/bitwise';
 import type Tab from "../model/Tab";
 export default defineComponent({
   props: ['modelValue'],
   inject: ['baseUrl'],
   computed: {
     texture():Texture {
-      return (this.modelValue as Tab).projectItem as Texture;
+      return (this.modelValue as Tab).asset as Texture;
     },
     src() {
       return this.baseUrl + '/' + this.texture.src;

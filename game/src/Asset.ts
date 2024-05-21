@@ -49,6 +49,11 @@ export default class Asset {
    */
   children?:Asset[];
 
+  /**
+   * Arbitrary data for this asset.
+   */
+  data:any;
+
   constructor( load:Load, props:AssetProps="" ) {
     if ( !load ) {
       throw new Error("Asset: Load object must be given to constructor");

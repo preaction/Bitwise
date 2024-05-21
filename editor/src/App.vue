@@ -5,7 +5,6 @@ import { loadModule } from 'vue3-sfc-loader';
 import type { Component, Game, System } from '@fourstar/bitwise';
 import Tab from './model/Tab.js';
 import Project from './model/Project.js';
-import type ProjectItem from './model/ProjectItem.js';
 import NewTab from "./components/NewTab.vue";
 import AssetTree from "./components/AssetTree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
@@ -157,7 +156,7 @@ export default Vue.defineComponent({
       platform: "",
       currentTabIndex: 0,
       openTabs: [] as Tab[],
-      projectItems: [] as ProjectItem[],
+      assets: [] as Asset[],
       gameFile: '',
       isBuilding: false,
       components: {} as {[key:string]: typeof Component},
@@ -197,7 +196,7 @@ export default Vue.defineComponent({
       baseUrl: Vue.computed( () => this.baseUrl ),
       systemForms: Vue.computed( () => this.systemForms ),
       componentForms: Vue.computed( () => this.componentForms ),
-      projectItems: Vue.computed( () => this.projectItems ),
+      assets: Vue.computed( () => this.assets ),
       openTab: (tab:Tab) => this.openTab(tab),
     };
   },
@@ -273,7 +272,7 @@ export default Vue.defineComponent({
 
     async openProject( name:string ) {
       this.project = await this.backend.openProject( name );
-      this.projectItems = this.project.items;
+      this.assets = this.project.assets;
       this.buildProject();
     },
 
@@ -340,9 +339,9 @@ export default Vue.defineComponent({
         });
     },
 
-    findProjectItem( findPath:string ):ProjectItem|void {
+    findAsset( findPath:string ):Asset|void {
       const findParts = findPath.split('/');
-      let items = this.projectItems;
+      let items = this.assets;
       for ( let i = 0; i < findParts.length; i++ ) {
         const itemPath = findParts.slice(0,i+1).join('/');
         const item = items.find( item => item.path === itemPath );
@@ -369,11 +368,11 @@ export default Vue.defineComponent({
         return;
       }
 
-      const projectItem = this.findProjectItem( item.path );
-      if ( !projectItem ) {
-        throw `Cannot find project item ${item.path}`;
+      const asset = this.findAsset( item.path );
+      if ( !asset ) {
+        throw `Cannot find asset ${item.path}`;
       }
-      const tab = new Tab(projectItem);
+      const tab = new Tab(this.project, asset);
       if ( item.component ) {
         tab.component = item.component;
         tab.icon = this.icons[item.component];
@@ -383,8 +382,8 @@ export default Vue.defineComponent({
         const ext = tab.ext;
         if ( ext === '.json' ) {
           // JSON files are game objects
-          tab.component = projectItem.type;
-          tab.icon = this.icons[projectItem.type];
+          tab.component = asset.data.component;
+          tab.icon = this.icons[asset.data.component];
         }
         else if ( ext.match( /\.(png|gif|jpe?g)$/ ) ) {
           tab.component = "ImageView";
@@ -497,7 +496,7 @@ export default Vue.defineComponent({
         const dropPath = event.currentTarget.dataset.path;
         // If the destination is a file, move to the parent folder
         const parts = dropPath.split('/');
-        let destItem = this.projectItems.find( item => item.name + item.ext === parts[0] );
+        let destItem = this.assets.find( item => item.name + item.ext === parts[0] );
         let parentPath = '';
         for ( const part of parts.slice(1) ) {
           parentPath += '/' + destItem.name;
@@ -513,7 +512,7 @@ export default Vue.defineComponent({
     },
 
     renamePath( path:string, dest:string ) {
-      // XXX: Pre-move item in projectItems
+      // XXX: Pre-move item in assets
       return electron.renamePath( this.project.name, path, dest );
     },
 
@@ -631,7 +630,7 @@ export default Vue.defineComponent({
         </MenuButton>
       </div>
       <div data-testid="projectTree" ref="projectTree" class="app-sidebar-item">
-        <AssetTree v-for="item in projectItems" :ondblclick="openTab" :asset="item" :ondrop="onDropFile">
+        <AssetTree v-for="asset in assets" :ondblclick="openTab" :asset="asset" :ondrop="onDropFile">
           <template #menu="{asset}">
             <MenuButton>
               <template #button>

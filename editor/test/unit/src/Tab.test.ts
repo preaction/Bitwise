@@ -1,26 +1,27 @@
 
 import {describe, expect, test, beforeEach, jest} from '@jest/globals';
 import { MockElectron } from '../../mock/electron.js';
+import { Asset, Load } from '@fourstar/bitwise';
 import Project from '../../../src/model/Project.js';
-import ProjectItem from '../../../src/model/ProjectItem.js';
 import Tab from '../../../src/model/Tab.js';
 import MockBackend from '../../mock/backend.js';
 
-let backend:MockBackend, project:Project, projectItem:ProjectItem;
+let backend:MockBackend, project:Project, asset:Asset;
 beforeEach( () => {
   global.electron = new MockElectron();
   global.confirm = () => true;
   backend = new MockBackend();
   project = new Project(backend, "test");
-  projectItem = new ProjectItem(project, "scene.json", "SceneEdit");
+  asset = new Asset(new Load(), "scene.json");
+  asset.data = { component: 'SceneEdit' };
 } );
 
 describe( 'Tab', () => {
   describe( 'constructor', () => {
     test( 'should fill attributes from project item', () => {
-      projectItem.path = "Scenes/MyScene.json";
-      const tab = new Tab(projectItem);
-      expect(tab.src).toBe(projectItem.path);
+      asset.path = "Scenes/MyScene.json";
+      const tab = new Tab(project, asset);
+      expect(tab.src).toBe(asset.path);
       expect(tab.name).toBe("MyScene");
       expect(tab.ext).toBe(".json");
     });
@@ -34,11 +35,11 @@ describe( 'Tab', () => {
     });
 
     test( 'should write file', async () => {
-      const tab = new Tab(projectItem);
+      const tab = new Tab(project, asset);
       const data = { component: "SceneEdit" };
-      await tab.writeFile(data);
+      await tab.writeFile(JSON.stringify(data));
       expect( backend.writeItemData ).toHaveBeenCalledWith(
-        project.name, projectItem.path, JSON.stringify(data),
+        project.name, asset.path, JSON.stringify(data),
       );
     });
 
@@ -50,11 +51,12 @@ describe( 'Tab', () => {
       );
       global.electron.newFile = mockNewFile;
 
-      const projectItem = new ProjectItem( project, "", "SceneEdit" );
-      const tab = new Tab(projectItem);
+      const asset = new Asset( new Load(), "" );
+      asset.data = {};
+      const tab = new Tab(project, asset);
       tab.ext = '.json';
       const data = { component: "SceneEdit" };
-      await tab.writeFile(data);
+      await tab.writeFile(JSON.stringify(data));
       expect( global.electron.newFile ).toHaveBeenCalledWith(
         project.name, "", ".json",
       );
@@ -70,11 +72,11 @@ describe( 'Tab', () => {
       );
       backend.deleteItem = mockDeleteItem;
 
-      const projectItem = new ProjectItem( project, "scene/Old Scene.json", "SceneEdit" );
-      const tab = new Tab(projectItem);
+      const asset = new Asset( new Load(), "scene/Old Scene.json" );
+      const tab = new Tab(project, asset);
       tab.name = 'New Scene';
       const data = { component: "SceneEdit" };
-      await tab.writeFile(data);
+      await tab.writeFile(JSON.stringify(data));
       expect( backend.writeItemData ).toHaveBeenCalledWith(
         project.name, "scene/New Scene.json", JSON.stringify(data),
       );

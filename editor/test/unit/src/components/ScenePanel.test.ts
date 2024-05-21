@@ -70,7 +70,7 @@ describe('ScenePanel', () => {
           systemForms,
           componentForms,
           openTab: () => (null),
-          projectItems: [],
+          assets: [],
         },
       },
     });
@@ -98,7 +98,7 @@ describe('ScenePanel', () => {
           systemForms,
           componentForms,
           openTab: () => (null),
-          projectItems: [],
+          assets: [],
         },
       },
     });

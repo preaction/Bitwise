@@ -8,6 +8,7 @@
     "package": "cd game && npm run build && cd ../editor && npm run package"
   },
   "devDependencies": {
+    "node": "^20",
     "concurrently": "^7.6.0"
   }
 }

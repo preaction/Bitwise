@@ -4,7 +4,7 @@ import { MockElectron } from '../../../mock/electron.js';
 import ElectronBackend from '../../../../src/backend/Electron.js';
 import type { DirectoryItem } from '../../../../src/Backend.js';
 import Project from '../../../../src/model/Project.js';
-import ProjectItem from '../../../../src/model/ProjectItem.js';
+import { Asset } from '@fourstar/bitwise';
 
 beforeEach( () => {
   global.electron = new MockElectron();
@@ -51,7 +51,7 @@ describe( 'backend/Electron', () => {
       expect(project.name).toBe(projectName);
     } );
 
-    test( 'should populate project with items', async () => {
+    test( 'should populate project with assets', async () => {
       const dirItems:DirectoryItem[] = [
         {
           path: 'sprite.png',
@@ -66,11 +66,11 @@ describe( 'backend/Electron', () => {
       const projectName = "newProject";
       const project = await backend.openProject(projectName);
       expect(mockReadProject).toHaveBeenCalledWith(projectName);
-      expect(project.items).toHaveLength(dirItems.length);
-      expect(project.items[0]).toBeInstanceOf(ProjectItem);
-      expect(project.items[0]?.path).toBe(dirItems[0].path);
-      expect(project.items[1]).toBeInstanceOf(ProjectItem);
-      expect(project.items[1]?.path).toBe(dirItems[1].path);
+      expect(project.assets).toHaveLength(dirItems.length);
+      expect(project.assets[0]).toBeInstanceOf(Asset);
+      expect(project.assets[0]?.path).toBe(dirItems[0].path);
+      expect(project.assets[1]).toBeInstanceOf(Asset);
+      expect(project.assets[1]?.path).toBe(dirItems[1].path);
     } );
 
     test( 'should append new projects to recent projects', async () => {

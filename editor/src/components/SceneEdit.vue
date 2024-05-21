@@ -54,7 +54,7 @@ export default defineComponent({
 
   async mounted() {
     try {
-      this.sceneData = await this.loadPromise;
+      this.sceneData = JSON.parse( await this.loadPromise );
     }
     catch (err) {
       console.log( `Error loading scene data: ${err}` );

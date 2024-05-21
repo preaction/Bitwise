@@ -1,12 +1,11 @@
 
-import type ProjectItem from './ProjectItem.js';
+import type {Asset} from '@fourstar/bitwise';
 import type IBackend from '../Backend.js';
+import type Project from './Project.js';
 
-// XXX: Now, make Tab class with test. Must create mock backend. Should
-// use Project and ProjectItem classes.
-// XXX: Then, switch editor tabs to use tab objects as modelValue.
 export default class Tab {
-  private projectItem:ProjectItem;
+  private asset:Asset;
+  project:Project;
   name: string = '';
   ext: string = '';
   icon: string = '';
@@ -14,25 +13,26 @@ export default class Tab {
   component: string = '';
   edited: boolean = false;
   get projectName():string {
-    return this.projectItem.project.name;
+    return this.project.name;
   }
   get backend():IBackend {
-    return this.projectItem.project.backend;
+    return this.project.backend;
   }
 
-  constructor( item:ProjectItem ) {
-    this.projectItem = item;
-    this.src = item.path;
+  constructor( project:Project, asset:Asset ) {
+    this.project = project;
+    this.asset = asset;
+    this.src = asset.path;
     const fileName = this.src.split('/').pop() || '';
     this.name = fileName.substring(0, fileName.lastIndexOf('.'));
     this.ext = fileName.substring(fileName.lastIndexOf('.'));
   }
   async readFile() {
-    return this.projectItem.readJSON();
+    return this.project.readItemData(this.asset.path)
   }
   async writeFile( data:any ) {
     // XXX: Instead of using `electron` and `confirm`, maybe this should
-    // throw error types that the app can catch and handle so that this
+    // trow error types that the app can catch and handle so that this
     // class can be used outside of Electron.
 
     // No src? Open save as dialog
@@ -60,13 +60,13 @@ export default class Tab {
         // File does not exist, continue...
       }
       this.src = newSrc;
-      this.projectItem.path = this.src;
-      await this.projectItem.writeJSON( data );
+      this.asset.path = this.src;
+      await this.project.writeItemData( this.asset.path, data );
       await this.backend.deleteItem( this.projectName, oldSrc );
       return;
     }
     // Otherwise, just write the data!
-    this.projectItem.path = this.src;
-    await this.projectItem.writeJSON( data );
+    this.asset.path = this.src;
+    await this.project.writeItemData( this.asset.path, data );
   }
 }

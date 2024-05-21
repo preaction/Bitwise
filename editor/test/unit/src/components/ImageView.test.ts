@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import MockBackend from '../../../mock/backend.js';
 import Project from '../../../../src/model/Project.js';
 import ImageView from '../../../../src/components/ImageView.vue';
-import Texture from '../../../../src/model/projectitem/Texture.js';
+import { Load, Texture } from '@fourstar/bitwise';
 import Tab from '../../../../src/model/Tab.js';
 import type Backend from '../../../../src/Backend.js';
 
@@ -19,8 +19,8 @@ beforeEach( () => {
 
 describe( 'ImageView', () => {
   test( 'shows an image', async () => {
-    const projectItem = new Texture(project, "image.png");
-    const tab = new Tab( projectItem );
+    const asset = new Texture(new Load(), "image.png");
+    const tab = new Tab( project, asset );
     const wrapper = mount( ImageView, {
       props: {
         modelValue: tab,
@@ -33,13 +33,13 @@ describe( 'ImageView', () => {
   });
 
   test( 'shows an image from an atlas', async () => {
-    const projectItem = new Texture(project, "atlas.xml/texture_01.png");
-    projectItem.src = "image.png";
-    projectItem.x = 10;
-    projectItem.y = 10;
-    projectItem.width = 100;
-    projectItem.height = 100;
-    const tab = new Tab( projectItem );
+    const asset = new Texture(new Load(), "atlas.xml/texture_01.png");
+    asset.src = "image.png";
+    asset.x = 10;
+    asset.y = 10;
+    asset.width = 100;
+    asset.height = 100;
+    const tab = new Tab( project, asset );
     const wrapper = mount( ImageView, {
       props: {
         modelValue: tab,

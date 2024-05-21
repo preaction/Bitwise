@@ -12,7 +12,7 @@ export default defineComponent({
   },
   async mounted() {
     try {
-      this.markdown = await this.modelValue.projectItem.read();
+      this.markdown = await this.modelValue.readFile();
     }
     catch (err) {
       console.log( `Error loading markdown data: ${err}` );

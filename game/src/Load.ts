@@ -34,9 +34,16 @@ export default class Load extends three.EventDispatcher {
     if ( path.match( /\.(?:png|jpe?g|gif)$/ ) || path.match( /^data:image/ ) ) {
       return new Texture( this, path );
     }
-    else if ( path.match( /\.xml$/ ) ) {
-      const xml = await this.text( path );
-      const dom = new DOMParser().parseFromString(xml, "application/xml");
+    return this.inflate( path, await this.text(path) );
+  }
+
+  /**
+   * Inflate the given data into an Asset or more-appropriate Asset
+   * subclass.
+   */
+  inflate( path:string, data:string ):Asset {
+    if ( path.match( /\.xml$/ ) ) {
+      const dom = new DOMParser().parseFromString(data, "application/xml");
       if ( dom.documentElement.tagName.toLowerCase() === "textureatlas" ) {
         return new Atlas( this, path ).parseDOM(dom);
       }

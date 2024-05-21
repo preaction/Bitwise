@@ -7,7 +7,7 @@ import MockBackend from'../../../mock/backend.js';
 import SceneEdit from '../../../../src/components/SceneEdit.vue';
 import ScenePanel from '../../../../src/components/ScenePanel.vue';
 import Tab from '../../../../src/model/Tab.js';
-import ProjectItem from '../../../../src/model/ProjectItem.js';
+import { Asset, Load } from '@fourstar/bitwise';
 
 let backend:MockBackend, project:Project, provide:any;
 beforeEach( () => {
@@ -45,7 +45,8 @@ describe('SceneEdit', () => {
     const newFilePath = "NewScene.json";
     mockNewFile.mockReturnValueOnce( Promise.resolve({ canceled: false, filePath: newFilePath }) );
 
-    const modelValue = new Tab(new ProjectItem(project, "", "SceneEdit"));
+    const asset = new Asset( new Load(), "Scene.json" );
+    const modelValue = new Tab( project, asset );
     const wrapper = mount(SceneEdit, {
       shallow: true,
       props: {
@@ -97,7 +98,9 @@ describe('SceneEdit', () => {
         ],
         entities: [],
       };
-      modelValue = new Tab(new ProjectItem(project, "OldScene.json", "SceneEdit"));
+      const asset = new Asset( new Load(), "OldScene.json" );
+      asset.data = sceneData;
+      modelValue = new Tab(project, asset);
       mockReadItemData.mockReturnValueOnce( Promise.resolve(JSON.stringify(sceneData)) );
       mockWriteItemData.mockReturnValueOnce( Promise.resolve() );
     } );

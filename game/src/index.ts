@@ -6,9 +6,12 @@ import { default as Asset } from './Asset.js';
 import { Pointer } from './system/Input.js';
 import { default as Scene } from './Scene.js';
 import { default as System } from './System.js';
+import { default as Atlas } from './Atlas.js';
+import { default as Texture } from './Texture.js';
 import * as event from './event/index.js';
 import * as system from './system/index.js';
 import * as component from './component/index.js';
 export {
   Component, Asset, Entity, Game, Load, Pointer, Scene, System, event, system, component,
+  Atlas, Texture,
 };

@@ -4,8 +4,9 @@ import { flushPromises, mount } from '@vue/test-utils';
 import MockBackend from '../../../mock/backend.js';
 import Project from '../../../../src/model/Project.js';
 import MarkdownView from '../../../../src/components/MarkdownView.vue';
-import ProjectItem from '../../../../src/model/ProjectItem.js';
+import { Load } from '@fourstar/bitwise';
 import Tab from '../../../../src/model/Tab.js';
+import Markdown from '../../../../src/asset/Markdown';
 
 const backend = new MockBackend();
 const project = new Project(backend, "ProjectName");
@@ -22,9 +23,9 @@ This is a Markdown document
 
 This is a second heading
 `
-    const projectItem = new ProjectItem(project, "README.markdown", "MarkdownView");
-    jest.spyOn( projectItem, 'read' ).mockResolvedValue( markdown );
-    const tab = new Tab( projectItem );
+    const asset = new Markdown(new Load(), "README.markdown");
+    jest.spyOn( project, 'readItemData' ).mockResolvedValue( markdown );
+    const tab = new Tab( project, asset );
     const wrapper = mount( MarkdownView, {
       props: {
         modelValue: tab,

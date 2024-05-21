@@ -1,20 +1,21 @@
 
 import type IBackend from '../Backend.js';
 import type { DirectoryItem } from '../Backend.js';
-import ProjectItem from './ProjectItem.js';
-import Atlas from './projectitem/Atlas.js';
 
 import {EventEmitter} from 'events';
-import type {Game} from '@fourstar/bitwise';
-import Texture from './projectitem/Texture.js';
+import {Load, Asset, type Game, Texture} from '@fourstar/bitwise';
+import Directory from '../asset/Directory.js';
+import Markdown from '../asset/Markdown.js';
+import GameModule from '../asset/GameModule.js';
+import EditorComponent from '../asset/EditorComponent.js';
 
 /**
- * Project is the main model class. This class manages project items and
+ * Project is the main model class. This class manages project assets and
  * handles loading the game class. The Project class uses a Backend
  * class to read and write file data as needed.
  *
  * Most editor components should use the Project object to do their
- * work. The Project object handles details about virtual items.
+ * work. The Project object handles details about virtual assets.
  */
 export default class Project extends EventEmitter {
   /**
@@ -28,10 +29,12 @@ export default class Project extends EventEmitter {
   name:string;
 
   /**
-   * All of the items in this project. Use inflateItems() to add
-   * ProjectItem objects to this array.
+   * All of the assets in this project. Use inflateItems() to add
+   * Asset objects to this array.
    */
-  readonly items:ProjectItem[] = [];
+  readonly assets:Asset[] = [];
+
+  load:Load;
 
   state:{ [key:string]: any } = {};
   private gameFile:string|null = null;
@@ -40,10 +43,11 @@ export default class Project extends EventEmitter {
     super();
     this.backend = backend;
     this.name = name;
+    this.load = new Load();
   }
 
   async readItemData( path:string ):Promise<string> {
-    // XXX: This needs to handle virtual project items
+    // XXX: This needs to handle virtual project Asset
     return this.backend.readItemData( this.name, path );
   }
 
@@ -66,54 +70,51 @@ export default class Project extends EventEmitter {
   }
 
   /**
-   * inflateItems creates ProjectItem objects from the given
-   * DirectoryItem objects and adds them to the project's items array.
+   * inflateItems creates Asset objects from the given
+   * DirectoryItem objects and adds them to the project's assets array.
    * This is used by the backend when opening the project and listing
    * its contents.
    */
-  async inflateItems( items:DirectoryItem[] ):Promise<ProjectItem[]> {
+  async inflateItems( items:DirectoryItem[] ):Promise<Asset[]> {
     const descend = async (dirItem:DirectoryItem) => {
-      let projectItem:ProjectItem|null = null;
+      let asset:Asset|null = null;
       if ( dirItem.children ) {
         // Descend
-        projectItem = new ProjectItem( this, dirItem.path, "directory" );
+        asset = new Directory( this.load, dirItem.path );
       }
       else if ( dirItem.path.match( /\.(?:png|jpe?g|gif)$/ ) ) {
-        projectItem = new Texture( this, dirItem.path );
+        asset = new Texture( this.load, dirItem.path );
       }
       else if ( dirItem.path.match( /\.(?:md|markdown)$/ ) ) {
-        projectItem = new ProjectItem( this, dirItem.path, "markdown" );
+        asset = new Markdown( this.load, dirItem.path );
       }
       else if ( dirItem.path.match( /\.[jt]s$/ ) ) {
-        projectItem = new ProjectItem( this, dirItem.path, "gameModule" );
+        asset = new GameModule( this.load, dirItem.path );
       }
       else if ( dirItem.path.match( /\.vue$/ ) ) {
-        projectItem = new ProjectItem( this, dirItem.path, "editorComponent" );
+        asset = new EditorComponent( this.load, dirItem.path );
       }
       else if ( dirItem.path.match( /\.json$/ ) ) {
         const json = await this.backend.readItemData( this.name, dirItem.path );
-        const data = JSON.parse( json );
-        projectItem = new ProjectItem( this, dirItem.path, data.component );
+        asset = new Asset( this.load, dirItem.path );
+        asset.data = JSON.parse( json );
       }
       else if ( dirItem.path.match( /\.xml$/ ) ) {
         const xml = await this.backend.readItemData( this.name, dirItem.path );
-        const dom = new DOMParser().parseFromString(xml, "application/xml");
-        if ( dom.documentElement.tagName.toLowerCase() === "textureatlas" ) {
-          projectItem = new Atlas( this, dirItem.path ).parseDOM(dom);
-        }
+        asset = this.load.inflate( dirItem.path, xml );
       }
-      if (!projectItem) {
-        projectItem = new ProjectItem( this, dirItem.path, "unknown" );
+      if (!asset) {
+        asset = new Asset( this.load, dirItem.path );
       }
       if ( dirItem.children ) {
-        projectItem.children = await Promise.all( dirItem.children.map((i:DirectoryItem) => descend(i)) );
+        asset.children = await Promise.all( dirItem.children.map((i:DirectoryItem) => descend(i)) );
       }
-      return projectItem;
+      return asset;
     };
 
-    const projectItems = await Promise.all( items.map( descend ) );
-    this.items.push( ...projectItems );
-    return projectItems;
+    const assets = await Promise.all( items.map( descend ) );
+    this.assets.push( ...assets );
+    return assets;
   }
 }
 
