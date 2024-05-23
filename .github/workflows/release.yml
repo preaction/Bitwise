@@ -17,7 +17,16 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 19
+          node-version: 20
+
+      - name: Install other prereqs
+        run: |
+          echo "$RUNNER_OS";
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            brew install cairo
+            brew install pango
+          fi
+        shell: bash 
 
       - name: Install dependencies
         run: npm install && npm run install
