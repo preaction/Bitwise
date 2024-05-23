@@ -31,38 +31,38 @@ export default defineComponent({
     handleClick() {
       // If we don't need to handle double-click, we can just handle the
       // click right away!
-      if ( !this.ondblclick ) {
-        if ( !this.onclick && this.asset.children ) {
+      if (!this.ondblclick) {
+        if (!this.onclick && this.asset.children) {
           this.toggleChildren();
         }
-        else if ( this.onclick ) {
+        else if (this.onclick) {
           this.onclick(this.asset);
         }
       }
       // Otherwise, if we need to handle both click and double-click
-      else if ( (this.onclick||this.asset.children) && !this.clickTimeout ) {
+      else if ((this.onclick || this.asset.children) && !this.clickTimeout) {
         // First click, start the timeout
-        this.clickTimeout = setTimeout( () => {
+        this.clickTimeout = setTimeout(() => {
           this.clearClickTimeout();
-          if ( this.onclick ) {
+          if (this.onclick) {
             this.onclick(this.asset);
           }
           else {
             this.toggleChildren();
           }
-        }, DBLCLICK_DELAY );
+        }, DBLCLICK_DELAY);
         return;
       }
     },
     handleDoubleClick() {
       this.clearClickTimeout();
-      if ( this.ondblclick ) {
+      if (this.ondblclick) {
         this.ondblclick(this.asset);
       }
     },
     clearClickTimeout() {
-      if ( this.clickTimeout ) {
-        clearTimeout( this.clickTimeout );
+      if (this.clickTimeout) {
+        clearTimeout(this.clickTimeout);
         this.clickTimeout = null;
       }
     },
@@ -70,7 +70,7 @@ export default defineComponent({
       this.clearClickTimeout();
       this._expand = this._expand ? false : true;
     },
-    preventTextSelect(event:MouseEvent) {
+    preventTextSelect(event: MouseEvent) {
       // This must be done separately because selection happens after
       // mousedown and dblclick happens after mouseup
       // https://stackoverflow.com/a/43321596
@@ -78,37 +78,37 @@ export default defineComponent({
         event.preventDefault();
       }
     },
-    dragstart( event:DragEvent ) {
-      event.dataTransfer.setData('bitwise/asset', this.asset.ref());
+    dragstart(event: DragEvent) {
+      event.dataTransfer.setData('bitwise/asset', JSON.stringify(this.asset.ref()));
     },
-    dragover(event:DragEvent) {
-      if ( this.ondrop ) {
+    dragover(event: DragEvent) {
+      if (this.ondrop) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
-        if ( this.ondragover ) {
+        if (this.ondragover) {
           this.ondragover(event, this.asset);
         }
       }
     },
-    drop( event:DragEvent ) {
-      if ( this.ondrop ) {
+    drop(event: DragEvent) {
+      if (this.ondrop) {
         this.ondrop(event, this.asset);
       }
       else {
         event.dataTransfer.dropEffect = "none";
       }
     },
-    dragend( event:DragEvent ) {
+    dragend(event: DragEvent) {
     },
-    removeAsset( asset:Asset ) {
-      const idx = this.asset.children.indexOf( asset );
-      if ( idx >= 0 ) {
-        this.asset.children.splice( idx, 1 );
+    removeAsset(asset: Asset) {
+      const idx = this.asset.children.indexOf(asset);
+      if (idx >= 0) {
+        this.asset.children.splice(idx, 1);
         return true;
       }
-      for ( const tree of this.$refs.children || [] ) {
-        const removed = tree.removeAsset( asset );
-        if ( removed ) {
+      for (const tree of this.$refs.children || []) {
+        const removed = tree.removeAsset(asset);
+        if (removed) {
           return removed;
         }
       }
@@ -120,19 +120,17 @@ export default defineComponent({
 
 <template>
   <div class="asset-tree-item">
-    <div class="name ps-1 d-flex"
-      :data-path="asset.path"
-      draggable="true" @dragstart="dragstart" @dragend="dragend"
-      @dragover="dragover" @drop="drop"
-      @click="handleClick" @dblclick="handleDoubleClick"
-      @mousedown="preventTextSelect"
-    >
+    <div class="name ps-1 d-flex" :data-path="asset.path" draggable="true" @dragstart="dragstart" @dragend="dragend"
+      @dragover="dragover" @drop="drop" @click="handleClick" @dblclick="handleDoubleClick"
+      @mousedown="preventTextSelect">
       <span v-if="asset.icon">
-        <i v-if="hasChildren" class="me-1 fa show-children" @click.stop="toggleChildren" :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
+        <i v-if="hasChildren" class="me-1 fa show-children" @click.stop="toggleChildren"
+          :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
         <i class="me-1 fa" :class="asset.icon"></i>
       </span>
       <span v-else-if="isFolder" class="me-1">
-        <i class="fa show-children" @click.stop="toggleChildren" :class="showChildren ? 'fa-folder-open' : 'fa-folder'"></i>
+        <i class="fa show-children" @click.stop="toggleChildren"
+          :class="showChildren ? 'fa-folder-open' : 'fa-folder'"></i>
       </span>
       <span class="flex-fill" data-test="name">{{ name }}</span>
       <span class="asset-tree-item__menu">
@@ -141,8 +139,9 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in asset.children">
-        <AssetTree ref="children" :onclick="onclick" :ondblclick="ondblclick" :ondragover="ondragover" :ondrop="ondrop" :asset="child">
-          <template #menu="{asset}">
+        <AssetTree ref="children" :onclick="onclick" :ondblclick="ondblclick" :ondragover="ondragover" :ondrop="ondrop"
+          :asset="child">
+          <template #menu="{ asset }">
             <slot name="menu" :asset="asset" />
           </template>
         </AssetTree>
@@ -152,26 +151,27 @@ export default defineComponent({
 </template>
 
 <style>
-  .asset-tree-item .name {
-    cursor: pointer;
-    padding: 2px;
-    margin: 0;
-  }
-  .asset-tree-item:hover > .name {
-    color: var(--bw-color-hover);
-    background: var(--bw-background-color-hover);
-  }
-  .asset-tree-item .children {
-    border-left: 1px dotted var(--bw-color);
-    margin-left: 2px;
-  }
+.asset-tree-item .name {
+  cursor: pointer;
+  padding: 2px;
+  margin: 0;
+}
 
-  .asset-tree-item__menu {
-    display: none;
-  }
+.asset-tree-item:hover>.name {
+  color: var(--bw-color-hover);
+  background: var(--bw-background-color-hover);
+}
 
-  .asset-tree-item .name:hover .asset-tree-item__menu {
-    display: block;
-  }
+.asset-tree-item .children {
+  border-left: 1px dotted var(--bw-color);
+  margin-left: 2px;
+}
 
+.asset-tree-item__menu {
+  display: none;
+}
+
+.asset-tree-item .name:hover .asset-tree-item__menu {
+  display: block;
+}
 </style>

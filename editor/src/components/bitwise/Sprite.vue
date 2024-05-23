@@ -1,35 +1,36 @@
 <script lang="ts">
 import { defineComponent, toRaw } from "vue";
-import InputGameObject from '../InputGameObject.vue';
+import InputAsset from '../InputAsset.vue';
 
 export default defineComponent({
   props: ['modelValue', 'scene'],
   components: {
-    InputGameObject,
+    InputAsset,
   },
   data() {
     const data = {
-      texturePath: '',
+      texture: {},
       ...this.modelValue,
-      entityPath: '',
     };
-    if ( !data.texturePath.match(/^[a-z]+:/) ) {
-      data.entityPath = data.texturePath;
+    // XXX: Migrate from texturePath to texture assets
+    if (data.texturePath) {
+      data.texture = { '$asset': 'Texture', path: data.texturePath };
+      delete data.texturePath;
     }
     return data;
   },
   watch: {
-    entityPath() {
+    texture() {
       this.update();
     },
   },
   methods: {
     update() {
       const newModel = {
-        texturePath: this.entityPath,
+        texture: toRaw(this.texture),
       };
-      this.$emit( 'update:modelValue', newModel );
-      this.$emit( 'update', newModel );
+      this.$emit('update:modelValue', newModel);
+      this.$emit('update', newModel);
     },
   },
 });
@@ -38,12 +39,12 @@ export default defineComponent({
   <div>
     <div class="d-flex justify-content-between texture-field align-items-center">
       <label class="me-1">Texture</label>
-      <InputGameObject v-model="entityPath" type="file" drop-effect="link" />
+      <InputAsset v-model="texture" type="texture" drop-effect="link" />
     </div>
   </div>
 </template>
 <style>
-  .texture-field input {
-    cursor: default;
-  }
+.texture-field input {
+  cursor: default;
+}
 </style>

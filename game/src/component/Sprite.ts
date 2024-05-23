@@ -9,7 +9,7 @@ import Texture from '../Texture.js';
  * they always face the camera and cannot be rotated.
  */
 export default class Sprite extends Component {
-  declare store:{
+  declare store: {
     textureId: number[],
   }
 
@@ -19,25 +19,30 @@ export default class Sprite extends Component {
     }
   }
 
-  freezeEntity( eid:number ) {
+  freezeEntity(eid: number) {
     // Freeze always gives a texture ref
     const data = super.freezeEntity(eid);
     data.texture = Texture.getById(data.textureId).ref();
     delete data.textureId;
     return data;
   }
-  async thawEntity( eid:number, data:{ [key:string]:any }={} ) {
+  async thawEntity(eid: number, data: { [key: string]: any } = {}) {
     // Thaw can work with an ID, path, or ref
     let textureId = data.textureId;
-    if ( !textureId ) {
-      if ( data.texturePath ) {
-        textureId = this.scene.game.load.texture( data.texturePath );
+    if (!textureId) {
+      if (data.texturePath) {
+        textureId = this.scene.game.load.texture(data.texturePath);
       }
-      else if ( data.texture ) {
-        const texture = await Asset.deref(this.scene.game.load, data.texture) as Texture;
-        textureId = texture.textureId;
+      else if (data.texture) {
+        if (typeof data.texture === 'string') {
+          textureId = this.scene.game.load.texture(data.texture);
+        }
+        else {
+          const texture = await Asset.deref(this.scene.game.load, data.texture) as Texture;
+          textureId = texture.textureId;
+        }
       }
     }
-    return super.thawEntity( eid, {textureId} );
+    return super.thawEntity(eid, { textureId });
   }
 }

@@ -54,12 +54,12 @@ export default defineComponent({
 
   async mounted() {
     try {
-      this.sceneData = JSON.parse( await this.loadPromise );
+      this.sceneData = JSON.parse(await this.loadPromise);
     }
     catch (err) {
-      console.log( `Error loading scene data: ${err}` );
+      console.log(`Error loading scene data: ${err}`);
     }
-    if ( !this.sceneData || Object.keys(this.sceneData).length <= 0 ) {
+    if (!this.sceneData || Object.keys(this.sceneData).length <= 0) {
       this.initializeScene();
       this.update({ name: 'NewScene', ext: '.json' });
     }
@@ -67,22 +67,22 @@ export default defineComponent({
       this.gameClass = await this.project.loadGameClass();
     }
     catch (err) {
-      console.log( `Error loading game class: ${err}` );
+      console.log(`Error loading game class: ${err}`);
     }
-    if ( this.gameClass ) {
+    if (this.gameClass) {
       this.initializeEditor();
     }
   },
 
   unmounted() {
-    if ( this.playing ) {
+    if (this.playing) {
       this.stop();
     }
     this.editGame.stop();
   },
 
   computed: {
-    edited():boolean {
+    edited(): boolean {
       return this.modelValue.edited;
     },
     scene() {
@@ -92,7 +92,7 @@ export default defineComponent({
 
   watch: {
     isBuilding(isBuilding) {
-      if ( isBuilding ) {
+      if (isBuilding) {
         // XXX: Restoring the playState of the scene only works if all
         // of the Systems know how to do it right, and I'm not sure
         // I know how to do it right: init() creates a set of objects,
@@ -103,8 +103,8 @@ export default defineComponent({
       }
       else {
         // Start the current pane again
-        if ( this.playing ) {
-          this.play( this.playState );
+        if (this.playing) {
+          this.play(this.playState);
 
           // Clear out the current edit game. If the game is playing, the
           // editor will be reinitialized when the game stops.
@@ -157,19 +157,19 @@ export default defineComponent({
     },
 
     initializeEditor() {
-      const game = this.editGame = this.createEditorGame( 'edit-canvas' );
+      const game = this.editGame = this.createEditorGame('edit-canvas');
 
       const scene = this.editScene = markRaw(game.addScene());
       this.thawEditScene(this.sceneData);
 
-      const editor = this.editScene.getSystem( game.systems.EditorRender );
-      editor.addEventListener( 'update', () => this.update() );
+      const editor = this.editScene.getSystem(game.systems.EditorRender);
+      editor.addEventListener('update', () => this.update());
 
       // The editor canvas must be visible when the game is started so
       // that the renderer is created at the correct size. If the canvas
       // is not visible, the renderer will think it has a canvas with
       // 0 width and 0 height.
-      this.$nextTick( async () => {
+      this.$nextTick(async () => {
         this.editGame.start();
         try {
           await scene.init();
@@ -177,21 +177,21 @@ export default defineComponent({
           scene.update(0);
         }
         catch (err) {
-          console.log( `Error calling update(): `, err );
+          console.log(`Error calling update(): `, err);
         }
         scene.render();
-      } );
+      });
     },
 
-    thawEditScene( sceneData:any ) {
+    thawEditScene(sceneData: any) {
       try {
         // Editor scene gets its own systems
         const systems = [
           { name: 'Input', data: {} },
           { name: 'EditorRender', data: {} },
         ];
-        if ( sceneData.systems.find( sys => sys.name === 'Physics' ) ) {
-          systems.push( { name: 'EditorPhysics', data: {} } );
+        if (sceneData.systems.find(sys => sys.name === 'Physics')) {
+          systems.push({ name: 'EditorPhysics', data: {} });
         }
         this.editScene.thaw({
           ...sceneData,
@@ -199,13 +199,13 @@ export default defineComponent({
         });
       }
       catch (e) {
-        console.log( `Error thawing scene: ${e}` );
+        console.log(`Error thawing scene: ${e}`);
       }
     },
 
     // The player game is sized according to the game settings and uses
     // the runtime systems
-    createPlayerGame( canvas:string, opt:Object ):Game {
+    createPlayerGame(canvas: string, opt: Object): Game {
       const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
@@ -219,17 +219,17 @@ export default defineComponent({
         ...opt,
       });
 
-      for ( const name in this.components ) {
-        game.registerComponent( name, this.components[name] );
+      for (const name in this.components) {
+        game.registerComponent(name, this.components[name]);
       }
-      for ( const name in this.systems ) {
+      for (const name in this.systems) {
         // XXX: Systems should have a class method that returns the
         // editor version of the system. Using naming conventions is
         // bad and I should feel bad.
-        if ( name.match(/^Editor/) ) {
+        if (name.match(/^Editor/)) {
           continue;
         }
-        game.registerSystem( name, this.systems[name] );
+        game.registerSystem(name, this.systems[name]);
       }
 
       return markRaw(game);
@@ -237,7 +237,7 @@ export default defineComponent({
 
     // The editor game is sized to fit the screen and uses some custom
     // editor systems.
-    createEditorGame( canvas:string, opt:Object={} ):Game {
+    createEditorGame(canvas: string, opt: Object = {}): Game {
       const game = new this.gameClass({
         canvas: this.$refs[canvas],
         loader: {
@@ -251,15 +251,15 @@ export default defineComponent({
         ...opt,
       });
 
-      for ( const name in this.components ) {
-        game.registerComponent( name, this.components[name] );
+      for (const name in this.components) {
+        game.registerComponent(name, this.components[name]);
       }
-      for ( const name in this.systems ) {
-        if ( !name.match(/^Editor/) ) {
+      for (const name in this.systems) {
+        if (!name.match(/^Editor/)) {
           continue;
         }
-        let system = this.systems[ name ];
-        game.registerSystem( name, system );
+        let system = this.systems[name];
+        game.registerSystem(name, system);
       }
 
       return markRaw(game);
@@ -270,15 +270,15 @@ export default defineComponent({
         this.scene.update(0);
       }
       catch (err) {
-        console.log( `Error calling update(): `, err );
+        console.log(`Error calling update(): `, err);
       }
       this.scene.render();
-      if ( !this.playing ) {
+      if (!this.playing) {
         this.update();
       }
     },
 
-    update(tabProps:any={}) {
+    update(tabProps: any = {}) {
       this.$emit('update', {
         edited: true,
         ...tabProps,
@@ -286,7 +286,7 @@ export default defineComponent({
     },
 
     async save() {
-      await this.modelValue.writeFile( this.sceneData );
+      await this.modelValue.writeFile(JSON.stringify(toRaw(this.sceneData)));
       this.$emit('update', {
         ...this.modelValue,
         edited: false,
@@ -296,23 +296,23 @@ export default defineComponent({
     play(playState) {
       this.playState = playState ||= this.sceneData;
 
-      if ( this.playGame ) {
+      if (this.playGame) {
         this.stop()
       }
 
-      this.playGame = this.createPlayerGame( 'play-canvas' );
+      this.playGame = this.createPlayerGame('play-canvas');
       const scene = this.playScene = markRaw(this.playGame.addScene());
-      scene.thaw( playState );
+      scene.thaw(playState);
 
       this.playing = true;
       this.paused = false;
-      this.$nextTick( async () => {
+      this.$nextTick(async () => {
         this.playGame.start();
         // XXX: Show a rudimentary loading screen during init
         await this.playScene.init();
         this.playScene.start();
         this.$refs['play-canvas'].focus();
-      } );
+      });
     },
 
     pause() {
@@ -332,35 +332,35 @@ export default defineComponent({
 
       // If the editor was hidden while the game was reloaded, we need
       // to re-initialize it in order to get the correct canvas size.
-      if ( !this.editGame ) {
+      if (!this.editGame) {
         this.initializeEditor();
       }
     },
 
-    ondelete( event:KeyboardEvent, update:boolean=true ) {
-      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
+    ondelete(event: KeyboardEvent, update: boolean = true) {
+      if (!this.editScene || event.target !== this.$refs['edit-canvas']) {
         return;
       }
       event.preventDefault();
       const scene = this.editScene;
-      const editor = scene.getSystem( this.editGame.systems.EditorRender );
-      const eids:number[] = editor.getSelectedEntityIds();
-      eids.forEach( eid => scene.removeEntity(eid) );
+      const editor = scene.getSystem(this.editGame.systems.EditorRender);
+      const eids: number[] = editor.getSelectedEntityIds();
+      eids.forEach(eid => scene.removeEntity(eid));
       editor.clearSelected();
-      if ( update ) {
+      if (update) {
         try {
           scene.update(0);
         }
         catch (err) {
-          console.log( `Error calling update(): `, err );
+          console.log(`Error calling update(): `, err);
         }
         scene.render();
         this.update();
       }
     },
 
-    oncut( event:KeyboardEvent ) {
-      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
+    oncut(event: KeyboardEvent) {
+      if (!this.editScene || event.target !== this.$refs['edit-canvas']) {
         return;
       }
       event.preventDefault();
@@ -368,17 +368,17 @@ export default defineComponent({
       this.ondelete(event);
     },
 
-    oncopy( event:KeyboardEvent ) {
-      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
+    oncopy(event: KeyboardEvent) {
+      if (!this.editScene || event.target !== this.$refs['edit-canvas']) {
         return;
       }
       event.preventDefault();
       const scene = this.editScene;
-      const editor = scene.getSystem( this.editGame.systems.EditorRender );
-      const eids:number[] = editor.getSelectedEntityIds();
-      const frozenEntities = eids.map( eid => scene.entities[eid].freeze() );
+      const editor = scene.getSystem(this.editGame.systems.EditorRender);
+      const eids: number[] = editor.getSelectedEntityIds();
+      const frozenEntities = eids.map(eid => scene.entities[eid].freeze());
       // Clear the path so they are put at the root
-      frozenEntities.forEach( e => delete e.path );
+      frozenEntities.forEach(e => delete e.path);
       const blob = new Blob(
         [JSON.stringify({ type: 'bitwise/entity', items: frozenEntities }, null, 2)],
         {
@@ -388,8 +388,8 @@ export default defineComponent({
       navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
     },
 
-    async onpaste( event:KeyboardEvent ) {
-      if ( !this.editScene || event.target !== this.$refs['edit-canvas'] ) {
+    async onpaste(event: KeyboardEvent) {
+      if (!this.editScene || event.target !== this.$refs['edit-canvas']) {
         return;
       }
       event.preventDefault();
@@ -400,7 +400,7 @@ export default defineComponent({
       for (const clipboardItem of clipboardItems) {
         for (const type of clipboardItem.types) {
           const blob = await clipboardItem.getType(type);
-          const clipItem = JSON.parse( await blob.text() );
+          const clipItem = JSON.parse(await blob.text());
           frozenEntities = clipItem.items;
         }
       }
@@ -408,11 +408,11 @@ export default defineComponent({
       // If entities are selected, we are replacing them. Delete
       // them first.
       this.ondelete(event, false);
-      for ( const eData of frozenEntities ) {
-        while ( scene.getEntityByPath( eData.name ) ) {
-          const endNum = eData.name.match( /(\d+)$/ )?.[0];
+      for (const eData of frozenEntities) {
+        while (scene.getEntityByPath(eData.name)) {
+          const endNum = eData.name.match(/(\d+)$/)?.[0];
           const suffix = endNum >= 0 ? parseInt(endNum) + 1 : " 1";
-          const namePrefix = eData.name.replace( /\d+$/, "" );
+          const namePrefix = eData.name.replace(/\d+$/, "");
           eData.name = namePrefix + suffix;
         }
         const entity = scene.addEntity();
@@ -422,7 +422,7 @@ export default defineComponent({
         scene.update(0);
       }
       catch (err) {
-        console.log( `Error calling update(): `, err );
+        console.log(`Error calling update(): `, err);
       }
       scene.render();
       this.update();
@@ -435,28 +435,23 @@ export default defineComponent({
   <div class="scene-edit">
     <div class="tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Scene editor toolbar">
-        <button type="button" class="btn btn-outline-dark btn-sm me-1"
-          :disabled="!edited" @click="save" data-test="save"
-        >
+        <button type="button" class="btn btn-outline-dark btn-sm me-1" :disabled="!edited" @click="save"
+          data-test="save">
           <i class="fa fa-save"></i>
         </button>
         <div class="btn-group" role="group" aria-label="Play/pause">
           <button type="button" class="btn btn-sm" data-test="stop"
-            :class="!playing ? 'btn-danger' : 'btn-outline-danger'"
-            :disabled="!playing" @click="stop"
-          >
+            :class="!playing ? 'btn-danger' : 'btn-outline-danger'" :disabled="!playing" @click="stop">
             <i class="fa fa-stop"></i>
           </button>
           <button type="button" class="btn btn-sm" data-test="play"
-            :class="playing && !paused ? 'btn-success' : 'btn-outline-success'"
-            :disabled="playing && !paused" @click="play()"
-          >
+            :class="playing && !paused ? 'btn-success' : 'btn-outline-success'" :disabled="playing && !paused"
+            @click="play()">
             <i class="fa fa-play"></i>
           </button>
           <button type="button" class="btn btn-sm" data-test="pause"
             :class="playing && paused ? 'btn-warning' : 'btn-outline-warning'"
-            :disabled="!playing || ( playing && paused )" @click="pause"
-          >
+            :disabled="!playing || (playing && paused)" @click="pause">
             <i class="fa fa-pause"></i>
           </button>
         </div>
@@ -464,91 +459,95 @@ export default defineComponent({
     </div>
     <div class="tab-main-edit" v-show="playing == false">
       <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
-      <canvas ref="edit-canvas"/>
+      <canvas ref="edit-canvas" />
     </div>
     <div class="tab-main-play" v-show="playing == true">
       <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
-      <canvas ref="play-canvas"/>
+      <canvas ref="play-canvas" />
     </div>
     <div class="tab-sidebar">
-      <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged"
-        v-model="sceneData" :scene="scene" />
+      <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged" v-model="sceneData" :scene="scene" />
     </div>
   </div>
 </template>
 
 <style>
-  .scene-edit {
-    display: grid;
-    place-content: stretch;
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 1fr minmax(0, auto);
-    grid-template-areas: "toolbar toolbar" "main sidebar";
-    height: 100%;
-    overflow: hidden;
-  }
-  .tab-toolbar {
-    grid-area: toolbar;
-    color: var(--bw-color);
-    background: var(--bw-border-color);
-    border: 2px outset var(--bw-color);
-    border-radius: 4px;
-    padding: 0.1em;
-  }
+.scene-edit {
+  display: grid;
+  place-content: stretch;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr minmax(0, auto);
+  grid-template-areas: "toolbar toolbar" "main sidebar";
+  height: 100%;
+  overflow: hidden;
+}
 
-  .tab-sidebar {
-    /* XXX: Allow changing sidebar width */
-    --tab-sidebar-width: auto;
-    grid-area: sidebar;
-    width: 17vw;
-    max-width: 17vw;
-    transition: width 0.2s;
-    display: flex;
-    flex-flow: column;
-    background: var(--bw-border-color);
-    padding: 0.3em;
-    height: 100%;
-    overflow: hidden;
-  }
+.tab-toolbar {
+  grid-area: toolbar;
+  color: var(--bw-color);
+  background: var(--bw-border-color);
+  border: 2px outset var(--bw-color);
+  border-radius: 4px;
+  padding: 0.1em;
+}
 
-  .tab-sidebar-item {
-    background: var(--bw-background-color);
-    color: var(--bw-color);
-  }
+.tab-sidebar {
+  /* XXX: Allow changing sidebar width */
+  --tab-sidebar-width: auto;
+  grid-area: sidebar;
+  width: 17vw;
+  max-width: 17vw;
+  transition: width 0.2s;
+  display: flex;
+  flex-flow: column;
+  background: var(--bw-border-color);
+  padding: 0.3em;
+  height: 100%;
+  overflow: hidden;
+}
 
-  .tab-main-edit {
-    position: relative;
-    grid-area: main;
-    align-self: stretch;
-    justify-self: stretch;
-    height: 100%;
-    overflow: hidden;
-  }
-  .tab-main-play {
-    position: relative;
-    grid-area: main;
-    align-self: center;
-    justify-self: center;
-  }
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-  .build-overlay {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba( 255, 255, 255, 0.5 );
-    display: flex;
-    align-items: center;
-    text-align: center;
-    z-index: 2;
-  }
-  .build-overlay > * {
-    flex: 1 1 100%;
-    color: var(--bs-light);
-  }
+.tab-sidebar-item {
+  background: var(--bw-background-color);
+  color: var(--bw-color);
+}
+
+.tab-main-edit {
+  position: relative;
+  grid-area: main;
+  align-self: stretch;
+  justify-self: stretch;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tab-main-play {
+  position: relative;
+  grid-area: main;
+  align-self: center;
+  justify-self: center;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.build-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  text-align: center;
+  z-index: 2;
+}
+
+.build-overlay>* {
+  flex: 1 1 100%;
+  color: var(--bs-light);
+}
 </style>

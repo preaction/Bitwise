@@ -76,6 +76,9 @@ export default defineComponent({
       const editor = scene.getSystem(game.systems.EditorRender);
       editor.addEventListener('update', () => this.update());
 
+      if (!this.entityData.path) {
+        this.entityData.path = this.entityData.name;
+      }
       scene.addEntity().thaw(this.entityData);
 
       // The editor canvas must be visible when the game is started so
@@ -139,7 +142,7 @@ export default defineComponent({
     },
 
     async save() {
-      await this.modelValue.writeFile(this.prefabData);
+      await this.modelValue.writeFile(JSON.stringify(toRaw(this.prefabData)));
       this.$emit('update', {
         ...this.modelValue,
         edited: false,

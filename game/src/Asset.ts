@@ -16,50 +16,51 @@ export type AssetRef = {
  * actual (files and folders) or virtual (slices of an image).
  */
 export default class Asset {
-  static classes:{ [key:string]: typeof Asset } = {};
-  static register( cls:typeof Asset ) {
-    if ( Asset.classes[ cls.name ] && Asset.classes[ cls.name ] != cls ) {
-      throw `Another Asset named ${cls.name} already registered!`;
+  static refType: string = 'Asset';
+  static classes: { [key: string]: typeof Asset } = {};
+  static register(cls: typeof Asset) {
+    if (Asset.classes[cls.refType] && Asset.classes[cls.refType] != cls) {
+      throw `Another Asset named ${cls.refType} already registered!`;
     }
-    Asset.classes[cls.name] = cls;
+    Asset.classes[cls.refType] = cls;
   }
-  static async deref( load:Load, ref:AssetRef ):Promise<Asset> {
-    const cons = Asset.classes[ ref.$asset ];
-    if ( !cons ) {
-      throw `Unknown asset type "${ref.$asset}"`;
+  static async deref(load: Load, ref: AssetRef): Promise<Asset> {
+    const cons = Asset.classes[ref.$asset];
+    if (!cons) {
+      throw `Unknown asset type "${ref.$asset}". Known types: ${Object.keys(Asset.classes).join(' ')}`;
     }
-    if ( this !== Asset ) {
-      return new cons( load, ref );
+    if (this !== Asset) {
+      return new cons(load, ref);
     }
-    return cons.deref( load, ref );
+    return cons.deref(load, ref);
   }
 
   /**
    * The loader that loaded this asset.
    */
-  load:Load;
+  load: Load;
 
   /**
    * The location of this asset. A URI.
    */
-  path:string;
+  path: string;
 
   /**
    * The children of this asset. All assets can contain other assets.
    */
-  children?:Asset[];
+  children?: Asset[];
 
   /**
    * Arbitrary data for this asset.
    */
-  data:any;
+  data: any;
 
-  constructor( load:Load, props:AssetProps="" ) {
-    if ( !load ) {
+  constructor(load: Load, props: AssetProps = "") {
+    if (!load) {
       throw new Error("Asset: Load object must be given to constructor");
     }
     this.load = load;
-    if ( typeof props === 'string' ) {
+    if (typeof props === 'string') {
       this.path = props;
     }
     else {
@@ -67,9 +68,9 @@ export default class Asset {
     }
   }
 
-  ref():AssetRef {
+  ref(): AssetRef {
     return {
-      $asset: this.constructor.name,
+      $asset: (this.constructor as typeof Asset).refType,
       path: this.path,
     };
   }
