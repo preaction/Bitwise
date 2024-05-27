@@ -12,7 +12,8 @@
     "sourceMap": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": false
   },
   "include": [
     "src/env.d.ts",

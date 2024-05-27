@@ -6,7 +6,8 @@
     "module": "commonjs",
     "moduleResolution": "nodenext",
     "composite": true,
-    "allowJs": true
+    "allowJs": true,
+    "verbatimModuleSyntax": false
   },
   "include": ["package.json", "vite.config.ts", "electron/*", "electron/**/*"]
 }

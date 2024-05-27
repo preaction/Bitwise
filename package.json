@@ -8,7 +8,11 @@
     "package": "cd game && npm run build && cd ../editor && npm run package"
   },
   "devDependencies": {
+    "@vue/language-server": "^2.0.19",
+    "@vue/typescript-plugin": "^2.0.19",
+    "concurrently": "^7.6.0",
     "node": "^20",
-    "concurrently": "^7.6.0"
+    "typescript": "^5.4.5",
+    "typescript-language-server": "^4.3.3"
   }
 }
