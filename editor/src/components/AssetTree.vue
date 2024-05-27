@@ -1,121 +1,124 @@
-<script lang="ts">
-import { defineComponent } from "vue";
-import Asset from "../../../game/src/Asset";
+<script lang="ts" setup>
+import { Asset } from "@fourstar/bitwise";
+import { ref, computed } from "vue";
 const DBLCLICK_DELAY = 250;
 
-export default defineComponent({
-  name: 'AssetTree',
-  props: ['asset', 'expand', 'onclick', 'ondblclick', 'ondragover', 'ondrop'],
-  data() {
-    return {
-      clickTimeout: null,
-      _expand: this.expand,
-    };
+const props = defineProps<{
+  asset: Asset,
+  expand?: boolean,
+  onclick?: (asset: Asset) => void | undefined,
+  ondblclick?: (asset: Asset) => void | undefined
+  ondragover?: (event: DragEvent, asset: Asset) => void | undefined
+  ondrop?: (event: DragEvent, asset: Asset) => void | undefined
+}>();
+
+let clickTimeout: ReturnType<typeof setTimeout> | void;
+let expand = ref(props.expand);
+
+const name = computed(
+  () => {
+    // Treat the asset's path as canonical if possible
+    return props.asset?.path ? props.asset.path.split('/').slice(-1)[0] : props.asset?.name;
   },
-  computed: {
-    name() {
-      // Treat the asset's path as canonical if possible
-      return this.asset?.path ? this.asset.path.split('/').slice(-1)[0] : this.asset?.name;
-    },
-    isFolder() {
-      return this.asset?.children?.length >= 0;
-    },
-    hasChildren() {
-      return this.asset?.children?.length > 0;
-    },
-    showChildren() {
-      return typeof this.expand !== "undefined" ? this.expand : this._expand;
-    },
-  },
-  methods: {
-    handleClick() {
-      // If we don't need to handle double-click, we can just handle the
-      // click right away!
-      if (!this.ondblclick) {
-        if (!this.onclick && this.asset.children) {
-          this.toggleChildren();
-        }
-        else if (this.onclick) {
-          this.onclick(this.asset);
-        }
-      }
-      // Otherwise, if we need to handle both click and double-click
-      else if ((this.onclick || this.asset.children) && !this.clickTimeout) {
-        // First click, start the timeout
-        this.clickTimeout = setTimeout(() => {
-          this.clearClickTimeout();
-          if (this.onclick) {
-            this.onclick(this.asset);
-          }
-          else {
-            this.toggleChildren();
-          }
-        }, DBLCLICK_DELAY);
-        return;
-      }
-    },
-    handleDoubleClick() {
-      this.clearClickTimeout();
-      if (this.ondblclick) {
-        this.ondblclick(this.asset);
-      }
-    },
-    clearClickTimeout() {
-      if (this.clickTimeout) {
-        clearTimeout(this.clickTimeout);
-        this.clickTimeout = null;
-      }
-    },
-    toggleChildren() {
-      this.clearClickTimeout();
-      this._expand = this._expand ? false : true;
-    },
-    preventTextSelect(event: MouseEvent) {
-      // This must be done separately because selection happens after
-      // mousedown and dblclick happens after mouseup
-      // https://stackoverflow.com/a/43321596
-      if (event.detail === 2) {
-        event.preventDefault();
-      }
-    },
-    dragstart(event: DragEvent) {
-      event.dataTransfer.setData('bitwise/asset', JSON.stringify(this.asset.ref()));
-    },
-    dragover(event: DragEvent) {
-      if (this.ondrop) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-        if (this.ondragover) {
-          this.ondragover(event, this.asset);
-        }
-      }
-    },
-    drop(event: DragEvent) {
-      if (this.ondrop) {
-        this.ondrop(event, this.asset);
+);
+const isFolder = computed(() => props.asset?.children?.length >= 0);
+const hasChildren = computed(() => props.asset?.children?.length > 0);
+const showChildren = computed(() => typeof props.expand !== 'undefined' ? props.expand : expand);
+
+const childTrees = ref([]);
+
+function handleClick() {
+  // If we don't need to handle double-click, we can just handle the
+  // click right away!
+  if (!props.ondblclick) {
+    if (!props.onclick && props.asset.children) {
+      toggleChildren();
+    }
+    else if (props.onclick) {
+      props.onclick(props.asset);
+    }
+  }
+  // Otherwise, if we need to handle both click and double-click
+  else if ((props.onclick || props.asset.children) && !clickTimeout) {
+    // First click, start the timeout
+    clickTimeout = setTimeout(() => {
+      clearClickTimeout();
+      if (props.onclick) {
+        props.onclick(props.asset);
       }
       else {
-        event.dataTransfer.dropEffect = "none";
+        toggleChildren();
       }
-    },
-    dragend(event: DragEvent) {
-    },
-    removeAsset(asset: Asset) {
-      const idx = this.asset.children.indexOf(asset);
-      if (idx >= 0) {
-        this.asset.children.splice(idx, 1);
-        return true;
-      }
-      for (const tree of this.$refs.children || []) {
-        const removed = tree.removeAsset(asset);
-        if (removed) {
-          return removed;
-        }
-      }
-      return false;
-    },
-  },
-});
+    }, DBLCLICK_DELAY);
+    return;
+  }
+}
+function handleDoubleClick() {
+  clearClickTimeout();
+  if (props.ondblclick) {
+    props.ondblclick(props.asset);
+  }
+}
+function clearClickTimeout() {
+  if (clickTimeout) {
+    clearTimeout(clickTimeout);
+    clickTimeout = undefined;
+  }
+}
+function toggleChildren() {
+  clearClickTimeout();
+  expand.value = expand ? false : true;
+}
+
+function preventTextSelect(event: MouseEvent) {
+  // This must be done separately because selection happens after
+  // mousedown and dblclick happens after mouseup
+  // https://stackoverflow.com/a/43321596
+  if (event.detail === 2) {
+    event.preventDefault();
+  }
+}
+
+function dragstart(event: DragEvent) {
+  event.dataTransfer.setData('bitwise/asset', JSON.stringify(props.asset.ref()));
+}
+
+function dragover(event: DragEvent) {
+  if (props.ondrop) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    if (props.ondragover) {
+      props.ondragover(event, props.asset);
+    }
+  }
+}
+
+function drop(event: DragEvent) {
+  if (props.ondrop) {
+    props.ondrop(event, props.asset);
+  }
+  else {
+    event.dataTransfer.dropEffect = "none";
+  }
+}
+
+function dragend(event: DragEvent) {
+}
+
+function removeAsset(asset: Asset) {
+  const idx = asset.children.indexOf(asset);
+  if (idx >= 0) {
+    asset.children.splice(idx, 1);
+    return true;
+  }
+  for (const tree of childTrees.value || []) {
+    const removed = tree.removeAsset(asset);
+    if (removed) {
+      return removed;
+    }
+  }
+  return false;
+}
 </script>
 
 <template>
@@ -139,10 +142,10 @@ export default defineComponent({
     </div>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in asset.children">
-        <AssetTree ref="children" :onclick="onclick" :ondblclick="ondblclick" :ondragover="ondragover" :ondrop="ondrop"
-          :asset="child">
+        <AssetTree ref="childTrees" :onclick="props.onclick" :ondblclick="props.ondblclick"
+          :ondragover="props.ondragover" :ondrop="props.ondrop" :asset="child">
           <template #menu="{ asset }">
-            <slot name="menu" :asset="asset" />
+            <slot name="menu" :asset="props.asset" />
           </template>
         </AssetTree>
       </div>
