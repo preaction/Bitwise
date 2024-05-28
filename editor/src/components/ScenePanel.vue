@@ -1,8 +1,20 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import AssetTree from './AssetTree.vue';
+import Tree from './Tree.vue';
 import MenuButton from "./MenuButton.vue";
-import type { Scene } from "@fourstar/bitwise";
+import type { Entity, Scene } from "@fourstar/bitwise";
+import type { TreeNode } from "../types";
+
+type EntityData = {
+  id: number,
+  type: string,
+  name?: string,
+  path: string,
+  active?: boolean,
+  components: {
+    [key: string]: any,
+  }
+}
 
 /**
  * ScenePanel handles showing the scene entity tree and rendering the
@@ -12,7 +24,7 @@ import type { Scene } from "@fourstar/bitwise";
  */
 export default defineComponent({
   components: {
-    AssetTree,
+    Tree,
     MenuButton,
   },
   props: ['modelValue', 'scene', 'isPrefab'],
@@ -21,46 +33,48 @@ export default defineComponent({
   inject: ['systemForms', 'componentForms', 'assets', 'openTab'],
   data() {
     return {
-      selectedSceneItem: null,
       selectedEntityData: null,
       selectedEntity: null,
       icons: {
         "default": "fa-cube",
         "Camera": "fa-camera",
         "Sprite": "fa-image-portrait",
-      },
+      }
+    } as {
+      selectedEntityData: EntityData | null,
+      selectedEntity: Entity | null,
+      icons: { [key: string]: string },
     }
   },
-  mounted() {
-    this.select(this.sceneTree);
-  },
   computed: {
-    sceneTree() {
+    sceneTree(): TreeNode {
       // Find all the entities and build tree items for them
-      const rootNode = {
+      const rootNode: TreeNode = {
         path: '',
         icon: '',
-        data: {},
-        children: [],
+        children: [] as Array<TreeNode>,
       };
-      for (const entity of this.modelValue?.entities ?? []) {
+      for (const entity of (this.modelValue?.entities ?? []) as Array<EntityData>) {
         const pathParts = entity.path.split(/\//);
         let treeNode = rootNode;
         for (let i = 0; i < pathParts.length; i++) {
+          if (!treeNode.children) {
+            treeNode.children = [];
+          }
           const findPath = pathParts.slice(0, i + 1).join('/');
           let leafNode = treeNode.children.find(node => node.path === findPath);
           if (!leafNode) {
             leafNode = {
               name: findPath.split('/').pop(),
-              path: findPath,
-              children: [],
+              path: findPath || '',
+              children: [] as Array<TreeNode>,
             };
             treeNode.children.push(leafNode);
           }
           treeNode = leafNode;
         }
 
-        treeNode.data = entity;
+        Object.assign(treeNode, entity);
         treeNode.path = entity.path;
         treeNode.icon = this.icons[entity.type] || this.icons.default;
       }
@@ -71,7 +85,7 @@ export default defineComponent({
         icon: this.isPrefab ? 'fa-cube' : 'fa-film',
       };
       if (this.isPrefab) {
-        sceneTree.data = { ...this.modelValue }
+        sceneTree = { ...this.modelValue }
       }
       return sceneTree;
     },
@@ -101,17 +115,9 @@ export default defineComponent({
   },
 
   methods: {
-    select(item) {
-      if (!this.isPrefab && this.sceneTree === item) {
-        this.selectedEntity = null;
-        this.selectedEntityData = null;
-        this.selectedSceneItem = null;
-        return;
-      }
-      this.selectedSceneItem = item;
-      console.log('selectedSceneItem', item);
-      console.log('selectEntity', item.data);
-      this.selectEntity(item.data);
+    select(entityData: EntityData) {
+      this.selectedEntityData = entityData;
+      this.selectEntity(entityData);
     },
 
     selectByPath(path: string) {
@@ -119,6 +125,9 @@ export default defineComponent({
       let item = this.sceneTree;
       for (let i = 0; i < pathParts.length; i++) {
         const findPath = pathParts.slice(0, i + 1).join('/');
+        if (!item.children) {
+          throw "Not found";
+        }
         item = item.children.find(i => i.path === findPath);
       }
       this.select(item);
@@ -159,7 +168,7 @@ export default defineComponent({
         return;
       }
       this.selectedEntityData.components[name] = {};
-      this.selectedEntity.addComponent(name);
+      this.selectedEntity.addComponent(name, {});
       this.update();
     },
 
@@ -201,9 +210,8 @@ export default defineComponent({
       this.update();
     },
 
-    deleteEntity(item) {
-      if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
-        const entityData = item.data;
+    deleteEntity(entityData: EntityData) {
+      if (confirm(`Are you sure you want to delete "${entityData.name}"?`)) {
         if (this.selectedEntity?.path === entityData.path) {
           this.select(this.sceneTree);
         }
@@ -215,13 +223,13 @@ export default defineComponent({
         }
         const entity = this.scene.getEntityByPath(entityData.path);
         this.scene.removeEntity(entity.id);
-        this.$refs.tree.removeItem(item);
+        (this.$refs.tree as typeof EntityTree).removeNode(entityData);
         this.update();
       }
     },
 
-    duplicateEntity(item) {
-      const entityData = JSON.parse(JSON.stringify(item.data));
+    duplicateEntity(entityData: EntityData) {
+      entityData = JSON.parse(JSON.stringify(entityData));
       const match = entityData.path.match(/\((\d+)\)$/);
       if (match) {
         entityData.path = entityData.path.replace(/\(\d+\)$/, `(${parseInt(match[1]) + 1})`);
@@ -298,16 +306,19 @@ export default defineComponent({
     getEntityDataByPath(path: string) {
       // XXX: Fix this to only use entityData.path
       const pathParts = path.split(/\//);
-      let treeNode = this.sceneTree;
+      let treeNode = this.sceneTree as TreeNode;
       for (let i = 0; i < pathParts.length; i++) {
         const findPath = pathParts.slice(0, i + 1).join('/');
+        if (!treeNode.children) {
+          throw "Not found";
+        }
         let leafNode = treeNode.children.find(node => node.path === findPath);
         if (!leafNode) {
           return null;
         }
         treeNode = leafNode;
       }
-      return treeNode.data;
+      return treeNode;
     },
 
     startDragSystem(event, index) {
@@ -356,7 +367,7 @@ export default defineComponent({
     },
 
     updateEntityName() {
-      const newName = this.selectedSceneItem.name;
+      const newName = this.selectedEntityData.name;
       if (newName != this.selectedEntity.name) {
         this.selectedEntity.name = newName;
         const path = this.selectedEntityData.path;
@@ -428,27 +439,27 @@ export default defineComponent({
       </MenuButton>
     </div>
     <div class="scene-tree">
-      <AssetTree ref="tree" :asset="sceneTree" :expand="true" :onclick="select" :ondragover="dragOverEntity"
-        :ondrop="dropEntity">
-        <template #menu="{ asset }">
+      <Tree ref="tree" v-for="entity in sceneTree.children" :node="entity" :onclick="select"
+        :ondragover="dragOverEntity" :ondrop="dropEntity">
+        <template #menu="{ node: entityData }">
           <MenuButton>
             <template #button>
               <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu-button"></i>
             </template>
             <ul>
-              <li @click="createPrefab(asset)">Create Prefab</li>
-              <li @click="duplicateEntity(asset)">Duplicate</li>
-              <li @click="deleteEntity(asset)">Delete</li>
+              <li @click="createPrefab(entityData)">Create Prefab</li>
+              <li @click="duplicateEntity(entityData)">Duplicate</li>
+              <li @click="deleteEntity(entityData)">Delete</li>
             </ul>
           </MenuButton>
         </template>
-      </AssetTree>
+      </Tree>
     </div>
     <div class="entity-pane" v-if="selectedEntityData">
       <h5>{{ selectedEntityData.type || "Unknown Type" }}</h5>
       <div class="d-flex justify-content-between align-items-center">
         <label class="me-1">Name</label>
-        <input class="flex-fill text-end col-1" v-model="selectedSceneItem.name" @keyup="updateEntityName"
+        <input class="flex-fill text-end col-1" v-model="selectedEntityData.name" @keyup="updateEntityName"
           pattern="^[^/]+$" />
       </div>
       <div class="d-flex justify-content-between align-items-center">

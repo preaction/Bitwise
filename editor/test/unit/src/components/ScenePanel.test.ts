@@ -1,11 +1,11 @@
 
-import {describe, expect, test, beforeEach, jest} from '@jest/globals';
+import { describe, expect, test, beforeEach, jest } from '@jest/globals';
 import { mount, flushPromises } from '@vue/test-utils';
 import * as Vue from "vue";
 import { MockElectron } from '../../../mock/electron.js';
 import MockGame from '../../../mock/game.js';
 import ScenePanel from '../../../../src/components/ScenePanel.vue';
-import AssetTree from '../../../../src/components/AssetTree.vue';
+import Tree from '../../../../src/components/Tree.vue';
 
 import TransformEdit from '../../../../src/components/bitwise/Transform.vue';
 import OrthographicCameraEdit from '../../../../src/components/bitwise/OrthographicCamera.vue';
@@ -20,7 +20,7 @@ const componentForms = Vue.markRaw({
 });
 
 describe('ScenePanel', () => {
-  test( 'renders scene tree with entities', async () => {
+  test('renders scene tree with entities', async () => {
     const modelValue = {
       name: "Example",
       component: "SceneEdit",
@@ -77,11 +77,11 @@ describe('ScenePanel', () => {
     await flushPromises();
     await wrapper.vm.$nextTick();
 
-    const tree = wrapper.getComponent(AssetTree);
-    expect( tree.get( '[data-test=name]' ).text() ).toBe( modelValue.name );
+    const tree = wrapper.getComponent(Tree);
+    expect(tree.get('[data-test=name]').text()).toBe(modelValue.entities[0].path);
   });
 
-  test( 'tree is updated when scene data changes', async () => {
+  test('tree is updated when scene data changes', async () => {
     const modelValue = {
       name: "Example",
       component: "SceneEdit",
@@ -105,9 +105,7 @@ describe('ScenePanel', () => {
     await flushPromises();
     await wrapper.vm.$nextTick();
 
-    let tree = wrapper.getComponent(AssetTree);
-    expect( tree.get( '[data-test=name]' ).text() ).toBe( modelValue.name );
-    expect( tree.findAllComponents(AssetTree) ).toHaveLength(0);
+    expect(wrapper.findAllComponents(Tree)).toHaveLength(0);
 
     const entities = [
       {
@@ -135,9 +133,8 @@ describe('ScenePanel', () => {
       },
     });
 
-    tree = wrapper.getComponent(AssetTree);
-    expect( tree.get( '[data-test=name]' ).text() ).toBe( modelValue.name );
-    expect( tree.findAllComponents(AssetTree) ).not.toHaveLength(0);
+    const tree = wrapper.getComponent(Tree);
+    expect(tree.get('[data-test=name]').text()).toBe(entities[0].path);
   });
 });
 

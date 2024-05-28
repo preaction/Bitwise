@@ -2,6 +2,7 @@
 import { describe, expect, test, beforeEach, jest } from '@jest/globals';
 import { mount, flushPromises } from '@vue/test-utils';
 import AssetTree from '../../../../src/components/AssetTree.vue';
+import Tree from '../../../../src/components/Tree.vue';
 import { Asset, Load } from '@fourstar/bitwise';
 
 let asset: Asset;
@@ -28,7 +29,7 @@ describe('AssetTree', () => {
       });
       expect(wrapper.get('[data-test=name]').text()).toBe(asset.path);
       expect(wrapper.find('.fa.fa-folder-open')).toBeTruthy();
-      const child = wrapper.get('.children').getComponent(AssetTree);
+      const child = wrapper.get('.children').getComponent(Tree);
       expect(child.get('[data-test=name]').text()).toBe(asset.children?.[0].path.split('/').pop());
       expect(child.findAll('.fa')).toHaveLength(0);
     });
@@ -40,7 +41,7 @@ describe('AssetTree', () => {
       expect(wrapper.find('.fa.fa-folder-open')).toBeTruthy();
       const children = wrapper.find('.children');
       expect(children).toBeTruthy();
-      expect(children.findAllComponents(AssetTree)).toHaveLength(1);
+      expect(children.findAllComponents(Tree)).toHaveLength(1);
     });
 
     test('expand children by clicking expand button', async () => {
@@ -51,7 +52,7 @@ describe('AssetTree', () => {
       expect(wrapper.find('.fa.fa-folder-open')).toBeTruthy();
       const children = wrapper.find('.children');
       expect(children).toBeTruthy();
-      expect(children.findAllComponents(AssetTree)).toHaveLength(1);
+      expect(children.findAllComponents(Tree)).toHaveLength(1);
     });
 
   });
