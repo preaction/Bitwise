@@ -448,12 +448,6 @@ export default Vue.defineComponent({
       this._showingDropdown = null;
     },
 
-    deleteFile(item: Object) {
-      if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
-        this.backend.deleteItem(this.project.name, item.path);
-      }
-    },
-
     showGameConfigTab() {
       const tab = {
         name: "Game Config",
@@ -486,34 +480,6 @@ export default Vue.defineComponent({
         this.consoleErrors = 0;
         this.consoleWarnings = 0;
       }
-    },
-
-    onDropFile(event: DragEvent) {
-      const data = event.dataTransfer.getData("bitwise/file");
-      if (data) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-        const dropPath = event.currentTarget.dataset.path;
-        // If the destination is a file, move to the parent folder
-        const parts = dropPath.split('/');
-        let destItem = this.assets.find(item => item.name + item.ext === parts[0]);
-        let parentPath = '';
-        for (const part of parts.slice(1)) {
-          parentPath += '/' + destItem.name;
-          destItem = destItem.children.find(item => item.name === part);
-        }
-        let destination = destItem.isDirectory ? destItem.path : parentPath;
-        destination += '/' + data.split('/').pop();
-        this.renamePath(data, destination);
-      }
-      else {
-        event.dataTransfer.dropEffect = "";
-      }
-    },
-
-    renamePath(path: string, dest: string) {
-      // XXX: Pre-move item in assets
-      return electron.renamePath(this.project.name, path, dest);
     },
 
     handleKeydown(event: KeyboardEvent) {
@@ -634,18 +600,7 @@ export default Vue.defineComponent({
         </MenuButton>
       </div>
       <div data-testid="projectTree" ref="projectTree" class="app-sidebar-item">
-        <AssetTree v-for="asset in assets" :ondblclick="openTab" :asset="asset" :ondrop="onDropFile">
-          <template #menu="{ asset }">
-            <MenuButton>
-              <template #button>
-                <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu-button"></i>
-              </template>
-              <ul>
-                <li @click="deleteFile(asset)">Delete</li>
-              </ul>
-            </MenuButton>
-          </template>
-        </AssetTree>
+        <AssetTree :ondblclick="openTab" :project="project" />
       </div>
     </div>
 
