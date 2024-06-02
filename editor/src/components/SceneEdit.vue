@@ -3,6 +3,9 @@ import { defineComponent, toRaw, markRaw } from "vue";
 import type { Game, Scene } from '@fourstar/bitwise';
 import ScenePanel from './ScenePanel.vue';
 import Tab from "../model/Tab";
+import TabView from './TabView.vue';
+import Panel from './Panel.vue';
+import SystemsPanel from "./SystemsPanel.vue";
 
 /**
  * SceneEdit is the scene editor tab. The scene JSON file contains the
@@ -26,6 +29,9 @@ import Tab from "../model/Tab";
 export default defineComponent({
   components: {
     ScenePanel,
+    TabView,
+    Panel,
+    SystemsPanel,
   },
   props: {
     modelValue: Tab,
@@ -466,7 +472,15 @@ export default defineComponent({
       <canvas ref="play-canvas" />
     </div>
     <div class="tab-sidebar">
-      <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged" v-model="sceneData" :scene="scene" />
+      <TabView>
+        <Panel label="Entities">
+          <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged" v-model="sceneData"
+            :scene="scene" />
+        </Panel>
+        <Panel label="Systems">
+          <SystemsPanel v-model="sceneData" @update="sceneChanged" :scene="scene" />
+        </Panel>
+      </TabView>
     </div>
   </div>
 </template>
@@ -477,7 +491,7 @@ export default defineComponent({
   place-content: stretch;
   grid-template-rows: auto 1fr;
   grid-template-columns: 1fr minmax(0, auto);
-  grid-template-areas: "toolbar toolbar" "main sidebar";
+  grid-template-areas: "toolbar sidebar" "main sidebar";
   height: 100%;
   overflow: hidden;
 }
@@ -500,14 +514,19 @@ export default defineComponent({
   transition: width 0.2s;
   display: flex;
   flex-flow: column;
-  background: var(--bw-border-color);
-  padding: 0.3em;
   height: 100%;
   overflow: hidden;
 }
 
-.tab-sidebar-item {
-  background: var(--bw-background-color);
+.tab-sidebar .tabview {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.tab-sidebar .tabpanel {
+  padding: 0.3em;
+  background: var(--bw-border-color);
   color: var(--bw-color);
 }
 

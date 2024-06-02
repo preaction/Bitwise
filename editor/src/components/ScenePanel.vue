@@ -30,7 +30,7 @@ export default defineComponent({
   props: ['modelValue', 'scene', 'isPrefab'],
   emits: { 'update:modelValue': null, 'update': null },
 
-  inject: ['systemForms', 'componentForms', 'assets', 'openTab'],
+  inject: ['componentForms', 'assets', 'openTab'],
   data() {
     return {
       selectedEntityData: null,
@@ -94,16 +94,8 @@ export default defineComponent({
       return this.scene?.game.components || {};
     },
 
-    systems() {
-      return this.scene?.game.systems || {};
-    },
-
     availableComponents() {
       return Object.keys(this.components).filter(c => !this.components[c].isNull && !this.components[c].isHidden);
-    },
-
-    availableSystems() {
-      return Object.keys(this.systems).filter(s => !this.systems[s].isNull && !s.match(/^Editor/));
     },
 
     selectedEntityComponents() {
@@ -195,14 +187,6 @@ export default defineComponent({
       this.update();
     },
 
-    updateName(event) {
-      const name = event.target.value;
-      this.sceneTree.name = name;
-      this.scene.name = name;
-      this.modelValue.name = name;
-      this.update();
-    },
-
     updateActive(event) {
       const active = event.target.checked;
       this.selectedEntityData.active = active;
@@ -240,12 +224,6 @@ export default defineComponent({
       const entity = this.scene.addEntity();
       entity.thaw(entityData);
       this.modelValue.entities.push(entity.freeze());
-      this.update();
-    },
-
-    updateSystem(idx: number, data: Object) {
-      this.modelValue.systems[idx].data = data;
-      this.scene.systems[idx].thaw(data);
       this.update();
     },
 
@@ -319,51 +297,6 @@ export default defineComponent({
         treeNode = leafNode;
       }
       return treeNode;
-    },
-
-    startDragSystem(event, index) {
-      event.dataTransfer.setData("bitwise/system", index);
-    },
-
-    dragOverSystem(event, index) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-      // XXX: Show drop indicator
-    },
-
-    dropSystem(event, index) {
-      const data = event.dataTransfer.getData("bitwise/system");
-      if (data) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-        const systemData = this.modelValue.systems.splice(data, 1);
-        this.modelValue.systems.splice(index, 0, ...systemData);
-        const system = this.scene.systems.splice(data, 1);
-        this.scene.systems.splice(index, 0, ...system);
-        this.update();
-      }
-    },
-
-    hasSystem(name: string) {
-      return !!this.modelValue?.systems?.find(s => s.name === name);
-    },
-
-    addSystem(name: string) {
-      if (this.hasSystem(name)) {
-        return;
-      }
-      this.scene.addSystem(name);
-      this.modelValue.systems.push({
-        name,
-        data: this.scene.systems[this.scene.systems.length - 1].freeze(),
-      });
-      this.update();
-    },
-
-    removeSystem(idx: number) {
-      this.modelValue.systems.splice(idx, 1);
-      this.scene.systems.splice(idx, 1);
-      this.update();
     },
 
     updateEntityName() {
@@ -489,35 +422,6 @@ export default defineComponent({
         </ul>
       </MenuButton>
     </div>
-
-    <div v-else-if="!isPrefab" class="entity-pane">
-      <h5>Scene</h5>
-      <div class="d-flex justify-content-between align-items-center">
-        <label class="me-1">Name</label>
-        <input v-model="modelValue.name" @input="updateName" class="flex-fill text-end col-1" pattern="^[^/]+$" />
-      </div>
-      <div v-for="s, idx in modelValue.systems" :key="s.name" class="system-form">
-        <div class="mb-1 d-flex justify-content-between align-items-center" draggable="true"
-          @dragstart="startDragSystem($event, idx)" @dragover="dragOverSystem($event, idx)"
-          @drop="dropSystem($event, idx)">
-          <div class="d-flex align-items-center">
-            <h6 class="m-0"><i class="fa fa-ellipsis-vertical system-move"></i><i
-                class="fa fa-ellipsis-vertical system-move"></i> {{ s.name }}</h6>
-            <i v-if="s.isNull" class="ms-1 fa fa-file-circle-question" title="System not found"></i>
-          </div>
-          <i @click="removeSystem(idx)" class="fa fa-close me-1 icon-button"></i>
-        </div>
-        <div v-if="systemForms[s.name]" class="system-form__body">
-          <component :is="systemForms[s.name]" v-model="s.data" :scene="scene" @update="updateSystem(idx, $event)" />
-        </div>
-      </div>
-      <MenuButton class="button-center" title="Add System...">
-        <ul>
-          <li v-for="s in availableSystems" :class="hasSystem(s) ? 'disabled' : ''" @click="addSystem(s)">{{ s }}</li>
-        </ul>
-      </MenuButton>
-    </div>
-    <div v-else="!isPrefab" class="entity-pane"></div>
   </div>
 </template>
 
