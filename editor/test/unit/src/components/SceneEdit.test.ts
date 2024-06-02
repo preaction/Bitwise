@@ -5,7 +5,7 @@ import MockGame from '../../../mock/game.js';
 import Project from '../../../../src/model/Project.js';
 import MockBackend from '../../../mock/backend.js';
 import SceneEdit from '../../../../src/components/SceneEdit.vue';
-import ScenePanel from '../../../../src/components/ScenePanel.vue';
+import EntityPanel from '../../../../src/components/EntityPanel.vue';
 import Tab from '../../../../src/model/Tab.js';
 import { Asset, Load } from '@fourstar/bitwise';
 
@@ -66,7 +66,7 @@ describe('SceneEdit', () => {
     expect(wrapper.emitted()).toHaveProperty('update');
     expect(wrapper.emitted()['update']).toHaveLength(1);
     expect(wrapper.emitted()['update'][0]).toMatchObject([{ edited: true, name: "NewScene", ext: '.json' }]);
-    expect(wrapper.getComponent(ScenePanel).props('modelValue')).toMatchObject(
+    expect(wrapper.getComponent(EntityPanel).props('modelValue')).toMatchObject(
       expect.objectContaining({
         name: "NewScene",
         component: "SceneEdit",
@@ -126,7 +126,7 @@ describe('SceneEdit', () => {
       expect(wrapper.emitted()).not.toHaveProperty('update');
       let saveButton = wrapper.get('button[data-test=save]');
       expect(saveButton.attributes()).toHaveProperty('disabled');
-      expect(wrapper.getComponent(ScenePanel).props('modelValue')).toEqual(sceneData);
+      expect(wrapper.getComponent(EntityPanel).props('modelValue')).toEqual(sceneData);
     });
 
     test('save an existing scene', async () => {

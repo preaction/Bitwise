@@ -4,7 +4,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import * as Vue from "vue";
 import { MockElectron } from '../../../mock/electron.js';
 import MockGame from '../../../mock/game.js';
-import ScenePanel from '../../../../src/components/ScenePanel.vue';
+import EntityPanel from '../../../../src/components/EntityPanel.vue';
 import Tree from '../../../../src/components/Tree.vue';
 
 import TransformEdit from '../../../../src/components/bitwise/Transform.vue';
@@ -19,7 +19,7 @@ const componentForms = Vue.markRaw({
   Sprite: SpriteEdit,
 });
 
-describe('ScenePanel', () => {
+describe('EntityPanel', () => {
   test('renders scene tree with entities', async () => {
     const modelValue = {
       name: "Example",
@@ -60,7 +60,7 @@ describe('ScenePanel', () => {
       ],
     };
     const scene = game.addScene();
-    const wrapper = mount(ScenePanel, {
+    const wrapper = mount(EntityPanel, {
       props: {
         modelValue,
         scene,
@@ -87,7 +87,7 @@ describe('ScenePanel', () => {
       component: "SceneEdit",
     };
     const scene = game.addScene();
-    const wrapper = mount(ScenePanel, {
+    const wrapper = mount(EntityPanel, {
       attachTo: document.body,
       props: {
         modelValue,

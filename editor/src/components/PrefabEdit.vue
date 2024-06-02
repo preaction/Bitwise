@@ -1,11 +1,11 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw, shallowReactive } from "vue";
-import ScenePanel from './ScenePanel.vue';
+import EntityPanel from './EntityPanel.vue';
 import { Game } from '@fourstar/bitwise';
 
 export default defineComponent({
   components: {
-    ScenePanel,
+    EntityPanel,
   },
   props: ['modelValue', 'name', 'edited'],
   inject: ['project', 'isBuilding', 'baseUrl', 'backend'],
@@ -167,7 +167,7 @@ export default defineComponent({
       <canvas ref="prefab-canvas" />
     </div>
     <div class="prefab-tab-sidebar">
-      <ScenePanel v-if="scene" class="prefab-tab-sidebar-item" ref="scenePanel" @update="sceneChanged" :scene="scene"
+      <EntityPanel v-if="scene" class="prefab-tab-sidebar-item" ref="scenePanel" @update="sceneChanged" :scene="scene"
         v-model="entityData" :is-prefab="true" />
     </div>
   </div>

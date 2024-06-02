@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
 import type { Game, Scene } from '@fourstar/bitwise';
-import ScenePanel from './ScenePanel.vue';
+import EntityPanel from './EntityPanel.vue';
 import Tab from "../model/Tab";
 import TabView from './TabView.vue';
 import Panel from './Panel.vue';
@@ -22,13 +22,10 @@ import SystemsPanel from "./SystemsPanel.vue";
  * an additional system for reporting information back to the SceneEdit
  * tab. Changes made to the playing scene are displayed in the editor
  * but not copied back to the scene JSON file data.
- *
- * Much of the work of displaying scene data and editing scene data is
- * handled by the ScenePanel component used by this tab and other tabs.
  */
 export default defineComponent({
   components: {
-    ScenePanel,
+    EntityPanel,
     TabView,
     Panel,
     SystemsPanel,
@@ -474,7 +471,7 @@ export default defineComponent({
     <div class="tab-sidebar">
       <TabView>
         <Panel label="Entities">
-          <ScenePanel class="tab-sidebar-item" ref="scenePanel" @update="sceneChanged" v-model="sceneData"
+          <EntityPanel class="tab-sidebar-item" @update="sceneChanged" v-model="sceneData"
             :scene="scene" />
         </Panel>
         <Panel label="Systems">
