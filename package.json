@@ -1,6 +1,7 @@
 {
   "scripts": {
     "install": "cd game && npm install && cd ../editor && npm install",
+    "list": "cd game && npm list && cd ../editor && npm list",
     "dev": "DEBUG=bitwise:* concurrently --names game,edit --kill-others 'cd game && npm run dev' 'cd editor && npm run dev'",
     "build": "cd game && npm run build && cd ../editor && npm run build",
     "test": "cd game && npm run test:unit && cd ../editor && npm run test:unit",
