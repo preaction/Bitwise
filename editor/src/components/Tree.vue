@@ -132,7 +132,7 @@ defineExpose({
 
 <template>
   <div class="asset-tree-item" :class="isRoot ? 'tree-root' : ''">
-    <div class="name ps-1 d-flex" :data-path="nodePath" draggable="true" @dragstart="dragstart" @dragend="dragend"
+    <a class="name ps-1 d-flex" :data-path="nodePath" draggable="true" @dragstart="dragstart" @dragend="dragend"
       @dragover="dragover" @drop="drop" @click="handleClick" @dblclick="handleDoubleClick"
       @mousedown="preventTextSelect">
       <span class="label">
@@ -150,7 +150,7 @@ defineExpose({
       <span class="asset-tree-item__menu">
         <slot name="menu" :node="node" />
       </span>
-    </div>
+    </a>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in props.node.children">
         <Tree ref="childTrees" :onclick="props.onclick" :ondblclick="props.ondblclick" :ondragover="props.ondragover"

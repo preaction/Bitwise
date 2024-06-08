@@ -84,20 +84,26 @@ export default defineComponent({
       // format is tree of entities
       if (this.sceneData.entities?.length) {
         const newEntities = [] as Array<EntityData>;
-        for (const entity of this.sceneData.entities.sort()) {
+        // @ts-ignore
+        for (const entity of this.sceneData.entities.sort((a,b) => a.path > b.path ? 1 : a.path < b.path ? -1 : 0)) {
           // @ts-ignore
           if (!entity.path.match('/')) {
-            newEntities.push(entity)
+            // @ts-ignore
+            entity.name = entity.path;
+            // @ts-ignore
+            delete entity.path;
+            newEntities.push(entity);
             continue;
           }
 
           let children = this.sceneData.entities
           // @ts-ignore
           const pathParts = entity.path.split('/');
+          // @ts-ignore
+          delete entity.path;
+          entity.name = pathParts[ pathParts.length - 1 ];
           for (let i = 0; i < pathParts.length - 1; i++) {
-            const findPath = pathParts.slice(0, i + 1).join('/');
-            // @ts-ignore
-            let ancestorEntity = children.find(node => node.path === findPath);
+            let ancestorEntity = children.find(node => node.name === pathParts[i]);
             if (ancestorEntity) {
               children = ancestorEntity.children ||= [];
             }
@@ -521,7 +527,7 @@ export default defineComponent({
             :scene="scene" />
         </Panel>
         <Panel label="Systems">
-          <SystemsPanel v-model="sceneData" @update="sceneChanged" :scene="scene" />
+          <SystemsPanel v-if="scene" v-model="sceneData" @update="sceneChanged" :scene="scene" />
         </Panel>
       </TabView>
     </div>

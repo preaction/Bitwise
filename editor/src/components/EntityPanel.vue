@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import type { PropType } from "vue";
+import type { PropType, Raw } from "vue";
 import Tree from './Tree.vue';
 import MenuButton from "./MenuButton.vue";
 import { Scene } from "@fourstar/bitwise";
@@ -20,7 +20,7 @@ export default defineComponent({
   },
   props: {
     modelValue: Object as PropType<Array<EntityData>>,
-    scene: Scene,
+    scene: Object as PropType<Raw<Scene>>,
     isPrefab: Boolean,
   },
   emits: { 'update:modelValue': null, 'update': null },
@@ -29,8 +29,8 @@ export default defineComponent({
   data() {
     return {
       entities: (this.modelValue ?? []),
-      selectedEntityData: null,
-      selectedEntity: null,
+      selectedEntityData: undefined,
+      selectedEntity: undefined,
       icons: {
         "default": "fa-cube",
         "Camera": "fa-camera",
@@ -38,8 +38,8 @@ export default defineComponent({
       }
     } as {
       entities: Array<EntityData>,
-      selectedEntityData: EntityData | null,
-      selectedEntity: Entity | null,
+      selectedEntityData: EntityData | undefined,
+      selectedEntity: Raw<Entity> | undefined,
       icons: { [key: string]: string },
     }
   },
@@ -63,48 +63,32 @@ export default defineComponent({
       if (!this.selectedEntityData) {
         return [];
       }
-      return Object.keys(this.selectedEntityData.components);
+      return Object.keys(this.selectedEntityData.components || {});
     },
   },
 
   methods: {
-    select(entityData: EntityData) {
+    select(entityData: EntityData, path: string) {
       this.selectedEntityData = entityData;
-      this.selectEntity(entityData);
-    },
-
-    selectByPath(path: string) {
-      const pathParts = path.split(/\//);
-      let children = this.entities;
-      for (let i = 0; i < pathParts.length; i++) {
-        const item = children.find(c => c.name === pathParts[i]);
-        if (!item) {
-          throw `Can't find item "${pathParts[i]}" in "${pathParts.slice(0, i - 1).join('/')}"`;
-        }
-        if (i === pathParts.length - 1) {
-          return this.select(item)
-        }
-        children = item.children ??= [];
+      const entity = this.scene?.getEntityByPath(path);
+      if (!entity) {
+        throw "No entity found in scene for path: " + path;
       }
-    },
-
-    selectEntity(entityData: any) {
-      if (!("active" in entityData)) {
-        entityData.active = true;
-      }
-      this.selectedEntityData = entityData;
-      this.selectedEntity = this.scene.getEntityByPath(entityData.path);
-      // XXX: Listen for updates to entity data
+      this.selectedEntity = markRaw(entity);
     },
 
     updateComponent(name: string, data: Object) {
+      if (!this.selectedEntityData || !this.selectedEntity) return;
+      this.selectedEntityData.components ??= {}
       this.selectedEntityData.components[name] = data;
       this.selectedEntity.setComponent(name, toRaw(data));
       this.update();
     },
 
     removeComponent(name: string) {
+      if (!this.selectedEntityData || !this.selectedEntity) return;
       if (confirm('Are you sure?')) {
+        this.selectedEntityData.components ??= {}
         delete this.selectedEntityData.components[name];
         this.selectedEntity.removeComponent(name);
         this.update();
@@ -112,6 +96,8 @@ export default defineComponent({
     },
 
     hasComponent(name: string) {
+      if (!this.selectedEntityData || !this.selectedEntity) return;
+      this.selectedEntityData.components ??= {}
       // XXX: This should be named "canAddComponent" and should dispatch
       // a call to the component object so a component can decide that
       // it is not compatible with other components.
@@ -119,24 +105,29 @@ export default defineComponent({
     },
 
     addComponent(name: string) {
+      if (!this.selectedEntityData || !this.selectedEntity) return;
       if (this.hasComponent(name)) {
         return;
       }
+      this.selectedEntityData.components ??= {}
       this.selectedEntityData.components[name] = {};
       this.selectedEntity.addComponent(name, {});
       this.update();
     },
 
     addEntity(...components: string[]) {
-      const entityData: { [key: string]: any } = {
-        path: 'New Entity',
-        components: {},
+      if (!this.scene) return;
+      const entityData: EntityData = {
+        $schema: '1',
+        name: 'New Entity',
+        active: true,
       };
+      entityData.components = {};
       for (const c of components) {
         entityData.components[c] = {};
       }
       if (this.isPrefab) {
-        entityData.path = `${this.entities[0].path}/${entityData.path}`;
+        this.entities[0].children ??= [];
         this.entities[0].children.push(entityData);
       }
       else {
@@ -148,12 +139,15 @@ export default defineComponent({
       const entity = this.scene.addEntity();
       entity.thaw(entityData);
 
-      this.selectByPath(entityData.path);
+      this.selectedEntityData = entityData;
+      this.selectedEntity = entity;
 
       this.update();
     },
 
-    updateActive(event) {
+    updateActive(event: Event) {
+      if (!this.selectedEntityData || !this.selectedEntity) return;
+      if (!(event.target instanceof HTMLInputElement)) return;
       const active = event.target.checked;
       this.selectedEntityData.active = active;
       this.selectedEntity.active = active;
@@ -162,8 +156,8 @@ export default defineComponent({
 
     deleteEntity(entityData: EntityData) {
       if (confirm(`Are you sure you want to delete "${entityData.name}"?`)) {
-        if (this.selectedEntity?.path === entityData.path) {
-          this.select(this.entities[0]);
+        if (this.selectedEntityData === entityData) {
+          this.select(this.entities[0], this.entities[0].name);
         }
         for (let i = 0; i < this.entities.length; i++) {
           if (this.entities[i].path === entityData.path) {
@@ -317,11 +311,6 @@ export default defineComponent({
       const newName = this.selectedEntityData.name;
       if (newName != this.selectedEntity.name) {
         this.selectedEntity.name = newName;
-        const path = this.selectedEntityData.path;
-        const pathParts = path.split('/').slice(0, -1);
-        pathParts.push(newName);
-        const newPath = pathParts.join('/');
-        this.selectedEntityData.path = newPath;
         this.update();
       }
     },
@@ -385,9 +374,9 @@ export default defineComponent({
       </MenuButton>
     </div>
     <div class="scene-tree">
-      <Tree ref="tree" v-for="entity in entities" :node="entity" :onclick="select"
-        :ondragstart="(e) => dragStart(e, entity)" :ondragover="(e) => dragOverEntity(e, entity)"
-        :ondrop="(e) => dropEntity(e, entity)">
+      <Tree ref="tree" v-for="entityData in entities" :node="entityData" :onclick="select"
+        :ondragstart="(e) => dragStart(e, entityData)" :ondragover="(e) => dragOverEntity(e, entityData)"
+        :ondrop="(e) => dropEntity(e, entityData)">
         <template #menu="{ node: entityData }">
           <MenuButton>
             <template #button>
@@ -403,19 +392,19 @@ export default defineComponent({
       </Tree>
     </div>
     <div class="entity-pane" v-if="selectedEntityData">
-      <h5>{{ selectedEntityData.type || "Unknown Type" }}</h5>
+      <h5 data-test="entity-type">{{ selectedEntityData.type || "Unknown Type" }}</h5>
       <div class="d-flex justify-content-between align-items-center">
         <label class="me-1">Name</label>
-        <input class="flex-fill text-end col-1" v-model="selectedEntityData.name" @keyup="updateEntityName"
+        <input name="name" class="flex-fill text-end col-1" v-model="selectedEntityData.name" @keyup="updateEntityName"
           pattern="^[^/]+$" />
       </div>
       <div class="d-flex justify-content-between align-items-center">
         <label class="me-1">Active</label>
         <div class="flex-fill text-end col-1">
-          <input type="checkbox" @change="updateActive" v-model="selectedEntityData.active" />
+          <input name="active" type="checkbox" @change="updateActive" v-model="selectedEntityData.active" />
         </div>
       </div>
-      <div v-for="name in selectedEntityComponents" class="component-form" :key="selectedEntityData.path + '/' + name">
+      <div v-for="name in selectedEntityComponents" class="component-form">
         <div class="mb-1 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
             <h6 class="m-0">{{ name }}</h6>
