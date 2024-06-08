@@ -152,9 +152,9 @@ defineExpose({
       </span>
     </a>
     <div v-if="hasChildren && showChildren" class="children">
-      <div v-for="child in props.node.children">
-        <Tree ref="childTrees" :onclick="props.onclick" :ondblclick="props.ondblclick" :ondragover="props.ondragover"
-          :ondrop="props.ondrop" :node="child" :dirname="nodePath">
+      <div v-for="child in props.node.children" :key="nodePath + '/' + child.name">
+        <Tree ref="childTrees" :onclick="props.onclick" :ondblclick="props.ondblclick" :ondragstart="props.ondragstart"
+          :ondragover="props.ondragover" :ondrop="props.ondrop" :node="child" :dirname="nodePath">
           <template #menu="{ child: node }">
             <slot name="menu" :node="node" />
           </template>

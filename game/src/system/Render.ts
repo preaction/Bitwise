@@ -582,7 +582,7 @@ export default class Render extends System {
       frustumSize / -2,
       near, far,
     );
-    camera.name = this.scene.getEntityById(eid).path;
+    camera.name = this.scene.getEntityById(eid).name;
     this.cameras[eid] = this.objects[eid] = camera;
     this.updateTransform(eid);
     this.updateCamera(eid);
@@ -615,7 +615,7 @@ export default class Render extends System {
     }
     const material = this.materials[eid] = new three.SpriteMaterial({ map: texture });
     const sprite = this.objects[eid] = new three.Sprite(material);
-    sprite.name = this.scene.getEntityById(eid).path;
+    sprite.name = this.scene.getEntityById(eid).name;
     sprite.userData.eid = eid;
     sprite.layers.enable(1);
     this.updateTransform(eid);

@@ -28,7 +28,7 @@ export default defineComponent({
   inject: ['componentForms', 'assets', 'openTab'],
   data() {
     return {
-      entities: (this.modelValue ?? []),
+      entities: JSON.parse(JSON.stringify(this.modelValue ?? [])),
       selectedEntityData: undefined,
       selectedEntity: undefined,
       icons: {
@@ -46,7 +46,7 @@ export default defineComponent({
 
   watch: {
     modelValue(newModelValue: EntityData[]) {
-      this.entities = newModelValue;
+      this.entities = JSON.parse(JSON.stringify(newModelValue));
     },
   },
 
@@ -187,8 +187,8 @@ export default defineComponent({
       this.update();
     },
 
-    dragStart(event: DragEvent, item: EntityData) {
-      event.dataTransfer.setData('bitwise/entity', item.path);
+    dragStart(event: DragEvent, item: EntityData, path: string) {
+      event.dataTransfer.setData('bitwise/entity', path);
       const labelElem = event.currentTarget.querySelector('.label')
       event.dataTransfer?.setDragImage(labelElem, 10, 10)
     },
@@ -217,7 +217,7 @@ export default defineComponent({
       event.currentTarget.classList.add(isChild ? 'entity-drop-child' : isAfter ? 'entity-drop' : 'entity-drop-top');
     },
 
-    dropEntity(event, onItem) {
+    dropEntity(event: DragEvent, onItem: EntityData, path: string) {
       const data = event.dataTransfer.getData("bitwise/entity");
       if (data) {
         event.preventDefault();
@@ -244,43 +244,46 @@ export default defineComponent({
 
         // Update the data with the new path
         const dragEntity = this.scene.getEntityByPath(data);
-        const dropEntity = this.scene.getEntityByPath(onItem.path);
+        const dropEntity = this.scene.getEntityByPath(path);
 
         const dragEntityData = this.getEntityDataByPath(data);
         // Remove the dragged entity from its current position
         if (dragEntity.parent) {
           const dragParentData = this.getEntityDataByPath(dragEntity.parent.path)
           dragParentData.children.splice(dragParentData.children.indexOf(dragEntityData), 1);
+          if (!dragParentData.children.length) {
+            delete dragParentData.children;
+          }
         }
         else {
           this.entities.splice(this.entities.indexOf(dragEntityData), 1);
         }
+        dragEntity.remove();
 
         // Put it in its new position
         if (isChild) {
-          const dropEntityData = this.getEntityDataByPath(onItem.path);
+          const dropEntityData = this.getEntityDataByPath(path);
           dropEntityData.children ??= [];
           dropEntityData.children.push(dragEntityData);
+          const newEntity = dropEntity.addEntity();
+          newEntity.thaw(dragEntityData);
         }
         else {
-          let dropDest: Array<EntityData>;
+          let dropDest: Array<EntityData>, destEntity: Entity;
           if (dropEntity.parent) {
+            destEntity = dropEntity.parent.addEntity();
             dropDest = this.getEntityDataByPath(dropEntity.parent.path).children ??= [];
           }
           else {
+            destEntity = this.scene.addEntity();
             dropDest = this.entities;
           }
-          dropDest.splice(dropDest.indexOf(dropEntityData) - (isAfter ? 0 : 1), 0, dragEntityData);
+          dropDest.splice(dropDest.findIndex(e => e.name === dropEntity.name) + (isAfter ? 1 : 0), 0, dragEntityData);
+          destEntity.thaw(dragEntityData);
         }
 
         // XXX: Adjust Transform to offset from parent so that entity
         // stays in same place visually
-
-        // Then we remove the old entity and add the new entity, to make
-        // sure it gets reparented
-        dragEntity.remove();
-        const newEntity = dropEntity.scene.addEntity();
-        newEntity.thaw(dragEntityData);
 
         // XXX: Expand dropEntity in scene tree if not root
         // XXX: Focus dragEntity in scene tree
@@ -339,9 +342,7 @@ export default defineComponent({
     },
 
     update() {
-      this.$emit('update:modelValue', {
-        ...toRaw(this.entities),
-      });
+      this.$emit('update:modelValue', this.entities);
       this.$emit('update');
     },
   },
@@ -374,9 +375,8 @@ export default defineComponent({
       </MenuButton>
     </div>
     <div class="scene-tree">
-      <Tree ref="tree" v-for="entityData in entities" :node="entityData" :onclick="select"
-        :ondragstart="(e) => dragStart(e, entityData)" :ondragover="(e) => dragOverEntity(e, entityData)"
-        :ondrop="(e) => dropEntity(e, entityData)">
+      <Tree ref="tree" v-for="entityData in entities" :key="entityData.name" :node="entityData" :onclick="select"
+        :ondragstart="dragStart" :ondragover="dragOverEntity" :ondrop="dropEntity">
         <template #menu="{ node: entityData }">
           <MenuButton>
             <template #button>
