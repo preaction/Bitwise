@@ -1,20 +1,11 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
+import type { PropType } from "vue";
 import Tree from './Tree.vue';
 import MenuButton from "./MenuButton.vue";
-import type { Entity, Scene } from "@fourstar/bitwise";
+import { Scene } from "@fourstar/bitwise";
+import type { Entity, EntityData } from "@fourstar/bitwise";
 import type { TreeNode } from "../types";
-
-type EntityData = {
-  id: number,
-  type: string,
-  name?: string,
-  path: string,
-  active?: boolean,
-  components: {
-    [key: string]: any,
-  }
-}
 
 /**
  * ScenePanel handles showing the scene entity tree and rendering the
@@ -27,12 +18,17 @@ export default defineComponent({
     Tree,
     MenuButton,
   },
-  props: ['modelValue', 'scene', 'isPrefab'],
+  props: {
+    modelValue: Object as PropType<Array<EntityData>>,
+    scene: Scene,
+    isPrefab: Boolean,
+  },
   emits: { 'update:modelValue': null, 'update': null },
 
   inject: ['componentForms', 'assets', 'openTab'],
   data() {
     return {
+      entities: (this.modelValue ?? []),
       selectedEntityData: null,
       selectedEntity: null,
       icons: {
@@ -41,55 +37,20 @@ export default defineComponent({
         "Sprite": "fa-image-portrait",
       }
     } as {
+      entities: Array<EntityData>,
       selectedEntityData: EntityData | null,
       selectedEntity: Entity | null,
       icons: { [key: string]: string },
     }
   },
-  computed: {
-    sceneTree(): TreeNode {
-      // Find all the entities and build tree items for them
-      const rootNode: TreeNode = {
-        path: '',
-        icon: '',
-        children: [] as Array<TreeNode>,
-      };
-      for (const entity of (this.modelValue?.entities ?? []) as Array<EntityData>) {
-        const pathParts = entity.path.split(/\//);
-        let treeNode = rootNode;
-        for (let i = 0; i < pathParts.length; i++) {
-          if (!treeNode.children) {
-            treeNode.children = [];
-          }
-          const findPath = pathParts.slice(0, i + 1).join('/');
-          let leafNode = treeNode.children.find(node => node.path === findPath);
-          if (!leafNode) {
-            leafNode = {
-              name: findPath.split('/').pop(),
-              path: findPath || '',
-              children: [] as Array<TreeNode>,
-            };
-            treeNode.children.push(leafNode);
-          }
-          treeNode = leafNode;
-        }
 
-        Object.assign(treeNode, entity);
-        treeNode.path = entity.path;
-        treeNode.icon = this.icons[entity.type] || this.icons.default;
-      }
-
-      let sceneTree = {
-        ...rootNode,
-        name: this.modelValue?.name,
-        icon: this.isPrefab ? 'fa-cube' : 'fa-film',
-      };
-      if (this.isPrefab) {
-        sceneTree = { ...this.modelValue }
-      }
-      return sceneTree;
+  watch: {
+    modelValue(newModelValue: EntityData[]) {
+      this.entities = newModelValue;
     },
+  },
 
+  computed: {
     components() {
       return this.scene?.game.components || {};
     },
@@ -114,15 +75,17 @@ export default defineComponent({
 
     selectByPath(path: string) {
       const pathParts = path.split(/\//);
-      let item = this.sceneTree;
+      let children = this.entities;
       for (let i = 0; i < pathParts.length; i++) {
-        const findPath = pathParts.slice(0, i + 1).join('/');
-        if (!item.children) {
-          throw "Not found";
+        const item = children.find(c => c.name === pathParts[i]);
+        if (!item) {
+          throw `Can't find item "${pathParts[i]}" in "${pathParts.slice(0, i - 1).join('/')}"`;
         }
-        item = item.children.find(i => i.path === findPath);
+        if (i === pathParts.length - 1) {
+          return this.select(item)
+        }
+        children = item.children ??= [];
       }
-      this.select(item);
     },
 
     selectEntity(entityData: any) {
@@ -173,11 +136,14 @@ export default defineComponent({
         entityData.components[c] = {};
       }
       if (this.isPrefab) {
-        entityData.path = `${this.sceneTree.path}/${entityData.path}`;
+        entityData.path = `${this.entities[0].path}/${entityData.path}`;
+        this.entities[0].children.push(entityData);
+      }
+      else {
+        this.entities.push(entityData);
       }
       // XXX: Fix this to ensure entity path is unique before adding
       // entity
-      this.modelValue.entities.push(entityData);
 
       const entity = this.scene.addEntity();
       entity.thaw(entityData);
@@ -197,17 +163,17 @@ export default defineComponent({
     deleteEntity(entityData: EntityData) {
       if (confirm(`Are you sure you want to delete "${entityData.name}"?`)) {
         if (this.selectedEntity?.path === entityData.path) {
-          this.select(this.sceneTree);
+          this.select(this.entities[0]);
         }
-        for (let i = 0; i < this.modelValue.entities.length; i++) {
-          if (this.modelValue.entities[i].path === entityData.path) {
-            this.modelValue.entities.splice(i, 1);
+        for (let i = 0; i < this.entities.length; i++) {
+          if (this.entities[i].path === entityData.path) {
+            this.entities.splice(i, 1);
             break;
           }
         }
         const entity = this.scene.getEntityByPath(entityData.path);
         this.scene.removeEntity(entity.id);
-        (this.$refs.tree as typeof EntityTree).removeNode(entityData);
+        (this.$refs.tree as typeof Tree).removeNode(entityData);
         this.update();
       }
     },
@@ -223,11 +189,17 @@ export default defineComponent({
       }
       const entity = this.scene.addEntity();
       entity.thaw(entityData);
-      this.modelValue.entities.push(entity.freeze());
+      this.entities.entities.push(entity.freeze());
       this.update();
     },
 
-    dragOverEntity(event, item) {
+    dragStart(event: DragEvent, item: EntityData) {
+      event.dataTransfer.setData('bitwise/entity', item.path);
+      const labelElem = event.currentTarget.querySelector('.label')
+      event.dataTransfer?.setDragImage(labelElem, 10, 10)
+    },
+
+    dragOverEntity(event, item: EntityData) {
       // Drag over left half, adjacent to over.
       // Drag over right half, child of over.
       const targetLeft = event.target.getBoundingClientRect().left;
@@ -236,11 +208,19 @@ export default defineComponent({
       const rowOffsetX = event.offsetX + (targetLeft - rowLeft);
       const isChild = rowOffsetX > rowWidth / 4
 
+      const targetTop = event.target.getBoundingClientRect().top;
+      const rowTop = event.currentTarget.getBoundingClientRect().top;
+      const rowHeight = event.currentTarget.clientHeight;
+      const rowOffsetY = event.offsetY + (targetTop - rowTop);
+      const isAfter = rowOffsetY > rowHeight / 2;
+
       // Show indicator: Adjacent circle at left, child-of circle indented
-      for (const node of event.currentTarget.parentNode.querySelectorAll('.entity-drop-top,.entity-drop')) {
+      for (const node of event.currentTarget.closest('.tree-root').parentNode.querySelectorAll('.entity-drop-top,.entity-drop,.entity-drop-child')) {
         node.classList.remove('entity-drop');
         node.classList.remove('entity-drop-top');
+        node.classList.remove('entity-drop-child');
       }
+      event.currentTarget.classList.add(isChild ? 'entity-drop-child' : isAfter ? 'entity-drop' : 'entity-drop-top');
     },
 
     dropEntity(event, onItem) {
@@ -248,6 +228,12 @@ export default defineComponent({
       if (data) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
+        for (const node of event.currentTarget.closest('.tree-root').parentNode.querySelectorAll('.entity-drop-child,.entity-drop-top,.entity-drop')) {
+          node.classList.remove('entity-drop');
+          node.classList.remove('entity-drop-top');
+          node.classList.remove('entity-drop-child');
+        }
+
         // Drag over left half, adjacent to over.
         // Drag over right half, child of over.
         const targetLeft = event.target.getBoundingClientRect().left;
@@ -256,12 +242,43 @@ export default defineComponent({
         const rowOffsetX = event.offsetX + (targetLeft - rowLeft);
         const isChild = rowOffsetX > rowWidth / 4;
 
+        const targetTop = event.target.getBoundingClientRect().top;
+        const rowTop = event.currentTarget.getBoundingClientRect().top;
+        const rowHeight = event.currentTarget.clientHeight;
+        const rowOffsetY = event.offsetY + (targetTop - rowTop);
+        const isAfter = rowOffsetY > rowHeight / 2;
+
         // Update the data with the new path
         const dragEntity = this.scene.getEntityByPath(data);
         const dropEntity = this.scene.getEntityByPath(onItem.path);
-        let newPath = [isChild ? dropEntity.path : dropEntity.parent?.path, dragEntity.name].filter(p => !!p).join('/');
+
         const dragEntityData = this.getEntityDataByPath(data);
-        dragEntityData.path = newPath;
+        // Remove the dragged entity from its current position
+        if (dragEntity.parent) {
+          const dragParentData = this.getEntityDataByPath(dragEntity.parent.path)
+          dragParentData.children.splice(dragParentData.children.indexOf(dragEntityData), 1);
+        }
+        else {
+          this.entities.splice(this.entities.indexOf(dragEntityData), 1);
+        }
+
+        // Put it in its new position
+        if (isChild) {
+          const dropEntityData = this.getEntityDataByPath(onItem.path);
+          dropEntityData.children ??= [];
+          dropEntityData.children.push(dragEntityData);
+        }
+        else {
+          let dropDest: Array<EntityData>;
+          if (dropEntity.parent) {
+            dropDest = this.getEntityDataByPath(dropEntity.parent.path).children ??= [];
+          }
+          else {
+            dropDest = this.entities;
+          }
+          dropDest.splice(dropDest.indexOf(dropEntityData) - (isAfter ? 0 : 1), 0, dragEntityData);
+        }
+
         // XXX: Adjust Transform to offset from parent so that entity
         // stays in same place visually
 
@@ -282,21 +299,18 @@ export default defineComponent({
     },
 
     getEntityDataByPath(path: string) {
-      // XXX: Fix this to only use entityData.path
       const pathParts = path.split(/\//);
-      let treeNode = this.sceneTree as TreeNode;
+      let children = this.entities;
       for (let i = 0; i < pathParts.length; i++) {
-        const findPath = pathParts.slice(0, i + 1).join('/');
-        if (!treeNode.children) {
-          throw "Not found";
-        }
-        let leafNode = treeNode.children.find(node => node.path === findPath);
+        let leafNode = children.find(node => node.name === pathParts[i]);
         if (!leafNode) {
           return null;
         }
-        treeNode = leafNode;
+        if (i === pathParts.length - 1) {
+          return leafNode;
+        }
+        children = leafNode.children;
       }
-      return treeNode;
     },
 
     updateEntityName() {
@@ -337,8 +351,7 @@ export default defineComponent({
 
     update() {
       this.$emit('update:modelValue', {
-        ...toRaw(this.modelValue),
-        name: this.modelValue.name,
+        ...toRaw(this.entities),
       });
       this.$emit('update');
     },
@@ -372,8 +385,9 @@ export default defineComponent({
       </MenuButton>
     </div>
     <div class="scene-tree">
-      <Tree ref="tree" v-for="entity in sceneTree.children" :node="entity" :onclick="select"
-        :ondragover="dragOverEntity" :ondrop="dropEntity">
+      <Tree ref="tree" v-for="entity in entities" :node="entity" :onclick="select"
+        :ondragstart="(e) => dragStart(e, entity)" :ondragover="(e) => dragOverEntity(e, entity)"
+        :ondrop="(e) => dropEntity(e, entity)">
         <template #menu="{ node: entityData }">
           <MenuButton>
             <template #button>
@@ -481,36 +495,38 @@ body .scene-panel {
 }
 
 .entity-drop,
-.entity-drop-top {
+.entity-drop-top,
+.entity-drop-child {
   position: relative;
 }
 
-.entity-drop {
-  border-bottom: 3px dashed #69b6d5;
-}
-
-.entity-drop-top {
-  border-top: 3px dashed #69b6d5;
+.entity-drop::before,
+.entity-drop-top::before,
+.entity-drop-child::before {
+  content: '';
+  display: block;
+  left: 0;
+  right: 0;
+  height: 5px;
+  position: absolute;
+  background: repeating-linear-gradient(to right,
+      #69b6d5ff,
+      #69b6d5ff 10px,
+      #69b6d500 10px,
+      #69b6d500 20px);
 }
 
 .entity-drop::before,
-.entity-drop-top::before {
-  content: '';
-  display: block;
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background-color: #69b6d5;
-  position: absolute;
-  left: -2.5px;
+.entity-drop-child::before {
+  top: calc(100% - 2.5px);
 }
 
-.entity-drop::before {
-  top: 100%;
+.entity-drop-child::before {
+  left: 25%;
 }
 
 .entity-drop-top::before {
-  bottom: 100%;
+  bottom: calc(100% - 2.5px);
 }
 
 .button-center {

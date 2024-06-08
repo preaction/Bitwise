@@ -308,30 +308,7 @@ export class Scene extends three.EventDispatcher {
       this.addSystem(system.name, system.data);
     }
 
-    // Load the entity metadata first so that components have something
-    // to hook on to.
-    const entityIds: { [key: string]: number } = {};
-    for (const eData of data.entities) {
-      const entity = this.addEntity();
-      entity.name = eData.name;
-      if (eData.type) {
-        entity.type = eData.type;
-      }
-      entity.name = eData.name;
-      entity.active = "active" in eData && typeof eData.active !== 'undefined' ? eData.active : true;
-      entityIds[entity.name] = entity.id;
-    }
-    for (const eData of data.entities) {
-      for (const c in eData.components) {
-        if (!this.components[c]) {
-          console.error(`Component ${c} not registered on scene`);
-          continue;
-        }
-        promises.push(this.components[c].thawEntity(entityIds[eData.name], eData.components[c]));
-      }
-    }
-
-    return Promise.all(promises);
+    return Promise.all(data.entities.map(e => this.addEntity().thaw(e)));
   }
 
   addSystem(name: string, data: any = {}) {

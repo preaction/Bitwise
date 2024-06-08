@@ -64,7 +64,7 @@ describe('Tree', () => {
       });
       await wrapper.get('[data-path=RootNode]').trigger('click');
       expect(onclick).toHaveBeenCalledTimes(1);
-      expect(onclick).toHaveBeenCalledWith(node);
+      expect(onclick).toHaveBeenCalledWith(node, node.path);
     });
 
     test('runs an onclick handler when an ondblclick handler is present', async () => {
@@ -76,7 +76,7 @@ describe('Tree', () => {
       await wrapper.get('[data-path=RootNode]').trigger('click');
       await new Promise((resolve) => setTimeout(resolve, 500));
       expect(onclick).toHaveBeenCalledTimes(1);
-      expect(onclick).toHaveBeenCalledWith(node);
+      expect(onclick).toHaveBeenCalledWith(node, node.path);
       expect(ondblclick).not.toHaveBeenCalled();
     });
 
@@ -96,7 +96,7 @@ describe('Tree', () => {
       });
       await wrapper.get('[data-path="RootNode/ChildNode"]').trigger('click');
       expect(onclick).toHaveBeenCalledTimes(1);
-      expect(onclick).toHaveBeenCalledWith(node.children?.[0]);
+      expect(onclick).toHaveBeenCalledWith(node.children?.[0], node.children?.[0].path);
     });
 
   });
@@ -109,7 +109,7 @@ describe('Tree', () => {
       });
       await wrapper.get('[data-path=RootNode]').trigger('dblclick');
       expect(ondblclick).toHaveBeenCalledTimes(1);
-      expect(ondblclick).toHaveBeenCalledWith(node);
+      expect(ondblclick).toHaveBeenCalledWith(node, node.path);
     });
 
     test('runs an ondblclick handler when an onclick handler is present', async () => {
@@ -121,7 +121,7 @@ describe('Tree', () => {
       await wrapper.get('[data-path=RootNode]').trigger('click');
       await wrapper.get('[data-path=RootNode]').trigger('dblclick');
       expect(ondblclick).toHaveBeenCalledTimes(1);
-      expect(ondblclick).toHaveBeenCalledWith(node);
+      expect(ondblclick).toHaveBeenCalledWith(node, node.path);
       expect(onclick).not.toHaveBeenCalled();
     });
 
@@ -132,7 +132,7 @@ describe('Tree', () => {
       });
       await wrapper.get('[data-path="RootNode/ChildNode"]').trigger('dblclick');
       expect(ondblclick).toHaveBeenCalledTimes(1);
-      expect(ondblclick).toHaveBeenCalledWith(node.children?.[0]);
+      expect(ondblclick).toHaveBeenCalledWith(node.children?.[0], node.children?.[0].path);
     });
   });
 
@@ -159,6 +159,7 @@ describe('Tree', () => {
       expect(ondragover).toHaveBeenCalledTimes(1);
       expect(ondragover.mock.lastCall?.[0]).toBeInstanceOf(Event);
       expect(ondragover.mock.lastCall?.[1]).toStrictEqual(node);
+      expect(ondragover.mock.lastCall?.[2]).toStrictEqual(node.path);
     });
 
     test('dropping calls ondrop handler', async () => {
@@ -170,6 +171,7 @@ describe('Tree', () => {
       expect(ondrop).toHaveBeenCalledTimes(1);
       expect(ondrop.mock.lastCall?.[0]).toBeInstanceOf(Event);
       expect(ondrop.mock.lastCall?.[1]).toStrictEqual(node);
+      expect(ondrop.mock.lastCall?.[2]).toStrictEqual(node.path);
     });
 
     test('ondragover and ondrop are called on children', async () => {
@@ -182,11 +184,13 @@ describe('Tree', () => {
       expect(ondragover).toHaveBeenCalledTimes(1);
       expect(ondragover.mock.lastCall?.[0]).toBeInstanceOf(Event);
       expect(ondragover.mock.lastCall?.[1]).toStrictEqual(node.children?.[0]);
+      expect(ondragover.mock.lastCall?.[2]).toStrictEqual(node.children?.[0].path);
 
       await wrapper.get('[data-path="RootNode/ChildNode"]').trigger('drop', dragEvent);
       expect(ondrop).toHaveBeenCalledTimes(1);
       expect(ondrop.mock.lastCall?.[0]).toBeInstanceOf(Event);
       expect(ondrop.mock.lastCall?.[1]).toStrictEqual(node.children?.[0]);
+      expect(ondrop.mock.lastCall?.[2]).toStrictEqual(node.children?.[0].path);
     });
 
   });

@@ -97,6 +97,7 @@ onMounted(() => {
   padding: 0.1em;
   margin: 0.1em 0.2em 0;
   border: 1px solid var(--bw-border-color);
+  border-radius: 5px 5px 0 0;
 }
 
 .tabview [role=tab][aria-selected] {

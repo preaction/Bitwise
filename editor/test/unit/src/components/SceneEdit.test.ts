@@ -1,13 +1,16 @@
 import { describe, expect, test, beforeEach, jest } from '@jest/globals';
 import { mount, flushPromises } from '@vue/test-utils';
 import { MockElectron } from '../../../mock/electron.js';
-import MockGame from '../../../mock/game.js';
 import Project from '../../../../src/model/Project.js';
 import MockBackend from '../../../mock/backend.js';
 import SceneEdit from '../../../../src/components/SceneEdit.vue';
 import EntityPanel from '../../../../src/components/EntityPanel.vue';
 import Tab from '../../../../src/model/Tab.js';
-import { Asset, Load } from '@fourstar/bitwise';
+import { Asset, Load, Game } from '@fourstar/bitwise';
+
+// Mock out the Game.start() method so we don't try (and fail) to create
+// a WebGL context.
+const mockStart = jest.spyOn(Game.prototype, 'start').mockImplementation(async () => { });
 
 const stubs = {
   TabView: false,
@@ -24,7 +27,7 @@ beforeEach(() => {
     project,
     baseUrl: 'testProject',
     isBuilding: false,
-    gameClass: MockGame,
+    gameClass: Game,
   };
 });
 
@@ -67,13 +70,11 @@ describe('SceneEdit', () => {
     expect(wrapper.emitted()['update']).toHaveLength(1);
     expect(wrapper.emitted()['update'][0]).toMatchObject([{ edited: true, name: "NewScene", ext: '.json' }]);
     expect(wrapper.getComponent(EntityPanel).props('modelValue')).toMatchObject(
-      expect.objectContaining({
-        name: "NewScene",
-        component: "SceneEdit",
-        entities: expect.arrayContaining([]),
-        components: expect.arrayContaining([]),
-        systems: expect.arrayContaining([]),
-      }),
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'Camera',
+        }),
+      ]),
     );
 
     // Click the Save button
@@ -126,7 +127,7 @@ describe('SceneEdit', () => {
       expect(wrapper.emitted()).not.toHaveProperty('update');
       let saveButton = wrapper.get('button[data-test=save]');
       expect(saveButton.attributes()).toHaveProperty('disabled');
-      expect(wrapper.getComponent(EntityPanel).props('modelValue')).toEqual(sceneData);
+      expect(wrapper.getComponent(EntityPanel).props('modelValue')).toEqual(sceneData.entities);
     });
 
     test('save an existing scene', async () => {
@@ -201,7 +202,7 @@ describe('SceneEdit', () => {
       });
       await flushPromises();
 
-      wrapper.setData({ gameClass: MockGame });
+      wrapper.setData({ gameClass: Game });
 
       let playButton = wrapper.get('button[data-test=play]');
       expect(playButton.attributes()).not.toHaveProperty('disabled');
@@ -209,6 +210,7 @@ describe('SceneEdit', () => {
       await flushPromises();
 
       // Verify the scene is playing
+      expect(mockStart).toHaveBeenCalled();
 
     });
 

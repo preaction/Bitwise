@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import type { Game, Scene } from '@fourstar/bitwise';
+import { type EntityData, type Game, type Scene, type SceneData } from '@fourstar/bitwise';
 import EntityPanel from './EntityPanel.vue';
 import Tab from "../model/Tab";
 import TabView from './TabView.vue';
@@ -36,16 +36,27 @@ export default defineComponent({
   emits: ['update'],
   data() {
     return {
-      sceneData: {},
-      loadPromise: Promise.resolve() as Promise<any>,
+      sceneData: null,
+      loadPromise: Promise.resolve(),
       loading: true,
       playing: false,
       paused: false,
-      gameClass: null as typeof Game | null,
+      gameClass: null,
       editGame: null,
       editScene: null,
       playGame: null,
       playScene: null,
+    } as {
+      sceneData: SceneData | null,
+      loadPromise: Promise<any>,
+      loading: boolean,
+      playing: boolean,
+      paused: boolean,
+      gameClass: any,
+      editGame: any,
+      editScene: any,
+      playGame: any,
+      playScene: any,
     };
   },
 
@@ -66,6 +77,39 @@ export default defineComponent({
       this.initializeScene();
       this.update({ name: 'NewScene', ext: '.json' });
     }
+
+    // Update sceneData for new formattings
+    if (this.sceneData && !this.sceneData.$schema) {
+      // Original data format was flattened array of entities, new
+      // format is tree of entities
+      if (this.sceneData.entities?.length) {
+        const newEntities = [] as Array<EntityData>;
+        for (const entity of this.sceneData.entities.sort()) {
+          // @ts-ignore
+          if (!entity.path.match('/')) {
+            newEntities.push(entity)
+            continue;
+          }
+
+          let children = this.sceneData.entities
+          // @ts-ignore
+          const pathParts = entity.path.split('/');
+          for (let i = 0; i < pathParts.length - 1; i++) {
+            const findPath = pathParts.slice(0, i + 1).join('/');
+            // @ts-ignore
+            let ancestorEntity = children.find(node => node.path === findPath);
+            if (ancestorEntity) {
+              children = ancestorEntity.children ||= [];
+            }
+          }
+          children.push(entity);
+        }
+        this.sceneData.entities = newEntities;
+      }
+
+      this.sceneData.$schema = '1';
+    }
+
     try {
       this.gameClass = await this.project.loadGameClass();
     }
@@ -124,8 +168,8 @@ export default defineComponent({
   methods: {
     initializeScene() {
       this.sceneData = {
+        $schema: '1',
         name: 'NewScene',
-        component: 'SceneEdit',
         components: [
           'Transform', 'Sprite', 'OrthographicCamera', 'RigidBody',
           'BoxCollider', 'UI',
@@ -137,8 +181,10 @@ export default defineComponent({
         ],
         entities: [
           {
-            path: "Camera",
+            $schema: '1',
+            name: "Camera",
             type: "Camera",
+            active: true,
             components: {
               Transform: {
                 z: 2000,
@@ -471,7 +517,7 @@ export default defineComponent({
     <div class="tab-sidebar">
       <TabView>
         <Panel label="Entities">
-          <EntityPanel class="tab-sidebar-item" @update="sceneChanged" v-model="sceneData"
+          <EntityPanel v-if="sceneData" class="tab-sidebar-item" @update="sceneChanged" v-model="sceneData.entities"
             :scene="scene" />
         </Panel>
         <Panel label="Systems">

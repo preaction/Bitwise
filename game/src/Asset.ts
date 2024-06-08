@@ -68,6 +68,10 @@ export default class Asset {
     }
   }
 
+  get name(): string {
+    return this.path.slice(this.path.lastIndexOf('/') + 1);
+  }
+
   ref(): AssetRef {
     return {
       $asset: (this.constructor as typeof Asset).refType,

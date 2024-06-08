@@ -208,6 +208,7 @@ export default class Entity {
         // same name. Use that instead of adding one, if found.
         const entity = this.scene.addEntity();
         promises.push(entity.thaw(eData));
+        this.children.push(entity);
       }
     }
     // XXX: Remove any descendant entities not found in data

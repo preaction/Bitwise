@@ -3,6 +3,8 @@ import Game from '../src/Game';
 import Scene from '../src/Scene';
 import System from '../src/System';
 import ProgressEvent from '../src/event/ProgressEvent';
+import Transform from '../src/component/Transform';
+import Entity from '../src/Entity';
 
 class FakeSystem extends System {
   resolveInit: any = null;
@@ -138,5 +140,74 @@ describe('Scene.freeze', () => {
     expect(sceneData.entities[0]).toMatchObject({ name: parentEntityName });
     expect(sceneData.entities[0].children).toHaveLength(1);
     expect(sceneData.entities[0].children?.[0]).toMatchObject({ name: childEntityName });
+  });
+});
+
+describe('Scene.thaw', () => {
+  let game: Game, scene: Scene;
+  beforeEach(() => {
+    game = new Game({});
+    game.registerComponent('transform', Transform);
+    scene = new Scene(game);
+  });
+
+  test('thaw entity component data', async () => {
+    const sceneData = {
+      $schema: "1",
+      name: "Scene",
+      entities: [
+        {
+          $schema: '1',
+          name: 'Entity One',
+          active: true,
+          components: {
+            transform: { x: 1, y: 1, z: 0 },
+          },
+        },
+      ],
+      systems: [],
+      components: ['transform'],
+    };
+    scene.thaw(sceneData);
+    expect(scene.eids).toHaveLength(sceneData.entities.length);
+    const entity = scene.getEntityByPath(sceneData.entities[0].name)
+    expect(entity).toBeInstanceOf(Entity)
+    expect(entity?.getComponent('transform')).toMatchObject(sceneData.entities[0].components.transform);
+  });
+
+  test('thaw entity descendants', async () => {
+    const sceneData = {
+      $schema: "1",
+      name: "Scene",
+      entities: [
+        {
+          $schema: '1',
+          name: 'Parent Entity',
+          active: true,
+          components: {},
+          children: [
+            {
+              $schema: '1',
+              name: 'Child Entity',
+              active: true,
+              children: [
+                {
+                  $schema: '1',
+                  name: 'Grandchild Entity',
+                  active: true,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      systems: [],
+      components: ['transform'],
+    };
+    await scene.thaw(sceneData);
+    const entity = scene.getEntityByPath(sceneData.entities[0].name)
+    expect(entity).toBeInstanceOf(Entity)
+    expect(entity?.children).toHaveLength(1);
+    expect(entity?.children[0].children).toHaveLength(1);
   });
 });
