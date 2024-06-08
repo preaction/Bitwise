@@ -413,8 +413,8 @@ export default defineComponent({
           <i @click="removeComponent(name)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="componentForms[name]" class="component-form__body">
-          <component :is="componentForms[name]" v-model="selectedEntityData.components[name]" :scene="scene"
-            @update="updateComponent(name, $event)" />
+          <component :is="componentForms[name]" v-model="selectedEntityData.components[name]"
+            :key="selectedEntity.path + '/' + name" :scene="scene" @update="updateComponent(name, $event)" />
         </div>
       </div>
       <MenuButton class="button-center" title="Add Component...">
