@@ -4,7 +4,7 @@ import Component from './Component.js';
 import System from './System.js';
 import NullSystem from './system/Null.js';
 import NullComponent from './component/Null.js';
-import Entity from './Entity.js';
+import Entity, { EntityData, NewEntityData } from './Entity.js';
 import ProgressEvent from './event/ProgressEvent.js';
 
 /**
@@ -34,9 +34,10 @@ export enum SceneState {
   Pause = "PAUSE",
 }
 
-type SceneData = {
+export type SceneData = {
+  $schema: string,
   name: string,
-  entities: Array<{[key:string]:any}>,
+  entities: Array<EntityData>,
   components: string[],
   systems: any[],
 };
@@ -69,31 +70,31 @@ export declare interface Scene {
  *  stop   - This stops the scene.
  */
 export class Scene extends three.EventDispatcher {
-  name:string = 'New Scene';
-  game:any;
-  state:SceneState = SceneState.Stop;
-  _scene:three.Scene = new three.Scene();
-  _uiScene:three.Scene = new three.Scene();
+  name: string = 'New Scene';
+  game: any;
+  state: SceneState = SceneState.Stop;
+  _scene: three.Scene = new three.Scene();
+  _uiScene: three.Scene = new three.Scene();
 
   // world is the bitecs World object. Each scene has its own.
-  world:bitecs.IWorld;
+  world: bitecs.IWorld;
 
   // systems are added to the scene to make the game go.
-  systems:System[] = [];
+  systems: System[] = [];
 
   // components are data added to entities
-  components:{ [key:string]: Component } = {};
+  components: { [key: string]: Component } = {};
 
   // entities are the bitecs entities in this scene.
-  entities:{ [key:number]: Entity } = {};
-  eids:number[] = [];
+  entities: { [key: number]: Entity } = {};
+  eids: number[] = [];
 
   /**
    */
-  constructor( game:any ) {
+  constructor(game: any) {
     super();
     this.game = game;
-    game.addEventListener( "resize", (e:{type: string, width: number, height: number}) => {
+    game.addEventListener("resize", (e: { type: string, width: number, height: number }) => {
       this.dispatchEvent(e);
     });
 
@@ -111,11 +112,11 @@ export class Scene extends three.EventDispatcher {
   async init() {
     const promises = [];
     this.dispatchEvent({ type: 'init' });
-    for ( const system of this.systems ) {
+    for (const system of this.systems) {
       // XXX: init() should be async
-      promises.push( system.init() );
+      promises.push(system.init());
     }
-    return Promise.all( promises );
+    return Promise.all(promises);
   }
 
   /**
@@ -124,65 +125,65 @@ export class Scene extends three.EventDispatcher {
    * Render and Physics systems.
    */
   start() {
-    if ( this.state === SceneState.Start || this.state === SceneState.Run ) {
+    if (this.state === SceneState.Start || this.state === SceneState.Run) {
       return;
     }
-    else if ( this.state !== SceneState.Stop ) {
+    else if (this.state !== SceneState.Stop) {
       throw `Cannot start scene in state ${this.state}`;
     }
     this.dispatchEvent({ type: 'start' });
-    for ( const system of this.systems ) {
+    for (const system of this.systems) {
       system.start();
     }
     this.state = SceneState.Start;
   }
 
   pause() {
-    if ( this.state === SceneState.Pause ) {
+    if (this.state === SceneState.Pause) {
       return;
     }
-    else if ( this.state !== SceneState.Run ) {
+    else if (this.state !== SceneState.Run) {
       throw `Cannot pause scene in state ${this.state}`;
     }
     this.dispatchEvent({ type: 'pause' });
-    for ( const system of this.systems ) {
+    for (const system of this.systems) {
       system.pause();
     }
     this.state = SceneState.Pause;
   }
 
   resume() {
-    if ( this.state === SceneState.Run ) {
+    if (this.state === SceneState.Run) {
       return;
     }
-    else if ( this.state !== SceneState.Pause ) {
+    else if (this.state !== SceneState.Pause) {
       throw `Cannot resume scene in state ${this.state}`;
     }
     this.dispatchEvent({ type: 'resume' });
-    for ( const system of this.systems ) {
+    for (const system of this.systems) {
       system.resume();
     }
     this.state = SceneState.Run;
   }
 
   stop() {
-    if ( this.state === SceneState.Stop ) {
+    if (this.state === SceneState.Stop) {
       return;
     }
     this.dispatchEvent({ type: 'stop' });
-    for ( const system of this.systems ) {
+    for (const system of this.systems) {
       system.stop();
     }
     this.state = SceneState.Stop;
   }
 
-  update( timeMs:DOMHighResTimeStamp ) {
+  update(timeMs: DOMHighResTimeStamp) {
     this.dispatchEvent({ type: 'beforeUpdate' });
-    for ( const system of this.systems ) {
+    for (const system of this.systems) {
       // XXX: Create inlined version of this function with only those
       // systems that have update methods
-      if ( system.update ) {
-        system.update( timeMs );
+      if (system.update) {
+        system.update(timeMs);
       }
     }
     this.dispatchEvent({ type: 'afterUpdate' });
@@ -190,19 +191,19 @@ export class Scene extends three.EventDispatcher {
 
   render() {
     this.dispatchEvent({ type: 'beforeRender' });
-    for ( const system of this.systems ) {
+    for (const system of this.systems) {
       // XXX: Create inlined version of this function with only those
       // systems that have render methods
-      if ( system.render ) {
+      if (system.render) {
         system.render();
       }
     }
     this.dispatchEvent({ type: 'afterRender' });
   }
 
-  getSystem<T extends System>(sysType:(new (...args: any[]) => T)):T {
-    for ( const sys of this.systems ) {
-      if ( sys instanceof sysType ) {
+  getSystem<T extends System>(sysType: (new (...args: any[]) => T)): T {
+    for (const sys of this.systems) {
+      if (sys instanceof sysType) {
         return sys as T;
       }
     }
@@ -217,115 +218,135 @@ export class Scene extends three.EventDispatcher {
    * @throws string If the component constructor cannot be found in the registry
    * @returns T An object of the given class
    */
-  getComponent<T extends Component>(componentType:(new (...args: any[]) => T)):T {
-    for ( const comp of Object.values(this.components) ) {
-      if ( comp.constructor === componentType ) {
+  getComponent<T extends Component>(componentType: (new (...args: any[]) => T)): T {
+    for (const comp of Object.values(this.components)) {
+      if (comp.constructor === componentType) {
         return comp as T;
       }
     }
     // Otherwise, try to load it using the name from the Game class
     // XXX: Why do we need to look up the name like this if we already
     // have the constructor?
-    for ( const componentName in this.game.components ) {
-      if ( this.game.components[ componentName ] === componentType ) {
-        return this.addComponent( componentName );
+    for (const componentName in this.game.components) {
+      if (this.game.components[componentName] === componentType) {
+        return this.addComponent(componentName);
       }
     }
     throw `Component ${componentType.name} not found in Game`;
   }
 
-  getEntityById( eid:number ):Entity {
-    return this.entities[ eid ];
+  getEntityById(eid: number): Entity {
+    return this.entities[eid];
   }
 
-  getEntityByPath( path:string ):Entity|undefined {
-    return Object.values( this.entities ).find( e => e.path === path );
+  getEntityByPath(path: string): Entity | undefined {
+    return Object.values(this.entities).find(e => e.path === path);
   }
 
   /**
    * Serialize the scene data into a form that can be stored. The
    * opposite of thaw()
    */
-  freeze():SceneData {
-    // XXX: Not using bitecs serialize/deserialize because I can't get
-    // them to work...
+  freeze(): SceneData {
     const seenComponents = new Set<string>();
-    const data = [];
-    for ( const id of this.eids ) {
-      const entity = this.entities[id];
-      const eData:{ [key:string]: any } = {
+    const rootEntities = {} as { [key: string]: EntityData };
+    // Sort entities by path so we always get parents before children
+    const entities = this.eids.map(eid => this.entities[eid]).sort((a, b) => a.path > b.path ? 1 : a.path < b.path ? -1 : 0)
+    for (const entity of entities) {
+      const eData: EntityData = {
+        $schema: "1",
         name: entity.name,
-        path: entity.path,
         type: entity.type,
         active: entity.active,
-        components: {},
+        children: [],
       };
-      for ( const c of entity.listComponents() ) {
+      eData.components = {};
+      for (const c of entity.listComponents()) {
         seenComponents.add(c);
-        eData.components[c] = this.components[c].freezeEntity(id);
+        eData.components[c] = this.components[c].freezeEntity(entity.id);
       }
-      data.push( eData );
+
+      const parts = entity.path.split('/');
+      if (parts.length == 1) {
+        rootEntities[parts[0]] = eData;
+      }
+      else {
+        let parent = rootEntities[parts[0]];
+        parts.shift()
+        for (const part of parts) {
+          parent.children ??= []
+          const newParent = parent.children.find(p => p.name === part)
+          if (newParent) {
+            parent = newParent;
+          }
+        }
+        parent.children ??= []
+        parent.children.push(eData);
+      }
     }
 
     return {
+      $schema: "1",
       name: this.name,
-      entities: data,
+      entities: Object.values(rootEntities),
       components: Array.from(seenComponents),
-      systems: this.systems.map( s => ({ name: s.name, data: s.freeze() }) ),
+      systems: this.systems.map(s => ({ name: s.name, data: s.freeze() })),
     };
   }
 
   /**
    * Load the scene from the given data. The opposite of freeze().
    */
-  async thaw( data:SceneData ) {
-    const promises:Promise<any>[] = [];
+  async thaw(data: SceneData) {
+    const promises: Promise<any>[] = [];
 
     this.name = data.name;
-    for ( const name of data.components ) {
-      this.addComponent( name );
+    for (const name of data.components) {
+      this.addComponent(name);
     }
-    for ( const system of data.systems ) {
-      this.addSystem( system.name, system.data );
+    for (const system of data.systems) {
+      this.addSystem(system.name, system.data);
     }
 
     // Load the entity metadata first so that components have something
     // to hook on to.
-    for ( const eData of data.entities ) {
+    const entityIds: { [key: string]: number } = {};
+    for (const eData of data.entities) {
       const entity = this.addEntity();
       entity.name = eData.name;
-      entity.type = eData.type;
-      entity.path = eData.path;
-      entity.active = "active" in eData ? eData.active : true;
-      eData.id = entity.id;
+      if (eData.type) {
+        entity.type = eData.type;
+      }
+      entity.name = eData.name;
+      entity.active = "active" in eData && typeof eData.active !== 'undefined' ? eData.active : true;
+      entityIds[entity.name] = entity.id;
     }
-    for ( const eData of data.entities ) {
-      for ( const c in eData.components ) {
-        if ( !this.components[c] ) {
-          console.error( `Component ${c} not registered on scene` );
+    for (const eData of data.entities) {
+      for (const c in eData.components) {
+        if (!this.components[c]) {
+          console.error(`Component ${c} not registered on scene`);
           continue;
         }
-        promises.push( this.components[c].thawEntity(eData.id, eData.components[c]) );
+        promises.push(this.components[c].thawEntity(entityIds[eData.name], eData.components[c]));
       }
-      delete eData.id;
     }
 
     return Promise.all(promises);
   }
 
-  addSystem( name:string, data:any={} ) {
-    let cons = this.game.systems[ name ];
-    if ( !cons ) {
+  addSystem(name: string, data: any = {}) {
+    let cons = this.game.systems[name];
+    if (!cons) {
       cons = NullSystem;
     }
-    const system = new cons( name, this );
-    system.thaw( data );
+    const system = new cons(name, this);
+    system.thaw(data);
     this.systems.push(system);
-    system.addEventListener( 'progress', (progress:ProgressEvent) => this.addProgress( name, progress ) );
+    system.addEventListener('progress', (progress: ProgressEvent) => this.addProgress(name, progress));
   }
 
-  private systemProgress:{ [key:string]: ProgressEvent } = {};
-  protected addProgress( name:string, progress:ProgressEvent ) {
+  private systemProgress: { [key: string]: ProgressEvent } = {};
+  protected addProgress(name: string, progress: ProgressEvent) {
     this.systemProgress[name] = progress;
     const sceneProgress = new ProgressEvent();
     Object.values(this.systemProgress).forEach(
@@ -344,22 +365,22 @@ export class Scene extends three.EventDispatcher {
    * @param name The name of a component registered with the Game object
    * @returns The newly-created component
    */
-  addComponent<T extends Component>( name:string ):T {
-    if ( !this.components[name] ) {
-      let cons = this.game.components[ name ];
-      if ( !cons ) {
+  addComponent<T extends Component>(name: string): T {
+    if (!this.components[name]) {
+      let cons = this.game.components[name];
+      if (!cons) {
         cons = NullComponent;
       }
-      this.components[name] = new cons( this, this.world );
+      this.components[name] = new cons(this, this.world);
     }
     return this.components[name] as T;
   }
 
-  addEntity( data:any=null ) {
-    const id = this.game.ecs.addEntity( this.world );
+  addEntity(data: NewEntityData | null = null) {
+    const id = this.game.ecs.addEntity(this.world);
     this.eids.push(id);
     this.entities[id] = new Entity(this, id);
-    if ( data !== null ) {
+    if (data !== null) {
       this.entities[id].thaw(data);
     }
     return this.entities[id];
@@ -369,10 +390,10 @@ export class Scene extends three.EventDispatcher {
    * Remove an entity from the scene.
    * @param id The entity ID
    */
-  removeEntity( id:number ) {
-    this.game.ecs.removeEntity( this.world, id );
+  removeEntity(id: number) {
+    this.game.ecs.removeEntity(this.world, id);
     delete this.entities[id];
-    this.eids.splice( this.eids.indexOf(id), 1 );
+    this.eids.splice(this.eids.indexOf(id), 1);
   }
 }
 

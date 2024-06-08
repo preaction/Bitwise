@@ -2,6 +2,20 @@
 import * as bitecs from 'bitecs';
 import ActiveComponent from './component/Active.js';
 import Scene from './Scene.js';
+import Active from './component/Active.js';
+
+export type EntityData = {
+  $schema: string,
+  name: string,
+  type?: string,
+  active: boolean,
+  components?: {
+    [key: string]: any,
+  },
+  children?: Array<EntityData>,
+};
+
+export type NewEntityData = Partial<EntityData> & { name: EntityData['name'] }
 
 /**
  * Entity is a single "thing" in a {@link Scene}. Entity objects are
@@ -31,7 +45,7 @@ export default class Entity {
    * honor the active flag by adding the Active component to queries.
    */
   get active(): boolean {
-    return bitecs.hasComponent(this.scene.world, this.id, this.scene.getComponent(ActiveComponent).store);
+    return bitecs.hasComponent(this.scene.world, this.scene.getComponent(ActiveComponent).store, this.id);
   }
   set active(newActive: boolean) {
     if (newActive) {
@@ -92,6 +106,8 @@ export default class Entity {
     this._parent = newParent;
   }
 
+  children: Entity[] = [];
+
   /**
    * Remove the entity from the scene.
    */
@@ -136,34 +152,30 @@ export default class Entity {
   }
 
   /**
+   * Add a child entity to this entity.
+   */
+  addEntity(data: NewEntityData | null = null): Entity {
+    const entity = this.scene.addEntity(data);
+    entity.parent = this;
+    this.children.push(entity);
+    return entity;
+  }
+
+  /**
    * Serialize this entity and all its descendants. The opposite of thaw().
    */
-  freeze(): any {
-    const data: { [key: string]: any } = {
-      path: this.path,
+  freeze(): EntityData {
+    const data: EntityData = {
+      $schema: '1',
+      name: this.name,
       type: this.type,
       active: this.active,
-      components: {},
     };
+    data.components = {};
     for (const c of this.listComponents()) {
       data.components[c] = this.scene.components[c].freezeEntity(this.id);
     }
-
-    // Also freeze descendants
-    data.entities = [];
-    Object.values(this.scene.entities).filter(e => e.path.startsWith(this.path + '/')).forEach(entity => {
-      const eData: { [key: string]: any } = {
-        path: entity.path,
-        type: entity.type,
-        active: entity.active,
-        components: {},
-      };
-      for (const c of entity.listComponents()) {
-        eData.components[c] = entity.scene.components[c].freezeEntity(entity.id);
-      }
-      data.entities.push(eData);
-    });
-
+    data.children = this.children.map(e => e.freeze())
     return data;
   }
 
@@ -171,16 +183,16 @@ export default class Entity {
    * Deserialize this entity and any descendants. The opposite of
    * freeze().
    */
-  async thaw(data: any) {
+  async thaw(data: NewEntityData) {
     const promises: Promise<any>[] = [];
 
-    if ("path" in data) {
-      this.path = data.path;
+    if ("name" in data) {
+      this.name = data.name;
     }
-    if ("type" in data) {
+    if ("type" in data && data.type) {
       this.type = data.type;
     }
-    this.active = "active" in data ? data.active : true;
+    this.active = "active" in data && typeof data.active !== 'undefined' ? data.active : true;
     for (const c in data.components) {
       if (!this.scene.components[c]) {
         this.scene.addComponent(c);
@@ -190,26 +202,12 @@ export default class Entity {
     // XXX: Remove any components from this entity which are not in the
     // given data
 
-    if (data.entities) {
-      for (const eData of data.entities) {
+    if (data.children) {
+      for (const eData of data.children) {
         // XXX: Find an entity already descended from this entity with the
         // same name. Use that instead of adding one, if found.
         const entity = this.scene.addEntity();
-        entity.path = eData.path;
-        entity.type = eData.type;
-        entity.active = eData.active;
-        eData.id = entity.id;
-      }
-      for (const eData of data.entities) {
-        for (const c in eData.components) {
-          if (!this.scene.components[c]) {
-            this.scene.addComponent(c);
-          }
-          promises.push(this.scene.components[c].thawEntity(eData.id, eData.components[c]));
-        }
-        // XXX: Remove any components from this entity which are not in the
-        // given data
-        delete eData.id;
+        promises.push(entity.thaw(eData));
       }
     }
     // XXX: Remove any descendant entities not found in data
