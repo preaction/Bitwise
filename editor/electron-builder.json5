@@ -36,6 +36,9 @@
     "artifactName": "${productName}-${version}.${ext}",
     "icon": "../images/icon.png",
     "category": "Development",
+    "target": [
+      "appImage"
+    ],
   },
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
