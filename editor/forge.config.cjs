@@ -25,7 +25,7 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-zip',
-      platforms: [ 'linux' ],
+      platforms: ['linux'],
     }
   ],
   publishers: [
@@ -60,5 +60,12 @@ module.exports = {
     },
   ],
   hooks: {
+    postMake: async (_, results) => {
+      for (const result of results) {
+        for (const artifact of result.artifacts) {
+          console.log(artifact);
+        }
+      }
+    }
   },
 };

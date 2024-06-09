@@ -33,12 +33,15 @@
   ],
   "linux": {
     "executableName": "bitwise-editor",
-    "artifactName": "${productName}-${version}.${ext}",
+    "artifactName": "${productName}_${version}.${arch}.${ext}",
     "icon": "../images/icon.png",
     "category": "Development",
+    "target": [
+      "appImage"
+    ],
   },
   "mac": {
-    "artifactName": "${productName}_${version}.${ext}",
+    "artifactName": "${productName}_${version}.${arch}.${ext}",
     "category": "public.app-category.developer-tools",
     "icon": "../images/icon.icns",
     "target": [
@@ -55,7 +58,7 @@
         ]
       }
     ],
-    "artifactName": "${productName}_${version}.${ext}"
+    "artifactName": "${productName}_${version}.${arch}.${ext}"
   },
   "nsis": {
     "oneClick": false,

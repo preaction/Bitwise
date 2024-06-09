@@ -25,6 +25,8 @@ jobs:
           if [ "$RUNNER_OS" == "macOS" ]; then
             brew install cairo
             brew install pango
+          elif [ "$RUNNER_OS" == "Linux" ]; then
+            sudo snap install snapcraft --classic
           fi
         shell: bash 
 
