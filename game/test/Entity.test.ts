@@ -66,6 +66,27 @@ describe('Entity.thaw', () => {
     expect(entity.type).toBe(original.type);
     expect(entity.active).toBe(original.active);
   });
+
+  test('thaw() arranges child entities', async () => {
+    const childData: EntityData = {
+      $schema: "1",
+      name: "Child",
+      type: "TestEntity",
+      active: false,
+    };
+    const parentData: EntityData = {
+      $schema: "1",
+      name: "Parent",
+      type: "TestEntity",
+      active: false,
+      children: [
+        childData,
+      ],
+    };
+    await entity.thaw(parentData);
+    expect(entity.children).toHaveLength(1);
+    expect(entity.children[0].parent).toMatchObject({ path: entity.path });
+  });
 });
 
 describe('Entity.freeze', () => {

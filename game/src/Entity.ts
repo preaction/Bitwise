@@ -206,9 +206,8 @@ export default class Entity {
       for (const eData of data.children) {
         // XXX: Find an entity already descended from this entity with the
         // same name. Use that instead of adding one, if found.
-        const entity = this.scene.addEntity();
+        const entity = this.addEntity();
         promises.push(entity.thaw(eData));
-        this.children.push(entity);
       }
     }
     // XXX: Remove any descendant entities not found in data

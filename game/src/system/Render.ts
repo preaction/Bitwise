@@ -250,6 +250,7 @@ export default class Render extends System {
     const node = this.uiNodes[eid] ||= this.createUINode(eid);
     const entity = this.scene.getEntityById(eid);
     const parent = entity.parent;
+    console.log(`addUINode parent`, entity.parent);
     if (parent && this.uiNodes[parent.id]) {
       this.uiNodes[parent.id].appendChild(node);
     }

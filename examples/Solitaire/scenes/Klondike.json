@@ -4,7 +4,6 @@
     {
       "name": "Camera",
       "type": "Camera",
-      "path": "Camera",
       "components": {
         "Transform": {
           "x": 0,
@@ -25,271 +24,10 @@
           "far": 2000
         }
       },
-      "active": true
-    },
-    {
-      "name": "Foundations",
-      "type": "Entity",
-      "path": "Foundations",
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 0,
-          "sx": 1,
-          "sy": 1,
-          "sz": 1
-        }
-      },
-      "active": true
-    },
-    {
-      "name": "Foundation 1",
-      "type": "Entity",
-      "path": "Foundations/Foundation 1",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": "7.534010410308838",
-          "y": 3.5,
-          "z": 0
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Foundation": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Foundation 2",
-      "type": "Entity",
-      "path": "Foundations/Foundation 2",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": "5.352031230926514",
-          "y": 3.5,
-          "z": 0
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Foundation": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Foundation 3",
-      "type": "Entity",
-      "path": "Foundations/Foundation 3",
-      "components": {
-        "Transform": {
-          "x": 3.1700520515441895,
-          "y": 3.5,
-          "z": 0,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Foundation": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Foundation 4",
-      "type": "Entity",
-      "path": "Foundations/Foundation 4",
-      "components": {
-        "Transform": {
-          "x": 0.974126935005188,
-          "y": 3.5,
-          "z": 0,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Foundation": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Stack 1",
-      "path": "Stack/Stack 1",
-      "type": "Entity",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": 7.015634536743164,
-          "y": 0.5472468733787537,
-          "z": "0"
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Stack": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Stack 2",
-      "path": "Stack/Stack 2",
-      "type": "Entity",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": 4.743009090423584,
-          "y": 0.5472471117973328,
-          "z": "0"
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Stack": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Stack 4",
-      "path": "Stack/Stack 4",
-      "type": "Entity",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": 2.4703850746154785,
-          "y": 0.5472471117973328,
-          "z": "0"
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Stack": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Stack 5",
-      "path": "Stack/Stack 5",
-      "type": "Entity",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": 0.2063533365726471,
-          "y": 0.5472471117973328,
-          "z": "0"
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Stack": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Stack 6",
-      "type": "Entity",
-      "path": "Stack/Stack 6",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": -2.1560862064361572,
-          "y": 0.5472471117973328,
-          "z": "0"
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Stack": {}
-      },
-      "active": true
-    },
-    {
-      "name": "Stack 7",
-      "path": "Stack/Stack 7",
-      "type": "Entity",
-      "components": {
-        "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 1,
-          "x": -4.518527984619141,
-          "y": 0.5472471117973328,
-          "z": "0"
-        },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
-        },
-        "Stack": {}
-      },
-      "active": true
+      "active": false
     },
     {
       "name": "Deck",
-      "path": "Deck",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -312,7 +50,6 @@
     },
     {
       "name": "Discard",
-      "path": "Discard",
       "type": "Entity",
       "components": {
         "Transform": {
@@ -334,32 +71,261 @@
       "active": true
     },
     {
-      "name": "Stack 3",
-      "path": "Stack/Stack 3",
+      "name": "Foundations",
       "type": "Entity",
       "components": {
         "Transform": {
-          "sx": 2.799999952316284,
-          "sy": 2.799999952316284,
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        }
+      },
+      "active": true,
+      "children": [
+        {
+          "name": "Foundation 1",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": "7.534010410308838",
+              "y": 3.5,
+              "z": 0
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Foundation": {}
+          },
+          "active": true
+        },
+        {
+          "name": "Foundation 2",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": "5.352031230926514",
+              "y": 3.5,
+              "z": 0
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Foundation": {}
+          },
+          "active": true
+        },
+        {
+          "name": "Foundation 3",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "x": 3.1700520515441895,
+              "y": 3.5,
+              "z": 0,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Foundation": {}
+          },
+          "active": true
+        },
+        {
+          "name": "Foundation 4",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "x": 0.974126935005188,
+              "y": 3.5,
+              "z": 0,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Foundation": {}
+          },
+          "active": true
+        }
+      ]
+    },
+    {
+      "name": "Menu",
+      "components": {
+        "Transform": {
+          "sx": "0.03",
+          "sy": "0.03",
           "sz": 1,
           "rx": 0,
           "ry": 0,
           "rz": 0,
-          "rw": 1,
-          "x": -6.926290988922119,
-          "y": 0.4883785843849182,
-          "z": "0"
+          "rw": 0
         },
-        "Sprite": {
-          "texturePath": "cards/card_empty.png"
+        "UIElement": {
+          "width": "120px",
+          "height": "240px",
+          "backgroundColor": "#000000e4",
+          "borderWidth": "1px",
+          "borderColor": "#c7c7c7",
+          "borderStyle": "solid",
+          "borderRadius": "10px",
+          "margin": "",
+          "padding": "5px"
         },
-        "Stack": {}
+        "UIContainer": {
+          "flow": "column",
+          "justify": "start",
+          "align": "stretch"
+        }
       },
-      "active": true
+      "active": true,
+      "children": [
+        {
+          "name": "Replay Button",
+          "active": true,
+          "components": {
+            "Transform": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 0,
+              "sx": 1,
+              "sy": 1,
+              "sz": 1
+            },
+            "UIElement": {
+              "backgroundColor": "#00000000",
+              "width": "",
+              "height": "",
+              "borderStyle": "outset",
+              "borderWidth": "2px",
+              "borderColor": "#cfcfcf",
+              "borderRadius": "5px",
+              "margin": "",
+              "padding": "5px"
+            },
+            "UIText": {
+              "text": "Replay",
+              "align": "center"
+            },
+            "UIButton": {
+              "action": "restartGame"
+            }
+          }
+        },
+        {
+          "active": true,
+          "components": {
+            "Transform": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 0,
+              "sx": 1,
+              "sy": 1,
+              "sz": 1
+            },
+            "UIElement": {
+              "backgroundColor": "#00000000",
+              "width": "",
+              "height": "",
+              "borderStyle": "outset",
+              "borderWidth": "2px",
+              "borderColor": "#cfcfcf",
+              "borderRadius": "5px",
+              "margin": "",
+              "padding": "5px"
+            },
+            "UIText": {
+              "text": "New Deal",
+              "align": "center"
+            },
+            "UIButton": {
+              "action": "newGame"
+            }
+          },
+          "name": "New Button"
+        },
+        {
+          "name": "Close Button",
+          "active": true,
+          "components": {
+            "Transform": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 0,
+              "sx": 1,
+              "sy": 1,
+              "sz": 1
+            },
+            "UIElement": {
+              "backgroundColor": "#00000000",
+              "width": "",
+              "height": "",
+              "borderStyle": "outset",
+              "borderWidth": "2px",
+              "borderColor": "#cfcfcf",
+              "borderRadius": "5px",
+              "margin": "",
+              "padding": "5px"
+            },
+            "UIText": {
+              "text": "Close",
+              "align": "center"
+            },
+            "UIButton": {
+              "action": "hideMenu"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "Menu Button",
-      "path": "Menu Button",
       "components": {
         "Transform": {
           "sx": "0.01",
@@ -393,157 +359,176 @@
       "active": true
     },
     {
-      "name": "Menu",
-      "path": "Menu",
-      "components": {
-        "Transform": {
-          "sx": "0.03",
-          "sy": "0.03",
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 0
-        },
-        "UIElement": {
-          "width": "120px",
-          "height": "240px",
-          "backgroundColor": "#000000e4",
-          "borderWidth": "1px",
-          "borderColor": "#c7c7c7",
-          "borderStyle": "solid",
-          "borderRadius": "10px",
-          "margin": "",
-          "padding": "5px"
-        },
-        "UIContainer": {
-          "flow": "column",
-          "justify": "start",
-          "align": "stretch"
-        }
-      },
-      "active": false
-    },
-    {
-      "name": "Replay Button",
-      "path": "Menu/Replay Button",
-      "active": true,
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 0,
-          "sx": 1,
-          "sy": 1,
-          "sz": 1
-        },
-        "UIElement": {
-          "backgroundColor": "#00000000",
-          "width": "",
-          "height": "",
-          "borderStyle": "outset",
-          "borderWidth": "2px",
-          "borderColor": "#cfcfcf",
-          "borderRadius": "5px",
-          "margin": "",
-          "padding": "5px"
-        },
-        "UIText": {
-          "text": "Replay",
-          "align": "center"
-        },
-        "UIButton": {
-          "action": "restartGame"
-        }
-      }
-    },
-    {
-      "name": "Close Button",
-      "path": "Menu/Close Button",
-      "active": true,
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 0,
-          "sx": 1,
-          "sy": 1,
-          "sz": 1
-        },
-        "UIElement": {
-          "backgroundColor": "#00000000",
-          "width": "",
-          "height": "",
-          "borderStyle": "outset",
-          "borderWidth": "2px",
-          "borderColor": "#cfcfcf",
-          "borderRadius": "5px",
-          "margin": "",
-          "padding": "5px"
-        },
-        "UIText": {
-          "text": "Close",
-          "align": "center"
-        },
-        "UIButton": {
-          "action": "hideMenu"
-        }
-      }
-    },
-    {
-      "path": "Stack",
       "components": {
         "Transform": {}
       },
-      "active": true
-    },
-    {
-      "path": "Menu/New Button",
       "active": true,
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 0,
-          "sx": 1,
-          "sy": 1,
-          "sz": 1
+      "name": "Stack",
+      "children": [
+        {
+          "name": "Stack 1",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": 7.015634536743164,
+              "y": 0.5472468733787537,
+              "z": "0"
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Stack": {}
+          },
+          "active": true
         },
-        "UIElement": {
-          "backgroundColor": "#00000000",
-          "width": "",
-          "height": "",
-          "borderStyle": "outset",
-          "borderWidth": "2px",
-          "borderColor": "#cfcfcf",
-          "borderRadius": "5px",
-          "margin": "",
-          "padding": "5px"
+        {
+          "name": "Stack 2",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": 4.743009090423584,
+              "y": 0.5472471117973328,
+              "z": "0"
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Stack": {}
+          },
+          "active": true
         },
-        "UIText": {
-          "text": "New Deal",
-          "align": "center"
+        {
+          "name": "Stack 3",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": -6.926290988922119,
+              "y": 0.4883785843849182,
+              "z": "0"
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Stack": {}
+          },
+          "active": true
         },
-        "UIButton": {
-          "action": "newGame"
+        {
+          "name": "Stack 4",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": 2.4703850746154785,
+              "y": 0.5472471117973328,
+              "z": "0"
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Stack": {}
+          },
+          "active": true
+        },
+        {
+          "name": "Stack 5",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": 0.2063533365726471,
+              "y": 0.5472471117973328,
+              "z": "0"
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Stack": {}
+          },
+          "active": true
+        },
+        {
+          "name": "Stack 6",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": -2.1560862064361572,
+              "y": 0.5472471117973328,
+              "z": "0"
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Stack": {}
+          },
+          "active": true
+        },
+        {
+          "name": "Stack 7",
+          "type": "Entity",
+          "components": {
+            "Transform": {
+              "sx": 2.799999952316284,
+              "sy": 2.799999952316284,
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 1,
+              "x": -4.518527984619141,
+              "y": 0.5472471117973328,
+              "z": "0"
+            },
+            "Sprite": {
+              "texturePath": "cards/card_empty.png"
+            },
+            "Stack": {}
+          },
+          "active": true
         }
-      },
-      "entities": []
+      ]
     },
     {
-      "path": "Undo Button",
       "active": true,
       "components": {
         "Transform": {
@@ -576,10 +561,9 @@
           "action": "undo"
         }
       },
-      "entities": []
+      "name": "Undo Button"
     },
     {
-      "path": "Win Dialog",
       "components": {
         "Transform": {
           "sx": "0.03",
@@ -607,65 +591,66 @@
           "align": "stretch"
         }
       },
-      "active": false
-    },
-    {
-      "path": "Win Dialog/Win Text",
-      "components": {
-        "Transform": {
-          "sx": "1",
-          "sy": "1",
-          "sz": 1,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 0
+      "active": false,
+      "name": "Win Dialog",
+      "children": [
+        {
+          "components": {
+            "Transform": {
+              "sx": "1",
+              "sy": "1",
+              "sz": 1,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 0
+            },
+            "UIElement": {},
+            "UIText": {
+              "text": "You win!",
+              "align": "center"
+            }
+          },
+          "active": true,
+          "name": "Win Text"
         },
-        "UIElement": {},
-        "UIText": {
-          "text": "You win!",
-          "align": "center"
+        {
+          "active": true,
+          "components": {
+            "Transform": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "rx": 0,
+              "ry": 0,
+              "rz": 0,
+              "rw": 0,
+              "sx": 1,
+              "sy": 1,
+              "sz": 1
+            },
+            "UIElement": {
+              "backgroundColor": "#00000000",
+              "width": "",
+              "height": "",
+              "borderStyle": "outset",
+              "borderWidth": "2px",
+              "borderColor": "#cfcfcf",
+              "borderRadius": "5px",
+              "margin": "",
+              "padding": "5px"
+            },
+            "UIText": {
+              "text": "New Deal",
+              "align": "center"
+            },
+            "UIButton": {
+              "action": "newGame"
+            }
+          },
+          "name": "New Button"
         }
-      },
-      "active": true
-    },
-    {
-      "path": "Win Dialog/New Button",
-      "active": true,
-      "components": {
-        "Active": {},
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "rx": 0,
-          "ry": 0,
-          "rz": 0,
-          "rw": 0,
-          "sx": 1,
-          "sy": 1,
-          "sz": 1
-        },
-        "UIElement": {
-          "backgroundColor": "#00000000",
-          "width": "",
-          "height": "",
-          "borderStyle": "outset",
-          "borderWidth": "2px",
-          "borderColor": "#cfcfcf",
-          "borderRadius": "5px",
-          "margin": "",
-          "padding": "5px"
-        },
-        "UIText": {
-          "text": "New Deal",
-          "align": "center"
-        },
-        "UIButton": {
-          "action": "newGame"
-        }
-      },
-      "entities": []
+      ]
     }
   ],
   "components": [
@@ -696,5 +681,6 @@
       "data": {}
     }
   ],
-  "component": "SceneEdit"
+  "component": "SceneEdit",
+  "$schema": "1"
 }
