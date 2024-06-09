@@ -2,253 +2,253 @@
   "name": "Space Shooter",
   "entities": [
     {
+      "name": "Boundary",
+      "type": "Entity",
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": -10,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 17.799999237060547,
+          "sy": 10,
+          "sz": 50
+        },
+        "BoxCollider": {
+          "trigger": 1,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        }
+      },
+      "active": false
+    },
+    {
       "name": "Camera",
-      "path": "Camera",
       "type": "Camera",
       "components": {
-      "Transform": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "OrthographicCamera": {
+          "frustum": 10,
+          "zoom": 1,
+          "near": 0,
+          "far": 10
+        }
       },
-      "OrthographicCamera": {
-        "frustum": 10,
-        "zoom": 1,
-        "near": 0,
-        "far": 10
-      }
-      }
-    },
-    {
-      "name": "Player Ship",
-      "path": "Player Ship",
-      "type": "Entity",
-      "components": {
-      "Transform": {
-        "x": 0,
-        "y": -4,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "images/playerShip1_blue.png"
-      },
-      "Player": {
-        "weapon": "prefabs/Laser.json"
-      },
-      "RigidBody": {
-        "mass": 1,
-        "vx": 0,
-        "vy": 0,
-        "vz": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "lx": 1,
-        "ly": 1,
-        "lz": 0,
-        "ax": 0,
-        "ay": 0,
-        "az": 1
-      },
-      "BoxCollider": {
-        "trigger": 1,
-        "ox": 0,
-        "oy": 0,
-        "oz": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      }
-      }
-    },
-    {
-      "name": "Meteor 1",
-      "path": "Meteor 1",
-      "type": "Entity",
-      "components": {
-      "Transform": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 1,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "images/meteorBrown_big1.png"
-      },
-      "BoxCollider": {
-        "trigger": 0,
-        "ox": 0,
-        "oy": 0,
-        "oz": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "Enemy": {
-        "health": 0
-      },
-      "RigidBody": {
-        "mass": 1,
-        "vx": 0,
-        "vy": 0,
-        "vz": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "lx": 1,
-        "ly": 1,
-        "lz": 0,
-        "ax": 0,
-        "ay": 0,
-        "az": 0
-      }
-      }
-    },
-    {
-      "name": "Boundary",
-      "path": "Boundary",
-      "type": "Entity",
-      "components": {
-      "Transform": {
-        "x": 0,
-        "y": 0,
-        "z": -10,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 17.799999237060547,
-        "sy": 10,
-        "sz": 50
-      },
-      "BoxCollider": {
-        "trigger": 1,
-        "ox": 0,
-        "oy": 0,
-        "oz": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      }
-      }
-    },
-    {
-      "name": "Enemy Fighter",
-      "path": "Enemy Fighter",
-      "type": "Entity",
-      "components": {
-      "Transform": {
-        "x": -4,
-        "y": 4,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      },
-      "Sprite": {
-        "texturePath": "images/enemyBlack1.png"
-      },
-      "RigidBody": {
-        "mass": 1,
-        "vx": 0,
-        "vy": 0,
-        "vz": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "lx": 1,
-        "ly": 1,
-        "lz": 0,
-        "ax": 0,
-        "ay": 0,
-        "az": 1
-      },
-      "Enemy": {
-        "health": 10
-      },
-      "BoxCollider": {
-        "trigger": 1,
-        "ox": 0,
-        "oy": 0,
-        "oz": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      }
-      }
+      "active": true
     },
     {
       "name": "Enemy Bomber",
-      "path": "Enemy Bomber",
       "type": "Entity",
       "components": {
-      "Transform": {
-        "x": 4,
-        "y": 4,
-        "z": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "rw": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
+        "Transform": {
+          "x": 4,
+          "y": 4,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "images/enemyBlack4.png"
+        },
+        "RigidBody": {
+          "mass": 1,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lx": 1,
+          "ly": 1,
+          "lz": 0,
+          "ax": 0,
+          "ay": 0,
+          "az": 1
+        },
+        "Enemy": {
+          "health": 20
+        },
+        "BoxCollider": {
+          "trigger": 1,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        }
       },
-      "Sprite": {
-        "texturePath": "images/enemyBlack4.png"
+      "active": true
+    },
+    {
+      "name": "Enemy Fighter",
+      "type": "Entity",
+      "components": {
+        "Transform": {
+          "x": -4,
+          "y": 4,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "images/enemyBlack1.png"
+        },
+        "RigidBody": {
+          "mass": 1,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lx": 1,
+          "ly": 1,
+          "lz": 0,
+          "ax": 0,
+          "ay": 0,
+          "az": 1
+        },
+        "Enemy": {
+          "health": 10
+        },
+        "BoxCollider": {
+          "trigger": 1,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        }
       },
-      "RigidBody": {
-        "mass": 1,
-        "vx": 0,
-        "vy": 0,
-        "vz": 0,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "lx": 1,
-        "ly": 1,
-        "lz": 0,
-        "ax": 0,
-        "ay": 0,
-        "az": 1
+      "active": true
+    },
+    {
+      "name": "Meteor 1",
+      "type": "Entity",
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 1,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "images/meteorBrown_big1.png"
+        },
+        "BoxCollider": {
+          "trigger": 0,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Enemy": {
+          "health": 0
+        },
+        "RigidBody": {
+          "mass": 1,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lx": 1,
+          "ly": 1,
+          "lz": 0,
+          "ax": 0,
+          "ay": 0,
+          "az": 0
+        }
       },
-      "Enemy": {
-        "health": 20
+      "active": true
+    },
+    {
+      "name": "Player Ship",
+      "type": "Entity",
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": -4,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "texturePath": "images/playerShip1_blue.png"
+        },
+        "Player": {
+          "weapon": "prefabs/Laser.json"
+        },
+        "RigidBody": {
+          "mass": 1,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lx": 1,
+          "ly": 1,
+          "lz": 0,
+          "ax": 0,
+          "ay": 0,
+          "az": 1
+        },
+        "BoxCollider": {
+          "trigger": 1,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        }
       },
-      "BoxCollider": {
-        "trigger": 1,
-        "ox": 0,
-        "oy": 0,
-        "oz": 0,
-        "sx": 1,
-        "sy": 1,
-        "sz": 1
-      }
-      }
+      "active": true
     }
   ],
   "components": [
@@ -289,5 +289,6 @@
       "data": {}
     }
   ],
-  "component": "SceneEdit"
+  "component": "SceneEdit",
+  "$schema": "1"
 }

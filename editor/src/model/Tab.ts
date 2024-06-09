@@ -45,7 +45,7 @@ export default class Tab {
     }
 
     // Name changes? Write new file and delete old
-    if (this.src != this.name + this.ext || !this.src.endsWith('/' + this.name + this.ext)) {
+    if (this.src != this.name + this.ext && !this.src.endsWith('/' + this.name + this.ext)) {
       const oldSrc = this.src;
       const newSrc = oldSrc.replace(oldSrc.substring(oldSrc.lastIndexOf('/') + 1), this.name + this.ext);
       try {

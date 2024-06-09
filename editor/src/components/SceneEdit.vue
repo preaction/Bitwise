@@ -341,7 +341,7 @@ export default defineComponent({
     },
 
     async save() {
-      await this.modelValue.writeFile(JSON.stringify(toRaw(this.sceneData)));
+      await this.modelValue.writeFile(JSON.stringify(toRaw(this.sceneData), null, 2));
       this.$emit('update', {
         ...this.modelValue,
         edited: false,
