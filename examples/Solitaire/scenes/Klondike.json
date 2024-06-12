@@ -212,7 +212,7 @@
           "align": "stretch"
         }
       },
-      "active": true,
+      "active": false,
       "children": [
         {
           "name": "Replay Button",

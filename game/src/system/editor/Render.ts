@@ -30,51 +30,51 @@ export default class Render extends RenderSystem {
    * The camera showing the scene for editing. This is not a camera that
    * is added to the scene being edited.
    */
-  camera!:three.OrthographicCamera;
+  camera!: three.OrthographicCamera;
 
   /**
    * The rendered frustum boxes for the cameras in the scene.
    */
-  sceneCameras:Array<three.LineSegments> = [];
+  sceneCameras: Array<three.LineSegments> = [];
 
-  input!:InputSystem;
-  transformComponent:Transform;
-  cameraComponent:OrthographicCameraComponent;
-  cameraQuery:bitecs.Query;
-  cameraEnterQuery:bitecs.Query;
-  cameraExitQuery:bitecs.Query;
+  input!: InputSystem;
+  transformComponent: Transform;
+  cameraComponent: OrthographicCameraComponent;
+  cameraQuery: bitecs.Query;
+  cameraEnterQuery: bitecs.Query;
+  cameraExitQuery: bitecs.Query;
 
   /**
    * How many units the camera should display, at minimum. Height/width
    * of the camera will be set by multiplying this value with the aspect
    * ratio to ensure no distortion
    */
-  frustumSize:number = 200;
+  frustumSize: number = 200;
 
   /**
    * The current zoom level. Can be modified by scroll wheel.
    */
   zoom = 1;
 
-  selected:Array<three.Object3D> = [];
-  mouseIsDown:boolean = false;
-  mouseMoved:boolean = false;
-  moveSelected:boolean = false;
-  moveRatio:{x: number, y: number} = {x: 0, y: 0};
-  moveObject:three.Object3D|null = null;
-  pointerStart:three.Vector3 = new three.Vector3(0, 0);
+  selected: Array<three.Object3D> = [];
+  mouseIsDown: boolean = false;
+  mouseMoved: boolean = false;
+  moveSelected: boolean = false;
+  moveRatio: { x: number, y: number } = { x: 0, y: 0 };
+  moveObject: three.Object3D | null = null;
+  pointerStart: three.Vector3 = new three.Vector3(0, 0);
 
-  listeners:{ [key:string]: (e:any) => void } = {};
+  listeners: { [key: string]: (e: any) => void } = {};
 
-  constructor( name:string, scene:Scene ) {
+  constructor(name: string, scene: Scene) {
     super(name, scene);
 
     this.transformComponent = scene.getComponent(Transform);
     this.cameraComponent = scene.getComponent(OrthographicCameraComponent);
 
-    this.cameraQuery = scene.game.ecs.defineQuery([ this.transformComponent.store, this.cameraComponent.store ]);
-    this.cameraEnterQuery = scene.game.ecs.enterQuery( this.cameraQuery );
-    this.cameraExitQuery = scene.game.ecs.exitQuery( this.cameraQuery );
+    this.cameraQuery = scene.game.ecs.defineQuery([this.transformComponent.store, this.cameraComponent.store]);
+    this.cameraEnterQuery = scene.game.ecs.enterQuery(this.cameraQuery);
+    this.cameraExitQuery = scene.game.ecs.exitQuery(this.cameraQuery);
 
     this.listeners = {
       wheel: this.onWheel.bind(this),
@@ -86,7 +86,7 @@ export default class Render extends RenderSystem {
   }
 
   async init() {
-    this.input = this.scene.getSystem( InputSystem );
+    this.input = this.scene.getSystem(InputSystem);
     return super.init();
   }
 
@@ -96,40 +96,40 @@ export default class Render extends RenderSystem {
     // Allow canvas to have keyboard focus
     this.scene.game.canvas.tabIndex = 1;
 
-    this.scene.addEventListener( "resize", (e:three.Event) => {
+    this.scene.addEventListener("resize", (e: three.Event) => {
       this.onResize(e as ResizeEvent);
     });
-    for ( const ev in this.listeners ) {
-      this.input.on( ev, this.listeners[ev] );
+    for (const ev in this.listeners) {
+      this.input.on(ev, this.listeners[ev]);
     }
     this.input.watchPointer();
   }
 
   stop() {
     super.stop();
-    for ( const ev in this.listeners ) {
-      this.input.off( ev, this.listeners[ev] );
+    for (const ev in this.listeners) {
+      this.input.off(ev, this.listeners[ev]);
     }
   }
 
-  onWheel( event:WheelEvent ) {
+  onWheel(event: WheelEvent) {
     event.preventDefault();
-    if ( !this.camera ) {
+    if (!this.camera) {
       return;
     }
 
     // XXX: Zoom when mouse is at coordinates other than 0,0 should move
     // the window to keep the pixel under the cursor in the same place
     this.camera.zoom += event.deltaY * 0.01;
-    if ( this.camera.zoom < 0.001 ) {
+    if (this.camera.zoom < 0.001) {
       this.camera.zoom = 0.001;
     }
     this.camera.updateProjectionMatrix();
     this.render();
   }
 
-  onPointerDown( event:MouseEvent ) {
-    if ( !this.camera ) {
+  onPointerDown(event: MouseEvent) {
+    if (!this.camera) {
       return;
     }
     this.mouseMoved = false;
@@ -138,18 +138,18 @@ export default class Render extends RenderSystem {
     // Mouse down on a selected entity means we're moving it
     const canvas = this.scene.game.canvas;
     const scene = this.scene._scene;
-    pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
-    pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+    pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
+    pointer.y = - (event.offsetY / canvas.clientHeight) * 2 + 1;
     pointer.z = 0;
-    this.pointerStart = pointer.clone().unproject( this.camera );
+    this.pointerStart = pointer.clone().unproject(this.camera);
 
-    raycaster.setFromCamera( pointer, this.camera );
-    const intersects = raycaster.intersectObjects( scene.children, true );
+    raycaster.setFromCamera(pointer, this.camera);
+    const intersects = raycaster.intersectObjects(scene.children, true);
 
-    if ( intersects.length > 0 ) {
+    if (intersects.length > 0) {
       const selected = intersects[0].object;
       const ray = intersects[0].point;
-      if ( this.selected.find( obj => obj.userData.selected === selected ) ) {
+      if (this.selected.find(obj => obj.userData.selected === selected)) {
         const camera = this.camera;
         this.moveSelected = true;
         this.moveObject = selected;
@@ -157,76 +157,76 @@ export default class Render extends RenderSystem {
     }
   }
 
-  onPointerUp( event:MouseEvent ) {
-    if ( !this.camera ) {
+  onPointerUp(event: MouseEvent) {
+    if (!this.camera) {
       return;
     }
     this.mouseIsDown = false;
     this.moveSelected = false;
     // Mouse up without moving selects element
-    if ( !this.mouseMoved ) {
+    if (!this.mouseMoved) {
       const canvas = this.scene.game.canvas;
       const scene = this.scene._scene;
-      pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
-      pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+      pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
+      pointer.y = - (event.offsetY / canvas.clientHeight) * 2 + 1;
 
-      raycaster.setFromCamera( pointer, this.camera );
-      const intersects = raycaster.intersectObjects( scene.children, true );
+      raycaster.setFromCamera(pointer, this.camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
 
-      if ( intersects.length > 0 ) {
+      if (intersects.length > 0) {
         const selected = intersects[0].object;
-        if ( this.selected.length === 1 && this.selected.find( obj => obj.userData.selected === selected ) ) {
-          this.deselectObject( selected );
+        if (this.selected.length === 1 && this.selected.find(obj => obj.userData.selected === selected)) {
+          this.deselectObject(selected);
         }
         else {
           // Do not clear if shift is pressed
-          if ( !event.shiftKey ) {
+          if (!event.shiftKey) {
             this.clearSelected();
           }
-          this.selectObject( selected );
+          this.selectObject(selected);
         }
       }
-      else if ( !event.shiftKey ) {
+      else if (!event.shiftKey) {
         this.clearSelected();
       }
 
       this.scene.update(0);
       this.scene.render();
     }
-    else if ( this.moveSelected ) {
+    else if (this.moveSelected) {
       this.dispatchEvent({ type: "update" });
     }
   }
 
-  onKeyDown( event:KeyboardEvent ) {
-    if ( !this.camera || this.selected.length <= 0 ) {
+  onKeyDown(event: KeyboardEvent) {
+    if (!this.camera || this.selected.length <= 0) {
       return;
     }
 
     const height = (this.camera.top - this.camera.bottom) / this.camera.zoom;
     const width = (this.camera.left - this.camera.right) / this.camera.zoom;
-    let nudge = 0, dir:"x"|"y"|"" = '';
+    let nudge = 0, dir: "x" | "y" | "" = '';
 
-    switch ( event.key ) {
+    switch (event.key) {
       case "ArrowUp":
-        nudge = event.shiftKey ? height/10 : event.altKey ? height/1000 : height/100;
+        nudge = event.shiftKey ? height / 10 : event.altKey ? height / 1000 : height / 100;
         dir = 'y';
         break;
       case "ArrowDown":
-        nudge = event.shiftKey ? -height/10 : event.altKey ? -height/1000 : -height/100;
+        nudge = event.shiftKey ? -height / 10 : event.altKey ? -height / 1000 : -height / 100;
         dir = 'y';
         break;
       case "ArrowLeft":
-        nudge = event.shiftKey ? width/10 : event.altKey ? width/1000 : width/100;
+        nudge = event.shiftKey ? width / 10 : event.altKey ? width / 1000 : width / 100;
         dir = 'x';
         break;
       case "ArrowRight":
-        nudge = event.shiftKey ? -width/10 : event.altKey ? -width/1000 : -width/100;
+        nudge = event.shiftKey ? -width / 10 : event.altKey ? -width / 1000 : -width / 100;
         dir = 'x';
         break;
     }
 
-    if ( !dir ) {
+    if (!dir) {
       return;
     }
 
@@ -234,9 +234,9 @@ export default class Render extends RenderSystem {
     this.dispatchEvent({ type: "update" });
   }
 
-  nudgeSelected({ x, y }:{x?:number, y?:number}) {
+  nudgeSelected({ x, y }: { x?: number, y?: number }) {
     const transform = this.transformComponent.store;
-    for ( const obj of this.selected ) {
+    for (const obj of this.selected) {
       obj.position.x += x || 0;
       obj.position.y += y || 0;
       const eid = obj.userData.eid;
@@ -248,56 +248,56 @@ export default class Render extends RenderSystem {
   }
 
   clearSelected() {
-    while ( this.selected.length ) {
+    while (this.selected.length) {
       const box = this.selected.pop();
-      if ( !box ) { break; }
+      if (!box) { break; }
       box.removeFromParent();
     }
   }
 
-  selectObject( obj:three.Object3D ) {
-    const geometry = new three.BoxGeometry( obj.scale.x*1.2, obj.scale.y*1.2, obj.scale.z*1.2 );
-    const edges = new three.EdgesGeometry( geometry );
-    const line = new three.LineSegments( edges, new three.LineDashedMaterial( { color: 0xffffff, dashSize: 0.2, gapSize: 0.1 } ) );
-    line.position.add( obj.position );
+  selectObject(obj: three.Object3D) {
+    const geometry = new three.BoxGeometry(obj.scale.x * 1.2, obj.scale.y * 1.2, obj.scale.z * 1.2);
+    const edges = new three.EdgesGeometry(geometry);
+    const line = new three.LineSegments(edges, new three.LineDashedMaterial({ color: 0xffffff, dashSize: 0.2, gapSize: 0.1 }));
+    line.position.add(obj.position);
     line.userData.selected = obj;
     line.userData.eid = obj.userData.eid;
-    this.scene._scene.add( line );
+    this.scene._scene.add(line);
     this.selected.push(line);
 
     // Emit select event so editor can select the entity, too
     this.dispatchEvent({ type: "select", object: obj });
   }
 
-  deselectObject( selected:three.Object3D ) {
-    const i = this.selected.findIndex( obj => obj.userData.selected === selected );
-    this.scene._scene.remove( this.selected[i] );
-    this.selected.splice( i, 1 );
+  deselectObject(selected: three.Object3D) {
+    const i = this.selected.findIndex(obj => obj.userData.selected === selected);
+    this.scene._scene.remove(this.selected[i]);
+    this.selected.splice(i, 1);
   }
 
-  getSelectedEntityIds():number[] {
-    return this.selected.map( obj => obj.userData.eid );
+  getSelectedEntityIds(): number[] {
+    return this.selected.map(obj => obj.userData.eid);
   }
 
-  onPointerMove( event:MouseEvent ) {
-    if ( !this.camera ) {
+  onPointerMove(event: MouseEvent) {
+    if (!this.camera) {
       return;
     }
-    if ( this.mouseIsDown ) {
+    if (this.mouseIsDown) {
       const canvas = this.scene.game.canvas;
-      pointer.x = ( event.offsetX / canvas.clientWidth ) * 2 - 1;
-      pointer.y = - ( event.offsetY / canvas.clientHeight ) * 2 + 1;
+      pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
+      pointer.y = - (event.offsetY / canvas.clientHeight) * 2 + 1;
       pointer.z = 0;
-      pointer.unproject( this.camera );
+      pointer.unproject(this.camera);
 
       // Allow a bare bit of movement
       this.mouseMoved ||= 1 < Math.abs(event.movementX) + Math.abs(event.movementY);
-      if ( this.moveSelected && this.moveObject ) {
-        this.nudgeSelected({ x: pointer.x-this.pointerStart.x, y: pointer.y-this.pointerStart.y });
+      if (this.moveSelected && this.moveObject) {
+        this.nudgeSelected({ x: pointer.x - this.pointerStart.x, y: pointer.y - this.pointerStart.y });
       }
       else {
-        this.camera.position.x -= (pointer.x-this.pointerStart.x);
-        this.camera.position.y -= (pointer.y-this.pointerStart.y);
+        this.camera.position.x -= (pointer.x - this.pointerStart.x);
+        this.camera.position.y -= (pointer.y - this.pointerStart.y);
         this.camera.updateProjectionMatrix();
       }
 
@@ -306,9 +306,9 @@ export default class Render extends RenderSystem {
     }
   }
 
-  updateCamera( eid:number ) {
+  updateCamera(eid: number) {
     const camera = this.sceneCameras[eid];
-    if ( !camera ) {
+    if (!camera) {
       return;
     }
 
@@ -328,7 +328,7 @@ export default class Render extends RenderSystem {
     const far = this.cameraComponent.store.far[eid];
     const near = this.cameraComponent.store.near[eid];
     const depth = far - near;
-    camera.scale.set( width, height, depth );
+    camera.scale.set(width, height, depth);
   }
 
   /**
@@ -336,11 +336,11 @@ export default class Render extends RenderSystem {
    * only to the editor camera, creating it if needed.
    */
   render() {
-    if ( !this.camera ) {
+    if (!this.camera) {
       this.camera = this.createEditorCamera();
     }
-    this.scene.game.renderer.render( this.scene._scene, this.camera );
-    this.scene.game.ui.renderer.render( this.scene._uiScene, this.camera );
+    this.scene.game.renderer.render(this.scene._scene, this.camera);
+    this.scene.game.ui.renderer.render(this.scene._uiScene, this.camera);
   }
 
   /**
@@ -359,24 +359,24 @@ export default class Render extends RenderSystem {
     // XXX: After above, show scrollbars for the scene to demonstrate there is more
     // to see
     const bounds = new three.Box3();
-    this.scene._scene.traverseVisible( (obj) => {
+    this.scene._scene.traverseVisible((obj) => {
       bounds.expandByObject(obj);
     });
     const boxSize = bounds.getSize(new three.Vector3());
-    const frustumSize = this.frustumSize = Math.max( boxSize.x, boxSize.y, 10 );
+    const frustumSize = this.frustumSize = Math.max(boxSize.x, boxSize.y, 10);
 
     const far = 4000;
     const near = 0;
     const camera = new three.OrthographicCamera(
-      frustumSize * (ratio/-2),
-      frustumSize * (ratio/2),
-      frustumSize /2,
-      frustumSize /-2,
+      frustumSize * (ratio / -2),
+      frustumSize * (ratio / 2),
+      frustumSize / 2,
+      frustumSize / -2,
       near, far,
     );
     // Position the camera so that Sprites can have positive and
     // negative Z values
-    camera.position.z = far/2;
+    camera.position.z = far / 2;
 
     camera.zoom = this.zoom;
     camera.updateProjectionMatrix();
@@ -384,7 +384,7 @@ export default class Render extends RenderSystem {
     return camera;
   }
 
-  createCamera( eid:number ) {
+  createCamera(eid: number) {
     const { gameWidth, gameHeight } = this.scene.game.data;
     const ratio = gameWidth / gameHeight;
 
@@ -396,45 +396,63 @@ export default class Render extends RenderSystem {
     const depth = far - near;
 
     const geometry = new three.BoxGeometry(1, 1, 1);
-    const wireframe = new three.WireframeGeometry( geometry );
-    const mat = new three.LineBasicMaterial( { color: 0x00ccff, linewidth: 2 } );
-    const camera = new three.LineSegments( wireframe, mat );
+    const wireframe = new three.WireframeGeometry(geometry);
+    const mat = new three.LineBasicMaterial({ color: 0x00ccff, linewidth: 2 });
+    const camera = new three.LineSegments(wireframe, mat);
     camera.userData.eid = eid;
     camera.material.depthTest = false;
     camera.material.transparent = true;
 
-    camera.scale.set( width, height, depth );
+    camera.scale.set(width, height, depth);
 
     camera.position.x = this.transformComponent.store.x[eid];
     camera.position.y = this.transformComponent.store.y[eid];
     camera.position.z = this.transformComponent.store.z[eid];
 
     this.sceneCameras[eid] = camera;
-    this.scene._scene.add( camera );
+    this.scene._scene.add(camera);
   }
 
-  remove( eid:number ) {
+  remove(eid: number) {
     const camera = this.sceneCameras[eid];
-    if ( camera ) {
-      this.scene._scene.remove( camera );
+    if (camera) {
+      this.scene._scene.remove(camera);
       delete this.sceneCameras[eid];
     }
     super.remove(eid);
   }
 
-  onResize(e:ResizeEvent) {
+  onResize(e: ResizeEvent) {
     // Fix camera settings to maintain exact size/aspect
     const { width, height } = e;
     const ratio = width / height;
     const camera = this.camera;
-    if ( !camera ) {
+    if (!camera) {
       return;
     }
-    camera.left = this.frustumSize * (ratio/-2);
-    camera.right = this.frustumSize * (ratio/2);
+    camera.left = this.frustumSize * (ratio / -2);
+    camera.right = this.frustumSize * (ratio / 2);
     camera.top = this.frustumSize / 2;
     camera.bottom = this.frustumSize / -2
     camera.updateProjectionMatrix();
     this.render();
+  }
+
+  grid: three.GridHelper | null = null;
+  showGrid(show: boolean | null = null) {
+    if (show === null) {
+      show = !this.grid;
+    }
+    if (show) {
+      const gridHelper = new three.GridHelper(100, 100);
+      gridHelper.lookAt(0, 1, 0);
+      this.scene._scene.add(gridHelper);
+      this.grid = gridHelper;
+    }
+    else if (this.grid) {
+      this.grid.removeFromParent();
+      this.grid.dispose();
+      this.grid = null;
+    }
   }
 }

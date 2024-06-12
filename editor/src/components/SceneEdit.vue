@@ -46,6 +46,8 @@ export default defineComponent({
       editScene: null,
       playGame: null,
       playScene: null,
+      showGrid: true,
+      snapToGrid: false,
     } as {
       sceneData: SceneData | null,
       loadPromise: Promise<any>,
@@ -57,6 +59,8 @@ export default defineComponent({
       editScene: any,
       playGame: any,
       playScene: any,
+      showGrid: boolean,
+      snapToGrid: boolean,
     };
   },
 
@@ -85,7 +89,7 @@ export default defineComponent({
       if (this.sceneData.entities?.length) {
         const newEntities = [] as Array<EntityData>;
         // @ts-ignore
-        for (const entity of this.sceneData.entities.sort((a,b) => a.path > b.path ? 1 : a.path < b.path ? -1 : 0)) {
+        for (const entity of this.sceneData.entities.sort((a, b) => a.path > b.path ? 1 : a.path < b.path ? -1 : 0)) {
           // @ts-ignore
           if (!entity.path.match('/')) {
             // @ts-ignore
@@ -101,7 +105,7 @@ export default defineComponent({
           const pathParts = entity.path.split('/');
           // @ts-ignore
           delete entity.path;
-          entity.name = pathParts[ pathParts.length - 1 ];
+          entity.name = pathParts[pathParts.length - 1];
           for (let i = 0; i < pathParts.length - 1; i++) {
             let ancestorEntity = children.find(node => node.name === pathParts[i]);
             if (ancestorEntity) {
@@ -235,6 +239,7 @@ export default defineComponent({
           console.log(`Error calling update(): `, err);
         }
         scene.render();
+        editor.showGrid(this.showGrid);
       });
     },
 
@@ -482,7 +487,18 @@ export default defineComponent({
       scene.render();
       this.update();
     },
+
+    toggleGrid() {
+      const editor = this.editScene.getSystem(this.editGame.systems.EditorRender);
+      this.showGrid = this.showGrid ? false : true;
+      editor.showGrid(this.showGrid);
+    },
+
+    toggleSnapToGrid() {
+      this.snapToGrid = this.snapToGrid ? false : true;
+    },
   },
+
 });
 </script>
 
@@ -490,11 +506,11 @@ export default defineComponent({
   <div class="scene-edit">
     <div class="tab-toolbar">
       <div class="btn-toolbar" role="toolbar" aria-label="Scene editor toolbar">
-        <button type="button" class="btn btn-outline-dark btn-sm me-1" :disabled="!edited" @click="save"
+        <button type="button" class="btn btn-outline-dark btn-sm me-2" :disabled="!edited" @click="save"
           data-test="save">
           <i class="fa fa-save"></i>
         </button>
-        <div class="btn-group" role="group" aria-label="Play/pause">
+        <div class="btn-group me-2" role="group" aria-label="Play/pause">
           <button type="button" class="btn btn-sm" data-test="stop"
             :class="!playing ? 'btn-danger' : 'btn-outline-danger'" :disabled="!playing" @click="stop">
             <i class="fa fa-stop"></i>
@@ -508,6 +524,16 @@ export default defineComponent({
             :class="playing && paused ? 'btn-warning' : 'btn-outline-warning'"
             :disabled="!playing || (playing && paused)" @click="pause">
             <i class="fa fa-pause"></i>
+          </button>
+        </div>
+        <div class="btn-toolbar me-2" aria-label="Grid controls">
+          <button type="button" class="btn btn-sm" data-test="toggle-grid"
+            :class="showGrid ? 'btn-dark' : 'btn-outline-dark'" @click="toggleGrid()">
+            <i class="fa fa-border-all"></i>
+          </button>
+          <button type="button" class="btn btn-sm" data-test="toggle-grid"
+            :class="snapToGrid ? 'btn-dark' : 'btn-outline-dark'" @click="toggleSnapToGrid()">
+            <i class="fa fa-lock"></i>
           </button>
         </div>
       </div>
