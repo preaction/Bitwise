@@ -66,6 +66,10 @@ export default class Render extends RenderSystem {
 
   listeners: { [key: string]: (e: any) => void } = {};
 
+  grid: three.GridHelper | null = null;
+  snapToGrid: boolean = false;
+  snapRatio: number = 0.25;
+
   constructor(name: string, scene: Scene) {
     super(name, scene);
 
@@ -148,9 +152,7 @@ export default class Render extends RenderSystem {
 
     if (intersects.length > 0) {
       const selected = intersects[0].object;
-      const ray = intersects[0].point;
       if (this.selected.find(obj => obj.userData.selected === selected)) {
-        const camera = this.camera;
         this.moveSelected = true;
         this.moveObject = selected;
       }
@@ -293,15 +295,52 @@ export default class Render extends RenderSystem {
       // Allow a bare bit of movement
       this.mouseMoved ||= 1 < Math.abs(event.movementX) + Math.abs(event.movementY);
       if (this.moveSelected && this.moveObject) {
-        this.nudgeSelected({ x: pointer.x - this.pointerStart.x, y: pointer.y - this.pointerStart.y });
+        const pointerMove = new three.Vector3().subVectors(pointer, this.pointerStart);
+
+        const snapDistance = this.snapRatio / this.camera.zoom;
+        if (this.snapToGrid) {
+          // If the origin of the object under the mouse cursor will be
+          // close enough to a vertex, nudge everything to the vertex
+          const eid = this.moveObject.userData.eid;
+          const transform = this.transformComponent.store;
+          const x = transform.x[eid] + pointerMove.x;
+          const y = transform.y[eid] + pointerMove.y;
+          let nudge = false, nudgeMove = new three.Vector3();
+          if (Math.abs(Math.round(x) - x) < snapDistance) {
+            nudge = true;
+            //nudgeMove.x = Math.round(transform.x[eid]) - transform.x[eid];
+            nudgeMove.x = Math.round(x) - transform.x[eid];
+          }
+          else {
+            nudgeMove.x = pointerMove.x;
+          }
+          if (Math.abs(Math.round(y) - y) < snapDistance) {
+            nudge = true;
+            //nudgeMove.y = Math.round(transform.y[eid]) - transform.y[eid];
+            nudgeMove.y = Math.round(y) - transform.y[eid];
+          }
+          else {
+            nudgeMove.y = pointerMove.y;
+          }
+          if (nudge) {
+            this.nudgeSelected(nudgeMove)
+            this.pointerStart.add(nudgeMove)
+          }
+          else {
+            this.nudgeSelected(pointerMove)
+            this.pointerStart = pointer.clone();
+          }
+        }
+        else {
+          this.nudgeSelected(pointerMove)
+          this.pointerStart = pointer.clone();
+        }
       }
       else {
         this.camera.position.x -= (pointer.x - this.pointerStart.x);
         this.camera.position.y -= (pointer.y - this.pointerStart.y);
         this.camera.updateProjectionMatrix();
       }
-
-      this.pointerStart = pointer.clone();
       this.render();
     }
   }
@@ -438,7 +477,6 @@ export default class Render extends RenderSystem {
     this.render();
   }
 
-  grid: three.GridHelper | null = null;
   showGrid(show: boolean | null = null) {
     if (show === null) {
       show = !this.grid;

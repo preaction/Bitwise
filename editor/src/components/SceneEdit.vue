@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, toRaw, markRaw } from "vue";
-import { type EntityData, type Game, type Scene, type SceneData } from '@fourstar/bitwise';
+import type { System, EntityData, Game, SceneData } from '@fourstar/bitwise';
 import EntityPanel from './EntityPanel.vue';
 import Tab from "../model/Tab";
 import TabView from './TabView.vue';
@@ -31,7 +31,10 @@ export default defineComponent({
     SystemsPanel,
   },
   props: {
-    modelValue: Tab,
+    modelValue: {
+      type: Tab,
+      required: true,
+    },
   },
   emits: ['update'],
   data() {
@@ -250,7 +253,7 @@ export default defineComponent({
           { name: 'Input', data: {} },
           { name: 'EditorRender', data: {} },
         ];
-        if (sceneData.systems.find(sys => sys.name === 'Physics')) {
+        if (sceneData.systems.find((sys: System) => sys.name === 'Physics')) {
           systems.push({ name: 'EditorPhysics', data: {} });
         }
         this.editScene.thaw({
@@ -496,6 +499,8 @@ export default defineComponent({
 
     toggleSnapToGrid() {
       this.snapToGrid = this.snapToGrid ? false : true;
+      const editor = this.editScene.getSystem(this.editGame.systems.EditorRender);
+      editor.snapToGrid = this.snapToGrid;
     },
   },
 

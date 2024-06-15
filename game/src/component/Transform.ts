@@ -7,7 +7,7 @@ import Component from '../Component.js';
  * (position), rotation, and scale.
  */
 export default class Transform extends Component {
-  declare store:{
+  declare store: {
     x: number[],
     y: number[],
     z: number[],
@@ -35,7 +35,7 @@ export default class Transform extends Component {
     }
   }
 
-  addEntity( eid:number ) {
+  addEntity(eid: number) {
     super.addEntity(eid);
     this.store.x[eid] = 0;
     this.store.y[eid] = 0;
