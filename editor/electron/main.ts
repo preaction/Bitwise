@@ -10,6 +10,7 @@ import { getProjectTree } from './bitwise-build/project.js';
 import type { BuildContext, BuildResult } from './bitwise-build/build.js';
 import { release } from './bitwise-build/release.js';
 import Debug from 'debug';
+import { bitwiseNewFile } from './main-lib.js';
 const debug = Debug('bitwise:electron');
 
 // Initialize electron-store
@@ -29,7 +30,7 @@ if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
 if (process.platform === 'win32') app.setAppUserModelId(app.getName())
 
 // Allow "test" NODE_ENV to run as many times as it wants
-if ( process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development' ) {
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
   if (!app.requestSingleInstanceLock()) {
     app.quit()
     process.exit(0)
@@ -69,7 +70,7 @@ export const ROOT_PATH = {
   // /dist or /public
   public: path.join(__dirname, app.isPackaged ? '../' : '../public'),
   // /node_modules
-  node_modules: path.resolve( __dirname.replace( 'app.asar', '' ), '../../node_modules' ),
+  node_modules: path.resolve(__dirname.replace('app.asar', ''), '../../node_modules'),
 }
 
 let win: BrowserWindow | null = null
@@ -88,11 +89,11 @@ type WindowConfig = {
 }
 async function createWindow() {
   // Read window config
-  const winConfig:WindowConfig = appStore.get( 'window', {
+  const winConfig: WindowConfig = appStore.get('window', {
     width: 1024,
     height: 768,
     maximize: false,
-  } ) as WindowConfig;
+  }) as WindowConfig;
 
   win = new BrowserWindow({
     title: 'Main window',
@@ -102,8 +103,8 @@ async function createWindow() {
       preload,
     },
   })
-  if ( winConfig.maximize ) {
-    if ( win.isFullScreenable() ) {
+  if (winConfig.maximize) {
+    if (win.isFullScreenable()) {
       win.setFullScreen(true);
     }
     else {
@@ -111,13 +112,13 @@ async function createWindow() {
     }
   }
   win.on('close', () => {
-    Object.assign( winConfig, { maximize: win?.isMaximized() }, win?.getNormalBounds() );
-    appStore.set( 'window', winConfig );
+    Object.assign(winConfig, { maximize: win?.isMaximized() }, win?.getNormalBounds());
+    appStore.set('window', winConfig);
   });
 
   if (app.isPackaged || !url) {
     win.loadFile(indexHtml)
-  } else if ( url ) {
+  } else if (url) {
     win.loadURL(url)
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
@@ -154,68 +155,68 @@ ipcMain.handle('open-win', (event, arg) => {
 })
 
 ipcMain.handle('bitwise-open-project', event => {
-  if ( !win ) {
+  if (!win) {
     return;
   }
   return dialog.showOpenDialog(win, {
     filters: [],
-    properties: [ 'openDirectory', 'createDirectory' ],
+    properties: ['openDirectory', 'createDirectory'],
   });
 });
 
 ipcMain.handle('bitwise-new-project', event => {
-  if ( !win ) {
+  if (!win) {
     return;
   }
   return dialog.showSaveDialog(win, {
     defaultPath: 'New Project',
     filters: [],
-    properties: [ 'createDirectory' ],
+    properties: ['createDirectory'],
   })
-  .then(
-    (res) => {
-      const projectRoot = res.filePath;
-      if ( projectRoot ) {
-        // XXX: What to do if directory exists?
-        return fs.mkdir(projectRoot).then(() => {
-          return init(projectRoot);
-        })
-        .then( () => res );
-      }
-      return res
-    },
-  );
+    .then(
+      (res) => {
+        const projectRoot = res.filePath;
+        if (projectRoot) {
+          // XXX: What to do if directory exists?
+          return fs.mkdir(projectRoot).then(() => {
+            return init(projectRoot);
+          })
+            .then(() => res);
+        }
+        return res
+      },
+    );
 });
 
-let aborter:AbortController;
+let aborter: AbortController;
 ipcMain.handle('bitwise-read-project', (event, path) => {
-  if ( !win ) {
+  if (!win) {
     return;
   }
   const mywin = win;
-  if ( aborter ) {
+  if (aborter) {
     aborter.abort();
   }
   aborter = new AbortController();
 
-  const watcher = fs.watch( path, { signal: aborter.signal, recursive: true, persistent: false } );
+  const watcher = fs.watch(path, { signal: aborter.signal, recursive: true, persistent: false });
   (async () => {
     try {
-      const changes:{eventType: string, filename:string}[] = [];
+      const changes: { eventType: string, filename: string }[] = [];
       let timeoutId;
       for await (const event of watcher) {
-        changes.push( event );
-        if ( timeoutId ) {
-          clearTimeout( timeoutId );
+        changes.push(event);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
         }
-        timeoutId = setTimeout( () => {
-          mywin.webContents.send( 'watch', changes );
+        timeoutId = setTimeout(() => {
+          mywin.webContents.send('watch', changes);
           changes.length = 0;
           timeoutId = null;
         }, 2000);
       }
     }
-    catch ( err:any ) {
+    catch (err: any) {
       if (err.name === 'AbortError') {
         return;
       }
@@ -236,67 +237,55 @@ app.whenReady().then(() => {
   })
 })
 
-ipcMain.handle('bitwise-new-file', ( event, root, name, ext ) => {
-  if ( !win ) {
+ipcMain.handle('bitwise-new-file', (event, root, name, ext) => {
+  if (!win) {
     return;
   }
-  return dialog.showSaveDialog(win, {
-    defaultPath: path.join( root, name ),
-    filters: [ { name: ext, extensions: [ext] } ],
-    properties: [ 'createDirectory' ],
-  })
-  .then(
-    (res) => {
-      if ( res.filePath && !res.filePath.match( "\\." + ext + "$" ) ) {
-        res.filePath += '.' + ext;
-      }
-      return res
-    },
-  );
+  return bitwiseNewFile(win, root, name, ext);
 });
 
 ipcMain.handle('bitwise-save-file', (event, root, item, data) => {
   // XXX: Write to new file then rename to avoid losing data
-  return fs.writeFile( path.join(root, item), data );
+  return fs.writeFile(path.join(root, item), data);
 });
 
 ipcMain.handle('bitwise-read-file', (event, root, item) => {
-  return fs.readFile( path.join(root, item), { encoding: 'utf8' } );
+  return fs.readFile(path.join(root, item), { encoding: 'utf8' });
 });
 
 ipcMain.handle('bitwise-delete-tree', (event, root, tree) => {
-  return fs.rm( path.join( root, tree ), { recursive: true } );
+  return fs.rm(path.join(root, tree), { recursive: true });
 });
 
 ipcMain.handle('bitwise-rename-path', (event, root, from, to) => {
-  return fs.rename( path.join( root, from ), path.join( root, to ) );
+  return fs.rename(path.join(root, from), path.join(root, to));
 });
 
 ipcMain.handle('bitwise-import-files', (event, root) => {
-  if ( !win ) {
+  if (!win) {
     return;
   }
   return dialog.showOpenDialog(win, {
     filters: [],
-    properties: [ 'openDirectory' ],
+    properties: ['openDirectory'],
   })
-  .then( async (res) => {
-    const promises = [] as Array<Promise<string>>;
-    for ( const src of res.filePaths ) {
-      // If path is a directory, copy to a new directory with the same
-      // name in the root
-      const stat = await fs.stat( src );
-      let dest = root;
-      if ( stat.isDirectory() ) {
-        dest = path.join( dest, path.basename( src ) );
+    .then(async (res) => {
+      const promises = [] as Array<Promise<string>>;
+      for (const src of res.filePaths) {
+        // If path is a directory, copy to a new directory with the same
+        // name in the root
+        const stat = await fs.stat(src);
+        let dest = root;
+        if (stat.isDirectory()) {
+          dest = path.join(dest, path.basename(src));
+        }
+        promises.push(fs.cp(src, dest, { recursive: true }).then(() => dest));
       }
-      promises.push( fs.cp( src, dest, { recursive: true } ).then( () => dest ) );
-    }
-    return Promise.all(promises);
-  });
+      return Promise.all(promises);
+    });
 });
 
-async function linkModules( root:string ) {
+async function linkModules(root: string) {
   // Make sure the project has all necessary dependencies linked in,
   // because Ammo breaks completely if it is loaded more than once,
   // and Three complains.
@@ -304,7 +293,7 @@ async function linkModules( root:string ) {
   // the framework rely on the exact same file, so esbuild will not
   // bundle it twice.
   const modulesDir = ROOT_PATH.node_modules;
-  const dependencies:string[] = [
+  const dependencies: string[] = [
     '@types/three',
     'three',
     'bitecs',
@@ -313,34 +302,34 @@ async function linkModules( root:string ) {
     'tslib',
     '@fourstar/bitwise',
   ];
-  debug( "Linking modules from %s to %s", modulesDir, root );
-  const p = new Promise( (resolve, reject) => {
+  debug("Linking modules from %s to %s", modulesDir, root);
+  const p = new Promise((resolve, reject) => {
     const cp = fork(
       require.resolve("npm"),
-      [ "link", "--force", ...dependencies.map( dep => path.join( modulesDir, dep ) ) ],
+      ["link", "--force", ...dependencies.map(dep => path.join(modulesDir, dep))],
       {
         cwd: root,
       },
     );
-    cp.on( 'exit', resolve );
-    cp.on( 'error', reject );
-  } );
+    cp.on('exit', resolve);
+    cp.on('error', reject);
+  });
   await p;
 }
 
-let context:BuildContext|undefined;
+let context: BuildContext | undefined;
 let contextDest = '';
 let contextRoot = '';
 ipcMain.handle('bitwise-build-project', async (event, root) => {
-  if ( !win ) {
+  if (!win) {
     return;
   }
   performance.clearMarks('buildStart');
   performance.mark('buildStart');
   const webwin = win;
-  if ( !context || contextRoot != root ) {
-    await fs.mkdtemp( path.join(os.tmpdir(), 'bitwise-') ).then( async destDir => {
-      const dest = path.join( destDir, 'game.js' );
+  if (!context || contextRoot != root) {
+    await fs.mkdtemp(path.join(os.tmpdir(), 'bitwise-')).then(async destDir => {
+      const dest = path.join(destDir, 'game.js');
       await linkModules(root);
       context = await bitwise.context(root, dest);
       contextDest = dest;
@@ -348,45 +337,45 @@ ipcMain.handle('bitwise-build-project', async (event, root) => {
     });
   }
 
-  const cp = await bitwise.check( root );
-  cp.stderr?.on( 'data', (buf) => {
+  const cp = await bitwise.check(root);
+  cp.stderr?.on('data', (buf) => {
     console.error(buf.toString());
     webwin.webContents.send('error', buf.toString());
   });
-  cp.stdout?.on( 'data', (buf) => {
+  cp.stdout?.on('data', (buf) => {
     console.log(buf.toString());
     webwin.webContents.send('log', buf.toString());
   });
   cp.on('error', (err) => {
     console.error(err);
-    webwin.webContents.send( 'error', err );
-  } );
+    webwin.webContents.send('error', err);
+  });
 
-  if ( !context ) {
+  if (!context) {
     console.error('Could not create build context');
-    webwin.webContents.send( 'error', 'Could not create build context' );
+    webwin.webContents.send('error', 'Could not create build context');
     return;
   }
 
-  return context.rebuild().then( (res:bitwise.BuildResult) => {
+  return context.rebuild().then((res: bitwise.BuildResult) => {
     performance.measure('buildTime', 'buildStart');
-    if ( !res ) {
+    if (!res) {
       return null;
     }
-    if ( res.errors?.length > 0 ) {
-      res.errors.map( err => {
+    if (res.errors?.length > 0) {
+      res.errors.map(err => {
         console.error(err);
-        webwin.webContents.send( 'error', err );
+        webwin.webContents.send('error', err);
       });
     }
-    if ( res.warnings?.length > 0 ) {
-      res.warnings.map( warn => {
+    if (res.warnings?.length > 0) {
+      res.warnings.map(warn => {
         console.log(warn);
-        webwin.webContents.send( 'info', `Warning: ${warn}` );
+        webwin.webContents.send('info', `Warning: ${warn}`);
       });
     }
     const perfEntries = performance.getEntriesByName('buildTime');
-    webwin.webContents.send( 'info', JSON.stringify(perfEntries[ perfEntries.length - 1 ]) );
+    webwin.webContents.send('info', JSON.stringify(perfEntries[perfEntries.length - 1]));
     performance.clearMeasures('buildTime');
     return res.errors?.length > 0 ? null : `bfile://${contextDest}`;
   });
@@ -396,27 +385,27 @@ ipcMain.handle('bitwise-open-editor', (event, root, file) => {
   return shell.openPath(path.join(root, file));
 });
 
-const resourcesPath = path.resolve( __dirname.replace( 'app.asar', '' ), '../../..' );
+const resourcesPath = path.resolve(__dirname.replace('app.asar', ''), '../../..');
 ipcMain.handle('bitwise-resources-path', (event) => {
   return resourcesPath;
 });
 
-ipcMain.handle('bitwise-list-examples', async ():Promise<{name:string, path:string}[]> => {
+ipcMain.handle('bitwise-list-examples', async (): Promise<{ name: string, path: string }[]> => {
   const resourcesPath = path.resolve(
-    __dirname.replace( 'app.asar', '' ),
+    __dirname.replace('app.asar', ''),
     app.isPackaged ? '../..' : '../../..',
   );
-  return fs.readdir( path.join( resourcesPath, 'examples' ) )
-    .then( (names) => {
+  return fs.readdir(path.join(resourcesPath, 'examples'))
+    .then((names) => {
       const promises = [];
-      for ( const name of names ) {
+      for (const name of names) {
         const fullPath = path.join(resourcesPath, 'examples', name);
-        promises.push( fs.stat(fullPath).then( stat => ({ name, path: fullPath, stat }) ) );
+        promises.push(fs.stat(fullPath).then(stat => ({ name, path: fullPath, stat })));
       }
-      return Promise.all( promises );
+      return Promise.all(promises);
     })
-    .then( (infos:{name:string, path:string, stat:Stats}[]) => {
-      return infos.filter( i => i.stat.isDirectory() ).map( i => ({ name: i.name, path: i.path }) );
+    .then((infos: { name: string, path: string, stat: Stats }[]) => {
+      return infos.filter(i => i.stat.isDirectory()).map(i => ({ name: i.name, path: i.path }));
     });
 });
 
@@ -425,27 +414,27 @@ ipcMain.handle('bitwise-get-platform', (event) => {
 });
 
 ipcMain.handle('bitwise-release-project', async (event, root, type) => {
-  if ( !win ) {
+  if (!win) {
     return;
   }
   const webwin = win;
 
-  const name = path.basename( root ) + '.' + type;
+  const name = path.basename(root) + '.' + type;
   return dialog.showSaveDialog(webwin, {
-    defaultPath: path.join( root, name ),
-    filters: [ { name: type, extensions: [type] } ],
-    properties: [ 'createDirectory' ],
-  }).then( async (res) => {
+    defaultPath: path.join(root, name),
+    filters: [{ name: type, extensions: [type] }],
+    properties: ['createDirectory'],
+  }).then(async (res) => {
     const dest = res.filePath;
-    if ( !dest ) {
+    if (!dest) {
       return;
     }
-    const gameFile = path.join( root, '.build', 'game.js' );
+    const gameFile = path.join(root, '.build', 'game.js');
     await linkModules(root);
-    const buildResult = await bitwise.build( root, gameFile, { sourcemap: false } );
-    if ( !buildResult ) {
+    const buildResult = await bitwise.build(root, gameFile, { sourcemap: false });
+    if (!buildResult) {
       return;
     }
-    return release( root, type, gameFile, dest );
+    return release(root, type, gameFile, dest);
   });
 });

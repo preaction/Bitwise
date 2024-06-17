@@ -2,7 +2,7 @@
 import * as bootstrap from "bootstrap";
 import * as Vue from "vue";
 import { loadModule } from 'vue3-sfc-loader';
-import type { Asset, Component, Game, System } from '@fourstar/bitwise';
+import { Asset, type Component, type Game, type System } from '@fourstar/bitwise';
 import Tab from './model/Tab.js';
 import Project from './model/Project.js';
 import NewTab from "./components/NewTab.vue";
@@ -305,16 +305,11 @@ export default Vue.defineComponent({
       this.saveStoredState();
     },
 
-    newTab(name: string, component) {
+    newTab(componentName: string) {
       // New tab creates a new project item and then a tab to go with it
-      const tab = {
-        name,
-        component,
-        icon: this.icons[component],
-        ext: '.json',
-        data: {},
-        edited: true,
-      };
+      const asset = new Asset(this.project.load, "");
+      const tab = new Tab(this.project, asset);
+      tab.component = componentName;
       this.openTabs.push(tab);
       this.showTab(this.openTabs.length - 1);
       this.saveSessionState();
@@ -339,60 +334,34 @@ export default Vue.defineComponent({
         });
     },
 
-    findAsset(findPath: string): Asset | void {
-      const findParts = findPath.split('/');
-      let items = this.assets;
-      for (let i = 0; i < findParts.length; i++) {
-        const itemPath = findParts.slice(0, i + 1).join('/');
-        const item = items.find(item => item.path === itemPath);
-        if (!item) {
-          return;
-        }
-        if (item.path === findPath) {
-          return item;
-        }
-        if (!item.children?.length) {
-          throw `Could not find project item "${findPath}"`;
-        }
-        items = item.children;
-      }
-    },
-
-    openEditor(item: { path: string }) {
+    openEditor(item: Asset) {
       return electron.openEditor(this.project.name, item.path);
     },
 
     async openTab(item: Asset) {
-      if (!item.component && item.path.match(/\.([tj]s)$/)) {
+      if (item.path.match(/\.([tj]s)$/)) {
         this.openEditor(item);
         return;
       }
 
-      const asset = this.findAsset(item.path);
-      if (!asset) {
-        throw `Cannot find asset ${item.path}`;
+      const tab = new Tab(this.project, item);
+      // Determine what kind of component to use
+      const ext = tab.ext;
+      if (ext === '.json') {
+        const data = JSON.parse(await tab.readFile());
+        // JSON files are game objects
+        if (typeof data === 'object' && 'component' in data) {
+          tab.component = data.component;
+          tab.icon = this.icons[data.component];
+        }
       }
-      const tab = new Tab(this.project, asset);
-      if (item.component) {
-        tab.component = item.component;
-        tab.icon = this.icons[item.component];
+      else if (ext.match(/\.(png|gif|jpe?g)$/)) {
+        tab.component = "ImageView";
+        tab.icon = 'fa-image';
       }
-      else {
-        // Determine what kind of component to use
-        const ext = tab.ext;
-        if (ext === '.json') {
-          // JSON files are game objects
-          tab.component = asset.data.component;
-          tab.icon = this.icons[asset.data.component];
-        }
-        else if (ext.match(/\.(png|gif|jpe?g)$/)) {
-          tab.component = "ImageView";
-          tab.icon = 'fa-image';
-        }
-        else if (ext.match(/\.(md|markdown)$/)) {
-          tab.component = "MarkdownView";
-          tab.icon = 'fa-file-lines';
-        }
+      else if (ext.match(/\.(md|markdown)$/)) {
+        tab.component = "MarkdownView";
+        tab.icon = 'fa-file-lines';
       }
 
       this.openTabs.push(tab);
@@ -569,10 +538,10 @@ export default Vue.defineComponent({
         <div class="d-flex">
           <MenuButton class="me-1" title="New">
             <template #title>
-              <i class="fa fa-file-circle-plus"></i>
+              <i class="fa fa-file-circle-plus" data-test="new-asset"></i>
             </template>
             <ul>
-              <li @click="newTab('New Scene', 'SceneEdit')">Scene</li>
+              <li data-test="new-scene" @click="newTab('SceneEdit')">Scene</li>
               <li class="hr">
                 <hr>
               </li>

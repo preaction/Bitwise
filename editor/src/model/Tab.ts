@@ -38,10 +38,12 @@ export default class Tab {
     // No src? Open save as dialog
     if (!this.src) {
       const res = await electron.newFile(this.projectName, this.name, this.ext);
+      console.log('res.filePath', res.filePath);
       this.src = res.filePath;
       const fileName = this.src.split('/').pop() || '';
       this.name = fileName.substring(0, fileName.lastIndexOf('.'));
       this.ext = fileName.substring(fileName.lastIndexOf('.'));
+      console.log('save as dialog filename', fileName);
     }
 
     // Name changes? Write new file and delete old

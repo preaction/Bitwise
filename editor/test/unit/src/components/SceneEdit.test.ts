@@ -52,7 +52,7 @@ describe('SceneEdit', () => {
     const newFilePath = "NewScene.json";
     mockNewFile.mockReturnValueOnce(Promise.resolve({ canceled: false, filePath: newFilePath }));
 
-    const asset = new Asset(new Load(), "Scene.json");
+    const asset = new Asset(new Load(), "");
     const modelValue = new Tab(project, asset);
     const wrapper = mount(SceneEdit, {
       shallow: true,
@@ -87,6 +87,12 @@ describe('SceneEdit', () => {
     expect(mockWriteItemData).toHaveBeenCalled();
     expect(mockWriteItemData.mock.calls[0][0]).toEqual(project.name);
     expect(mockWriteItemData.mock.calls[0][1]).toEqual(newFilePath);
+    const jsonData = mockWriteItemData.mock.calls[0][2];
+    expect(jsonData).toBeTruthy();
+    expect(JSON.parse(jsonData)).toMatchObject({
+      name: 'NewScene',
+      component: 'SceneEdit',
+    });
     expect(wrapper.emitted()).toHaveProperty('update');
     expect(wrapper.emitted()['update']).toHaveLength(2);
     expect(wrapper.emitted()['update'][1]).toMatchObject([{ edited: false, src: newFilePath, name: "NewScene", ext: ".json" }]);
@@ -97,6 +103,7 @@ describe('SceneEdit', () => {
     beforeEach(() => {
       sceneData = {
         name: "OldScene",
+        component: "SceneEdit",
         components: ['Transform', 'Sprite', 'OrthographicCamera', 'UI'],
         systems: [
           { name: 'Input', data: {} },

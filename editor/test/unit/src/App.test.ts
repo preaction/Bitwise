@@ -12,6 +12,7 @@ import type Modal from '../../../src/components/Modal.vue';
 import ProjectSelect from '../../../src/components/ProjectSelect.vue';
 import Tab from '../../../src/model/Tab.js';
 import Project from '../../../src/model/Project.js';
+import type { DefineComponent } from 'vue';
 
 jest.mock("../../mock/game.ts");
 const MockGameConstructor = jest.requireActual<typeof import('../../mock/game.js')>('../../mock/game.js').default;
@@ -54,8 +55,8 @@ beforeEach(async () => {
   backend.readItemData = mockReadItemData;
 
   const mockData: { [key: string]: string } = {
-    'LoadScene.json': '{ "component": "SceneEdit" }',
-    'directory/OldScene.json': '{ "component": "SceneEdit" }',
+    'LoadScene.json': '{ "type": "Scene", "component": "SceneEdit" }',
+    'directory/OldScene.json': '{ "type": "Scene", "component": "SceneEdit" }',
     'sheet.xml': `<?xml version="1.0" encoding="UTF-8"?>
       <TextureAtlas imagePath="sprite.png">
         <SubTexture name="tile.png" x="0" y="0" width="10" height="10"/>
@@ -86,6 +87,20 @@ beforeEach(async () => {
   await project.inflateItems(projectItems);
   mockOpenProject.mockReturnValue(Promise.resolve(project));
   project.loadGameClass = mockLoadGameClass;
+});
+
+beforeAll(() => {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {
+      // do nothing
+    }
+    unobserve() {
+      // do nothing
+    }
+    disconnect() {
+      // do nothing
+    }
+  };
 });
 
 afterEach(() => {
@@ -373,6 +388,50 @@ describe('App', () => {
       expect(mockSetState).toHaveBeenCalled();
       expect(mockSetState.mock.lastCall?.[0]).toBe("app");
       expect(mockSetState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
+    });
+  });
+
+  describe('can create new assets', () => {
+    let wrapper: VueWrapper;
+    beforeEach(async () => {
+      wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+        global: {
+          stubs: {
+            SceneEdit: true,
+            Release: true,
+          },
+        },
+      });
+      cleanup.push(wrapper.unmount.bind(wrapper));
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      const modal = wrapper.getComponent(ProjectSelect);
+      modal.vm.$emit('select', project.name);
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+    });
+
+    test('create a new Scene', async () => {
+      await wrapper.get('[data-test=new-asset]').trigger('click');
+      await wrapper.get('[data-test=new-scene]').trigger('click');
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Opens tab w/ correct info
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElements = tabBar.findAll('a');
+      expect(tabElements).toHaveLength(1);
+      expect(tabElements[0].text()).toBe("");
+      expect(tabElements[0].attributes('aria-current')).toBe('true');
+
+      const editorTab = wrapper.getComponent(SceneEdit);
+      expect(editorTab.vm.modelValue).toBeInstanceOf(Tab);
+      expect(editorTab.vm.modelValue).toMatchObject({
+        src: "",
+      });
     });
   });
 

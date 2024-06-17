@@ -52,7 +52,7 @@ export default defineComponent({
       showGrid: true,
       snapToGrid: false,
     } as {
-      sceneData: SceneData | null,
+      sceneData: (SceneData & { component: string }) | null,
       loadPromise: Promise<any>,
       loading: boolean,
       playing: boolean,
@@ -70,7 +70,12 @@ export default defineComponent({
   inject: ['project', 'isBuilding', 'baseUrl', 'backend'],
 
   async created() {
-    this.loadPromise = this.modelValue.readFile();
+    if (this.modelValue.src) {
+      this.loadPromise = this.modelValue.readFile();
+    }
+    else {
+      this.loadPromise = Promise.resolve('{}');
+    }
   },
 
   async mounted() {
@@ -183,6 +188,7 @@ export default defineComponent({
       this.sceneData = {
         $schema: '1',
         name: 'NewScene',
+        component: 'SceneEdit',
         components: [
           'Transform', 'Sprite', 'OrthographicCamera', 'RigidBody',
           'BoxCollider', 'UI',
@@ -349,7 +355,14 @@ export default defineComponent({
     },
 
     async save() {
-      await this.modelValue.writeFile(JSON.stringify(toRaw(this.sceneData), null, 2));
+      console.log('before write tab', this.modelValue);
+      try {
+        await this.modelValue.writeFile(JSON.stringify(toRaw(this.sceneData), null, 2));
+      }
+      catch (error) {
+        console.log('error writing file', error);
+      }
+      console.log('after write tab', this.modelValue);
       this.$emit('update', {
         ...this.modelValue,
         edited: false,
