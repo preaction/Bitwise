@@ -29,6 +29,7 @@ export default defineComponent({
   data() {
     return {
       entities: JSON.parse(JSON.stringify(this.modelValue ?? [])),
+      selectedEntityPath: "",
       selectedEntityData: undefined,
       selectedEntity: undefined,
       icons: {
@@ -38,6 +39,7 @@ export default defineComponent({
       }
     } as {
       entities: Array<EntityData>,
+      selectedEntityPath: string,
       selectedEntityData: EntityData | undefined,
       selectedEntity: Raw<Entity> | undefined,
       icons: { [key: string]: string },
@@ -47,6 +49,9 @@ export default defineComponent({
   watch: {
     modelValue(newModelValue: EntityData[]) {
       this.entities = JSON.parse(JSON.stringify(newModelValue));
+      if (this.selectedEntityPath) {
+        this.selectedEntityData = this.getEntityDataByPath(this.selectedEntityPath);
+      }
     },
   },
 
@@ -69,6 +74,7 @@ export default defineComponent({
 
   methods: {
     select(entityData: EntityData, path: string) {
+      this.selectedEntityPath = path;
       this.selectedEntityData = entityData;
       const entity = this.scene?.getEntityByPath(path);
       if (!entity) {
@@ -314,6 +320,7 @@ export default defineComponent({
       const newName = this.selectedEntityData.name;
       if (newName != this.selectedEntity.name) {
         this.selectedEntity.name = newName;
+        this.selectedEntityPath = this.selectedEntity.path;
         this.update();
       }
     },
@@ -395,7 +402,7 @@ export default defineComponent({
       <h5 data-test="entity-type">{{ selectedEntityData.type || "Unknown Type" }}</h5>
       <div class="d-flex justify-content-between align-items-center">
         <label class="me-1">Name</label>
-        <input name="name" class="flex-fill text-end col-1" v-model="selectedEntityData.name" @keyup="updateEntityName"
+        <input name="name" class="flex-fill text-end col-1" v-model="selectedEntityData.name" @change="updateEntityName"
           pattern="^[^/]+$" />
       </div>
       <div class="d-flex justify-content-between align-items-center">

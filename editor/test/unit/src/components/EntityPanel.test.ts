@@ -1,6 +1,6 @@
 
 import { describe, expect, test, beforeEach, jest } from '@jest/globals';
-import { mount, flushPromises, VueWrapper } from '@vue/test-utils';
+import { mount, flushPromises, config } from '@vue/test-utils';
 import * as Vue from "vue";
 import EntityPanel from '../../../../src/components/EntityPanel.vue';
 import Tree from '../../../../src/components/Tree.vue';
@@ -23,6 +23,7 @@ const provide = {
   openTab: () => (null),
   assets: [],
 };
+config.global.provide = { ...provide };
 
 let modelValue: Array<EntityData>;
 let game: Game, scene: Scene, entity: Entity;
@@ -68,7 +69,6 @@ describe('EntityPanel', () => {
         modelValue,
         scene,
       },
-      global: { provide },
     });
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -84,7 +84,6 @@ describe('EntityPanel', () => {
         modelValue: [],
         scene,
       },
-      global: { provide, },
     });
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -104,7 +103,6 @@ describe('EntityPanel', () => {
         modelValue,
         scene,
       },
-      global: { provide, },
     });
     await flushPromises();
     await wrapper.vm.$nextTick();
@@ -119,25 +117,57 @@ describe('EntityPanel', () => {
     expect(activeInput.checked).toBe(modelValue[0].active);
   });
 
-  test('updateActive', async () => {
-    const isActive = modelValue[0].active;
-    const wrapper = mount(EntityPanel, {
-      attachTo: document.body,
-      props: {
-        modelValue,
-        scene,
-      },
-      global: { provide, },
+  describe('update entity data', () => {
+    const mockUpdate = jest.fn();
+    let wrapper = mount(EntityPanel);
+    beforeEach(async () => {
+      mockUpdate.mockReset();
+      wrapper = mount(EntityPanel, {
+        attachTo: document.body,
+        props: {
+          modelValue,
+          scene,
+          'onUpdate:modelValue': mockUpdate,
+        },
+      });
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+      await wrapper.get(`a[data-path=${modelValue[0].name}]`).trigger('click');
     });
-    await flushPromises();
-    await wrapper.vm.$nextTick();
 
-    await wrapper.get(`a[data-path=${modelValue[0].name}]`).trigger('click');
-    const entityPane = wrapper.get('.entity-pane');
-    const activeInput = entityPane.get('[name=active]')
-    expect((activeInput.element as HTMLInputElement).checked).toBe(isActive);
-    await activeInput.trigger('click');
-    expect((activeInput.element as HTMLInputElement).checked).toBe(!isActive);
+    test('updateActive', async () => {
+      const isActive = modelValue[0].active;
+      const entityPane = wrapper.get('.entity-pane');
+      const activeInput = entityPane.get('[name=active]')
+      expect((activeInput.element as HTMLInputElement).checked).toBe(isActive);
+      await activeInput.trigger('click');
+      expect((activeInput.element as HTMLInputElement).checked).toBe(!isActive);
+    });
+
+    test('updateEntityName', async () => {
+      const name = modelValue[0].name;
+      const entityPane = wrapper.get('.entity-pane');
+      const nameInput = entityPane.get('[name=name]')
+      expect((nameInput.element as HTMLInputElement).value).toBe(name);
+      let newName = 'New Name';
+      await nameInput.setValue(newName);
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
+      expect(newModelValue[0].name).toBe(newName);
+      await wrapper.setProps({ modelValue: newModelValue });
+      expect((nameInput.element as HTMLInputElement).value).toBe(newName);
+      expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+
+      // Should be able to update it again
+      newName = 'Another Name';
+      await nameInput.setValue(newName);
+      expect(mockUpdate).toHaveBeenCalledTimes(2);
+      newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
+      expect(newModelValue[0].name).toBe(newName);
+      await wrapper.setProps({ modelValue: newModelValue });
+      expect((nameInput.element as HTMLInputElement).value).toBe(newName);
+      expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+    });
   });
 
   describe('rearrange entities via drag/drop', () => {
@@ -161,7 +191,6 @@ describe('EntityPanel', () => {
             modelValue,
             scene,
           },
-          global: { provide, },
         });
         await flushPromises();
         await wrapper.vm.$nextTick();
@@ -180,7 +209,6 @@ describe('EntityPanel', () => {
             modelValue,
             scene,
           },
-          global: { provide, },
         });
         await flushPromises();
         await wrapper.vm.$nextTick();
@@ -223,7 +251,6 @@ describe('EntityPanel', () => {
             scene,
             'onUpdate:modelValue': onUpdate,
           },
-          global: { provide, },
         });
         await flushPromises();
         await wrapper.vm.$nextTick();
@@ -251,7 +278,6 @@ describe('EntityPanel', () => {
             scene,
             'onUpdate:modelValue': onUpdate,
           },
-          global: { provide, },
         });
         await flushPromises();
         await wrapper.vm.$nextTick();
@@ -279,7 +305,6 @@ describe('EntityPanel', () => {
             scene,
             'onUpdate:modelValue': onUpdate,
           },
-          global: { provide, },
         });
         await flushPromises();
         await wrapper.vm.$nextTick();
@@ -322,7 +347,6 @@ describe('EntityPanel', () => {
             scene,
             'onUpdate:modelValue': onUpdate,
           },
-          global: { provide, },
         });
         await flushPromises();
         await wrapper.vm.$nextTick();
