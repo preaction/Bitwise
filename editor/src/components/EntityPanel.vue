@@ -145,6 +145,7 @@ export default defineComponent({
       const entity = this.scene.addEntity();
       entity.thaw(entityData);
 
+      this.selectedEntityPath = entity.path;
       this.selectedEntityData = entityData;
       this.selectedEntity = entity;
 
@@ -180,16 +181,20 @@ export default defineComponent({
 
     duplicateEntity(entityData: EntityData) {
       entityData = JSON.parse(JSON.stringify(entityData));
-      const match = entityData.path.match(/\((\d+)\)$/);
+      const match = entityData.name.match(/\((\d+)\)$/);
       if (match) {
-        entityData.path = entityData.path.replace(/\(\d+\)$/, `(${parseInt(match[1]) + 1})`);
+        entityData.name = entityData.name.replace(/\(\d+\)$/, `(${parseInt(match[1]) + 1})`);
       }
       else {
-        entityData.path += ' (2)';
+        entityData.name += ' (2)';
       }
       const entity = this.scene.addEntity();
       entity.thaw(entityData);
-      this.entities.entities.push(entity.freeze());
+      entityData = entity.freeze();
+      this.entities.push(entityData);
+      this.selectedEntityPath = entity.path;
+      this.selectedEntityData = entityData;
+      this.selectedEntity = entity;
       this.update();
     },
 
@@ -359,7 +364,7 @@ export default defineComponent({
 <template>
   <div class="scene-panel">
     <div class="scene-toolbar">
-      <MenuButton placement="left-start">
+      <MenuButton data-test="new-entity" placement="left-start">
         <template #title>
           <i class="fa fa-file-circle-plus"></i>
           New Entity
@@ -387,12 +392,12 @@ export default defineComponent({
         <template #menu="{ node: entityData }">
           <MenuButton>
             <template #button>
-              <i class="fa-solid fa-ellipsis-vertical scene-tree-item-menu-button"></i>
+              <i data-test="entity-menu" class="fa-solid fa-ellipsis-vertical scene-tree-item-menu-button"></i>
             </template>
             <ul>
-              <li @click="createPrefab(entityData)">Create Prefab</li>
-              <li @click="duplicateEntity(entityData)">Duplicate</li>
-              <li @click="deleteEntity(entityData)">Delete</li>
+              <li @click.stop.prevent="createPrefab(entityData)">Create Prefab</li>
+              <li data-test="duplicate" @click.stop.prevent="duplicateEntity(entityData)">Duplicate</li>
+              <li @click.stop.prevent="deleteEntity(entityData)">Delete</li>
             </ul>
           </MenuButton>
         </template>

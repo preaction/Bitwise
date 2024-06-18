@@ -1,5 +1,5 @@
 
-import { describe, expect, test, beforeEach, jest } from '@jest/globals';
+import { describe, expect, test, beforeEach, beforeAll, jest } from '@jest/globals';
 import { mount, flushPromises, config } from '@vue/test-utils';
 import * as Vue from "vue";
 import EntityPanel from '../../../../src/components/EntityPanel.vue';
@@ -10,6 +10,20 @@ import OrthographicCameraEdit from '../../../../src/components/bitwise/Orthograp
 import SpriteEdit from '../../../../src/components/bitwise/Sprite.vue';
 import { Game } from '@fourstar/bitwise';
 import type { Entity, EntityData, Scene } from '@fourstar/bitwise';
+
+beforeAll(() => {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {
+      // do nothing
+    }
+    unobserve() {
+      // do nothing
+    }
+    disconnect() {
+      // do nothing
+    }
+  };
+});
 
 const systemForms = Vue.markRaw({});
 const componentForms = Vue.markRaw({
@@ -167,6 +181,47 @@ describe('EntityPanel', () => {
       await wrapper.setProps({ modelValue: newModelValue });
       expect((nameInput.element as HTMLInputElement).value).toBe(newName);
       expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+    });
+
+    test('create a new, blank entity', async () => {
+      await wrapper.get('[data-test=new-entity] button').trigger('click');
+      await wrapper.get('[data-test=new-entity] li:first-child').trigger('click');
+
+      const newName = 'New Entity';
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
+      expect(newModelValue[newModelValue.length - 1].name).toBe(newName);
+
+      await wrapper.setProps({ modelValue: newModelValue });
+      expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+
+      // New, blank entity is selected
+      const entityPane = wrapper.get('.entity-pane');
+      const nameInput = entityPane.get('[name=name]')
+      expect((nameInput.element as HTMLInputElement).value).toBe(newName);
+      const activeInput = entityPane.get('[name=active]')
+      expect((activeInput.element as HTMLInputElement).checked).toBeTruthy();
+    });
+
+    test('duplicate an entity', async () => {
+      const originalName = 'Camera';
+      await wrapper.get(`a[data-path="${originalName}"] [data-test=entity-menu]`).trigger('click');
+      await wrapper.get(`a[data-path="${originalName}"] [data-test=duplicate]`).trigger('click');
+
+      const newName = 'Camera (2)';
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
+      expect(newModelValue[newModelValue.length - 1].name).toBe(newName);
+
+      await wrapper.setProps({ modelValue: newModelValue });
+      expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+
+      // New, duplicate entity is selected
+      const entityPane = wrapper.get('.entity-pane');
+      const nameInput = entityPane.get('[name=name]')
+      expect((nameInput.element as HTMLInputElement).value).toBe(newName);
+      const activeInput = entityPane.get('[name=active]')
+      expect((activeInput.element as HTMLInputElement).checked).toBeTruthy();
     });
   });
 
@@ -378,4 +433,3 @@ describe('EntityPanel', () => {
   });
 
 });
-
