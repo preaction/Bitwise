@@ -486,16 +486,16 @@ export default class Render extends System {
 
     promise = promise.then((glTexture: three.Texture) => {
       if (texture.x) {
-        glTexture.offset.x = texture.x / glTexture.image.width;
+        glTexture.offset.x = (texture.x + 0.5) / glTexture.image.width;
       }
       if (texture.y || texture.height) {
-        glTexture.offset.y = (glTexture.image.height - (texture.y + (texture.height || 0))) / glTexture.image.height;
+        glTexture.offset.y = (glTexture.image.height - (texture.y - 0.5 + (texture.height || 0))) / glTexture.image.height;
       }
       if (texture.width) {
-        glTexture.repeat.x = texture.width / glTexture.image.width;
+        glTexture.repeat.x = (texture.width - 1) / glTexture.image.width;
       }
       if (texture.height) {
-        glTexture.repeat.y = texture.height / glTexture.image.height;
+        glTexture.repeat.y = (texture.height - 1) / glTexture.image.height;
       }
       glTexture.needsUpdate = true;
       return glTexture;
@@ -613,6 +613,9 @@ export default class Render extends System {
     if (!texture) {
       this.loadTexture(tid, eid).then(() => this.render());
       texture = this.textures[tid];
+      texture.anisotropy = 0;
+      texture.magFilter = three.NearestFilter;
+      texture.minFilter = three.NearestFilter;
     }
     const material = this.materials[eid] = new three.SpriteMaterial({ map: texture });
     const sprite = this.objects[eid] = new three.Sprite(material);

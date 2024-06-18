@@ -56,26 +56,26 @@ const DEFAULT_COMPONENTS = {
  * Any number of Scenes may be active at once.
  */
 export default class Game extends three.EventDispatcher {
-  canvas!:HTMLCanvasElement;
-  load:Load;
-  renderer!:three.WebGLRenderer;
-  ui!:{ renderer: CSS3DRenderer };
-  ecs:typeof bitecs;
+  canvas!: HTMLCanvasElement;
+  load: Load;
+  renderer!: three.WebGLRenderer;
+  ui!: { renderer: CSS3DRenderer };
+  ecs: typeof bitecs;
 
-  width:number = 0;
-  height:number = 0;
-  autoSize:boolean = true;
+  width: number = 0;
+  height: number = 0;
+  autoSize: boolean = true;
 
   /**
    * The path to the JSON file containing initial scene to load. If set,
    * the game will start this scene immediately when start() is called.
    */
-  initialScenePath:string = '';
-  scenes:Scene[] = [];
-  data:Object;
+  initialScenePath: string = '';
+  scenes: Scene[] = [];
+  data: Object;
 
-  components:{ [key:string]: typeof Component } = {};
-  systems:{ [key:string]: typeof System } = {};
+  components: { [key: string]: typeof Component } = {};
+  systems: { [key: string]: typeof System } = {};
 
   /**
    * The config property provides the default configuration values for
@@ -83,21 +83,21 @@ export default class Game extends three.EventDispatcher {
    * the game's constructor.
    */
   // XXX: define game constructor options object type
-  get config():any { return {} }
+  get config(): any { return {} }
 
   /**
    */
-  constructor( opt:any ) {
+  constructor(opt: any) {
     super();
     const conf = this.config;
     // XXX: Config should be merged with options
     this.ecs = bitecs;
     this.canvas = opt.canvas;
-    this.load = new Load( opt.loader || {} );
+    this.load = new Load(opt.loader || {});
     this.width = opt.renderer?.width || conf.renderer?.width;
     this.height = opt.renderer?.height || conf.renderer?.height;
     this.data = opt.data || {};
-    if ( this.width > 0 || this.height > 0 ) {
+    if (this.width > 0 || this.height > 0) {
       this.autoSize = false;
     }
     this.initialScenePath = opt.scene || '';
@@ -117,21 +117,22 @@ export default class Game extends three.EventDispatcher {
    * Start the game. Sets up the renderer and canvas as needed, and
    * launches the initial scene if initialScenePath is set.
    */
-  async start():Promise<any> {
+  async start(): Promise<any> {
     // Create the renderer after the <canvas> exists
     const renderer = new three.WebGLRenderer({
       canvas: this.canvas,
+      antialias: false,
     });
     this.renderer = renderer;
 
-    if ( this.autoSize ) {
+    if (this.autoSize) {
       // Record the initial render height/width in case it changes. To
       // keep responsiveness, we will reset the renderer size and adjust the
       // camera so that everything looks the same.
       const { width, height } = this.renderSize();
       this.width = width;
       this.height = height;
-      window.addEventListener( 'resize', this.onResize.bind(this) );
+      window.addEventListener('resize', this.onResize.bind(this));
     }
 
     this.renderer.setSize(this.width, this.height, false);
@@ -145,12 +146,12 @@ export default class Game extends three.EventDispatcher {
     uiEl.style.left = this.canvas.clientLeft + "px";
     uiEl.style.top = this.canvas.clientTop + "px";
     uiEl.style.pointerEvents = "none";
-    uiRenderer.setSize( this.canvas.clientWidth, this.canvas.clientHeight );
+    uiRenderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
 
     this.dispatchEvent({ type: 'start' });
 
-    if ( this.initialScenePath ) {
-      const scene = await this.loadScene( this.initialScenePath );
+    if (this.initialScenePath) {
+      const scene = await this.loadScene(this.initialScenePath);
       await scene.init();
       scene.start();
     }
@@ -164,13 +165,13 @@ export default class Game extends three.EventDispatcher {
    */
   stop() {
     this.dispatchEvent({ type: 'stop' });
-    for ( const scene of this.scenes ) {
+    for (const scene of this.scenes) {
       scene.stop();
     }
-    if ( this.renderer ) {
+    if (this.renderer) {
       this.renderer.dispose();
     }
-    if ( this.ui.renderer ) {
+    if (this.ui.renderer) {
       this.ui.renderer.domElement.remove();
     }
   }
@@ -187,13 +188,13 @@ export default class Game extends three.EventDispatcher {
    * renderSize gets the size of the canvas in screen pixels (so, using
    * the device's pixel ratio).
    */
-  renderSize():three.Vector2 {
-    if ( !this.renderer ) {
+  renderSize(): three.Vector2 {
+    if (!this.renderer) {
       return new three.Vector2(0, 0);
     }
     const canvas = this.renderer.domElement;
     const pixelRatio = window.devicePixelRatio;
-    const width  = canvas.clientWidth  * pixelRatio | 0;
+    const width = canvas.clientWidth * pixelRatio | 0;
     const height = canvas.clientHeight * pixelRatio | 0;
     const vec = new three.Vector2(width, height);
     return vec;
@@ -205,7 +206,7 @@ export default class Game extends three.EventDispatcher {
    * not stretched or squished.
    */
   resizeRendererToDisplaySize() {
-    if ( !this.renderer ) {
+    if (!this.renderer) {
       return;
     }
     const canvas = this.renderer.domElement;
@@ -213,7 +214,7 @@ export default class Game extends three.EventDispatcher {
     const needResize = canvas.width !== render.width || canvas.height !== render.height;
     if (needResize) {
       this.renderer.setSize(render.width, render.height, false);
-      this.ui.renderer.setSize( this.canvas.clientWidth, this.canvas.clientHeight );
+      this.ui.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
       this.dispatchEvent({ type: 'resize', width: render.width, height: render.height });
     }
     return needResize;
@@ -223,22 +224,22 @@ export default class Game extends three.EventDispatcher {
    * render is the main game loop. It handles all Scene state changes
    * and dispatches the appropriate scene update() and render() calls.
    */
-  render( timeMilli:DOMHighResTimeStamp=0, timeTotal:DOMHighResTimeStamp=0 ) {
-    if ( !this.renderer ) {
+  render(timeMilli: DOMHighResTimeStamp = 0, timeTotal: DOMHighResTimeStamp = 0) {
+    if (!this.renderer) {
       return;
     }
 
     this.dispatchEvent({ type: 'beforeRender' });
     SCENES:
-    for ( const scene of this.scenes ) {
+    for (const scene of this.scenes) {
       switch (scene.state) {
         case SceneState.Start:
           scene.render();
           scene.state = SceneState.Run;
           continue SCENES;
         case SceneState.Run:
-          scene.update( timeMilli );
-          // fall-through to render
+          scene.update(timeMilli);
+        // fall-through to render
         case SceneState.Pause:
           scene.render();
           continue SCENES;
@@ -246,14 +247,14 @@ export default class Game extends three.EventDispatcher {
     }
     this.dispatchEvent({ type: 'afterRender' });
 
-    requestAnimationFrame( (t:DOMHighResTimeStamp) => this.render(t-timeTotal, t) );
+    requestAnimationFrame((t: DOMHighResTimeStamp) => this.render(t - timeTotal, t));
   }
 
   /**
    * registerComponent registers a new component constructor. This
    * component can then be used by scenes.
    */
-  registerComponent( name:string, component:typeof Component ) {
+  registerComponent(name: string, component: typeof Component) {
     this.components[name] = component;
   }
 
@@ -261,7 +262,7 @@ export default class Game extends three.EventDispatcher {
    * registerSystem registers a new system constructor. This system can
    * then be used by scenes.
    */
-  registerSystem( name:string, system:typeof System ) {
+  registerSystem(name: string, system: typeof System) {
     this.systems[name] = system;
   }
 
@@ -271,8 +272,8 @@ export default class Game extends three.EventDispatcher {
    * with the Scene.thaw() method.
    */
   addScene() {
-    const scene = new Scene( this );
-    this.scenes.push( scene );
+    const scene = new Scene(this);
+    this.scenes.push(scene);
     return scene;
   }
 
@@ -280,10 +281,10 @@ export default class Game extends three.EventDispatcher {
    * loadScene loads the JSON at the given path and uses it to create
    * a new Scene object.
    */
-  async loadScene( path:string ):Promise<Scene> {
+  async loadScene(path: string): Promise<Scene> {
     const sceneData = await this.load.json(path);
     const scene = this.addScene();
-    scene.thaw( sceneData );
+    scene.thaw(sceneData);
     return scene;
   }
 }
