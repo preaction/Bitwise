@@ -131,7 +131,7 @@ export default class Render extends System {
    * Initialize the renderer by creating all of the Object3D in the
    * scene and loading all external resources (like textures).
    */
-  async init(): Promise<any> {
+  init(): Promise<any> {
     const promise = this.createEnters();
     // XXX: This should be a System setting.
     this.mainCamera = this.cameras.findIndex(c => !!c);
@@ -449,7 +449,7 @@ export default class Render extends System {
   /**
    * Load the texture and prepare it to be rendered.
    */
-  async loadTexture(textureId: number, forEid: string | number = "preload"): Promise<three.Texture> {
+  loadTexture(textureId: number, forEid: string | number = "preload"): Promise<three.Texture> {
     const texture = Texture.getById(textureId);
     if (!texture.src) {
       throw `Unknown texture ID ${textureId} (${forEid})`;

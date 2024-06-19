@@ -224,11 +224,11 @@ export default defineComponent({
       };
     },
 
-    initializeEditor() {
+    async initializeEditor() {
       const game = this.editGame = this.createEditorGame('edit-canvas');
 
       const scene = this.editScene = markRaw(game.addScene());
-      this.thawEditScene(this.sceneData);
+      await this.thawEditScene(this.sceneData);
 
       const editor = this.editScene.getSystem(game.systems.EditorRender);
       editor.addEventListener('update', () => this.update());
@@ -252,7 +252,7 @@ export default defineComponent({
       });
     },
 
-    thawEditScene(sceneData: any) {
+    async thawEditScene(sceneData: any) {
       try {
         // Editor scene gets its own systems
         const systems = [
@@ -262,7 +262,7 @@ export default defineComponent({
         if (sceneData.systems.find((sys: System) => sys.name === 'Physics')) {
           systems.push({ name: 'EditorPhysics', data: {} });
         }
-        this.editScene.thaw({
+        await this.editScene.thaw({
           ...sceneData,
           systems,
         });
@@ -369,7 +369,7 @@ export default defineComponent({
       });
     },
 
-    play(playState) {
+    async play(playState) {
       this.playState = playState ||= this.sceneData;
 
       if (this.playGame) {
@@ -378,7 +378,7 @@ export default defineComponent({
 
       this.playGame = this.createPlayerGame('play-canvas');
       const scene = this.playScene = markRaw(this.playGame.addScene());
-      scene.thaw(playState);
+      await scene.thaw(playState);
 
       this.playing = true;
       this.paused = false;
@@ -492,7 +492,7 @@ export default defineComponent({
           eData.name = namePrefix + suffix;
         }
         const entity = scene.addEntity();
-        entity.thaw(eData);
+        await entity.thaw(eData);
       }
       try {
         scene.update(0);

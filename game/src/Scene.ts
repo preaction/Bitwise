@@ -109,7 +109,7 @@ export class Scene extends three.EventDispatcher {
    * loaded. This method should load external assets into memory and
    * pre-allocate needed objects.
    */
-  async init() {
+  init() {
     const promises = [];
     this.dispatchEvent({ type: 'init' });
     for (const system of this.systems) {
@@ -297,9 +297,7 @@ export class Scene extends three.EventDispatcher {
   /**
    * Load the scene from the given data. The opposite of freeze().
    */
-  async thaw(data: SceneData) {
-    const promises: Promise<any>[] = [];
-
+  thaw(data: SceneData) {
     this.name = data.name;
     for (const name of data.components) {
       this.addComponent(name);

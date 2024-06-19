@@ -121,7 +121,7 @@ export default defineComponent({
       this.update();
     },
 
-    addEntity(...components: string[]) {
+    async addEntity(...components: string[]) {
       if (!this.scene) return;
       const entityData: EntityData = {
         $schema: '1',
@@ -143,7 +143,7 @@ export default defineComponent({
       // entity
 
       const entity = this.scene.addEntity();
-      entity.thaw(entityData);
+      await entity.thaw(entityData);
 
       this.selectedEntityPath = entity.path;
       this.selectedEntityData = entityData;
@@ -179,7 +179,7 @@ export default defineComponent({
       }
     },
 
-    duplicateEntity(entityData: EntityData) {
+    async duplicateEntity(entityData: EntityData) {
       entityData = JSON.parse(JSON.stringify(entityData));
       const match = entityData.name.match(/\((\d+)\)$/);
       if (match) {
@@ -189,7 +189,7 @@ export default defineComponent({
         entityData.name += ' (2)';
       }
       const entity = this.scene.addEntity();
-      entity.thaw(entityData);
+      await entity.thaw(entityData);
       entityData = entity.freeze();
       this.entities.push(entityData);
       this.selectedEntityPath = entity.path;
@@ -228,7 +228,7 @@ export default defineComponent({
       event.currentTarget.classList.add(isChild ? 'entity-drop-child' : isAfter ? 'entity-drop' : 'entity-drop-top');
     },
 
-    dropEntity(event: DragEvent, onItem: EntityData, path: string) {
+    async dropEntity(event: DragEvent, onItem: EntityData, path: string) {
       const data = event.dataTransfer.getData("bitwise/entity");
       if (data) {
         event.preventDefault();
@@ -277,7 +277,7 @@ export default defineComponent({
           dropEntityData.children ??= [];
           dropEntityData.children.push(dragEntityData);
           const newEntity = dropEntity.addEntity();
-          newEntity.thaw(dragEntityData);
+          await newEntity.thaw(dragEntityData);
         }
         else {
           let dropDest: Array<EntityData>, destEntity: Entity;
@@ -290,7 +290,7 @@ export default defineComponent({
             dropDest = this.entities;
           }
           dropDest.splice(dropDest.findIndex(e => e.name === dropEntity.name) + (isAfter ? 1 : 0), 0, dragEntityData);
-          destEntity.thaw(dragEntityData);
+          await destEntity.thaw(dragEntityData);
         }
 
         // XXX: Adjust Transform to offset from parent so that entity
