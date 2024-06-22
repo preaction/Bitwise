@@ -25,7 +25,8 @@ const pointer = new three.Vector3();
  * * Click to select objects. Selected objects may be dragged or moved
  *   with the arrow keys.
  */
-export default class Render extends RenderSystem {
+export class Render extends RenderSystem {
+
   /**
    * The camera showing the scene for editing. This is not a camera that
    * is added to the scene being edited.
@@ -195,9 +196,6 @@ export default class Render extends RenderSystem {
       this.scene.update(0);
       this.scene.render();
     }
-    else if (this.moveSelected) {
-      this.dispatchEvent({ type: "update" });
-    }
   }
 
   onKeyDown(event: KeyboardEvent) {
@@ -233,7 +231,6 @@ export default class Render extends RenderSystem {
     }
 
     this.nudgeSelected({ [dir]: nudge });
-    this.dispatchEvent({ type: "update" });
   }
 
   nudgeSelected({ x, y }: { x?: number, y?: number }) {
@@ -244,6 +241,16 @@ export default class Render extends RenderSystem {
       const eid = obj.userData.eid;
       transform.x[eid] += x || 0;
       transform.y[eid] += y || 0;
+      this.dispatchEvent({
+        type: "updateEntity",
+        eid,
+        components: {
+          [this.transformComponent.constructor.name]: {
+            x: transform.x[eid],
+            y: transform.y[eid],
+          },
+        },
+      });
     }
     this.scene.update(0);
     this.scene.render();
@@ -255,6 +262,7 @@ export default class Render extends RenderSystem {
       if (!box) { break; }
       box.removeFromParent();
     }
+    this.dispatchEvent({ type: "selectionChanged", eids: this.selected });
   }
 
   selectObject(obj: three.Object3D) {
@@ -268,13 +276,14 @@ export default class Render extends RenderSystem {
     this.selected.push(line);
 
     // Emit select event so editor can select the entity, too
-    this.dispatchEvent({ type: "select", object: obj });
+    this.dispatchEvent({ type: "selectionChanged", eids: this.selected.map(s => s.userData.eid) });
   }
 
   deselectObject(selected: three.Object3D) {
     const i = this.selected.findIndex(obj => obj.userData.selected === selected);
     this.scene._scene.remove(this.selected[i]);
     this.selected.splice(i, 1);
+    this.dispatchEvent({ type: "selectionChanged", eids: this.selected.map(s => s.userData.eid) });
   }
 
   getSelectedEntityIds(): number[] {
@@ -439,6 +448,7 @@ export default class Render extends RenderSystem {
     const mat = new three.LineBasicMaterial({ color: 0x00ccff, linewidth: 2 });
     const camera = new three.LineSegments(wireframe, mat);
     camera.userData.eid = eid;
+    camera.name = this.scene.getEntityById(eid)?.name;
     camera.material.depthTest = false;
     camera.material.transparent = true;
 
@@ -494,3 +504,10 @@ export default class Render extends RenderSystem {
     }
   }
 }
+
+export declare interface Render extends RenderSystem {
+  addEventListener(name: 'updateEntity', cb: (ev: { eid: number, components: { [key: string]: any } }) => void): this;
+  addEventListener(name: 'selectionChanged', cb: (ev: { eids: number[] }) => void): this;
+  addEventListener(event: string, listener: Function): this;
+}
+export default Render
