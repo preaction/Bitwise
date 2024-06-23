@@ -307,7 +307,7 @@ export class Render extends RenderSystem {
         const pointerMove = new three.Vector3().subVectors(pointer, this.pointerStart);
 
         const snapDistance = this.snapRatio / this.camera.zoom;
-        if (this.snapToGrid) {
+        if (this.snapToGrid && !event.shiftKey) {
           // If the origin of the object under the mouse cursor will be
           // close enough to a vertex, nudge everything to the vertex
           const eid = this.moveObject.userData.eid;
