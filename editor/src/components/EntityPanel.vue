@@ -3,9 +3,7 @@ import { defineComponent, toRaw, markRaw } from "vue";
 import type { PropType, Raw } from "vue";
 import Tree from './Tree.vue';
 import MenuButton from "./MenuButton.vue";
-import { Scene } from "@fourstar/bitwise";
-import type { Entity, EntityData } from "@fourstar/bitwise";
-import type { TreeNode } from "../types";
+import type { Scene, Entity, EntityData } from "@fourstar/bitwise";
 
 /**
  * ScenePanel handles showing the scene entity tree and rendering the
@@ -38,6 +36,7 @@ export default defineComponent({
         "Sprite": "fa-image-portrait",
       }
     } as {
+      entities: EntityData[],
       selectedEntityPath: string,
       selectedEntityData: EntityData | null | undefined,
       selectedEntity: Raw<Entity> | undefined,
@@ -50,6 +49,9 @@ export default defineComponent({
       this.entities = [...newModelValue];
       if (this.selectedEntityPath) {
         this.selectedEntityData = this.getEntityDataByPath(this.selectedEntityPath);
+        if (this.selectedEntityData && this.selectedEntity) {
+          this.selectedEntity.thaw(this.selectedEntityData);
+        }
       }
     },
   },
@@ -431,7 +433,7 @@ export default defineComponent({
         </div>
         <div v-if="componentForms[name]" class="component-form__body">
           <component :is="componentForms[name]" v-model="selectedEntityData.components[name]"
-            @update:modelValue="$emit('update:modelValue', entities)" :scene="scene" />
+            @update:modelValue="updateComponent(name, $event)" :scene="scene" />
         </div>
       </div>
       <MenuButton class="button-center" data-test="add-component" title="Add Component...">

@@ -154,8 +154,10 @@ describe('EntityPanel', () => {
       const entityPane = wrapper.get('.entity-pane');
       const activeInput = entityPane.get('[name=active]')
       expect((activeInput.element as HTMLInputElement).checked).toBe(isActive);
+      expect(entity.active).toBeTruthy();
       await activeInput.trigger('click');
       expect((activeInput.element as HTMLInputElement).checked).toBe(!isActive);
+      expect(entity.active).toBeFalsy();
     });
 
     test('updateEntityName', async () => {
@@ -171,6 +173,7 @@ describe('EntityPanel', () => {
       await wrapper.setProps({ modelValue: newModelValue });
       expect((nameInput.element as HTMLInputElement).value).toBe(newName);
       expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+      expect(entity.name).toBe(newName);
 
       // Should be able to update it again
       newName = 'Another Name';
@@ -181,6 +184,7 @@ describe('EntityPanel', () => {
       await wrapper.setProps({ modelValue: newModelValue });
       expect((nameInput.element as HTMLInputElement).value).toBe(newName);
       expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+      expect(entity.name).toBe(newName);
     });
 
     test('create a new, blank entity', async () => {
@@ -194,6 +198,12 @@ describe('EntityPanel', () => {
 
       await wrapper.setProps({ modelValue: newModelValue });
       expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
+
+      // Entity added to scene
+      const entity = scene.getEntityByPath(newName);
+      expect(entity).toBeTruthy();
+      expect(entity?.name).toBe(newName);
+      expect(entity?.active).toBeTruthy();
 
       // New, blank entity is selected
       const entityPane = wrapper.get('.entity-pane');
@@ -216,6 +226,12 @@ describe('EntityPanel', () => {
       await wrapper.setProps({ modelValue: newModelValue });
       expect(wrapper.find(`a[data-path="${newName}"]`).exists()).toBeTruthy();
 
+      // Entity added to scene
+      const entity = scene.getEntityByPath(newName);
+      expect(entity).toBeTruthy();
+      expect(entity?.name).toBe(newName);
+      expect(entity?.active).toBeTruthy();
+
       // New, duplicate entity is selected
       const entityPane = wrapper.get('.entity-pane');
       const nameInput = entityPane.get('[name=name]')
@@ -233,49 +249,61 @@ describe('EntityPanel', () => {
     });
 
     test('add component', async () => {
+      const componentName = 'Sprite'
       await wrapper.get('[data-test="add-component"]').trigger('click');
-      await wrapper.get('[data-add-component="Sprite"]').trigger('click');
+      await wrapper.get(`[data-add-component="${componentName}"]`).trigger('click');
       expect(mockUpdate).toHaveBeenCalledTimes(1);
       let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
-      expect(newModelValue[newModelValue.length - 1].components).toHaveProperty('Sprite');
+      expect(newModelValue[newModelValue.length - 1].components).toHaveProperty(componentName);
+
+      expect(entity.listComponents()).toContain(componentName);
     });
 
     test('remove component', async () => {
+      const componentName = 'OrthographicCamera';
       const mockConfirm = jest.spyOn(global, 'confirm').mockReturnValue(true);
-      await wrapper.get('[data-component="OrthographicCamera"] [data-test=remove]').trigger('click');
+      await wrapper.get(`[data-component="${componentName}"] [data-test=remove]`).trigger('click');
       expect(mockConfirm).toHaveBeenCalled();
       expect(mockUpdate).toHaveBeenCalledTimes(1);
       let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
       expect(newModelValue[newModelValue.length - 1].components).not.toHaveProperty('OrthographicCamera');
+      expect(entity.listComponents()).not.toContain(componentName);
     });
 
     test('can update Transform data', async () => {
+      const componentName = 'Transform';
+      const propName = 'x';
+      const newValue = 2.5;
       const entityPane = wrapper.get('.entity-pane');
-      await entityPane.get('[data-component=Transform] [name=x]').setValue('2.5');
+      await entityPane.get(`[data-component=${componentName}] [name=${propName}]`).setValue(newValue);
       expect(mockUpdate).toHaveBeenCalledTimes(1);
       let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
-      expect(newModelValue[newModelValue.length - 1].components?.Transform).toMatchObject({ x: "2.5" });
+      expect(newModelValue[newModelValue.length - 1].components?.Transform).toMatchObject({ [propName]: newValue.toString() });
+      expect(entity.getComponent(componentName)).toMatchObject({ [propName]: newValue });
     });
 
     test('updates component data when modelValue changes', async () => {
-      const entityPane = wrapper.get('.entity-pane');
-      const inputField = wrapper.vm.$el.querySelector('[data-component=Transform] [name=x]');
-      expect(inputField.value).toBe("0");
+      const componentName = 'Transform';
+      const propName = 'x';
+      const newValue = 2.5;
+      const inputField = wrapper.vm.$el.querySelector(`[data-component=${componentName}] [name=${propName}]`);
+      expect(inputField.value).toBe(modelValue[0].components?.[componentName][propName].toString());
       const newModelValue = [
         {
           ...modelValue[0],
           components: {
             ...modelValue[0].components,
-            Transform: {
-              ...(modelValue[0].components?.Transform ?? {}),
-              x: 2.5,
+            [componentName]: {
+              ...(modelValue[0].components?.[componentName] ?? {}),
+              [propName]: newValue,
             },
           },
         },
         ...modelValue.slice(1),
       ];
       await wrapper.setProps({ modelValue: newModelValue });
-      expect(inputField.value).toBe("2.5");
+      expect(inputField.value).toBe(newValue.toString());
+      expect(entity.getComponent(componentName)).toMatchObject({ [propName]: newValue });
     });
   });
 
