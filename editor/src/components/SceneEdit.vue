@@ -50,7 +50,6 @@ export default defineComponent({
       playGame: null,
       playScene: null,
       showGrid: true,
-      snapToGrid: false,
     } as {
       sceneData: (SceneData & { component: string }) | null,
       loadPromise: Promise<any>,
@@ -63,7 +62,6 @@ export default defineComponent({
       playGame: any,
       playScene: any,
       showGrid: boolean,
-      snapToGrid: boolean,
     };
   },
 
@@ -250,6 +248,7 @@ export default defineComponent({
         }
         scene.render();
         editor.showGrid(this.showGrid);
+        editor.snapToGrid = this.showGrid;
       });
     },
 
@@ -550,12 +549,7 @@ export default defineComponent({
       const editor = this.editScene.getSystem(this.editGame.systems.EditorRender);
       this.showGrid = this.showGrid ? false : true;
       editor.showGrid(this.showGrid);
-    },
-
-    toggleSnapToGrid() {
-      this.snapToGrid = this.snapToGrid ? false : true;
-      const editor = this.editScene.getSystem(this.editGame.systems.EditorRender);
-      editor.snapToGrid = this.snapToGrid;
+      editor.snapToGrid = this.showGrid;
     },
   },
 
@@ -590,10 +584,6 @@ export default defineComponent({
           <button type="button" class="btn btn-sm" data-test="toggle-grid"
             :class="showGrid ? 'btn-dark' : 'btn-outline-dark'" @click="toggleGrid()">
             <i class="fa fa-border-all"></i>
-          </button>
-          <button type="button" class="btn btn-sm" data-test="toggle-grid"
-            :class="snapToGrid ? 'btn-dark' : 'btn-outline-dark'" @click="toggleSnapToGrid()">
-            <i class="fa fa-lock"></i>
           </button>
         </div>
       </div>
