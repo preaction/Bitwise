@@ -23,12 +23,12 @@ export default defineComponent({
     scene: Object as PropType<Raw<Scene>>,
     isPrefab: Boolean,
   },
-  emits: { 'update:modelValue': null, 'update': null },
+  emits: { 'update:modelValue': null },
 
   inject: ['componentForms', 'assets', 'openTab'],
   data() {
     return {
-      entities: JSON.parse(JSON.stringify(this.modelValue ?? [])),
+      entities: [...(this.modelValue || [])],
       selectedEntityPath: "",
       selectedEntityData: undefined,
       selectedEntity: undefined,
@@ -38,9 +38,8 @@ export default defineComponent({
         "Sprite": "fa-image-portrait",
       }
     } as {
-      entities: Array<EntityData>,
       selectedEntityPath: string,
-      selectedEntityData: EntityData | undefined,
+      selectedEntityData: EntityData | null | undefined,
       selectedEntity: Raw<Entity> | undefined,
       icons: { [key: string]: string },
     }
@@ -48,7 +47,7 @@ export default defineComponent({
 
   watch: {
     modelValue(newModelValue: EntityData[]) {
-      this.entities = JSON.parse(JSON.stringify(newModelValue));
+      this.entities = [...newModelValue];
       if (this.selectedEntityPath) {
         this.selectedEntityData = this.getEntityDataByPath(this.selectedEntityPath);
       }
@@ -306,6 +305,13 @@ export default defineComponent({
       }
     },
 
+    selectByPath(path: string) {
+      const entityData = this.getEntityDataByPath(path)
+      if (entityData) {
+        this.select(entityData, path);
+      }
+    },
+
     getEntityDataByPath(path: string) {
       const pathParts = path.split(/\//);
       let children = this.entities;
@@ -355,7 +361,6 @@ export default defineComponent({
 
     update() {
       this.$emit('update:modelValue', this.entities);
-      this.$emit('update');
     },
   },
 });
@@ -416,23 +421,24 @@ export default defineComponent({
           <input name="active" type="checkbox" @change="updateActive" v-model="selectedEntityData.active" />
         </div>
       </div>
-      <div v-for="name in selectedEntityComponents" class="component-form">
+      <div v-for="name in selectedEntityComponents" :data-component="name" class="component-form">
         <div class="mb-1 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
             <h6 class="m-0">{{ name }}</h6>
             <i v-if="!components[name]" class="ms-1 fa fa-file-circle-question" title="Component not found"></i>
           </div>
-          <i @click="removeComponent(name)" class="fa fa-close me-1 icon-button"></i>
+          <i data-test="remove" @click="removeComponent(name)" class="fa fa-close me-1 icon-button"></i>
         </div>
         <div v-if="componentForms[name]" class="component-form__body">
           <component :is="componentForms[name]" v-model="selectedEntityData.components[name]"
-            :key="selectedEntity.path + '/' + name" :scene="scene" @update="updateComponent(name, $event)" />
+            @update:modelValue="$emit('update:modelValue', entities)" :scene="scene" />
         </div>
       </div>
-      <MenuButton class="button-center" title="Add Component...">
+      <MenuButton class="button-center" data-test="add-component" title="Add Component...">
         <ul>
-          <li v-for="c in availableComponents" :class="hasComponent(c) ? 'disabled' : ''" @click="addComponent(c)">{{ c
-            }}
+          <li v-for="c in availableComponents" :data-add-component="c" :class="hasComponent(c) ? 'disabled' : ''"
+            @click="addComponent(c)">
+            {{ c }}
           </li>
         </ul>
       </MenuButton>

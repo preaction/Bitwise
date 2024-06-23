@@ -223,6 +223,60 @@ describe('EntityPanel', () => {
       const activeInput = entityPane.get('[name=active]')
       expect((activeInput.element as HTMLInputElement).checked).toBeTruthy();
     });
+
+    test('list entity components', async () => {
+      const entityComponents = Object.keys(modelValue[0].components ?? {});
+      const forms = wrapper.findAll('[data-component]');
+      expect(forms).toHaveLength(entityComponents.length);
+      expect(forms[0].text()).toMatch(entityComponents[0]);
+      expect(forms[1].text()).toMatch(entityComponents[1]);
+    });
+
+    test('add component', async () => {
+      await wrapper.get('[data-test="add-component"]').trigger('click');
+      await wrapper.get('[data-add-component="Sprite"]').trigger('click');
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
+      expect(newModelValue[newModelValue.length - 1].components).toHaveProperty('Sprite');
+    });
+
+    test('remove component', async () => {
+      const mockConfirm = jest.spyOn(global, 'confirm').mockReturnValue(true);
+      await wrapper.get('[data-component="OrthographicCamera"] [data-test=remove]').trigger('click');
+      expect(mockConfirm).toHaveBeenCalled();
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
+      expect(newModelValue[newModelValue.length - 1].components).not.toHaveProperty('OrthographicCamera');
+    });
+
+    test('can update Transform data', async () => {
+      const entityPane = wrapper.get('.entity-pane');
+      await entityPane.get('[data-component=Transform] [name=x]').setValue('2.5');
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
+      expect(newModelValue[newModelValue.length - 1].components?.Transform).toMatchObject({ x: "2.5" });
+    });
+
+    test('updates component data when modelValue changes', async () => {
+      const entityPane = wrapper.get('.entity-pane');
+      const inputField = wrapper.vm.$el.querySelector('[data-component=Transform] [name=x]');
+      expect(inputField.value).toBe("0");
+      const newModelValue = [
+        {
+          ...modelValue[0],
+          components: {
+            ...modelValue[0].components,
+            Transform: {
+              ...(modelValue[0].components?.Transform ?? {}),
+              x: 2.5,
+            },
+          },
+        },
+        ...modelValue.slice(1),
+      ];
+      await wrapper.setProps({ modelValue: newModelValue });
+      expect(inputField.value).toBe("2.5");
+    });
   });
 
   describe('rearrange entities via drag/drop', () => {

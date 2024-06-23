@@ -1,6 +1,6 @@
 <script lang="ts">
-import { defineComponent, toRaw, markRaw } from "vue";
-import type { System, EntityData, Game, SceneData } from '@fourstar/bitwise';
+import { defineComponent, toRaw, markRaw, reactive } from "vue";
+import type { System, EntityData, Game, SceneData, Entity } from '@fourstar/bitwise';
 import EntityPanel from './EntityPanel.vue';
 import Tab from "../model/Tab";
 import TabView from './TabView.vue';
@@ -80,7 +80,7 @@ export default defineComponent({
 
   async mounted() {
     try {
-      this.sceneData = JSON.parse(await this.loadPromise);
+      this.sceneData = reactive(JSON.parse(await this.loadPromise));
     }
     catch (err) {
       console.log(`Error loading scene data: ${err}`);
@@ -185,7 +185,7 @@ export default defineComponent({
 
   methods: {
     initializeScene() {
-      this.sceneData = {
+      this.sceneData = reactive({
         $schema: '1',
         name: 'NewScene',
         component: 'SceneEdit',
@@ -221,7 +221,7 @@ export default defineComponent({
             },
           },
         ],
-      };
+      });
     },
 
     async initializeEditor() {
@@ -231,7 +231,8 @@ export default defineComponent({
       await this.thawEditScene(this.sceneData);
 
       const editor = this.editScene.getSystem(game.systems.EditorRender);
-      editor.addEventListener('update', () => this.update());
+      editor.addEventListener('updateEntity', this.updateEntityData.bind(this));
+      editor.addEventListener('selectionChanged', this.selectionChanged.bind(this));
 
       // The editor canvas must be visible when the game is started so
       // that the renderer is created at the correct size. If the canvas
@@ -334,6 +335,49 @@ export default defineComponent({
       return markRaw(game);
     },
 
+    getEntityDataByPath(path: string) {
+      if (!this.sceneData) {
+        return;
+      }
+      const pathParts = path.split(/\//);
+      let children = this.sceneData.entities;
+      for (let i = 0; i < pathParts.length; i++) {
+        let leafNode = children.find(node => node.name === pathParts[i]);
+        if (!leafNode) {
+          return null;
+        }
+        if (i === pathParts.length - 1) {
+          return leafNode;
+        }
+        children = leafNode.children;
+      }
+    },
+
+    updateEntityData({ eid, components }: { eid: number, components: { [key: string]: any } }) {
+      const entity = this.scene.getEntityById(eid);
+      const entityData = this.getEntityDataByPath(entity.path);
+      if (!entityData) {
+        return;
+      }
+      entityData.components ??= {}
+      for (const [componentName, componentData] of Object.entries(components)) {
+        for (const [propertyName, propertyValue] of
+          Object.entries(componentData)) {
+          entityData.components[componentName][propertyName]
+            = propertyValue;
+        }
+      }
+    },
+
+    selectionChanged({ eids }: { eids: number[] }) {
+      const eid = eids[eids.length - 1];
+      if (!eid) {
+        return;
+      }
+      const entity = this.scene.getEntityById(eid);
+      (this.$refs.entityPanel as typeof EntityPanel).selectByPath(entity.path);
+    },
+
     sceneChanged() {
       try {
         this.scene.update(0);
@@ -355,14 +399,12 @@ export default defineComponent({
     },
 
     async save() {
-      console.log('before write tab', this.modelValue);
       try {
         await this.modelValue.writeFile(JSON.stringify(toRaw(this.sceneData), null, 2));
       }
       catch (error) {
         console.log('error writing file', error);
       }
-      console.log('after write tab', this.modelValue);
       this.$emit('update', {
         ...this.modelValue,
         edited: false,
@@ -567,8 +609,8 @@ export default defineComponent({
     <div class="tab-sidebar">
       <TabView>
         <Panel label="Entities">
-          <EntityPanel v-if="sceneData" class="tab-sidebar-item" @update="sceneChanged" v-model="sceneData.entities"
-            :scene="scene" />
+          <EntityPanel ref="entityPanel" v-if="sceneData" class="tab-sidebar-item" @update="sceneChanged"
+            v-model="sceneData.entities" :scene="scene" />
         </Panel>
         <Panel label="Systems">
           <SystemsPanel v-if="scene" v-model="sceneData" @update="sceneChanged" :scene="scene" />

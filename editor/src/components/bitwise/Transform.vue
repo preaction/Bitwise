@@ -3,21 +3,11 @@ import { defineComponent } from "vue";
 export default defineComponent({
   props: ['modelValue'],
   data() {
-    return {
-      sx: 1,
-      sy: 1,
-      sz: 1,
-      rx: 0,
-      ry: 0,
-      rz: 0,
-      rw: 0,
-      ...this.modelValue,
-    }
+    return {}
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      this.$emit('update:modelValue', this.modelValue);
     },
   },
 });
@@ -26,42 +16,43 @@ export default defineComponent({
   <div>
     <div class="d-flex position align-items-center">
       <label>X</label>
-      <input @change="update" v-model="$data.x">
+      <input name="x" @change="update" v-model="modelValue.x">
       <label>Y</label>
-      <input @change="update" v-model="$data.y">
+      <input name="y" @change="update" v-model="modelValue.y">
       <label>Z</label>
-      <input @change="update" v-model="$data.z">
+      <input name="z" @change="update" v-model="modelValue.z">
     </div>
     <div class="d-flex position align-items-center">
       <span>Rotate</span>
       <label>X</label>
-      <input @change="update" v-model="$data.rx">
+      <input name="rx" @change="update" v-model="modelValue.rx">
       <label>Y</label>
-      <input @change="update" v-model="$data.ry">
+      <input name="ry" @change="update" v-model="modelValue.ry">
       <label>Z</label>
-      <input @change="update" v-model="$data.rz">
+      <input name="rz" @change="update" v-model="modelValue.rz">
       <label>W</label>
-      <input @change="update" v-model="$data.rw">
+      <input name="rw" @change="update" v-model="modelValue.rw">
     </div>
     <div class="d-flex position align-items-center">
       <span>Scale</span>
       <label>X</label>
-      <input @change="update" v-model="$data.sx">
+      <input name="sx" @change="update" v-model="modelValue.sx">
       <label>Y</label>
-      <input @change="update" v-model="$data.sy">
+      <input name="sy" @change="update" v-model="modelValue.sy">
       <label>Z</label>
-      <input @change="update" v-model="$data.sz">
+      <input name="sz" @change="update" v-model="modelValue.sz">
     </div>
   </div>
 </template>
 <style>
-  .position label {
-    padding: 0 2px;
-  }
-  .position input {
-    margin: 0 4px 0 0;
-    flex: 1 1 auto;
-    width: 2em;
-    text-align: right;
-  }
+.position label {
+  padding: 0 2px;
+}
+
+.position input {
+  margin: 0 4px 0 0;
+  flex: 1 1 auto;
+  width: 2em;
+  text-align: right;
+}
 </style>
