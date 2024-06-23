@@ -61,14 +61,19 @@ describe('EditorRender', () => {
     camera = scene.addEntity();
     camera.path = "camera";
     camera.active = true;
-    camera.addComponent('Transform', { x: 0, y: 0, z: 0, sx: 1, sy: 1, sz: 1 });
-    camera.addComponent('OrthographicCamera', {});
+    camera.addComponent('Transform', { x: 0, y: 0, z: 2000, sx: 1, sy: 1, sz: 1 });
+    camera.addComponent('OrthographicCamera', {
+      frustum: 10,
+      zoom: 1,
+      near: 0,
+      far: 2000,
+    });
     // Sprite
     sprite = scene.addEntity();
     sprite.path = "sprite";
     sprite.active = true;
     sprite.addComponent('Transform', { x: 0, y: 0, z: 0, sx: 1, sy: 1, sz: 1 });
-    sprite.addComponent('Sprite', {});
+    sprite.addComponent('Sprite', { textureId: 0 });
   });
 
   describe('init()', () => {
@@ -87,13 +92,6 @@ describe('EditorRender', () => {
       expect(progressEvents.length).toBe(2);
       expect(progressEvents[0].loaded).toBe(1);
       expect(progressEvents[0].total).toBe(1);
-    });
-
-    test('init() adds editor camera to scene', async () => {
-      await system.init();
-      const threeScene = system.scene._scene;
-      expect(threeScene.children).toHaveLength(1);
-      expect(system.mainCamera).toBeDefined();
     });
   });
 

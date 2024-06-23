@@ -408,6 +408,8 @@ export class Render extends RenderSystem {
     // to see
     const bounds = new three.Box3();
     this.scene._scene.traverseVisible((obj) => {
+      if (obj === this.scene._scene) { return }
+      if (obj.userData.isEditor) { return }
       bounds.expandByObject(obj);
     });
     const boxSize = bounds.getSize(new three.Vector3());
@@ -494,6 +496,7 @@ export class Render extends RenderSystem {
     if (show) {
       const gridHelper = new three.GridHelper(100, 100);
       gridHelper.lookAt(0, 1, 0);
+      gridHelper.userData.isEditor = true;
       this.scene._scene.add(gridHelper);
       this.grid = gridHelper;
     }
