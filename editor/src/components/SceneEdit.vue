@@ -49,9 +49,9 @@ export default defineComponent({
       editScene: null,
       playGame: null,
       playScene: null,
-      showGrid: true,
+      showGrid: false,
     } as {
-      sceneData: (SceneData & { component: string }) | null,
+      sceneData: (SceneData & { component: string, editor: any }) | null,
       loadPromise: Promise<any>,
       loading: boolean,
       playing: boolean,
@@ -231,6 +231,7 @@ export default defineComponent({
       const editor = this.editScene.getSystem(game.systems.EditorRender);
       editor.addEventListener('updateEntity', this.updateEntityData.bind(this));
       editor.addEventListener('selectionChanged', this.selectionChanged.bind(this));
+      this.showGrid = !!editor.grid;
 
       // The editor canvas must be visible when the game is started so
       // that the renderer is created at the correct size. If the canvas
@@ -247,8 +248,6 @@ export default defineComponent({
           console.log(`Error calling update(): `, err);
         }
         scene.render();
-        editor.showGrid(this.showGrid);
-        editor.snapToGrid = this.showGrid;
       });
     },
 
@@ -257,7 +256,7 @@ export default defineComponent({
         // Editor scene gets its own systems
         const systems = [
           { name: 'Input', data: {} },
-          { name: 'EditorRender', data: {} },
+          { name: 'EditorRender', data: sceneData?.editor },
         ];
         if (sceneData.systems.find((sys: System) => sys.name === 'Physics')) {
           systems.push({ name: 'EditorPhysics', data: {} });
@@ -550,6 +549,10 @@ export default defineComponent({
       this.showGrid = this.showGrid ? false : true;
       editor.showGrid(this.showGrid);
       editor.snapToGrid = this.showGrid;
+      if (this.sceneData) {
+        this.sceneData.editor = editor.freeze();
+      }
+      this.update();
     },
   },
 
@@ -581,7 +584,7 @@ export default defineComponent({
           </button>
         </div>
         <div class="btn-toolbar me-2" aria-label="Grid controls">
-          <button type="button" class="btn btn-sm" data-test="toggle-grid"
+          <button type="button" :aria-pressed="showGrid" class="btn btn-sm" data-test="toggle-grid"
             :class="showGrid ? 'btn-dark' : 'btn-outline-dark'" @click="toggleGrid()">
             <i class="fa fa-border-all"></i>
           </button>

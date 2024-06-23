@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, jest } from '@jest/globals';
+import { describe, expect, test, beforeEach, beforeAll, jest } from '@jest/globals';
 import { mount, flushPromises } from '@vue/test-utils';
 import { MockElectron } from '../../../mock/electron.js';
 import Project from '../../../../src/model/Project.js';
@@ -6,11 +6,31 @@ import MockBackend from '../../../mock/backend.js';
 import SceneEdit from '../../../../src/components/SceneEdit.vue';
 import EntityPanel from '../../../../src/components/EntityPanel.vue';
 import Tab from '../../../../src/model/Tab.js';
-import { Asset, Load, Game } from '@fourstar/bitwise';
+import { Asset, Load, Game, Scene } from '@fourstar/bitwise';
 
 // Mock out the Game.start() method so we don't try (and fail) to create
 // a WebGL context.
 const mockStart = jest.spyOn(Game.prototype, 'start').mockImplementation(async () => { });
+const mockRender = jest.spyOn(Scene.prototype, 'render').mockImplementation(async () => { });
+
+beforeAll(() => {
+  // XXX: This always returns true for a match, but we might want to
+  // return `false` for devices when checking if they support mouse
+  // input.
+  Object.defineProperty(global, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // Deprecated
+      removeListener: jest.fn(), // Deprecated
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+});
 
 const stubs = {
   TabView: false,
@@ -54,21 +74,25 @@ describe('SceneEdit', () => {
 
     const asset = new Asset(new Load(), "");
     const modelValue = new Tab(project, asset);
+    const onUpdate = jest.fn();
     const wrapper = mount(SceneEdit, {
       shallow: true,
       props: {
         modelValue,
-        'onUpdate': (update: any) => Object.assign(wrapper.vm.modelValue, update),
+        onUpdate,
       },
       global: {
         provide,
         stubs,
       },
     });
+    onUpdate.mockImplementation((update: any) => Object.assign(wrapper.vm.modelValue, update));
     await flushPromises();
-    expect(wrapper.emitted()).toHaveProperty('update');
-    expect(wrapper.emitted()['update']).toHaveLength(1);
-    expect(wrapper.emitted()['update'][0]).toMatchObject([{ edited: true, name: "NewScene", ext: '.json' }]);
+    const emitted = wrapper.emitted();
+    expect(emitted).toHaveProperty('update');
+    expect(emitted['update']).toHaveLength(1);
+    expect(emitted['update'][0]).toMatchObject([{ edited: true, name: "NewScene", ext: '.json' }]);
+
     expect(wrapper.getComponent(EntityPanel).props('modelValue')).toMatchObject(
       expect.arrayContaining([
         expect.objectContaining({
@@ -114,8 +138,8 @@ describe('SceneEdit', () => {
       const asset = new Asset(new Load(), "OldScene.json");
       asset.data = sceneData;
       modelValue = new Tab(project, asset);
-      mockReadItemData.mockReturnValueOnce(Promise.resolve(JSON.stringify(sceneData)));
-      mockWriteItemData.mockReturnValueOnce(Promise.resolve());
+      mockReadItemData.mockReturnValue(Promise.resolve(JSON.stringify(sceneData)));
+      mockWriteItemData.mockReturnValue(Promise.resolve());
     });
 
     test('open an existing scene', async () => {
@@ -221,6 +245,42 @@ describe('SceneEdit', () => {
 
     });
 
+    test('show grid', async () => {
+      const onUpdate = jest.fn();
+      const wrapper = mount(SceneEdit, {
+        shallow: true,
+        props: {
+          modelValue,
+          onUpdate,
+        },
+        global: {
+          provide,
+          stubs,
+        },
+      });
+      onUpdate.mockImplementation((update: any) => Object.assign(wrapper.vm.modelValue, update));
+      wrapper.setData({ gameClass: Game });
+      await flushPromises();
+
+      const gridBtnEl = wrapper.vm.$el.querySelector('[data-test="toggle-grid"]');
+      expect(gridBtnEl.getAttribute('aria-pressed')).toBe('false');
+      const gridBtn = wrapper.get('[data-test="toggle-grid"]');
+      await gridBtn.trigger('click');
+      expect(gridBtnEl.getAttribute('aria-pressed')).toBe('true');
+      expect(onUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ edited: true }),
+      );
+
+      // Grid state is saved with scene data
+      let saveButton = wrapper.get('button[data-test=save]');
+      expect(saveButton.attributes()).not.toHaveProperty('disabled');
+      await saveButton.trigger('click');
+      expect(mockWriteItemData).toHaveBeenCalled();
+      const sceneJson = mockWriteItemData.mock.lastCall?.[2] || '{}';
+      expect(JSON.parse(sceneJson)).toMatchObject({
+        editor: expect.objectContaining({ showGrid: true, snapToGrid: true }),
+      });
+    });
   });
 
 });

@@ -118,4 +118,24 @@ describe('EditorRender', () => {
     expect(threeScene.children).toHaveLength(1);
   });
 
+  describe('freeze()', () => {
+    test('grid settings frozen', () => {
+      let frozen = system.freeze()
+      expect(frozen).toMatchObject({ showGrid: false, snapToGrid: false });
+
+      system.showGrid(true);
+      system.snapToGrid = true;
+      frozen = system.freeze()
+      expect(frozen).toMatchObject({ showGrid: true, snapToGrid: true });
+    });
+  });
+
+  describe('thaw()', () => {
+    test('grid settings thawed', async () => {
+      system.thaw({ showGrid: true, snapToGrid: true });
+      expect(system.grid).toBeTruthy();
+      expect(system.snapToGrid).toBeTruthy();
+    });
+  });
+
 });

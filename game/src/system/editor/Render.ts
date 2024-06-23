@@ -503,6 +503,22 @@ export class Render extends RenderSystem {
       this.grid = null;
     }
   }
+
+  freeze(): any {
+    const data = super.freeze();
+    data.showGrid = !!this.grid;
+    data.snapToGrid = this.snapToGrid;
+    return data;
+  }
+
+  thaw(data: any) {
+    if ('showGrid' in data) {
+      this.showGrid(data.showGrid);
+    }
+    if ('snapToGrid' in data) {
+      this.snapToGrid = data.snapToGrid;
+    }
+  }
 }
 
 export declare interface Render extends RenderSystem {
