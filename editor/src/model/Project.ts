@@ -2,8 +2,8 @@
 import type IBackend from '../Backend.js';
 import type { DirectoryItem } from '../Backend.js';
 
-import {EventEmitter} from 'events';
-import {Load, Asset, type Game, Texture} from '@fourstar/bitwise';
+import { EventEmitter } from 'events';
+import { Load, Asset, type Game, Texture } from '@fourstar/bitwise';
 import Directory from '../asset/Directory.js';
 import Markdown from '../asset/Markdown.js';
 import GameModule from '../asset/GameModule.js';
@@ -21,51 +21,52 @@ export default class Project extends EventEmitter {
   /**
    * The API for reading and writing project data.
    */
-  backend:IBackend;
+  backend: IBackend;
   /**
    * The identifier for this project. Likely a path or URI that has
    * meaning to the Backend.
    */
-  name:string;
+  name: string;
 
   /**
    * All of the assets in this project. Use inflateItems() to add
    * Asset objects to this array.
    */
-  readonly assets:Asset[] = [];
+  readonly assets: Asset[] = [];
 
-  load:Load;
+  load: Load;
 
-  state:{ [key:string]: any } = {};
-  private gameFile:string|null = null;
-  private gameClass:typeof Game|null = null;
-  constructor( backend:IBackend, name:string ) {
+  state: { [key: string]: any } = {};
+  private gameFile: string | null = null;
+  private gameClass: typeof Game | null = null;
+
+  constructor(backend: IBackend, name: string) {
     super();
     this.backend = backend;
     this.name = name;
     this.load = new Load();
   }
 
-  async readItemData( path:string ):Promise<string> {
+  async readItemData(path: string): Promise<string> {
     // XXX: This needs to handle virtual project Asset
-    return this.backend.readItemData( this.name, path );
+    return this.backend.readItemData(this.name, path);
   }
 
-  async writeItemData( path:string, data:string ):Promise<void> {
+  async writeItemData(path: string, data: string): Promise<void> {
     // XXX: This needs to handle virtual project items
-    return this.backend.writeItemData( this.name, path, data );
+    return this.backend.writeItemData(this.name, path, data);
   }
 
-  async loadGameClass():Promise<typeof Game> {
-    this.emit( 'loadstart' );
-    if ( !this.gameFile ) {
-      this.gameFile = await this.backend.buildProject( this.name );
-      if ( !this.gameFile ) {
+  async loadGameClass(): Promise<typeof Game> {
+    this.emit('loadstart');
+    if (!this.gameFile) {
+      this.gameFile = await this.backend.buildProject(this.name);
+      if (!this.gameFile) {
         throw 'Error building project: No game file returned';
       }
     }
-    const mod = await import( /* @vite-ignore */ this.gameFile );
-    this.emit( 'loadend', mod.default );
+    const mod = await import( /* @vite-ignore */ this.gameFile);
+    this.emit('loadend', mod.default);
     return mod.default;
   }
 

@@ -480,7 +480,7 @@ export default defineComponent({
         return;
       }
       event.preventDefault();
-      this.oncopy();
+      this.oncopy(event);
       this.ondelete(event);
     },
 

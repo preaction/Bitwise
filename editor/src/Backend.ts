@@ -6,17 +6,17 @@ export type DirectoryItem = {
 };
 
 export default interface Backend {
-  listProjects():Promise<string[]>;
-  openProject(projectName:string):Promise<Project>;
-  saveProject(project:Project):Promise<void>;
-  buildProject(projectName:string):Promise<string>;
-  releaseProject(projectName:string, releaseType:string):Promise<void>;
+  listProjects(): Promise<string[]>;
+  openProject(projectName: string): Promise<Project>;
+  saveProject(project: Project): Promise<void>;
+  buildProject(projectName: string): Promise<string>;
+  releaseProject(projectName: string, releaseType: string): Promise<void>;
 
-  listItems(projectName:string):Promise<DirectoryItem[]>;
-  readItemData(projectName:string, itemPath:string):Promise<string>;
-  writeItemData(projectName:string, itemPath:string, data:string):Promise<void>;
-  deleteItem(projectName:string, itemPath:string):Promise<void>;
+  listItems(projectName: string): Promise<DirectoryItem[]>;
+  readItemData(projectName: string, itemPath: string): Promise<string>;
+  writeItemData(projectName: string, itemPath: string, data: string): Promise<void>;
+  deleteItem(projectName: string, itemPath: string): Promise<void>;
 
-  getState(stateName:string, defaultValue:any):Promise<any>;
-  setState(stateName:string, data:any):Promise<void>;
+  getState(stateName: string, defaultValue: any): Promise<any>;
+  setState(stateName: string, data: any): Promise<void>;
 }

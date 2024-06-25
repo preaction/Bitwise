@@ -16,7 +16,6 @@ import Modal from "./components/Modal.vue";
 import MenuButton from "./components/MenuButton.vue";
 import Release from "./components/Release.vue";
 import PrefabEdit from "./components/PrefabEdit.vue";
-import type { VueElement } from "vue";
 
 // Core Component Forms
 import TransformEdit from './components/bitwise/Transform.vue';
@@ -70,7 +69,7 @@ import * as bitecs from 'bitecs';
 import { Scene, System } from '@fourstar/bitwise';
 
 export default class ${name} extends System {
-  init() {
+  async init() {
     // Get references to Components and Systems from this.scene
     // Create queries with bitecs.Query
     // Add event handlers
@@ -87,7 +86,7 @@ export default class ${name} extends System {
 }
 `;
   },
-  'Component.vue': (name: string): string => {
+  'Component.vue': (_: string): string => {
     return '<scr' + `ipt lang="ts">
 import { defineComponent } from "vue";
 
@@ -155,13 +154,13 @@ export default Vue.defineComponent({
     return {
       platform: "",
       currentTabIndex: 0,
-      openTabs: [] as Tab[],
-      assets: [] as Asset[],
+      openTabs: [],
+      assets: [],
       gameFile: '',
       isBuilding: false,
-      components: {} as { [key: string]: typeof Component },
-      systems: {} as { [key: string]: typeof System },
-      componentForms: Vue.markRaw({
+      components: {},
+      systems: {},
+      componentForms: {
         "Transform": TransformEdit,
         "OrthographicCamera": OrthographicCameraEdit,
         "Sprite": SpriteEdit,
@@ -172,10 +171,10 @@ export default Vue.defineComponent({
         "UIText": UITextEdit,
         "UIButton": UIButtonEdit,
         "UIContainer": UIContainerEdit,
-      }) as { [key: string]: typeof VueElement },
-      systemForms: Vue.markRaw({
+      },
+      systemForms: {
         "Physics": PhysicsEdit,
-      }) as { [key: string]: typeof VueElement },
+      },
       consoleLogs: [],
       openConsole: false,
       consoleErrors: 0,
@@ -186,6 +185,25 @@ export default Vue.defineComponent({
         TilesetEdit: 'fa-grid-2-plus',
         PrefabEdit: 'fa-cubes',
       },
+      showingDropdown: false,
+    } as {
+      platform: string,
+      currentTabIndex: number,
+      openTabs: Tab[],
+      assets: Asset[],
+      gameFile: string,
+      isBuilding: boolean,
+      components: { [key: string]: typeof Component },
+      systems: { [key: string]: typeof System },
+      componentForms: { [key: string]: any },
+      systemForms: { [key: string]: any },
+      consoleLogs: string[],
+      openConsole: boolean,
+      consoleErrors: number,
+      consoleWarnings: number,
+      project: Project,
+      icons: { [key: string]: string },
+      showingDropdown: boolean,
     };
   },
   provide() {
@@ -392,8 +410,8 @@ export default Vue.defineComponent({
     },
 
     showFileDropdown(event: MouseEvent) {
-      if (this._showingDropdown) {
-        this._showingDropdown.hide();
+      if (this.showingDropdown) {
+        this.showingDropdown.hide();
       }
       const el = event.target.closest('.dropdown');
       if (!el) {
@@ -401,7 +419,7 @@ export default Vue.defineComponent({
       }
       const dropdown = bootstrap.Dropdown.getInstance(el.querySelector('[data-bs-toggle]'));
       dropdown.show();
-      this._showingDropdown = dropdown;
+      this.showingDropdown = dropdown;
     },
 
     hideFileDropdown(event: MouseEvent) {
@@ -414,7 +432,7 @@ export default Vue.defineComponent({
         return;
       }
       dropdown.hide();
-      this._showingDropdown = null;
+      this.showingDropdown = null;
     },
 
     showGameConfigTab() {
@@ -517,11 +535,10 @@ export default Vue.defineComponent({
     if (this.hasSessionState) {
       await this.loadSessionState();
     }
-    electron.on('error', (ev, err) => {
+    electron.on('error', (ev: any, err: Error) => {
       console.trace(ev, err);
     });
-    electron.on('info', (ev, msg) => console.log(msg));
-
+    electron.on('info', (_: any, msg: string) => console.log(msg));
     window.addEventListener('keydown', this.handleKeydown.bind(this));
   },
 });

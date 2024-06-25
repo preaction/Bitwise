@@ -14,9 +14,9 @@ export type BuildResult = esbuild.BuildResult;
 
 type GameConfig = {};
 
-export async function context( root:string, dest:string, opt:{ [key:string]: any }={} ):Promise<esbuild.BuildContext|undefined> {
+export async function context(root: string, dest: string, opt: { [key: string]: any } = {}): Promise<esbuild.BuildContext | undefined> {
   const src = await buildGameFile(root);
-  if ( !src ) {
+  if (!src) {
     return;
   }
   const ctx = {
@@ -37,82 +37,82 @@ export async function context( root:string, dest:string, opt:{ [key:string]: any
     logLimit: 0,
     ...opt,
   };
-  debug("Creating esbuild context: %o", ctx );
+  debug("Creating esbuild context: %o", ctx);
   return esbuild.context(ctx);
 }
 
-export async function build( root:string, dest:string, opt:{ [key:string]:any }={} ):Promise<esbuild.BuildResult|undefined> {
+export async function build(root: string, dest: string, opt: { [key: string]: any } = {}): Promise<esbuild.BuildResult | undefined> {
   debug("Building %s (root: %s)", dest, root);
   const ctx = await context(root, dest, opt);
-  if ( !ctx ) {
+  if (!ctx) {
     return;
   }
   return ctx.rebuild();
 }
 
-export async function check(root:string):Promise<ChildProcess> {
+export async function check(root: string): Promise<ChildProcess> {
   // Check for typescript errors
   let tsc = require.resolve("typescript");
   debug("Using typescript at ", tsc);
-  const cp = fork( tsc, [ '--noEmit' ], {
+  const cp = fork(tsc, ['--noEmit'], {
     cwd: root,
     stdio: 'overlapped',
-  } );
+  });
   return cp;
 }
 
-async function buildGameFile( projectRoot:string ):Promise<string|undefined> {
-  debug( "Building game file in %s", projectRoot );
-  const findModules:((dir:string) => Promise<{name: string, path:string}[]>) = async (dir) => {
+async function buildGameFile(projectRoot: string): Promise<string | undefined> {
+  debug("Building game file in %s", projectRoot);
+  const findModules: ((dir: string) => Promise<{ name: string, path: string }[]>) = async (dir) => {
     const dirents = await fs.readdir(dir, { withFileTypes: true });
     const files = await Promise.all(
       dirents
-        .filter( dirent => !(dirent.name.match(/^\./) || dirent.name === "node_modules") )
-        .map( dirent => {
+        .filter(dirent => !(dirent.name.match(/^\./) || dirent.name === "node_modules"))
+        .map(dirent => {
           const res = { name: dirent.name, path: path.join(dir, dirent.name) };
           return dirent.isDirectory() ? findModules(res.path) : dirent.name.match(/\.[tj]s$/) ? res : null;
         })
     );
-    return files.flat().filter( f => f !== null ) as {name: string, path:string}[];
+    return files.flat().filter(f => f !== null) as { name: string, path: string }[];
   }
 
-  const modules = await findModules( projectRoot );
-  debug( "Found modules: %o", modules );
-  const confPath = path.join( projectRoot, 'bitwise.json' );
+  const modules = await findModules(projectRoot);
+  debug("Found modules: %o", modules);
+  const confPath = path.join(projectRoot, 'bitwise.json');
   let gameConf = {};
   try {
-    const confJson = await fs.readFile( confPath, { encoding: 'utf8' } );
+    const confJson = await fs.readFile(confPath, { encoding: 'utf8' });
     gameConf = JSON.parse(confJson);
   }
   catch (e) {
-    console.warn( `Could not read project config: ${e}` );
+    console.warn(`Could not read project config: ${e}`);
   }
-  debug( "Game coniguration: %o", gameConf );
+  debug("Game coniguration: %o", gameConf);
 
-  const gameJs = buildGameJs( projectRoot, gameConf, modules );
+  const gameJs = buildGameJs(projectRoot, gameConf, modules);
   // The game file must be written to the root of the project
   // directory for `import` directives to work correctly.
-  const gamePath = path.join( projectRoot, '.bitwise.js' );
-  debug( "Writing game file to %s", gamePath );
-  return fs.writeFile( gamePath, gameJs ).then( () => gamePath );
+  const gamePath = path.join(projectRoot, '.bitwise.js');
+  debug("Writing game file to %s", gamePath);
+  return fs.writeFile(gamePath, gameJs).then(() => gamePath);
 };
 
-function buildGameJs(projectRoot:string, config:GameConfig, moduleItems:{name:string,path:string}[]) {
+function buildGameJs(projectRoot: string, config: GameConfig, moduleItems: { name: string, path: string }[]) {
   // We only know plugins, not whether they are components or systems,
   // so we have to load them all and figure out which is what later...
-  const imports: { [key:string]: { stmt: string, name: string } } = {};
-  for ( const item of moduleItems ) {
-    let varname = item.name.replace( /\.[tj]s$/, '');
-    if ( imports[ varname ] ) {
+  const imports: { [key: string]: { stmt: string, name: string } } = {};
+  for (const item of moduleItems) {
+    let varname = item.name.replace(/\.[tj]s$/, '');
+    if (imports[varname]) {
       let idx = 1;
-      while ( imports[ varname + idx ] ) {
+      while (imports[varname + idx]) {
         idx++;
       }
       varname = varname + idx;
     }
     imports[varname] = {
       stmt: `import ${varname} from './${path.relative(projectRoot, item.path)}';`,
-      name: item.name.replace( /\.[tj]s$/, '' ),
+      name: item.name.replace(/\.[tj]s$/, ''),
     };
   }
 
@@ -120,11 +120,11 @@ function buildGameJs(projectRoot:string, config:GameConfig, moduleItems:{name:st
     import { Game, System, Component } from '@fourstar/bitwise';
 
     // Import custom components and systems
-    ${Object.keys(imports).sort().map( k => imports[k].stmt ).join("\n")}
+    ${Object.keys(imports).sort().map(k => imports[k].stmt).join("\n")}
     const mods = [ ${Object.keys(imports).sort().join(', ')} ];
-    const modNames = [ ${Object.keys(imports).sort().map( k => `"${imports[k].name}"` ).join(', ')} ];
+    const modNames = [ ${Object.keys(imports).sort().map(k => `"${imports[k].name}"`).join(', ')} ];
 
-    const config = ${JSON.stringify( config, null, 2 )};
+    const config = ${JSON.stringify(config, null, 2)};
     config.components = {};
     config.systems = {};
 
