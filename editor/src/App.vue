@@ -272,7 +272,7 @@ export default Vue.defineComponent({
 
     async openProject(name: string) {
       this.project = await this.backend.openProject(name);
-      this.assets = this.project.assets;
+      this.assets = await this.project.getAssets();
       this.buildProject();
     },
 

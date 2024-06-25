@@ -12,7 +12,7 @@ export default class Electron extends EventEmitter implements Backend {
   async openProject(projectName:string):Promise<Project> {
     // Populate the initial project items
     const project = new Project(this, projectName);
-    await project.inflateItems( await this.listItems(projectName) );
+    await project.getAssets(); // preload assets
 
     // Update the recent projects list
     const projectNames = electron.store.get( 'app', 'recentProjects', [] )

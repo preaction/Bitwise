@@ -69,51 +69,61 @@ export default class Project extends EventEmitter {
     return mod.default;
   }
 
+  assetPromise: Promise<Asset[]> | null = null;
+  async getAssets(): Promise<Asset[]> {
+    if (this.assetPromise) {
+      return this.assetPromise;
+    }
+    return this.assetPromise = new Promise((resolve) => {
+      this.backend.listItems(this.name).then(this.inflateItems.bind(this)).then(resolve);
+    });
+  }
+
   /**
    * inflateItems creates Asset objects from the given
    * DirectoryItem objects and adds them to the project's assets array.
    * This is used by the backend when opening the project and listing
    * its contents.
    */
-  async inflateItems( items:DirectoryItem[] ):Promise<Asset[]> {
-    const descend = async (dirItem:DirectoryItem) => {
-      let asset:Asset|null = null;
-      if ( dirItem.children ) {
+  private async inflateItems(items: DirectoryItem[]): Promise<Asset[]> {
+    const descend = async (dirItem: DirectoryItem) => {
+      let asset: Asset | null = null;
+      if (dirItem.children) {
         // Descend
-        asset = new Directory( this.load, dirItem.path );
+        asset = new Directory(this.load, dirItem.path);
       }
-      else if ( dirItem.path.match( /\.(?:png|jpe?g|gif)$/ ) ) {
-        asset = new Texture( this.load, dirItem.path );
+      else if (dirItem.path.match(/\.(?:png|jpe?g|gif)$/)) {
+        asset = new Texture(this.load, dirItem.path);
       }
-      else if ( dirItem.path.match( /\.(?:md|markdown)$/ ) ) {
-        asset = new Markdown( this.load, dirItem.path );
+      else if (dirItem.path.match(/\.(?:md|markdown)$/)) {
+        asset = new Markdown(this.load, dirItem.path);
       }
-      else if ( dirItem.path.match( /\.[jt]s$/ ) ) {
-        asset = new GameModule( this.load, dirItem.path );
+      else if (dirItem.path.match(/\.[jt]s$/)) {
+        asset = new GameModule(this.load, dirItem.path);
       }
-      else if ( dirItem.path.match( /\.vue$/ ) ) {
-        asset = new EditorComponent( this.load, dirItem.path );
+      else if (dirItem.path.match(/\.vue$/)) {
+        asset = new EditorComponent(this.load, dirItem.path);
       }
-      else if ( dirItem.path.match( /\.json$/ ) ) {
-        const json = await this.backend.readItemData( this.name, dirItem.path );
-        asset = new Asset( this.load, dirItem.path );
-        asset.data = JSON.parse( json );
+      else if (dirItem.path.match(/\.json$/)) {
+        const json = await this.backend.readItemData(this.name, dirItem.path);
+        asset = new Asset(this.load, dirItem.path);
+        asset.data = JSON.parse(json);
       }
-      else if ( dirItem.path.match( /\.xml$/ ) ) {
-        const xml = await this.backend.readItemData( this.name, dirItem.path );
-        asset = this.load.inflate( dirItem.path, xml );
+      else if (dirItem.path.match(/\.xml$/)) {
+        const xml = await this.backend.readItemData(this.name, dirItem.path);
+        asset = this.load.inflate(dirItem.path, xml);
       }
       if (!asset) {
-        asset = new Asset( this.load, dirItem.path );
+        asset = new Asset(this.load, dirItem.path);
       }
-      if ( dirItem.children ) {
-        asset.children = await Promise.all( dirItem.children.map((i:DirectoryItem) => descend(i)) );
+      if (dirItem.children) {
+        asset.children = await Promise.all(dirItem.children.map((i: DirectoryItem) => descend(i)));
       }
       return asset;
     };
 
-    const assets = await Promise.all( items.map( descend ) );
-    this.assets.push( ...assets );
+    const assets = await Promise.all(items.map(descend));
+    this.assets.push(...assets);
     return assets;
   }
 }

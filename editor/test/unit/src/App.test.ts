@@ -42,6 +42,7 @@ const mockLoadGameClass = jest.fn() as jest.MockedFunction<typeof project.loadGa
 const mockGetState = jest.fn() as jest.MockedFunction<typeof backend.getState>;
 const mockSetState = jest.fn() as jest.MockedFunction<typeof backend.setState>;
 const mockReadItemData = jest.fn() as jest.MockedFunction<typeof backend.readItemData>;
+const mockListItems = jest.fn() as jest.MockedFunction<typeof backend.listItems>;
 beforeEach(async () => {
   global.fetch = jest.fn() as jest.MockedFunction<typeof global.fetch>
   mockGetState.mockResolvedValue({});
@@ -53,6 +54,7 @@ beforeEach(async () => {
   backend.getState = mockGetState;
   backend.setState = mockSetState;
   backend.readItemData = mockReadItemData;
+  backend.listItems = mockListItems;
 
   const mockData: { [key: string]: string } = {
     'LoadScene.json': '{ "type": "Scene", "component": "SceneEdit" }',
@@ -82,9 +84,10 @@ beforeEach(async () => {
   projectItems[0].children = [
     { path: "directory/OldScene.json" },
   ];
+  mockListItems.mockResolvedValue(projectItems);
 
   project = new Project(backend, "Project Name");
-  await project.inflateItems(projectItems);
+  await project.getAssets();
   mockOpenProject.mockReturnValue(Promise.resolve(project));
   project.loadGameClass = mockLoadGameClass;
 });
