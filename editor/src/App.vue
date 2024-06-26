@@ -602,10 +602,10 @@ export default Vue.defineComponent({
               <li class="hr">
                 <hr>
               </li>
-              <li @click="newModule('NewComponent', 'Component.ts')">Component</li>
-              <li @click="newModule('NewComponentForm', 'Component.vue')">Component Form</li>
-              <li @click="newModule('NewSystem', 'System.ts')">System</li>
-              <li @click="newModule('NewSystemForm', 'Component.vue')">System Form</li>
+              <li data-test="new-component" @click="newModule('NewComponent', 'Component.ts')">Component</li>
+              <li data-test="new-component-form" @click="newModule('NewComponentForm', 'Component.vue')">Component Form</li>
+              <li data-test="new-system" @click="newModule('NewSystem', 'System.ts')">System</li>
+              <li data-test="new-system-form" @click="newModule('NewSystemForm', 'Component.vue')">System Form</li>
             </ul>
           </MenuButton>
           <button class="menu-button" title="Import" @click="importFiles" data-test="import-files">

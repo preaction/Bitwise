@@ -12,7 +12,7 @@ export function bitwiseNewFile(win: BrowserWindow, root: string, name: string, e
         if (res.filePath) {
           res.filePath = path.relative(root, res.filePath);
         }
-        if (res.filePath && !res.filePath.match(new RegExp("\\" + ext + "$"))) {
+        if (res.filePath && !res.filePath.match(new RegExp("\\." + ext + "$"))) {
           res.filePath += '.' + ext;
         }
         return res

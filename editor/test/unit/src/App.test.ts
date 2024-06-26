@@ -468,6 +468,35 @@ describe('App', () => {
         src: "",
       });
     });
+
+    test('create new game component', async () => {
+      const defaultComponentName = 'NewComponent';
+      const defaultComponentExt = 'ts';
+      const defaultComponentPath = `${defaultComponentName}.${defaultComponentExt}`;
+      // Electron shell.openPath returns "" on success
+      const mockOpenEditor = jest.spyOn(global.electron, 'openEditor').mockResolvedValue("");
+      const mockNewFile = jest.spyOn(global.electron, 'newFile').mockResolvedValue({
+        canceled: false,
+        filePath: defaultComponentPath,
+      });
+      const mockSaveFile = jest.spyOn(global.electron, 'saveFile').mockResolvedValue();
+
+      await wrapper.get('[data-test=new-asset]').trigger('click');
+      await wrapper.get('[data-test=new-component]').trigger('click');
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      // Tries to open editor
+      expect(mockNewFile).toHaveBeenCalledWith(project.name, defaultComponentName, defaultComponentExt);
+      expect(mockSaveFile).toHaveBeenCalledWith(project.name, defaultComponentPath, expect.stringMatching(`${defaultComponentName} extends Component`));
+      expect(mockOpenEditor).toHaveBeenCalledWith(project.name, defaultComponentPath);
+
+      // Does not open tab
+      const tabBar = wrapper.get({ ref: 'tabBar' });
+      const tabElements = tabBar.findAll('a');
+      expect(tabElements).toHaveLength(0);
+    });
+
   });
 
   describe('load session state (browser refresh)', () => {
