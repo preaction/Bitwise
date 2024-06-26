@@ -602,7 +602,7 @@ export default defineComponent({
     <div class="tab-sidebar">
       <TabView>
         <Panel label="Entities">
-          <EntityPanel ref="entityPanel" v-if="sceneData" class="tab-sidebar-item" @update="sceneChanged"
+          <EntityPanel ref="entityPanel" v-if="sceneData" class="tab-sidebar-item" @update:modelValue="sceneChanged"
             v-model="sceneData.entities" :scene="scene" />
         </Panel>
         <Panel label="Systems">

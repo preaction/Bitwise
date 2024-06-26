@@ -23,7 +23,7 @@ export default defineComponent({
   },
   emits: { 'update:modelValue': null },
 
-  inject: ['componentForms', 'assets', 'openTab'],
+  inject: ['componentForms', 'project', 'openTab'],
   data() {
     return {
       entities: [...(this.modelValue || [])],
@@ -346,7 +346,7 @@ export default defineComponent({
       const eName = eData.path.split('/').slice(0, -1)[0];
       let filename = eName + '.json';
       let suffix = 1;
-      while (this.assets.includes(filename)) {
+      while (this.project.assets.includes(filename)) {
         filename = eName + (suffix++) + '.json';
       }
       // Don't write the file yet, just open a new tab on the prefab

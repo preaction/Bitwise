@@ -1,11 +1,15 @@
 import { describe, expect, test, beforeEach, beforeAll, jest } from '@jest/globals';
 import { mount, flushPromises } from '@vue/test-utils';
+import * as Vue from "vue";
 import { MockElectron } from '../../../mock/electron.js';
 import Project from '../../../../src/model/Project.js';
 import MockBackend from '../../../mock/backend.js';
 import SceneEdit from '../../../../src/components/SceneEdit.vue';
 import EntityPanel from '../../../../src/components/EntityPanel.vue';
 import Tab from '../../../../src/model/Tab.js';
+import TransformEdit from '../../../../src/components/bitwise/Transform.vue';
+import OrthographicCameraEdit from '../../../../src/components/bitwise/OrthographicCamera.vue';
+import SpriteEdit from '../../../../src/components/bitwise/Sprite.vue';
 import { Asset, Load, Game, Scene } from '@fourstar/bitwise';
 
 // Mock out the Game.start() method so we don't try (and fail) to create
@@ -36,6 +40,12 @@ const stubs = {
   TabView: false,
   Panel: false,
 };
+const systemForms = Vue.markRaw({});
+const componentForms = Vue.markRaw({
+  Transform: TransformEdit,
+  OrthographicCamera: OrthographicCameraEdit,
+  Sprite: SpriteEdit,
+});
 let backend: MockBackend, project: Project, provide: any;
 beforeEach(() => {
   global.electron = new MockElectron();
@@ -48,6 +58,9 @@ beforeEach(() => {
     baseUrl: 'testProject',
     isBuilding: false,
     gameClass: Game,
+    systemForms,
+    componentForms,
+    openTab: () => { },
   };
 });
 
@@ -280,6 +293,26 @@ describe('SceneEdit', () => {
       expect(JSON.parse(sceneJson)).toMatchObject({
         editor: expect.objectContaining({ showGrid: true, snapToGrid: true }),
       });
+    });
+
+    test('changing an entity enables save', async () => {
+      const onUpdate = jest.fn();
+      const wrapper = mount(SceneEdit, {
+        props: {
+          modelValue,
+          onUpdate,
+        },
+        global: { provide },
+      });
+      wrapper.setData({ gameClass: Game });
+      await flushPromises();
+
+      const entityPanel = wrapper.getComponent(EntityPanel);
+      entityPanel.vm.$emit('update:modelValue', sceneData.entities);
+
+      expect(onUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ edited: true }),
+      );
     });
   });
 
