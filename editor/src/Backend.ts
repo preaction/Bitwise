@@ -5,6 +5,11 @@ export type DirectoryItem = {
   children?: DirectoryItem[],
 };
 
+export type ProjectChange = {
+  eventType: string,
+  filename: string | null,
+};
+
 export default interface Backend {
   listProjects(): Promise<string[]>;
   openProject(projectName: string): Promise<Project>;
@@ -19,4 +24,6 @@ export default interface Backend {
 
   getState(stateName: string, defaultValue: any): Promise<any>;
   setState(stateName: string, data: any): Promise<void>;
+
+  on(type: "change", cb: (changes: ProjectChange[]) => void): void;
 }

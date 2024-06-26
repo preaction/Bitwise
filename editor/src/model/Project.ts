@@ -1,6 +1,6 @@
 
 import type IBackend from '../Backend.js';
-import type { DirectoryItem } from '../Backend.js';
+import type { ProjectChange, DirectoryItem } from '../Backend.js';
 
 import { EventEmitter } from 'events';
 import { Load, Asset, type Game, Texture } from '@fourstar/bitwise';
@@ -39,12 +39,15 @@ export default class Project extends EventEmitter {
   state: { [key: string]: any } = {};
   private gameFile: string | null = null;
   private gameClass: typeof Game | null = null;
+  private pendingChanges: ProjectChange[] = [];
+  private buildTimeout: null | ReturnType<typeof setTimeout> = null;
 
   constructor(backend: IBackend, name: string) {
     super();
     this.backend = backend;
     this.name = name;
     this.load = new Load();
+    backend.on("change", this.onChange.bind(this));
   }
 
   async readItemData(path: string): Promise<string> {
@@ -127,5 +130,42 @@ export default class Project extends EventEmitter {
     this.assets.push(...assets);
     return assets;
   }
+
+  private onChange(changes: ProjectChange[]) {
+    // If we do not have focus, queue up changes to process
+    if (!document.hasFocus()) {
+      if (!this.pendingChanges?.length) {
+        const processChanges = () => {
+          this.processChanges(this.pendingChanges);
+          this.pendingChanges = [];
+          window.removeEventListener('focus', processChanges);
+        };
+        window.addEventListener('focus', processChanges);
+      }
+      this.pendingChanges.push(...changes);
+      return;
+    }
+    this.processChanges(changes);
+  }
+
+  private processChanges(changes: ProjectChange[]) {
+    this.assets.splice(0, Infinity);
+    this.assetPromise = null;
+    this.emit('change');
+
+    // If any ts/js file changed, build the project
+    if (changes.find(({ filename }) => filename && !filename.match(/(^|\/)\./) && filename.match(/\.[tj]s$/))) {
+      this.emit('loadstart');
+      if (this.buildTimeout) {
+        clearTimeout(this.buildTimeout);
+      }
+      this.buildTimeout = setTimeout(async () => {
+        this.gameFile = null;
+        await this.loadGameClass();
+        this.buildTimeout = null;
+      }, 1000);
+    }
+  }
+
 }
 

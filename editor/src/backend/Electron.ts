@@ -1,9 +1,11 @@
 import type Backend from '../Backend.js';
-import type { DirectoryItem } from '../Backend.js';
+import type { DirectoryItem, ProjectChange } from '../Backend.js';
 import Project from '../model/Project.js';
 import { EventEmitter } from 'events';
 
 export default class Electron extends EventEmitter implements Backend {
+  fsWatcher: null | ((event: any, changes: ProjectChange[]) => void) = null;
+
   async listProjects(): Promise<string[]> {
     // List the most recent projects
     const projectNames = electron.store.get('app', 'recentProjects', [])
@@ -26,7 +28,17 @@ export default class Electron extends EventEmitter implements Backend {
     projectNames.length = Math.min(projectNames.length, 5);
     electron.store.set('app', 'recentProjects', projectNames);
 
+    if (this.fsWatcher) {
+      electron.removeListener('watch', this.fsWatcher);
+    }
+    this.fsWatcher = this.changeFile.bind(this);
+    electron.on('watch', this.fsWatcher);
+
     return project;
+  }
+
+  changeFile(_: any, changes: ProjectChange[]) {
+    this.emit("change", changes);
   }
 
   async saveProject(project: Project): Promise<void> {

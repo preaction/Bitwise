@@ -9,21 +9,22 @@ import { Texture, Atlas } from '@fourstar/bitwise';
 
 jest.mock('../../../mock/game.js');
 
+const mockReadFile = jest.fn() as jest.MockedFunction<typeof global.electron.readFile>;
+const mockReadProject = jest.fn() as jest.MockedFunction<typeof global.electron.readProject>;
+let backend: ElectronBackend;
+let project: Project;
 beforeEach(() => {
+  backend = new ElectronBackend();
+  project = new Project(backend, "projectName");
   global.electron = new MockElectron();
+  global.electron.readFile = mockReadFile;
+  global.electron.readProject = mockReadProject;
+  mockReadFile.mockReset();
+  mockReadProject.mockReset();
 });
 
 describe('Project', () => {
   describe('getAssets()', () => {
-    const mockReadFile = jest.fn() as jest.MockedFunction<typeof global.electron.readFile>;
-    const mockReadProject = jest.fn() as jest.MockedFunction<typeof global.electron.readProject>;
-    beforeEach(() => {
-      global.electron.readFile = mockReadFile;
-      global.electron.readProject = mockReadProject;
-      mockReadFile.mockReset();
-      mockReadProject.mockReset();
-    });
-
     test('should inflate assets from DirectoryItem', async () => {
       const dirItems: DirectoryItem[] = [
         {
@@ -47,8 +48,6 @@ describe('Project', () => {
       ];
       mockReadProject.mockResolvedValue(dirItems);
 
-      const backend = new ElectronBackend();
-      const project = new Project(backend, "projectName");
       const gotAssets = await project.getAssets();
       expect(gotAssets).toHaveLength(4);
       expect(gotAssets[0]).toBeInstanceOf(Texture);
@@ -72,8 +71,6 @@ describe('Project', () => {
       ];
       mockReadProject.mockResolvedValue(dirItems);
 
-      const backend = new ElectronBackend();
-      const project = new Project(backend, "projectName");
       const gotAssets = await project.getAssets();
       expect(gotAssets).toHaveLength(1);
       const texture = gotAssets[0] as Texture;
@@ -99,8 +96,6 @@ describe('Project', () => {
       ];
       itemData.map(data => JSON.stringify(data)).forEach(json => mockReadFile.mockResolvedValue(json));
 
-      const backend = new ElectronBackend();
-      const project = new Project(backend, "projectName");
       const gotAssets = await project.getAssets();
       expect(gotAssets).toHaveLength(1);
       expect(gotAssets[0].path).toBe(dirItems[0].path);
@@ -120,8 +115,6 @@ describe('Project', () => {
       ];
       mockReadProject.mockResolvedValue(dirItems);
 
-      const backend = new ElectronBackend();
-      const project = new Project(backend, "projectName");
       const gotAssets = await project.getAssets();
       expect(gotAssets).toHaveLength(1);
       expect(gotAssets[0].path).toBe(dirItems[0].path);
@@ -152,8 +145,6 @@ describe('Project', () => {
       ];
       itemData.forEach(data => mockReadFile.mockResolvedValue(data));
 
-      const backend = new ElectronBackend();
-      const project = new Project(backend, "projectName");
       const gotAssets = await project.getAssets();
       expect(gotAssets).toHaveLength(2);
       expect(gotAssets[0].path).toBe(dirItems[0].path);
@@ -181,8 +172,6 @@ describe('Project', () => {
 
     test('should load game class', async () => {
       mockBuildProject.mockResolvedValue('../../../mock/game.js');
-      const backend = new ElectronBackend();
-      const project = new Project(backend, "projectName");
       const gameClass = await project.loadGameClass();
       expect(gameClass).toBeInstanceOf(typeof MockGame);
     });
@@ -190,5 +179,31 @@ describe('Project', () => {
     test.todo('should emit loadstart/loadend events');
     test.todo('should reload game class after backend build');
     test.todo('should return same class to multiple concurrent callers');
+  });
+
+  describe('subscribes to backend change events', () => {
+    const mockHasFocus = jest.spyOn(document, 'hasFocus');
+    beforeEach(() => {
+      mockHasFocus.mockReset();
+      mockHasFocus.mockReturnValue(true);
+    });
+
+    test('change causes asset cache reset', async () => {
+      const dirItems: DirectoryItem[] = [
+        { path: 'sprite.png' },
+      ];
+      mockReadProject.mockResolvedValue(dirItems);
+
+      const initialAssets = await project.getAssets();
+      expect(initialAssets).toHaveLength(dirItems.length);
+
+      const newItems = [{ path: 'newimage.png' }];
+      dirItems.push(...newItems);
+      backend.emit('change', newItems);
+
+      const newAssets = await project.getAssets();
+      expect(newAssets).toHaveLength(dirItems.length);
+      expect(newAssets[newAssets.length - 1]).toMatchObject({ name: newItems[0].path });
+    });
   });
 });

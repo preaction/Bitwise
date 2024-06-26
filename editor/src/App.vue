@@ -6,7 +6,7 @@ import { Asset, type Component, type Game, type System } from '@fourstar/bitwise
 import Tab from './model/Tab.js';
 import Project from './model/Project.js';
 import NewTab from "./components/NewTab.vue";
-import AssetTree from "./components/AssetTree.vue";
+import Tree from "./components/Tree.vue";
 import ProjectSelect from "./components/ProjectSelect.vue";
 import ImageView from "./components/ImageView.vue";
 import MarkdownView from "./components/MarkdownView.vue";
@@ -138,7 +138,7 @@ const vueLoaderOptions = {
 export default Vue.defineComponent({
   components: {
     NewTab,
-    AssetTree,
+    Tree,
     ProjectSelect,
     ImageView,
     MarkdownView,
@@ -291,6 +291,9 @@ export default Vue.defineComponent({
     async openProject(name: string) {
       this.project = await this.backend.openProject(name);
       this.assets = await this.project.getAssets();
+      this.project.on('change', async () => {
+        this.assets = await this.project.getAssets();
+      });
       this.buildProject();
     },
 
@@ -528,6 +531,43 @@ export default Vue.defineComponent({
       this.isBuilding = false;
     },
 
+    ondragstart(event: DragEvent, asset: Asset) {
+      event.dataTransfer.setData('bitwise/asset', JSON.stringify(asset.ref()));
+    },
+
+    deleteFile(item: Asset) {
+      if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+        this.backend.deleteItem(this.project.name, item.path);
+      }
+    },
+
+    onDropFile(event: DragEvent) {
+      const data = event.dataTransfer.getData("bitwise/file");
+      if (data) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        const dropPath = event.currentTarget.dataset.path;
+        // If the destination is a file, move to the parent folder
+        const parts = dropPath.split('/');
+        let destItem = this.project.assets.find(item => item.name + item.ext === parts[0]);
+        let parentPath = '';
+        for (const part of parts.slice(1)) {
+          parentPath += '/' + destItem.name;
+          destItem = destItem.children.find(item => item.name === part);
+        }
+        let destination = destItem.isDirectory ? destItem.path : parentPath;
+        destination += '/' + data.split('/').pop();
+        this.renamePath(data, destination);
+      }
+      else {
+        event.dataTransfer.dropEffect = "";
+      }
+    },
+
+    renamePath(path: string, dest: string) {
+      // XXX: Pre-move item in assets
+      return electron.renamePath(this.project.name, path, dest);
+    },
   },
 
   async mounted() {
@@ -586,7 +626,19 @@ export default Vue.defineComponent({
         </MenuButton>
       </div>
       <div data-testid="projectTree" ref="projectTree" class="app-sidebar-item">
-        <AssetTree :ondblclick="openTab" :project="project" />
+        <Tree v-for="asset in assets" :ondblclick="openTab" :node="asset" :ondrop="onDropFile"
+          :ondragstart="ondragstart">
+          <template #menu="{ asset }">
+            <MenuButton>
+              <template #button>
+                <i class="fa-solid fa-ellipsis-vertical project-tree-item-menu-button"></i>
+              </template>
+              <ul>
+                <li @click="deleteFile(asset)">Delete</li>
+              </ul>
+            </MenuButton>
+          </template>
+        </Tree>
       </div>
     </div>
 

@@ -204,6 +204,38 @@ describe('App', () => {
     });
   });
 
+  describe('displays asset tree', () => {
+    let wrapper: VueWrapper;
+    beforeEach(async () => {
+      wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+      });
+      cleanup.push(wrapper.unmount.bind(wrapper));
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      const modal = wrapper.getComponent(ProjectSelect);
+      modal.vm.$emit('select', project.name);
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+    });
+
+    test('shows new assets after change', async () => {
+      const newItems = [{ path: 'newimage.png' }];
+      projectItems.push(...newItems);
+      mockListItems.mockReset();
+      mockListItems.mockResolvedValue(projectItems);
+      backend.emit('change', newItems);
+      await wrapper.vm.$nextTick();
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      const treeItem = wrapper.find('[data-path="newimage.png"]');
+      expect(treeItem.exists()).toBeTruthy();
+    });
+  });
+
   describe('can open items from project tree', () => {
     let wrapper: VueWrapper;
     beforeEach(async () => {

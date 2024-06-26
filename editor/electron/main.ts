@@ -202,7 +202,7 @@ ipcMain.handle('bitwise-read-project', (event, path) => {
   const watcher = fs.watch(path, { signal: aborter.signal, recursive: true, persistent: false });
   (async () => {
     try {
-      const changes: { eventType: string, filename: string }[] = [];
+      const changes: { eventType: string, filename: string | null }[] = [];
       let timeoutId;
       for await (const event of watcher) {
         changes.push(event);
