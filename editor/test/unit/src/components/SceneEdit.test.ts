@@ -139,6 +139,7 @@ describe('SceneEdit', () => {
     let sceneData: any, modelValue: Tab;
     beforeEach(() => {
       sceneData = {
+        $schema: 1,
         name: "OldScene",
         component: "SceneEdit",
         components: ['Transform', 'Sprite', 'OrthographicCamera', 'UI'],
@@ -146,7 +147,15 @@ describe('SceneEdit', () => {
           { name: 'Input', data: {} },
           { name: 'Render', data: {} },
         ],
-        entities: [],
+        entities: [
+          {
+            name: 'MyEntity',
+            components: {
+              Transform: {},
+              Sprite: {},
+            },
+          },
+        ],
       };
       const asset = new Asset(new Load(), "OldScene.json");
       asset.data = sceneData;
@@ -295,7 +304,7 @@ describe('SceneEdit', () => {
       });
     });
 
-    test('changing an entity enables save', async () => {
+    test('changing an entity in EntityPanel enables save', async () => {
       const onUpdate = jest.fn();
       const wrapper = mount(SceneEdit, {
         props: {
@@ -309,6 +318,28 @@ describe('SceneEdit', () => {
 
       const entityPanel = wrapper.getComponent(EntityPanel);
       entityPanel.vm.$emit('update:modelValue', sceneData.entities);
+
+      expect(onUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ edited: true }),
+      );
+    });
+
+    test('changing an entity in game enables save', async () => {
+      const onUpdate = jest.fn();
+      const wrapper = mount(SceneEdit, {
+        props: {
+          modelValue,
+          onUpdate,
+        },
+        global: { provide },
+      });
+      wrapper.setData({ gameClass: Game });
+      await flushPromises();
+      await wrapper.vm.initializeEditor();
+
+      const scene = wrapper.vm.editScene;
+      const editorRender = scene.getSystem(scene.game.systems.EditorRender);
+      editorRender.dispatchEvent({ type: 'updateEntity', eid: scene.eids[0], components: {} });
 
       expect(onUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ edited: true }),

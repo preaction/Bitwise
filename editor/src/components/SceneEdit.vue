@@ -252,15 +252,15 @@ export default defineComponent({
     },
 
     async thawEditScene(sceneData: any) {
+      // Editor scene gets its own systems
+      const systems = [
+        { name: 'Input', data: {} },
+        { name: 'EditorRender', data: sceneData?.editor },
+      ];
+      if (sceneData.systems.find((sys: System) => sys.name === 'Physics')) {
+        systems.push({ name: 'EditorPhysics', data: {} });
+      }
       try {
-        // Editor scene gets its own systems
-        const systems = [
-          { name: 'Input', data: {} },
-          { name: 'EditorRender', data: sceneData?.editor },
-        ];
-        if (sceneData.systems.find((sys: System) => sys.name === 'Physics')) {
-          systems.push({ name: 'EditorPhysics', data: {} });
-        }
         await this.editScene.thaw({
           ...sceneData,
           systems,
@@ -365,6 +365,7 @@ export default defineComponent({
             = propertyValue;
         }
       }
+      this.update();
     },
 
     selectionChanged({ eids }: { eids: number[] }) {

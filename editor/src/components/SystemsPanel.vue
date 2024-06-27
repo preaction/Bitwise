@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Scene } from '@fourstar/bitwise';
+import type { Scene, SceneData } from '@fourstar/bitwise';
 import { computed, inject, toRaw } from 'vue'
 import MenuButton from './MenuButton.vue';
 
@@ -9,7 +9,7 @@ const emits = defineEmits<{
   (e: 'update'): void,
 }>();
 const systems = computed(() => {
-  return props.scene?.game.systems || {};
+  return props.scene?.game?.systems || [];
 });
 
 const availableSystems = computed(() => {
@@ -24,7 +24,7 @@ function updateSystem(idx: number, data: Object) {
   update();
 }
 
-function startDragSystem(event, index) {
+function startDragSystem(event: DragEvent, index) {
   event.dataTransfer.setData("bitwise/system", index);
 }
 
@@ -79,7 +79,7 @@ function update() {
 </script>
 
 <template>
-  <div>
+  <div v-if="modelValue?.systems">
     <div v-for="s, idx in modelValue.systems" :key="s.name" class="system-form">
       <div class="mb-1 d-flex justify-content-between align-items-center" draggable="true"
         @dragstart="startDragSystem($event, idx)" @dragover="dragOverSystem($event, idx)"
