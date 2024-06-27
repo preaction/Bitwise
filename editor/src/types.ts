@@ -1,5 +1,5 @@
 export type TreeNode = {
   name?: string,
-  icon?: string,
+  type?: string,
   children?: Array<TreeNode>,
 };

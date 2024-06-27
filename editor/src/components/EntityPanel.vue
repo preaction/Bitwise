@@ -30,17 +30,11 @@ export default defineComponent({
       selectedEntityPath: "",
       selectedEntityData: undefined,
       selectedEntity: undefined,
-      icons: {
-        "default": "fa-cube",
-        "Camera": "fa-camera",
-        "Sprite": "fa-image-portrait",
-      }
     } as {
       entities: EntityData[],
       selectedEntityPath: string,
       selectedEntityData: EntityData | null | undefined,
       selectedEntity: Raw<Entity> | undefined,
-      icons: { [key: string]: string },
     }
   },
 
@@ -395,7 +389,7 @@ export default defineComponent({
     </div>
     <div class="scene-tree">
       <Tree ref="tree" v-for="entityData in entities" :key="entityData.name" :node="entityData" :onclick="select"
-        :ondragstart="dragStart" :ondragover="dragOverEntity" :ondrop="dropEntity">
+        :ondragstart="dragStart" :ondragover="dragOverEntity" :ondrop="dropEntity" default-type="Entity">
         <template #menu="{ node: entityData }">
           <MenuButton>
             <template #button>

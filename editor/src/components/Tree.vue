@@ -1,6 +1,7 @@
 <script lang="ts" setup generic="T extends TreeNode">
 import { ref, computed } from "vue";
 import type { TreeNode } from '../types';
+import { Asset, Entity } from "@fourstar/bitwise";
 const DBLCLICK_DELAY = 250;
 
 const props = defineProps<{
@@ -12,10 +13,29 @@ const props = defineProps<{
   ondragstart?: (event: DragEvent, node: T, path: string) => void | undefined
   ondragover?: (event: DragEvent, node: T, path: string) => void | undefined
   ondrop?: (event: DragEvent, node: T, path: string) => void | undefined
+  defaultType?: string,
 }>();
 
 let clickTimeout: ReturnType<typeof setTimeout> | void;
 let expand = ref(false);
+
+const icons: { [key: string]: string } = {
+  'Camera': 'fa-camera',
+  'Sprite': 'fa-image-portrait',
+  'Asset': 'fa-cube',
+  'Texture': 'fa-image',
+  'Entity': 'fa-cube',
+  'png': 'fa-image',
+  'gif': 'fa-image',
+  'jpg': 'fa-image',
+  'jpeg': 'fa-image',
+  'md': 'fa-file-lines',
+  'markdown': 'fa-file-lines',
+  'ts': 'fa-file-code',
+  'js': 'fa-file-code',
+  'vue': 'fa-file-edit',
+  'json': 'fa-film',
+};
 
 // isRoot should default to true, since this sets dirname on descendants
 const isRoot = !props.dirname;
@@ -29,6 +49,17 @@ const isFolder = computed(() => props.node?.children?.length >= 0);
 const hasChildren = computed(() => props.node?.children?.length > 0);
 const showChildren = computed(() => props.expand || expand.value);
 const childTrees = ref<Array<Tree>>([]);
+const icon = computed(() => {
+  const kind = props.node.type || (props.node.name?.includes('.') ? props.node.name.split('.').pop() : props.defaultType);
+  let icon: string = '';
+  if (kind && icons[kind]) {
+    icon = icons[kind];
+  }
+  else if (props.node instanceof Entity) {
+    icon = icons['Entity'];
+  }
+  return icon || '';
+});
 
 function handleClick() {
   // If we don't need to handle double-click, we can just handle the
@@ -136,10 +167,10 @@ defineExpose({
       @dragover="dragover" @drop="drop" @click="handleClick" @dblclick="handleDoubleClick"
       @mousedown="preventTextSelect">
       <span class="label">
-        <span v-if="props.node.icon">
+        <span v-if="icon">
           <i v-if="hasChildren" class="me-1 fa show-children" @click.stop="toggleChildren"
             :class="showChildren ? 'fa-caret-down' : 'fa-caret-right'"></i>
-          <i class="me-1 fa" :class="props.node.icon"></i>
+          <i class="me-1 fa" :class="icon"></i>
         </span>
         <span v-else-if="isFolder" class="me-1">
           <i class="fa show-children" @click.stop="toggleChildren"
@@ -165,13 +196,15 @@ defineExpose({
 </template>
 
 <style>
-.asset-tree-item .name {
+.asset-tree-item>.name {
+  color: var(--bw-color);
+  text-decoration: none;
   cursor: pointer;
   padding: 2px;
   margin: 0;
 }
 
-.asset-tree-item:hover>.name {
+.asset-tree-item .name:hover {
   color: var(--bw-color-hover);
   background: var(--bw-background-color-hover);
 }
