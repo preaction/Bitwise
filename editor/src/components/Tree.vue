@@ -163,8 +163,8 @@ defineExpose({
 
 <template>
   <div class="asset-tree-item" :class="isRoot ? 'tree-root' : ''">
-    <a class="name ps-1 d-flex" :data-path="nodePath" draggable="true" @dragstart="dragstart" @dragend="dragend"
-      @dragover="dragover" @drop="drop" @click="handleClick" @dblclick="handleDoubleClick"
+    <a class="name ps-1" :title="props.node.name" :data-path="nodePath" draggable="true" @dragstart="dragstart"
+      @dragend="dragend" @dragover="dragover" @drop="drop" @click="handleClick" @dblclick="handleDoubleClick"
       @mousedown="preventTextSelect">
       <span class="label">
         <span v-if="icon">
@@ -197,11 +197,17 @@ defineExpose({
 
 <style>
 .asset-tree-item>.name {
+  display: flex;
+  width: 100%;
   color: var(--bw-color);
   text-decoration: none;
   cursor: pointer;
   padding: 2px;
   margin: 0;
+  white-space: nowrap;
+  word-break: keep-all;
+  position: relative;
+  text-overflow: ellipsis;
 }
 
 .asset-tree-item .name:hover {
@@ -216,7 +222,9 @@ defineExpose({
 
 .asset-tree-item__menu {
   display: none;
-  margin-left: auto;
+  position: absolute;
+  right: 0;
+  background: var(--bw-background-color-hover);
 }
 
 .asset-tree-item .name:hover .asset-tree-item__menu {
