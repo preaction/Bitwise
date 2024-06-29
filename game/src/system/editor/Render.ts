@@ -496,6 +496,7 @@ export class Render extends RenderSystem {
     if (show) {
       const gridHelper = new three.GridHelper(100, 100);
       gridHelper.lookAt(0, 1, 0);
+      gridHelper.position.z = -1;
       gridHelper.userData.isEditor = true;
       this.scene._scene.add(gridHelper);
       this.grid = gridHelper;

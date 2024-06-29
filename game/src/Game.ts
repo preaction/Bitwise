@@ -91,12 +91,11 @@ export default class Game extends three.EventDispatcher {
    * the game. These values can be overridden by the config passed to
    * the game's constructor.
    */
-  // XXX: define game constructor options object type
   get config(): GameConfig {
     return {
       renderer: {
-        width: 1200,
-        height: 720,
+        width: 0,
+        height: 0,
       },
       components: {},
       systems: {},
@@ -112,8 +111,8 @@ export default class Game extends three.EventDispatcher {
     this.ecs = bitecs;
     this.canvas = opt.canvas;
     this.load = new Load(opt.loader || {});
-    this.width = opt.renderer?.width || conf.renderer?.width;
-    this.height = opt.renderer?.height || conf.renderer?.height;
+    this.width = opt.renderer?.width ?? conf.renderer?.width;
+    this.height = opt.renderer?.height ?? conf.renderer?.height;
     this.data = opt.data || {};
     if (this.width > 0 || this.height > 0) {
       this.autoSize = false;

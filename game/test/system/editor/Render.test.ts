@@ -1,7 +1,7 @@
 import { jest, describe, expect, test, beforeEach } from '@jest/globals';
 import 'global-jsdom/register'; // Adds `document` object for three to use
 import 'webgl-mock-threejs'; // Provides HTMLCanvasElement
-import { OrthographicCamera, Sprite, Texture } from 'three';
+import { AmbientLight, OrthographicCamera, Sprite, Texture } from 'three';
 import Game from '../../../src/Game';
 import Entity from '../../../src/Entity';
 import Scene from '../../../src/Scene';
@@ -100,11 +100,13 @@ describe('EditorRender', () => {
     system.start();
 
     const threeScene = system.scene._scene;
-    expect(threeScene.children).toHaveLength(3);
+    expect(threeScene.children).toHaveLength(4);
     const threeCamera = threeScene.getObjectByName("camera") as OrthographicCamera;
     expect(threeCamera).toBeDefined();
     const threeSprite = threeScene.getObjectByName("sprite") as Sprite;
     expect(threeSprite).toBeDefined();
+    const threeLight = threeScene.getObjectByName("ambientLight") as AmbientLight;
+    expect(threeLight).toBeDefined();
   });
 
   test('stop() removes objects (except editor camera) from three scene', async () => {

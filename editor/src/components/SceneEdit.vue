@@ -311,6 +311,11 @@ export default defineComponent({
         loader: {
           base: this.baseUrl,
         },
+        // Editor game should auto-size, so set width/height 0
+        renderer: {
+          width: 0,
+          height: 0,
+        },
         data: {
           // XXX: Get from game settings
           gameWidth: 1280,

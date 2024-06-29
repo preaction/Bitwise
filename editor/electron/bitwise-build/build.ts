@@ -82,7 +82,7 @@ async function buildGameFile(projectRoot: string): Promise<string | undefined> {
   let gameConf = {};
   try {
     const confJson = await fs.readFile(confPath, { encoding: 'utf8' });
-    gameConf = JSON.parse(confJson);
+    gameConf = JSON.parse(confJson).game;
   }
   catch (e) {
     console.warn(`Could not read project config: ${e}`);

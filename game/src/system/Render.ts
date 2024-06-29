@@ -60,6 +60,7 @@ export default class Render extends System {
 
   cameras: Array<three.OrthographicCamera | undefined> = [];
   mainCamera: number = -1;
+  ambientLight: three.Light;
   objects: three.Object3D[] = [];
   textures: three.Texture[] = [];
   materials: three.Material[] = [];
@@ -87,6 +88,10 @@ export default class Render extends System {
         return this.scene.game.load.base + url
       },
     );
+
+    // XXX: This should be an Entity/Component
+    this.ambientLight = new three.AmbientLight(0xffffff);
+    this.ambientLight.name = 'ambientLight';
 
     // Render currently has Sprite and OrthographicCamera
     // At init(), we want to create all Object3D
@@ -227,6 +232,7 @@ export default class Render extends System {
    * event listeners.
    */
   start() {
+    this.scene._scene.add(this.ambientLight);
     this.createEnters();
     this.updateTransforms();
     this.addNewActive();
@@ -407,6 +413,7 @@ export default class Render extends System {
    * event listeners.
    */
   stop() {
+    this.ambientLight.removeFromParent();
     this.objects.forEach((obj: three.Object3D) => obj.removeFromParent());
     this.stopActionListener();
   }
@@ -558,9 +565,10 @@ export default class Render extends System {
     obj.position.x = this.transformComponent.store.x[eid];
     obj.position.y = this.transformComponent.store.y[eid];
     obj.position.z = this.transformComponent.store.z[eid];
-    // obj.rotation.x = this.transformComponent.store.rx[eid];
-    // obj.rotation.y = this.transformComponent.store.ry[eid];
-    // obj.rotation.z = this.transformComponent.store.rz[eid];
+    obj.quaternion.x = this.transformComponent.store.rx[eid];
+    obj.quaternion.y = this.transformComponent.store.ry[eid];
+    obj.quaternion.z = this.transformComponent.store.rz[eid];
+    obj.quaternion.w = this.transformComponent.store.rw[eid];
     obj.scale.x = this.transformComponent.store.sx[eid];
     obj.scale.y = this.transformComponent.store.sy[eid];
     obj.scale.z = this.transformComponent.store.sz[eid];
@@ -606,7 +614,7 @@ export default class Render extends System {
     return group;
   }
 
-  createSprite(eid: number): three.Sprite {
+  createSprite(eid: number): three.Mesh {
     // Find the sprite's texture
     const tid = this.spriteComponent.store.textureId[eid];
     let texture = this.textures[tid];
@@ -617,8 +625,9 @@ export default class Render extends System {
       texture.magFilter = three.NearestFilter;
       texture.minFilter = three.NearestFilter;
     }
-    const material = this.materials[eid] = new three.SpriteMaterial({ map: texture });
-    const sprite = this.objects[eid] = new three.Sprite(material);
+    const material = this.materials[eid] = new three.MeshStandardMaterial({ map: texture, alphaTest: 0.9, alphaToCoverage: true });
+    const geometry = new three.PlaneGeometry(1, 1);
+    const sprite = this.objects[eid] = new three.Mesh(geometry, material);
     sprite.name = this.scene.getEntityById(eid).name;
     sprite.userData.eid = eid;
     sprite.layers.enable(1);
@@ -627,7 +636,7 @@ export default class Render extends System {
   }
 
   updateSprite(eid: number) {
-    const sprite = this.objects[eid] as three.Sprite;
+    const sprite = this.objects[eid] as three.Mesh;
     if (!sprite) {
       return;
     }
@@ -637,8 +646,8 @@ export default class Render extends System {
       this.loadTexture(tid, eid).then(() => this.render());
       texture = this.textures[tid];
     }
-    if (!this.materials[eid] || (this.materials[eid] as three.SpriteMaterial).map !== texture) {
-      const material = this.materials[eid] = new three.SpriteMaterial({ map: texture });
+    if (!this.materials[eid] || (this.materials[eid] as three.MeshStandardMaterial).map !== texture) {
+      const material = this.materials[eid] = new three.MeshStandardMaterial({ map: texture, alphaTest: 0.9, alphaToCoverage: true });
       sprite.material = material;
     }
   }
