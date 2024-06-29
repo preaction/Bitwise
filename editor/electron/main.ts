@@ -90,7 +90,7 @@ type WindowConfig = {
 async function createWindow() {
   // Read window config
   const winConfig: WindowConfig = appStore.get('window', {
-    width: 1024,
+    width: 1280,
     height: 768,
     maximize: false,
   }) as WindowConfig;

@@ -51,6 +51,15 @@ const DEFAULT_COMPONENTS = {
   UIContainer: UIContainerComponent,
 };
 
+export type GameConfig = {
+  renderer: {
+    width: number,
+    height: number,
+  },
+  components?: { [key: string]: typeof Component },
+  systems?: { [key: string]: typeof System },
+};
+
 /**
  * Game is main game container. Games are made up of one or many Scenes.
  * Any number of Scenes may be active at once.
@@ -83,7 +92,16 @@ export default class Game extends three.EventDispatcher {
    * the game's constructor.
    */
   // XXX: define game constructor options object type
-  get config(): any { return {} }
+  get config(): GameConfig {
+    return {
+      renderer: {
+        width: 1200,
+        height: 720,
+      },
+      components: {},
+      systems: {},
+    }
+  }
 
   /**
    */
@@ -103,12 +121,12 @@ export default class Game extends three.EventDispatcher {
     this.initialScenePath = opt.scene || '';
     this.components = {
       ...DEFAULT_COMPONENTS,
-      ...conf.components,
+      ...(conf.components ?? {}),
       ...opt.components,
     };
     this.systems = {
       ...DEFAULT_SYSTEMS,
-      ...conf.systems,
+      ...(conf.systems ?? {}),
       ...opt.systems,
     };
   }

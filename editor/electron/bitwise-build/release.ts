@@ -3,26 +3,34 @@ import * as path from 'node:path';
 import { promises as fs, Dirent } from 'node:fs';
 import archiver from 'archiver';
 
-export async function release( root:string, type:string, gameFile:string, dest:string ):Promise<any> {
-  if ( type === "zip" ) {
+const defaultGameConfig = {
+  renderer: {
+    width: 1280,
+    height: 720,
+  },
+};
+
+export async function release(root: string, type: string, gameFile: string, dest: string): Promise<any> {
+  if (type === "zip") {
     return releaseZip(root, gameFile, dest);
   }
   throw `Unknown release type ${type}`;
 }
 
-async function getFiles(dir:string):Promise<string[]> {
+async function getFiles(dir: string): Promise<string[]> {
   const dirents = await fs.readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(dirents.map((dirent:Dirent) => {
+  const files = await Promise.all(dirents.map((dirent: Dirent) => {
     const res = path.resolve(dir, dirent.name);
     return dirent.isDirectory() ? getFiles(res) : res;
   }));
   return Array.prototype.concat(...files);
 }
 
-async function releaseZip( root:string, gameFilePath:string, dest:string ):Promise<any> {
-  const gameConfigJson = await fs.readFile( path.join( root, 'bitwise.json' ), "utf-8" );
-  const conf = JSON.parse( gameConfigJson );
-  const initialScene = conf.release.zip.scene;
+async function releaseZip(root: string, gameFilePath: string, dest: string): Promise<any> {
+  const bitwiseConfigJson = await fs.readFile(path.join(root, 'bitwise.json'), "utf-8");
+  const bitwiseConfig = JSON.parse(bitwiseConfigJson);
+  const initialScene = bitwiseConfig.release.zip.scene;
+  const gameConfig = bitwiseConfig.game;
 
   const outfile = await fs.open(dest, 'w');
   const output = outfile.createWriteStream();
@@ -61,16 +69,15 @@ async function releaseZip( root:string, gameFilePath:string, dest:string ):Promi
       <canvas id="game"></canvas>
     </div>
     <script type="module">
-      import Game from './${path.relative( root, gameFilePath )}';
+      import Game from './${path.relative(root, gameFilePath)}';
       const game = window.game = new Game({
         canvas: document.getElementById('game'),
         loader: {
           base: '',
         },
-        // XXX: Get from game settings
         renderer: {
-          width: 1280,
-          height: 720,
+          width: ${gameConfig.renderer?.width ?? defaultGameConfig.renderer.width},
+          height: ${gameConfig.renderer?.height ?? defaultGameConfig.renderer.height},
         },
         scene: '${initialScene}',
       });
@@ -79,7 +86,7 @@ async function releaseZip( root:string, gameFilePath:string, dest:string ):Promi
   </body>
 </html>`);
 
-  return new Promise( async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     output.on('close', function() {
       resolve(true);
     });
@@ -109,31 +116,31 @@ async function releaseZip( root:string, gameFilePath:string, dest:string ):Promi
     });
 
     // Add code file
-    const gameFile = await fs.open( gameFilePath, "r" );
+    const gameFile = await fs.open(gameFilePath, "r");
     const gameStream = gameFile.createReadStream();
-    archive.append( gameStream, { name: path.relative( root, gameFilePath ) } );
+    archive.append(gameStream, { name: path.relative(root, gameFilePath) });
 
     // Add all non-code files
     const allFiles = await getFiles(root);
-    for ( const file of allFiles ) {
+    for (const file of allFiles) {
       // All code has already been bundled up into the gameFile
-      if ( file.match(/[.](?:[tj]s|vue|js\.map)$|\/node_modules\/?/) ) {
+      if (file.match(/[.](?:[tj]s|vue|js\.map)$|\/node_modules\/?/)) {
         continue;
       }
       // And we don't need these metadata files either...
-      if ( file.match(/(?:package(-lock)?|bitwise|tsconfig).json$/) ) {
+      if (file.match(/(?:package(-lock)?|bitwise|tsconfig).json$/)) {
         continue;
       }
       // Or these OS-specific files
-      if ( file.match(/(?:\.DS_Store)$/) ) {
+      if (file.match(/(?:\.DS_Store)$/)) {
         continue;
       }
-      const fh = await fs.open( file, "r" );
+      const fh = await fs.open(file, "r");
       const inStream = fh.createReadStream();
-      archive.append( inStream, { name: path.relative( root, file ) } );
+      archive.append(inStream, { name: path.relative(root, file) });
     }
 
-    archive.append( index, { name: 'index.html' } );
+    archive.append(index, { name: 'index.html' });
     archive.finalize();
   });
 }

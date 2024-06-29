@@ -1,6 +1,6 @@
 import { default as Component } from './Component.js';
 import { default as Entity, EntityData } from './Entity.js';
-import { default as Game } from './Game.js';
+import { default as Game, GameConfig } from './Game.js';
 import { default as Load } from './Load.js';
 import { default as Asset } from './Asset.js';
 import { Pointer } from './system/Input.js';
@@ -12,6 +12,6 @@ import * as event from './event/index.js';
 import * as system from './system/index.js';
 import * as component from './component/index.js';
 export {
-  Component, Asset, Entity, EntityData, Game, Load, Pointer, Scene, SceneData, System, event, system, component,
+  Component, Asset, Entity, EntityData, Game, GameConfig, Load, Pointer, Scene, SceneData, System, event, system, component,
   Atlas, Texture,
 };

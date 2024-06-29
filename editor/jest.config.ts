@@ -59,6 +59,23 @@ const config: Config = {
         "customExportConditions": ["node", "node-addons"],
       },
     },
+    {
+      ...common,
+      transform: {
+        // '^.+\\.[tj]sx?$' to process js/ts with `ts-jest`
+        // '^.+\\.m?[tj]sx?$' to process js/ts/mjs/mts with `ts-jest`
+        '^.+\\.m?tsx?$': [
+          'ts-jest',
+          {
+            useESM: true,
+            tsconfig: 'tsconfig.node.json',
+          },
+        ],
+      },
+      "testMatch": ["**/test/unit/bitwise-build/**/?(*.)+(spec|test).[jt]s?(x)"],
+      "testPathIgnorePatterns": ["<rootDir>/out"],
+      "testEnvironment": "node",
+    },
   ],
 };
 export default config;
