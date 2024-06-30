@@ -16,7 +16,7 @@ function buildScene(): [Scene, Render] {
   });
   const scene = new Scene(game);
   scene.addSystem('render');
-  const system = scene.getSystem(Render);
+  const system = scene.getSystem<Render>(Render);
   return [scene, system];
 }
 

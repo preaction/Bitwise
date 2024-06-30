@@ -81,7 +81,7 @@ export default class Game extends three.EventDispatcher {
    */
   initialScenePath: string = '';
   scenes: Scene[] = [];
-  data: Object;
+  data: { [key: string]: any } = {};
 
   components: { [key: string]: typeof Component } = {};
   systems: { [key: string]: typeof System } = {};

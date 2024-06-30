@@ -6,6 +6,7 @@ import NullSystem from './system/Null.js';
 import NullComponent from './component/Null.js';
 import Entity, { EntityData, NewEntityData } from './Entity.js';
 import ProgressEvent from './event/ProgressEvent.js';
+import Game from './Game.js';
 
 /**
  * SceneState is the current state of the scene.
@@ -71,7 +72,7 @@ export declare interface Scene {
  */
 export class Scene extends three.EventDispatcher {
   name: string = 'New Scene';
-  game: any;
+  game: Game;
   state: SceneState = SceneState.Stop;
   _scene: three.Scene = new three.Scene();
   _uiScene: three.Scene = new three.Scene();
@@ -91,10 +92,10 @@ export class Scene extends three.EventDispatcher {
 
   /**
    */
-  constructor(game: any) {
+  constructor(game: Game) {
     super();
     this.game = game;
-    game.addEventListener("resize", (e: { type: string, width: number, height: number }) => {
+    game.addEventListener("resize", (e) => {
       this.dispatchEvent(e);
     });
 
@@ -201,7 +202,7 @@ export class Scene extends three.EventDispatcher {
     this.dispatchEvent({ type: 'afterRender' });
   }
 
-  getSystem<T extends System>(sysType: (new (...args: any[]) => T)): T {
+  getSystem<T extends System>(sysType: typeof System): T {
     for (const sys of this.systems) {
       if (sys instanceof sysType) {
         return sys as T;
@@ -218,7 +219,7 @@ export class Scene extends three.EventDispatcher {
    * @throws string If the component constructor cannot be found in the registry
    * @returns T An object of the given class
    */
-  getComponent<T extends Component>(componentType: (new (...args: any[]) => T)): T {
+  getComponent<T extends Component>(componentType: typeof Component): T {
     for (const comp of Object.values(this.components)) {
       if (comp.constructor === componentType) {
         return comp as T;
@@ -346,6 +347,7 @@ export class Scene extends three.EventDispatcher {
       if (!cons) {
         cons = NullComponent;
       }
+      // @ts-ignore
       this.components[name] = new cons(this, this.world);
     }
     return this.components[name] as T;

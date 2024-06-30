@@ -19,7 +19,7 @@ function buildScene(): [Scene, EditorRender] {
   const scene = new Scene(game);
   scene.addSystem('input');
   scene.addSystem('editorRender');
-  const system = scene.getSystem(EditorRender);
+  const system = scene.getSystem<EditorRender>(EditorRender);
   return [scene, system];
 }
 

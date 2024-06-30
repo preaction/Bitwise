@@ -1,25 +1,25 @@
-import {jest, describe, expect, test, beforeEach} from '@jest/globals';
+import { jest, describe, expect, test, beforeEach } from '@jest/globals';
 import 'global-jsdom/register'; // Adds `document` object for three to use
 import Game from '../../src/Game';
 import Scene from '../../src/Scene';
 import Input from '../../src/system/Input';
 
-function buildScene(canvas?:HTMLElement):[ Scene, Input ] {
+function buildScene(canvas?: HTMLElement): [Scene, Input] {
   const game = new Game({
     canvas: canvas ?? document.createElement('canvas'),
     systems: {
       input: Input,
     },
   });
-  const scene = new Scene( game );
-  scene.addSystem( 'input' );
-  const system = scene.getSystem( Input );
+  const scene = new Scene(game);
+  scene.addSystem('input');
+  const system = scene.getSystem<Input>(Input);
   return [scene, system];
 }
 
-describe( 'Input', () => {
-  let scene:Scene, system:Input, canvas:HTMLCanvasElement;
-  beforeEach( () => {
+describe('Input', () => {
+  let scene: Scene, system: Input, canvas: HTMLCanvasElement;
+  beforeEach(() => {
     [scene, system] = buildScene();
     canvas = scene.game.canvas;
 
@@ -40,22 +40,22 @@ describe( 'Input', () => {
       })),
     });
 
-  } );
+  });
 
-  test( 'init() does not add event listeners to canvas', async () => {
+  test('init() does not add event listeners to canvas', async () => {
     await system.init();
     // watchKey
-    system.watchKey( ' ' );
+    system.watchKey(' ');
     // watchKeypress
-    system.watchKeypress( ' ' );
+    system.watchKeypress(' ');
 
-    canvas.dispatchEvent( new KeyboardEvent("keydown", { key: " " }) );
-    expect( system.key ).not.toHaveProperty(" ");
-    expect( system.keypress ).not.toHaveProperty(" ");
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    expect(system.key).not.toHaveProperty(" ");
+    expect(system.keypress).not.toHaveProperty(" ");
 
-    canvas.dispatchEvent( new KeyboardEvent("keyup", { key: " " }) );
-    expect( system.key ).not.toHaveProperty(" ");
-    expect( system.keypress ).not.toHaveProperty(" ");
+    canvas.dispatchEvent(new KeyboardEvent("keyup", { key: " " }));
+    expect(system.key).not.toHaveProperty(" ");
+    expect(system.keypress).not.toHaveProperty(" ");
 
     // watchPointer
     system.watchPointer();
@@ -76,31 +76,31 @@ describe( 'Input', () => {
     // XXX: jsdom does not currently support PointerEvent, so I'm using
     // MouseEvent instead for the moment...
     // https://github.com/jsdom/jsdom/pull/2666
-    canvas.dispatchEvent( new MouseEvent("pointerover", {...pointerEventProps}) );
-    expect( system.pointers ).toHaveLength(1);
-    expect( system.pointers[0].active ).toBeFalsy();
-  } );
+    canvas.dispatchEvent(new MouseEvent("pointerover", { ...pointerEventProps }));
+    expect(system.pointers).toHaveLength(1);
+    expect(system.pointers[0].active).toBeFalsy();
+  });
 
-  test( 'start() adds event listeners to canvas', async () => {
+  test('start() adds event listeners to canvas', async () => {
     await system.init();
     system.start();
 
     // watchKey
-    system.watchKey( ' ' );
+    system.watchKey(' ');
     // watchKeypress
-    system.watchKeypress( ' ' );
+    system.watchKeypress(' ');
 
-    canvas.dispatchEvent( new KeyboardEvent("keydown", { key: " " }) );
-    expect( system.key ).toHaveProperty(" ");
-    expect( system.key[" "] ).toBeTruthy();
-    expect( system.keypress ).toHaveProperty(" ");
-    expect( system.keypress[" "] ).toBeTruthy();
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    expect(system.key).toHaveProperty(" ");
+    expect(system.key[" "]).toBeTruthy();
+    expect(system.keypress).toHaveProperty(" ");
+    expect(system.keypress[" "]).toBeTruthy();
 
-    canvas.dispatchEvent( new KeyboardEvent("keyup", { key: " " }) );
-    expect( system.key ).toHaveProperty(" ");
-    expect( system.key[" "] ).toBeFalsy();
-    expect( system.keypress ).toHaveProperty(" ");
-    expect( system.keypress[" "] ).toBeTruthy();
+    canvas.dispatchEvent(new KeyboardEvent("keyup", { key: " " }));
+    expect(system.key).toHaveProperty(" ");
+    expect(system.key[" "]).toBeFalsy();
+    expect(system.keypress).toHaveProperty(" ");
+    expect(system.keypress[" "]).toBeTruthy();
 
     // XXX: After render, the keypresses should be cleared
     // expect( system.keypress ).toHaveProperty(" ");
@@ -125,28 +125,28 @@ describe( 'Input', () => {
     // XXX: jsdom does not currently support PointerEvent, so I'm using
     // MouseEvent instead for the moment...
     // https://github.com/jsdom/jsdom/pull/2666
-    canvas.dispatchEvent( new MouseEvent("pointerover", {...pointerEventProps}) );
-    expect( system.pointers ).toHaveLength(1);
-    expect( system.pointers[0].active ).toBeTruthy();
-  } );
+    canvas.dispatchEvent(new MouseEvent("pointerover", { ...pointerEventProps }));
+    expect(system.pointers).toHaveLength(1);
+    expect(system.pointers[0].active).toBeTruthy();
+  });
 
-  test( 'stop() removes event listeners from canvas', async () => {
+  test('stop() removes event listeners from canvas', async () => {
     await system.init();
     system.start();
     system.stop();
 
     // watchKey
-    system.watchKey( ' ' );
+    system.watchKey(' ');
     // watchKeypress
-    system.watchKeypress( ' ' );
+    system.watchKeypress(' ');
 
-    canvas.dispatchEvent( new KeyboardEvent("keydown", { key: " " }) );
-    expect( system.key ).not.toHaveProperty(" ");
-    expect( system.keypress ).not.toHaveProperty(" ");
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    expect(system.key).not.toHaveProperty(" ");
+    expect(system.keypress).not.toHaveProperty(" ");
 
-    canvas.dispatchEvent( new KeyboardEvent("keyup", { key: " " }) );
-    expect( system.key ).not.toHaveProperty(" ");
-    expect( system.keypress ).not.toHaveProperty(" ");
+    canvas.dispatchEvent(new KeyboardEvent("keyup", { key: " " }));
+    expect(system.key).not.toHaveProperty(" ");
+    expect(system.keypress).not.toHaveProperty(" ");
 
     // watchPointer
     system.watchPointer();
@@ -167,12 +167,12 @@ describe( 'Input', () => {
     // XXX: jsdom does not currently support PointerEvent, so I'm using
     // MouseEvent instead for the moment...
     // https://github.com/jsdom/jsdom/pull/2666
-    canvas.dispatchEvent( new MouseEvent("pointerover", {...pointerEventProps}) );
-    expect( system.pointers ).toHaveLength(1);
-    expect( system.pointers[0].active ).toBeFalsy();
-  } );
+    canvas.dispatchEvent(new MouseEvent("pointerover", { ...pointerEventProps }));
+    expect(system.pointers).toHaveLength(1);
+    expect(system.pointers[0].active).toBeFalsy();
+  });
 
-  test( `multiple Input systems can be running`, async () => {
+  test(`multiple Input systems can be running`, async () => {
     await system.init();
     system.start();
 
@@ -181,22 +181,22 @@ describe( 'Input', () => {
     system2.start();
 
     // Can watch same events on both systems and get same results
-    system.watchKey( ' ' );
+    system.watchKey(' ');
     system.watchPointer();
-    system2.watchKey( ' ' );
+    system2.watchKey(' ');
     system2.watchPointer();
 
-    canvas.dispatchEvent( new KeyboardEvent("keydown", { key: " " }) );
-    expect( system.key ).toHaveProperty(" ");
-    expect( system.key[" "] ).toBeTruthy();
-    expect( system2.key ).toHaveProperty(" ");
-    expect( system2.key[" "] ).toBeTruthy();
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    expect(system.key).toHaveProperty(" ");
+    expect(system.key[" "]).toBeTruthy();
+    expect(system2.key).toHaveProperty(" ");
+    expect(system2.key[" "]).toBeTruthy();
 
-    canvas.dispatchEvent( new KeyboardEvent("keyup", { key: " " }) );
-    expect( system.key ).toHaveProperty(" ");
-    expect( system.key[" "] ).toBeFalsy();
-    expect( system2.key ).toHaveProperty(" ");
-    expect( system2.key[" "] ).toBeFalsy();
+    canvas.dispatchEvent(new KeyboardEvent("keyup", { key: " " }));
+    expect(system.key).toHaveProperty(" ");
+    expect(system.key[" "]).toBeFalsy();
+    expect(system2.key).toHaveProperty(" ");
+    expect(system2.key[" "]).toBeFalsy();
 
     // XXX: jsdom does not currently support PointerEvent, so I'm using
     // MouseEvent instead for the moment...
@@ -215,14 +215,14 @@ describe( 'Input', () => {
       clientY: 50,
     };
 
-    canvas.dispatchEvent( new MouseEvent("pointerover", {...pointerEventProps}) );
-    expect( system.pointers ).toHaveLength(1);
-    expect( system.pointers[0].active ).toBeTruthy();
-    expect( system2.pointers ).toHaveLength(1);
-    expect( system2.pointers[0].active ).toBeTruthy();
+    canvas.dispatchEvent(new MouseEvent("pointerover", { ...pointerEventProps }));
+    expect(system.pointers).toHaveLength(1);
+    expect(system.pointers[0].active).toBeTruthy();
+    expect(system2.pointers).toHaveLength(1);
+    expect(system2.pointers[0].active).toBeTruthy();
   });
 
-  test( `stopping one scene's Input does not stop another's`, async () => {
+  test(`stopping one scene's Input does not stop another's`, async () => {
     await system.init();
     system.start();
 
@@ -231,23 +231,23 @@ describe( 'Input', () => {
     system2.start();
 
     // Can watch same events on both systems and get same results
-    system.watchKey( ' ' );
-    system2.watchKey( ' ' );
+    system.watchKey(' ');
+    system2.watchKey(' ');
     system.watchPointer();
     system2.watchPointer();
 
     // Stopping one scene does not affect the other
     system2.stop();
 
-    canvas.dispatchEvent( new KeyboardEvent("keydown", { key: " " }) );
-    expect( system.key ).toHaveProperty(" ");
-    expect( system.key[" "] ).toBeTruthy();
-    expect( system2.key[" "] ).toBeFalsy();
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    expect(system.key).toHaveProperty(" ");
+    expect(system.key[" "]).toBeTruthy();
+    expect(system2.key[" "]).toBeFalsy();
 
-    canvas.dispatchEvent( new KeyboardEvent("keyup", { key: " " }) );
-    expect( system.key ).toHaveProperty(" ");
-    expect( system.key[" "] ).toBeFalsy();
-    expect( system2.key[" "] ).toBeFalsy();
+    canvas.dispatchEvent(new KeyboardEvent("keyup", { key: " " }));
+    expect(system.key).toHaveProperty(" ");
+    expect(system.key[" "]).toBeFalsy();
+    expect(system2.key[" "]).toBeFalsy();
 
     // XXX: jsdom does not currently support PointerEvent, so I'm using
     // MouseEvent instead for the moment...
@@ -266,10 +266,10 @@ describe( 'Input', () => {
       clientY: 50,
     };
 
-    canvas.dispatchEvent( new MouseEvent("pointerover", {...pointerEventProps}) );
-    expect( system.pointers ).toHaveLength(1);
-    expect( system.pointers[0].active ).toBeTruthy();
-    expect( system2.pointers ).toHaveLength(1);
-    expect( system2.pointers[0].active ).toBeFalsy();
-  } );
+    canvas.dispatchEvent(new MouseEvent("pointerover", { ...pointerEventProps }));
+    expect(system.pointers).toHaveLength(1);
+    expect(system.pointers[0].active).toBeTruthy();
+    expect(system2.pointers).toHaveLength(1);
+    expect(system2.pointers[0].active).toBeFalsy();
+  });
 });

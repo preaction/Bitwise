@@ -22,15 +22,15 @@ export type Pointer = {
  * properties.
  */
 export default class Input extends System {
-  protected watchingKeys:{ [key:string]: Set<string> } = {};
-  protected watchingKeypresses:{ [key:string]: Set<string> } = {};
+  protected watchingKeys: { [key: string]: Set<string> } = {};
+  protected watchingKeypresses: { [key: string]: Set<string> } = {};
 
   /**
    * key holds the state of any keys added to the watch list. "true" if
    * the key is down, "false" if not.
    * @category state
    */
-  key:{ [key:string]: boolean } = {};
+  key: { [key: string]: boolean } = {};
 
   /**
    * keypress holds the keys that have been pressed since the last
@@ -38,7 +38,7 @@ export default class Input extends System {
    * removed until the key is up and then down again.
    * @category state
    */
-  keypress:{ [key:string]: boolean } = {};
+  keypress: { [key: string]: boolean } = {};
 
   /**
    * The pointers array has the state of all the pointers that can be
@@ -47,14 +47,14 @@ export default class Input extends System {
    * pressed.
    * @category state
    */
-  pointers:Pointer[] = [];
+  pointers: Pointer[] = [];
 
   /**
    * The registered DOM event handlers being managed by this system.
    */
-  private handlers: {[key: string]: Function} = {};
+  private handlers: { [key: string]: any } = {};
 
-  constructor( name:string, scene:Scene ) {
+  constructor(name: string, scene: Scene) {
     super(name, scene);
   }
 
@@ -63,19 +63,19 @@ export default class Input extends System {
    * @category lifecycle
    */
   start() {
-    this.scene.addEventListener( 'afterRender', this.clearKeypresses.bind(this) );
-    this.scene.addEventListener( 'afterRender', this.clearButtonPresses.bind(this) );
+    this.scene.addEventListener('afterRender', this.clearKeypresses.bind(this));
+    this.scene.addEventListener('afterRender', this.clearButtonPresses.bind(this));
     this.scene.game.canvas.tabIndex = 1;
-    this.scene.game.canvas.addEventListener( 'keydown', this.handlers.keydown = this.keydown.bind(this) );
-    this.scene.game.canvas.addEventListener( 'keyup', this.handlers.keyup = this.keyup.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointerover', this.handlers.pointerover = this.pointerbegin.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointerenter', this.handlers.pointerenter = this.pointerbegin.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointerdown', this.handlers.pointerdown = this.pointerdown.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointermove', this.handlers.pointermove = this.pointerchange.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointerup', this.handlers.pointerup = this.pointerchange.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointercancel', this.handlers.pointercancel = this.pointerend.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointerout', this.handlers.pointerout = this.pointerend.bind(this) );
-    this.scene.game.canvas.addEventListener( 'pointerleave', this.handlers.pointerleave = this.pointerend.bind(this) );
+    this.scene.game.canvas.addEventListener('keydown', this.handlers.keydown = this.keydown.bind(this));
+    this.scene.game.canvas.addEventListener('keyup', this.handlers.keyup = this.keyup.bind(this));
+    this.scene.game.canvas.addEventListener('pointerover', this.handlers.pointerover = this.pointerbegin.bind(this));
+    this.scene.game.canvas.addEventListener('pointerenter', this.handlers.pointerenter = this.pointerbegin.bind(this));
+    this.scene.game.canvas.addEventListener('pointerdown', this.handlers.pointerdown = this.pointerdown.bind(this));
+    this.scene.game.canvas.addEventListener('pointermove', this.handlers.pointermove = this.pointerchange.bind(this));
+    this.scene.game.canvas.addEventListener('pointerup', this.handlers.pointerup = this.pointerchange.bind(this));
+    this.scene.game.canvas.addEventListener('pointercancel', this.handlers.pointercancel = this.pointerend.bind(this));
+    this.scene.game.canvas.addEventListener('pointerout', this.handlers.pointerout = this.pointerend.bind(this));
+    this.scene.game.canvas.addEventListener('pointerleave', this.handlers.pointerleave = this.pointerend.bind(this));
     this.scene.game.canvas.style.touchAction = "none";
   }
 
@@ -85,31 +85,31 @@ export default class Input extends System {
    * @category lifecycle
    */
   stop() {
-    for ( const eventName in this.handlers ) {
-      if ( !this.handlers[eventName] ) {
+    for (const eventName in this.handlers) {
+      if (!this.handlers[eventName]) {
         continue;
       }
-      this.scene.game.canvas.removeEventListener( eventName, this.handlers[eventName] );
+      this.scene.game.canvas.removeEventListener(eventName, this.handlers[eventName]);
       delete this.handlers[eventName];
     }
   }
 
-  protected keydown(e:KeyboardEvent) {
-    if ( e.key in this.watchingKeys ) {
-      for ( const alias of this.watchingKeys[e.key] ) {
+  protected keydown(e: KeyboardEvent) {
+    if (e.key in this.watchingKeys) {
+      for (const alias of this.watchingKeys[e.key]) {
         this.key[alias] = true;
       }
     }
-    if ( e.key in this.watchingKeypresses ) {
-      for ( const alias of this.watchingKeypresses[e.key] ) {
+    if (e.key in this.watchingKeypresses) {
+      for (const alias of this.watchingKeypresses[e.key]) {
         this.keypress[alias] = true;
       }
     }
   }
 
-  protected keyup(e:KeyboardEvent) {
-    if ( e.key in this.watchingKeys ) {
-      for ( const alias of this.watchingKeys[e.key] ) {
+  protected keyup(e: KeyboardEvent) {
+    if (e.key in this.watchingKeys) {
+      for (const alias of this.watchingKeys[e.key]) {
         this.key[alias] = false;
       }
     }
@@ -119,20 +119,20 @@ export default class Input extends System {
    * Add your own custom event listener to the game canvas element.
    * @category watch
    */
-  on( event:string, fn:(e:Event) => void ) {
+  on(event: string, fn: (e: Event) => void) {
     // XXX: This handler should be managed: it should be added if/when
     // the system is started, and removed when the system is stopped.
-    this.scene.game.canvas.addEventListener( event, fn );
+    this.scene.game.canvas.addEventListener(event, fn);
   }
 
   /**
    * Remove your custom event listener from the game canvas element.
    * @category watch
    */
-  off( event:string, fn:(e:Event) => void ) {
+  off(event: string, fn: (e: Event) => void) {
     // XXX: This handler should be managed: it should be added if/when
     // the system is started, and removed when the system is stopped.
-    this.scene.game.canvas.removeEventListener( event, fn );
+    this.scene.game.canvas.removeEventListener(event, fn);
   }
 
   /**
@@ -151,11 +151,11 @@ export default class Input extends System {
    * @param alias An alias to give the key.
    * @category watch
    */
-  watchKey( key:string, alias:string='' ) {
-    if ( !(key in this.watchingKeys) ) {
+  watchKey(key: string, alias: string = '') {
+    if (!(key in this.watchingKeys)) {
       this.watchingKeys[key] = new Set();
     }
-    this.watchingKeys[key].add( alias || key );
+    this.watchingKeys[key].add(alias || key);
   }
 
   /**
@@ -199,16 +199,16 @@ export default class Input extends System {
    * objects.
    * @category watch
    */
-  watchPointer( count:number=0 ) {
-    if ( !count ) {
+  watchPointer(count: number = 0) {
+    if (!count) {
       count = isNaN(navigator.maxTouchPoints) ? 0 : navigator.maxTouchPoints;
       // Add mouse if detected
-      if ( matchMedia('(pointer:fine)').matches ) {
+      if (matchMedia('(pointer:fine)').matches) {
         count++;
       }
     }
     // Pre-create enough pointer objects
-    for ( let i = this.pointers.length; i < count; i++ ) {
+    for (let i = this.pointers.length; i < count; i++) {
       this.pointers.push({
         id: 0,
         active: false,
@@ -220,9 +220,9 @@ export default class Input extends System {
     }
   }
 
-  protected pointerbegin( ev:PointerEvent ) {
-    let pointer = this.pointers.find( p => p.id === ev.pointerId || !p.active );
-    if ( !pointer ) {
+  protected pointerbegin(ev: PointerEvent) {
+    let pointer = this.pointers.find(p => p.id === ev.pointerId || !p.active);
+    if (!pointer) {
       // No more pointers to track
       return;
     }
@@ -230,44 +230,44 @@ export default class Input extends System {
     pointer.active = true;
   }
 
-  protected pointerdown( ev:PointerEvent ) {
-    let pointer = this.pointers.find( p => p.id === ev.pointerId || !p.active );
-    if ( !pointer ) {
+  protected pointerdown(ev: PointerEvent) {
+    let pointer = this.pointers.find(p => p.id === ev.pointerId || !p.active);
+    if (!pointer) {
       // Not tracking this pointer
       return;
     }
-    if ( !pointer.active ) {
+    if (!pointer.active) {
       // The pointerbegin event for this pointer was missed, likely
       // because the pointer was already over the canvas when the Input
       // system was started, so fire it now.
-      this.pointerbegin( ev );
+      this.pointerbegin(ev);
     }
     pointer.buttonPress |= ev.buttons;
-    this.pointerchange( ev );
+    this.pointerchange(ev);
     this.scene.game.canvas.setPointerCapture(ev.pointerId);
   }
 
-  protected pointerchange( ev:PointerEvent ) {
-    let pointer = this.pointers.find( p => p.id === ev.pointerId || !p.active );
-    if ( !pointer ) {
+  protected pointerchange(ev: PointerEvent) {
+    let pointer = this.pointers.find(p => p.id === ev.pointerId || !p.active);
+    if (!pointer) {
       // Not tracking this pointer
       return;
     }
-    if ( !pointer.active ) {
+    if (!pointer.active) {
       // The pointerbegin event for this pointer was missed, likely
       // because the pointer was already over the canvas when the Input
       // system was started, so fire it now.
-      this.pointerbegin( ev );
+      this.pointerbegin(ev);
     }
     ev.preventDefault();
     pointer.button = ev.buttons;
-    pointer.x = ( ev.offsetX / this.scene.game.canvas.clientWidth ) * 2 - 1;
-    pointer.y = -( ev.offsetY / this.scene.game.canvas.clientHeight ) * 2 + 1;
+    pointer.x = (ev.offsetX / this.scene.game.canvas.clientWidth) * 2 - 1;
+    pointer.y = -(ev.offsetY / this.scene.game.canvas.clientHeight) * 2 + 1;
   }
 
-  protected pointerend( ev:PointerEvent ) {
-    let pointer = this.pointers.find( p => p.id === ev.pointerId );
-    if ( !pointer ) {
+  protected pointerend(ev: PointerEvent) {
+    let pointer = this.pointers.find(p => p.id === ev.pointerId);
+    if (!pointer) {
       // Not tracking pointer
       return;
     }
@@ -276,7 +276,7 @@ export default class Input extends System {
   }
 
   protected clearButtonPresses() {
-    for ( const p of this.pointers ) {
+    for (const p of this.pointers) {
       p.buttonPress = 0;
     }
   }
