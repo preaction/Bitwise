@@ -461,8 +461,6 @@ export default class Render extends System {
     if (!texture.src) {
       throw `Unknown texture ID ${textureId} (${forEid})`;
     }
-    console.log(`Loading texture ${textureId} (${texture.src}: ${texture.x},${texture.y}/${texture.width},${texture.height})`);
-    this.progress.total++;
     let promise;
     const loadedSrc = this.sources[texture.src];
     if (loadedSrc instanceof three.Source) {
@@ -482,13 +480,22 @@ export default class Render extends System {
       });
     }
     else {
+      console.log(`Loading texture ${textureId} (${texture.src}: ${texture.x},${texture.y}/${texture.width},${texture.height})`);
+      this.progress.total++;
       promise = this.sources[texture.src] = new Promise(
         (resolve, reject) => {
           const glTexture = this.loader.load(texture.src, resolve, undefined, reject)
           this.textures[textureId] = glTexture;
           this.sources[texture.src] = glTexture.source;
         },
-      )
+      ).then((value: any) => {
+        this.progress.loaded++;
+        this.dispatchEvent(this.progress);
+        if (this.progress.loaded == this.progress.total) {
+          this.progress = new ProgressEvent();
+        }
+        return value;
+      })
     }
 
     promise = promise.then((glTexture: three.Texture) => {
@@ -508,14 +515,7 @@ export default class Render extends System {
       return glTexture;
     })
 
-    return promise.then((value: any) => {
-      this.progress.loaded++;
-      this.dispatchEvent(this.progress);
-      if (this.progress.loaded == this.progress.total) {
-        this.progress = new ProgressEvent();
-      }
-      return value;
-    });
+    return promise;
   }
 
   update(timeMilli: number) {
@@ -614,17 +614,27 @@ export default class Render extends System {
     return group;
   }
 
-  createSprite(eid: number): three.Mesh {
-    // Find the sprite's texture
+  loadTextureForSprite(eid: number): three.Texture {
     const tid = this.spriteComponent.store.textureId[eid];
-    let texture = this.textures[tid];
-    if (!texture) {
-      this.loadTexture(tid, eid).then(() => this.render());
-      texture = this.textures[tid];
-      texture.anisotropy = 0;
-      texture.magFilter = three.NearestFilter;
-      texture.minFilter = three.NearestFilter;
-    }
+    this.loadTexture(tid, eid).then((glTexture: three.Texture) => {
+      // Update sprite geometry to match this new texture
+      const sprite = this.objects[eid] as three.Mesh;
+      const pixelScale = this.scene.game.config.renderer.pixelScale || 128;
+      const texture = Texture.getById(tid);
+      const width = (texture.width || glTexture.image?.width || pixelScale) / pixelScale;
+      const height = (texture.height || glTexture.image?.height || pixelScale) / pixelScale;
+      sprite.geometry = new three.PlaneGeometry(width, height);
+      //this.render();
+    });
+    const glTexture = this.textures[tid];
+    glTexture.anisotropy = 0;
+    glTexture.magFilter = three.NearestFilter;
+    glTexture.minFilter = three.NearestFilter;
+    return glTexture;
+  }
+
+  createSprite(eid: number): three.Mesh {
+    const texture = this.loadTextureForSprite(eid);
     const material = this.materials[eid] = new three.MeshStandardMaterial({ map: texture, alphaTest: 0.9, alphaToCoverage: true });
     const geometry = new three.PlaneGeometry(1, 1);
     const sprite = this.objects[eid] = new three.Mesh(geometry, material);
@@ -641,11 +651,7 @@ export default class Render extends System {
       return;
     }
     const tid = this.spriteComponent.store.textureId[eid];
-    let texture = this.textures[tid];
-    if (!texture) {
-      this.loadTexture(tid, eid).then(() => this.render());
-      texture = this.textures[tid];
-    }
+    let texture = this.textures[tid] || this.loadTextureForSprite(eid);
     if (!this.materials[eid] || (this.materials[eid] as three.MeshStandardMaterial).map !== texture) {
       const material = this.materials[eid] = new three.MeshStandardMaterial({ map: texture, alphaTest: 0.9, alphaToCoverage: true });
       sprite.material = material;

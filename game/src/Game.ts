@@ -55,6 +55,7 @@ export type GameConfig = {
   renderer: {
     width: number,
     height: number,
+    pixelScale?: number,
   },
   components?: { [key: string]: typeof Component },
   systems?: { [key: string]: typeof System },
@@ -96,6 +97,7 @@ export default class Game extends three.EventDispatcher {
       renderer: {
         width: 0,
         height: 0,
+        pixelScale: 128,
       },
       components: {},
       systems: {},
