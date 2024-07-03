@@ -10,7 +10,7 @@ export type ReleaseConfig = {
 };
 export type ConfigFile = {
   game: GameConfig,
-  release: {
+  release?: {
     zip: ReleaseConfig,
   },
 };

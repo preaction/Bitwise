@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { inject, onMounted, reactive, ref, watch, type Ref } from "vue";
+import { inject, onMounted, ref, watch, type Ref } from "vue";
 import type Project from "../model/Project";
 import type { ConfigFile } from "../types";
 
@@ -11,6 +11,7 @@ let config = ref({
     renderer: {
       width: 1024,
       height: 768,
+      pixelScale: 128,
     },
   },
 } as ConfigFile);
@@ -46,6 +47,10 @@ async function save() {
         <div class="form-group">
           <label for="height">Height</label>
           <input id="height" v-model.number="config.game.renderer.height" />
+        </div>
+        <div class="form-group">
+          <label for="pixel-scale">Pixel Scale</label>
+          <input id="pixel-scale" v-model.number="config.game.renderer.pixelScale" />
         </div>
       </fieldset>
     </div>

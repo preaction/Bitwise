@@ -17,6 +17,7 @@ describe('GameConfig', () => {
         renderer: {
           width: 1280,
           height: 720,
+          pixelScale: 128,
         },
       },
     };
@@ -26,6 +27,7 @@ describe('GameConfig', () => {
     expect(mockRead).toHaveBeenCalledWith(project.name, 'bitwise.json');
     expect(wrapper.vm.$el.querySelector('#width').value).toBe("" + configData.game.renderer.width);
     expect(wrapper.vm.$el.querySelector('#height').value).toBe("" + configData.game.renderer.height);
+    expect(wrapper.vm.$el.querySelector('#pixel-scale').value).toBe("" + configData.game.renderer.pixelScale);
   });
 
   test('write config to file', async () => {
@@ -35,8 +37,10 @@ describe('GameConfig', () => {
 
     const newWidth = 1600;
     const newHeight = 800;
+    const newScale = 64;
     await wrapper.get('#width').setValue(newWidth);
     await wrapper.get('#height').setValue(newHeight);
+    await wrapper.get('#pixel-scale').setValue(newScale);
     expect(wrapper.get('[data-test=save]').attributes('disabled')).toBeFalsy();
 
     await wrapper.get('form').trigger('submit');
@@ -46,5 +50,6 @@ describe('GameConfig', () => {
     const configData = JSON.parse(mockWrite.mock.lastCall?.[2] || '{}')
     expect(configData?.game?.renderer?.width).toBe(newWidth);
     expect(configData?.game?.renderer?.height).toBe(newHeight);
+    expect(configData?.game?.renderer?.pixelScale).toBe(newScale);
   });
 });

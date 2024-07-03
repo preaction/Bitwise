@@ -4,7 +4,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import extract from 'extract-zip';
-import type { GameConfig } from '../../../../game/dist/Game.js';
+import type { GameConfig } from '@fourstar/bitwise';
 import { release } from '../../../electron/bitwise-build/release.js';
 
 let gameDir: string, gameFilePath: string, gameConfFile: string,
@@ -24,6 +24,7 @@ describe('release', () => {
         renderer: {
           width: 1920,
           height: 1080,
+          pixelScale: 128,
         },
       };
       const bitwiseConfig = {
@@ -51,8 +52,9 @@ describe('release', () => {
       });
 
       // Test the game configuration
-      expect(indexHtml).toMatch(`width: ${gameConf.renderer.width}`);
-      expect(indexHtml).toMatch(`height: ${gameConf.renderer.height}`);
+      expect(indexHtml).toMatch(new RegExp(`\"?width\"?\s*:\s*${gameConf.renderer.width}`));
+      expect(indexHtml).toMatch(new RegExp(`\"?height\"?\s*:\s*${gameConf.renderer.height}`));
+      expect(indexHtml).toMatch(new RegExp(`\"?pixelScale\"?\s*:\s*${gameConf.renderer.pixelScale}`));
     });
   });
 });

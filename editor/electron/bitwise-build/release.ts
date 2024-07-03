@@ -7,6 +7,7 @@ const defaultGameConfig = {
   renderer: {
     width: 1280,
     height: 720,
+    pixelScale: 128,
   },
 };
 
@@ -75,10 +76,7 @@ async function releaseZip(root: string, gameFilePath: string, dest: string): Pro
         loader: {
           base: '',
         },
-        renderer: {
-          width: ${gameConfig.renderer?.width ?? defaultGameConfig.renderer.width},
-          height: ${gameConfig.renderer?.height ?? defaultGameConfig.renderer.height},
-        },
+        renderer: ${JSON.stringify(gameConfig.renderer)},
         scene: '${initialScene}',
       });
       game.start();
