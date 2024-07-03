@@ -87,7 +87,7 @@ async function buildGameFile(projectRoot: string): Promise<string | undefined> {
   catch (e) {
     console.warn(`Could not read project config: ${e}`);
   }
-  debug("Game coniguration: %o", gameConf);
+  debug("Game configuration: %o", gameConf);
 
   const gameJs = buildGameJs(projectRoot, gameConf, modules);
   // The game file must be written to the root of the project

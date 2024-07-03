@@ -279,11 +279,6 @@ export default defineComponent({
         loader: {
           base: this.baseUrl,
         },
-        // XXX: Get from game settings
-        renderer: {
-          width: 1280,
-          height: 720,
-        },
         ...opt,
       });
 
@@ -316,13 +311,12 @@ export default defineComponent({
           width: 0,
           height: 0,
         },
-        data: {
-          // XXX: Get from game settings
-          gameWidth: 1280,
-          gameHeight: 720,
-        },
         ...opt,
       });
+      game.data = {
+        gameWidth: game.config?.renderer?.width ?? 1280,
+        gameHeight: game.config?.renderer?.height ?? 720,
+      };
 
       for (const name in this.components) {
         game.registerComponent(name, this.components[name]);
