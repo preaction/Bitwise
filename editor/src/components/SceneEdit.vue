@@ -601,11 +601,11 @@ export default defineComponent({
     </div>
     <div class="tab-sidebar">
       <TabView>
-        <Panel label="Entities">
+        <Panel label="Entities" style="height: 100%">
           <EntityPanel ref="entityPanel" v-if="sceneData" class="tab-sidebar-item" @update:modelValue="sceneChanged"
             v-model="sceneData.entities" :scene="scene" />
         </Panel>
-        <Panel label="Systems">
+        <Panel label="Systems" style="height: 100%">
           <SystemsPanel v-if="scene" v-model="sceneData" @update="sceneChanged" :scene="scene" />
         </Panel>
       </TabView>
@@ -650,12 +650,15 @@ export default defineComponent({
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 .tab-sidebar .tabpanel {
   padding: 0.3em;
   background: var(--bw-border-color);
   color: var(--bw-color);
+  overflow: hidden;
+  height: 100%;
 }
 
 .tab-main-edit {

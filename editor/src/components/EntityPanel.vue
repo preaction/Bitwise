@@ -443,7 +443,7 @@ export default defineComponent({
 </template>
 
 <style>
-body .scene-panel {
+.scene-panel {
   display: flex;
   flex-flow: column;
   font-size: 0.9em;
