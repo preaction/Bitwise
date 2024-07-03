@@ -160,7 +160,7 @@ export default Vue.defineComponent({
       isBuilding: false,
       components: {},
       systems: {},
-      componentForms: {
+      componentForms: Vue.markRaw({
         "Transform": TransformEdit,
         "OrthographicCamera": OrthographicCameraEdit,
         "Sprite": SpriteEdit,
@@ -171,10 +171,10 @@ export default Vue.defineComponent({
         "UIText": UITextEdit,
         "UIButton": UIButtonEdit,
         "UIContainer": UIContainerEdit,
-      },
-      systemForms: {
+      }),
+      systemForms: Vue.markRaw({
         "Physics": PhysicsEdit,
-      },
+      }),
       consoleLogs: [],
       openConsole: false,
       consoleErrors: 0,
@@ -603,7 +603,8 @@ export default Vue.defineComponent({
                 <hr>
               </li>
               <li data-test="new-component" @click="newModule('NewComponent', 'Component.ts')">Component</li>
-              <li data-test="new-component-form" @click="newModule('NewComponentForm', 'Component.vue')">Component Form</li>
+              <li data-test="new-component-form" @click="newModule('NewComponentForm', 'Component.vue')">Component Form
+              </li>
               <li data-test="new-system" @click="newModule('NewSystem', 'System.ts')">System</li>
               <li data-test="new-system-form" @click="newModule('NewSystemForm', 'Component.vue')">System Form</li>
             </ul>
