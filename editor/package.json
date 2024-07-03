@@ -1,7 +1,7 @@
 {
   "name": "@fourstar/bitwise-editor",
   "productName": "Bitwise Editor",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "main": "dist/electron/main.cjs",
   "description": "Editor for the Bitwise game framework",
   "author": "Doug Bell",
