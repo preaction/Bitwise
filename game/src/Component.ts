@@ -10,7 +10,7 @@ import Scene from './Scene.js';
  * in custom attributes in the Component subclass.
  */
 export default abstract class Component {
-  world:any;
+  world: any;
 
   /**
    * The store handles high-performance component data as an object of
@@ -21,22 +21,22 @@ export default abstract class Component {
    * Component classes can also declare their own properties to store
    * arbitrary data like strings or objects.
    */
-  store:{ [key:string]: Array<number> }
-  scene:Scene;
-  isNull:boolean = false;
+  store: { [key: string]: Array<number> }
+  scene: Scene;
+  isNull: boolean = false;
 
   /**
    * Returns a mapping of property to data type. Data types are defined
    * by bitecs.Types.
    */
-  get componentData():Object { return {} };
+  get componentData(): Object { return {} };
 
-  constructor( scene:Scene, world:any ) {
+  constructor(scene: Scene, world: any) {
     this.scene = scene;
     this.world = world;
-    this.store = scene.game.ecs.defineComponent( this.componentData );
+    this.store = scene.game.ecs.defineComponent(this.componentData);
   }
-  static get editorComponent():string {
+  static get editorComponent(): string {
     return '';
   }
   /**
@@ -44,21 +44,21 @@ export default abstract class Component {
    * components cannot be added in the editor and will not appear in the
    * editor if they are defined on the entity.
    */
-  static isHidden:boolean = false;
+  static isHidden: boolean = false;
 
   /**
    * Add an entity to this component. Override this method in a subclass
    * to set up default values for component properties.
    */
-  addEntity( eid:number ) {
-    this.scene.game.ecs.addComponent( this.world, this.store, eid );
+  addEntity(eid: number) {
+    this.scene.game.ecs.addComponent(this.world, this.store, eid);
   }
 
   /**
    * Remove an entity from this component.
    */
-  removeEntity( eid:number ) {
-    this.scene.game.ecs.removeComponent( this.world, this.store, eid );
+  removeEntity(eid: number) {
+    this.scene.game.ecs.removeComponent(this.world, this.store, eid);
   }
 
   /**
@@ -70,11 +70,11 @@ export default abstract class Component {
    * example, the Sprite component thaws texture paths by using the Load
    * object to get a texture ID.
    */
-  async thawEntity( eid:number, data:{ [key:string]: any }={} ):Promise<void> {
-    this.addEntity( eid );
-    for ( const k in data ) {
-      if ( !this.store[k] ) {
-        console.warn( 'Unknown attribute:', k, 'for component:', this.constructor.name );
+  async thawEntity(eid: number, data: { [key: string]: any } = {}): Promise<void> {
+    this.addEntity(eid);
+    for (const k in data) {
+      if (!this.store[k]) {
+        console.warn('Unknown attribute:', k, 'for component:', this.constructor.name);
         continue;
       }
       this.store[k][eid] = data[k];
@@ -90,9 +90,9 @@ export default abstract class Component {
    * example, the Sprite component freezes texture IDs as the path to
    * the texture's image file.
    */
-  freezeEntity( eid:number ):{ [key:string]: any } {
-    const data: { [key:string]: any } = {};
-    for ( const k in this.store ) {
+  freezeEntity(eid: number): { [key: string]: any } {
+    const data: { [key: string]: any } = {};
+    for (const k in this.store) {
       data[k] = this.store[k][eid];
     }
     return data;
