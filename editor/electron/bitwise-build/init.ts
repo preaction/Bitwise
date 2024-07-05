@@ -7,14 +7,33 @@ import { promises as fs } from 'node:fs';
 import Debug from 'debug';
 const debug = Debug('bitwise:build');
 
-export async function init( projectRoot:string ) {
-  debug( "Initializing new project in %s", projectRoot );
+export async function init(projectRoot: string) {
+  debug("Initializing new project in %s", projectRoot);
+  const pkgconfig = buildPackageJson();
+  const pkgPath = path.join(projectRoot, 'package.json');
+  await fs.writeFile(pkgPath, JSON.stringify(pkgconfig, null, 2));
   const tsconfig = buildTsconfig();
-  const confPath = path.join( projectRoot, 'tsconfig.json' );
-  return fs.writeFile( confPath, JSON.stringify(tsconfig, null, 2) );
+  const confPath = path.join(projectRoot, 'tsconfig.json');
+  await fs.writeFile(confPath, JSON.stringify(tsconfig, null, 2));
 }
 
-async function buildTsconfig() {
+function buildPackageJson() {
+  return {
+    "devDependencies": {
+      "@types/three": "^0.146.0",
+      "typescript": "^5.4.5"
+    },
+    "dependencies": {
+      "@fourstar/bitwise": "0.5.2",
+      "tslib": "^2.4.1",
+      "ammojs-typed": "^1.0.6",
+      "bitecs": "^0.3.38",
+      "three": "^0.146.0"
+    }
+  };
+}
+
+function buildTsconfig() {
   return {
     "compilerOptions": {
       "target": "ESNext",
@@ -31,7 +50,7 @@ async function buildTsconfig() {
       "skipLibCheck": true,
       "outDir": ".build",
     },
-    "include": [ "**/*" ]
+    "include": ["**/*"]
   }
 }
 

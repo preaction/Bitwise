@@ -9,12 +9,15 @@ import { fork, ChildProcess } from 'node:child_process';
 import Debug from 'debug';
 const debug = Debug('bitwise:build');
 
-export type BuildContext = esbuild.BuildContext;
+export type BuildContext = {
+  rebuild: esbuild.BuildContext["rebuild"],
+  dispose: esbuild.BuildContext["dispose"],
+};
 export type BuildResult = esbuild.BuildResult;
 
 type GameConfig = {};
 
-export async function context(root: string, dest: string, opt: { [key: string]: any } = {}): Promise<esbuild.BuildContext | undefined> {
+export async function context(root: string, dest: string, opt: { [key: string]: any } = {}): Promise<BuildContext | undefined> {
   const src = await buildGameFile(root);
   if (!src) {
     return;
@@ -31,14 +34,23 @@ export async function context(root: string, dest: string, opt: { [key: string]: 
     entryPoints: [src],
     outfile: dest,
     outbase: root,
-    format: 'esm',
+    format: 'esm' as esbuild.Format,
     sourcemap: true,
-    logLevel: 'info',
+    logLevel: 'info' as esbuild.LogLevel,
     logLimit: 0,
     ...opt,
   };
   debug("Creating esbuild context: %o", ctx);
-  return esbuild.context(ctx);
+  const context = await esbuild.context(ctx);
+  return {
+    async rebuild() {
+      await buildGameFile(root);
+      return context.rebuild();
+    },
+    dispose() {
+      return context.dispose();
+    },
+  };
 }
 
 export async function build(root: string, dest: string, opt: { [key: string]: any } = {}): Promise<esbuild.BuildResult | undefined> {
