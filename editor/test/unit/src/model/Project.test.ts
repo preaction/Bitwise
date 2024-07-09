@@ -4,10 +4,7 @@ import { MockElectron } from '../../../mock/electron.js';
 import ElectronBackend from '../../../../src/backend/Electron.js';
 import type { DirectoryItem } from '../../../../src/Backend.js';
 import Project from '../../../../src/model/Project.js';
-import MockGame from '../../../mock/game.js';
-import { Texture, Atlas } from '@fourstar/bitwise';
-
-jest.mock('../../../mock/game.js');
+import { Texture, Atlas, Game } from '@fourstar/bitwise';
 
 const mockReadFile = jest.fn() as jest.MockedFunction<typeof global.electron.readFile>;
 const mockReadProject = jest.fn() as jest.MockedFunction<typeof global.electron.readProject>;
@@ -21,6 +18,12 @@ beforeEach(() => {
   global.electron.readProject = mockReadProject;
   mockReadFile.mockReset();
   mockReadProject.mockReset();
+});
+
+const mockHasFocus = jest.spyOn(document, 'hasFocus');
+beforeEach(() => {
+  mockHasFocus.mockReset();
+  mockHasFocus.mockReturnValue(true);
 });
 
 describe('Project', () => {
@@ -159,35 +162,6 @@ describe('Project', () => {
       expect(project.assets).toEqual(gotAssets);
     });
 
-  });
-
-  describe.skip('loadGameClass()', () => {
-    // XXX: Skipped because the dynamic import does not work in
-    // node/Jest
-    const mockBuildProject = jest.fn() as jest.MockedFunction<typeof global.electron.buildProject>;
-    beforeEach(() => {
-      global.electron.buildProject = mockBuildProject;
-      mockBuildProject.mockReset();
-    });
-
-    test('should load game class', async () => {
-      mockBuildProject.mockResolvedValue('../../../mock/game.js');
-      const gameClass = await project.loadGameClass();
-      expect(gameClass).toBeInstanceOf(typeof MockGame);
-    });
-
-    test.todo('should emit loadstart/loadend events');
-    test.todo('should reload game class after backend build');
-    test.todo('should return same class to multiple concurrent callers');
-  });
-
-  describe('subscribes to backend change events', () => {
-    const mockHasFocus = jest.spyOn(document, 'hasFocus');
-    beforeEach(() => {
-      mockHasFocus.mockReset();
-      mockHasFocus.mockReturnValue(true);
-    });
-
     test('change causes asset cache reset', async () => {
       const dirItems: DirectoryItem[] = [
         { path: 'sprite.png' },
@@ -197,13 +171,49 @@ describe('Project', () => {
       const initialAssets = await project.getAssets();
       expect(initialAssets).toHaveLength(dirItems.length);
 
-      const newItems = [{ path: 'newimage.png' }];
-      dirItems.push(...newItems);
+      const newItems = [{ filename: 'newimage.png' }];
+      dirItems.push(...newItems.map(i => ({ path: i.filename })));
       backend.emit('change', newItems);
 
       const newAssets = await project.getAssets();
       expect(newAssets).toHaveLength(dirItems.length);
-      expect(newAssets[newAssets.length - 1]).toMatchObject({ name: newItems[0].path });
+      expect(newAssets[newAssets.length - 1]).toMatchObject({ name: newItems[0].filename });
+    });
+  });
+
+  describe('loadGameClass()', () => {
+    const mockBuildProject = jest.fn() as jest.MockedFunction<typeof global.electron.buildProject>;
+    beforeEach(() => {
+      global.electron.buildProject = mockBuildProject;
+      mockBuildProject.mockReset();
+      mockBuildProject.mockResolvedValue('../../test/mock/game.ts');
+      jest.spyOn(project, '_import').mockResolvedValue(Game);
+    });
+
+    test('should load game class', async () => {
+      const gameClass = await project.loadGameClass();
+      expect(new gameClass({})).toBeInstanceOf(Game);
+    });
+
+    test('should emit loadstart/loadend events', async () => {
+      const loadStart = jest.fn();
+      project.on('loadstart', loadStart);
+      const loadEnd = jest.fn();
+      project.on('loadend', loadEnd);
+      const promise = project.loadGameClass();
+      expect(loadStart).toHaveBeenCalled();
+      await promise;
+      expect(loadEnd).toHaveBeenCalled();
+    });
+
+    test('should reload game class after backend change', async () => {
+      const gameClass = await project.loadGameClass();
+      const NewGame = class extends Game { }
+      jest.spyOn(project, '_import').mockResolvedValue(NewGame);
+      const newItems = [{ filename: 'newcomponent.ts' }];
+      backend.emit('change', newItems);
+      const newGameClass = await project.loadGameClass();
+      expect(newGameClass).not.toBe(gameClass);
     });
   });
 });

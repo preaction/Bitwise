@@ -6,7 +6,7 @@ import type { ConfigFile } from "../types";
 const CONFIG_FILE = 'bitwise.json';
 const project = inject<Ref<Project>>('project') as Ref<Project>;
 
-let config = ref({
+const defaultConfig: ConfigFile = {
   game: {
     renderer: {
       width: 1024,
@@ -14,12 +14,15 @@ let config = ref({
       pixelScale: 128,
     },
   },
-} as ConfigFile);
+};
+let config = ref(defaultConfig);
 
 onMounted(async () => {
   try {
     const loadConfig = JSON.parse(await project.value.readItemData(CONFIG_FILE));
     config.value = loadConfig;
+    config.value.game ??= defaultConfig.game;
+    config.value.game.renderer ??= defaultConfig.game.renderer;
   }
   catch (err) {
     console.log(`Error loading game config: ${err}`);

@@ -51,7 +51,9 @@ beforeEach(() => {
   global.electron = new MockElectron();
   global.confirm = () => true;
   backend = new MockBackend();
+  jest.spyOn(backend, 'buildProject').mockResolvedValue('../../../mock/game.ts');
   project = new Project(backend, "testProject");
+  jest.spyOn(project, '_import').mockResolvedValue(Game);
   provide = {
     backend,
     project,

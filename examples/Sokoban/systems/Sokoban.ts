@@ -16,6 +16,7 @@ export default class Sokoban extends System {
   movement: three.Vector2 | null = null;
 
   async init() {
+    console.log('Sokoban: init()');
     // Get references to Components and Systems from this.scene
     this.input = this.scene.getSystem(Input);
     this.physics = this.scene.getSystem(Physics);
@@ -27,6 +28,7 @@ export default class Sokoban extends System {
   }
 
   start() {
+    console.log('Sokoban: start()');
     // Add event handlers
     this.input.watchKey('ArrowLeft', 'left');
     this.input.watchKey('ArrowRight', 'right');

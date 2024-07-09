@@ -47,8 +47,10 @@ export default defineComponent({
       gameClass: null,
       editGame: null,
       editScene: null,
+      editReady: false,
       playGame: null,
       playScene: null,
+      playReady: false,
       showGrid: false,
     } as {
       sceneData: (SceneData & { component: string, editor: any }) | null,
@@ -59,8 +61,10 @@ export default defineComponent({
       gameClass: any,
       editGame: any,
       editScene: any,
+      editReady: boolean,
       playGame: any,
       playScene: any,
+      playReady: boolean,
       showGrid: boolean,
     };
   },
@@ -126,15 +130,7 @@ export default defineComponent({
       this.sceneData.$schema = '1';
     }
 
-    try {
-      this.gameClass = await this.project.loadGameClass();
-    }
-    catch (err) {
-      console.log(`Error loading game class: ${err}`);
-    }
-    if (this.gameClass) {
-      this.initializeEditor();
-    }
+    this.initializeEditor();
   },
 
   unmounted() {
@@ -156,6 +152,8 @@ export default defineComponent({
   watch: {
     isBuilding(isBuilding) {
       if (isBuilding) {
+        this.editReady = false;
+        this.playReady = false;
         // XXX: Restoring the playState of the scene only works if all
         // of the Systems know how to do it right, and I'm not sure
         // I know how to do it right: init() creates a set of objects,
@@ -223,6 +221,11 @@ export default defineComponent({
     },
 
     async initializeEditor() {
+      if (this.isBuilding) {
+        console.log('initializeEditor: waiting until build is finished...');
+        return;
+      }
+      this.gameClass = await this.project.loadGameClass();
       const game = this.editGame = this.createEditorGame('edit-canvas');
 
       const scene = this.editScene = markRaw(game.addScene());
@@ -247,7 +250,13 @@ export default defineComponent({
         catch (err) {
           console.log(`Error calling update(): `, err);
         }
-        scene.render();
+        try {
+          scene.render();
+        }
+        catch (err) {
+          console.log(`Error calling render(): `, err);
+        }
+        this.editReady = true;
       });
     },
 
@@ -427,6 +436,7 @@ export default defineComponent({
         // XXX: Show a rudimentary loading screen during init
         await this.playScene.init();
         this.playScene.start();
+        this.playReady = true;
         this.$refs['play-canvas'].focus();
       });
     },
@@ -592,11 +602,11 @@ export default defineComponent({
       </div>
     </div>
     <div class="tab-main-edit" v-show="playing == false">
-      <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
+      <div v-if="!editReady" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
       <canvas ref="edit-canvas" />
     </div>
     <div class="tab-main-play" v-show="playing == true">
-      <div v-if="isBuilding" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
+      <div v-if="!playReady" class="build-overlay"><i class="fa fa-cog fa-spin fa-10x"></i></div>
       <canvas ref="play-canvas" />
     </div>
     <div class="tab-sidebar">

@@ -1,21 +1,19 @@
 import { describe, expect, test, beforeEach, afterEach, jest, beforeAll } from '@jest/globals';
 import { flushPromises, mount, VueWrapper } from '@vue/test-utils';
+import { Game, Component, System } from '@fourstar/bitwise';
 import { MockElectron } from '../../mock/electron.js';
-import type { DirectoryItem } from '../../../src/Backend.js';
-import Tree from '../../../src/components/Tree.vue';
-import MockBackend from '../../mock/backend.js';
-import MockGame from '../../mock/game.js';
+import Backend from '../../../src/backend/Electron.js';
 import App from '../../../src/App.vue';
+import Tree from '../../../src/components/Tree.vue';
 import SceneEdit from '../../../src/components/SceneEdit.vue';
 import ImageView from '../../../src/components/ImageView.vue';
 import type Modal from '../../../src/components/Modal.vue';
 import ProjectSelect from '../../../src/components/ProjectSelect.vue';
 import Tab from '../../../src/model/Tab.js';
 import Project from '../../../src/model/Project.js';
-import type { DefineComponent } from 'vue';
+import type { DirectoryItem } from '../../../src/Backend.js';
 
-jest.mock("../../mock/game.ts");
-const MockGameConstructor = jest.requireActual<typeof import('../../mock/game.js')>('../../mock/game.js').default;
+jest.mock('../../../src/backend/Electron.js');
 
 const findAsset = async (wrapper: VueWrapper, path: string) => {
   const pathParts = path.split('/');
@@ -33,30 +31,34 @@ const findAsset = async (wrapper: VueWrapper, path: string) => {
   throw `Could not find Tree for asset path "${path}"`;
 };
 
-let backend: MockBackend, project: Project, projectItems: DirectoryItem[];
-const MockedGame = jest.mocked(MockGame);
+let backend: jest.Mocked<Backend>;
+let project: Project;
+let projectItems: DirectoryItem[];
+let mockImport: jest.Mock<Project["_import"]> = jest.fn();
 const cleanup = [] as Array<() => void>;
-const mockOpenProject = jest.fn() as jest.MockedFunction<typeof backend.openProject>;
-const mockBuildProject = jest.fn() as jest.MockedFunction<typeof backend.buildProject>;
-const mockLoadGameClass = jest.fn() as jest.MockedFunction<typeof project.loadGameClass>;
-const mockGetState = jest.fn() as jest.MockedFunction<typeof backend.getState>;
-const mockSetState = jest.fn() as jest.MockedFunction<typeof backend.setState>;
-const mockReadItemData = jest.fn() as jest.MockedFunction<typeof backend.readItemData>;
-const mockListItems = jest.fn() as jest.MockedFunction<typeof backend.listItems>;
 beforeEach(async () => {
-  global.fetch = jest.fn() as jest.MockedFunction<typeof global.fetch>
-  mockGetState.mockResolvedValue({});
-
   global.electron = new MockElectron();
-  backend = new MockBackend();
-  backend.openProject = mockOpenProject;
-  backend.buildProject = mockBuildProject;
-  backend.getState = mockGetState;
-  backend.setState = mockSetState;
-  backend.readItemData = mockReadItemData;
-  backend.listItems = mockListItems;
+  global.fetch = jest.fn() as jest.MockedFunction<typeof global.fetch>
+
+  backend = jest.mocked(new Backend());
+  backend.getState.mockResolvedValue({});
+  const backendListeners: {
+    [key: string | symbol]: Function[],
+  } = {};
+  backend.on.mockImplementation((name: string, cb: Function) => {
+    backendListeners[name] ||= [];
+    backendListeners[name].push(cb);
+    return backend;
+  });
+  backend.emit.mockImplementation((name, ...args) => {
+    if (name in backendListeners) {
+      backendListeners[name].forEach(cb => cb(...args));
+    }
+    return true;
+  });
 
   const mockData: { [key: string]: string } = {
+    'bitwise.json': '{"game": {}}',
     'LoadScene.json': '{ "type": "Scene", "component": "SceneEdit" }',
     'directory/OldScene.json': '{ "type": "Scene", "component": "SceneEdit" }',
     'sheet.xml': `<?xml version="1.0" encoding="UTF-8"?>
@@ -65,13 +67,13 @@ beforeEach(async () => {
       </TextureAtlas>
     `,
   };
-  mockReadItemData.mockImplementation(async (projectName: string, itemPath: string) => {
+  backend.readItemData.mockImplementation(async (projectName: string, itemPath: string) => {
     if (!mockData[itemPath]) {
       throw `No mock data for path ${itemPath}`;
     }
     return Promise.resolve(mockData[itemPath]);
   });
-  mockBuildProject.mockResolvedValue("test/mock/game.ts");
+  backend.buildProject.mockResolvedValue("../mock/game.ts");
 
   projectItems = [
     { path: "directory", children: [] },
@@ -84,12 +86,13 @@ beforeEach(async () => {
   projectItems[0].children = [
     { path: "directory/OldScene.json" },
   ];
-  mockListItems.mockResolvedValue(projectItems);
+  backend.listItems.mockResolvedValue(projectItems);
+  backend.listProjects.mockResolvedValue([]);
 
+  mockImport.mockReset();
   project = new Project(backend, "Project Name");
-  await project.getAssets();
-  mockOpenProject.mockReturnValue(Promise.resolve(project));
-  project.loadGameClass = mockLoadGameClass;
+  project._import = mockImport;
+  backend.openProject.mockResolvedValue(project);
 });
 
 beforeAll(() => {
@@ -104,18 +107,14 @@ beforeAll(() => {
       // do nothing
     }
   };
+  jest.spyOn(document, 'hasFocus').mockReturnValue(true);
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup.forEach(c => c());
   cleanup.length = 0;
   sessionStorage.clear();
-  mockOpenProject.mockReset();
-  mockBuildProject.mockReset();
-  mockLoadGameClass.mockReset();
-  mockGetState.mockReset();
-  mockSetState.mockReset();
-  MockedGame.mockReset();
+  await flushPromises();
 });
 
 describe('App', () => {
@@ -151,25 +150,56 @@ describe('App', () => {
       await flushPromises();
       await wrapper.vm.$nextTick();
 
-      expect(mockOpenProject).toHaveBeenCalledWith(project.name);
+      expect(backend.openProject).toHaveBeenCalledWith(project.name);
       expect(wrapper.vm.project.name).toBe(project.name);
 
-      expect(mockLoadGameClass).toHaveBeenCalled();
+      expect(backend.buildProject).toHaveBeenCalled();
+    });
+
+    test('watches project build events', async () => {
+      const wrapper = mount(App, {
+        attachTo: document.body,
+        props: { backend },
+      });
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      const modal = wrapper.getComponent(ProjectSelect);
+      modal.vm.$emit('select', project.name);
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+
+      project.emit('loadstart');
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.isBuilding).toBeTruthy();
+      expect(wrapper.get('.tasks').text()).toContain('Building');
+
+      project.emit('loadend');
+      await flushPromises();
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.isBuilding).toBeFalsy();
+      expect(wrapper.get('.tasks').text()).not.toContain('Building');
     });
 
     test('loads system and component forms', async () => {
       // @ts-ignore
-      mockLoadGameClass.mockResolvedValue(MockedGame);
-      MockedGame.mockImplementation(() => {
-        const game = new MockGameConstructor();
-        game.components = {
-          TestComponent: { editorComponent: 'test/mock/componentEditForm.vue' },
-        };
-        game.systems = {
-          TestSystem: { editorComponent: 'test/mock/systemEditForm.vue' },
-        };
-        return jest.mocked(game);
+      project._import.mockResolvedValue(class MockGame extends Game {
+        constructor() {
+          super({});
+          console.log('constructing mock game');
+          this.components = {
+            TestComponent: class extends Component {
+              static editorComponent = 'test/mock/componentEditForm.vue'
+            },
+          };
+          this.systems = {
+            TestSystem: class extends System {
+              static editorComponent = 'test/mock/systemEditForm.vue'
+            },
+          };
+        }
       });
+
       const mockFetch = jest.spyOn(global, "fetch");
       // @ts-ignore
       mockFetch.mockImplementationOnce(() => {
@@ -224,13 +254,15 @@ describe('App', () => {
     test('shows new assets after change', async () => {
       const newItems = [{ path: 'newimage.png' }];
       projectItems.push(...newItems);
-      mockListItems.mockReset();
-      mockListItems.mockResolvedValue(projectItems);
+      backend.listItems.mockReset();
+      backend.listItems.mockResolvedValue(projectItems);
       backend.emit('change', newItems);
       await wrapper.vm.$nextTick();
       await flushPromises();
       await wrapper.vm.$nextTick();
+      await flushPromises();
 
+      console.log(wrapper.html());
       const treeItem = wrapper.find('[data-path="newimage.png"]');
       expect(treeItem.exists()).toBeTruthy();
     });
@@ -282,9 +314,9 @@ describe('App', () => {
 
       // XXX: Saves session info
       // Saves state info
-      expect(mockSetState).toHaveBeenCalled();
-      expect(mockSetState.mock.lastCall?.[0]).toBe("app");
-      expect(mockSetState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
+      expect(backend.setState).toHaveBeenCalled();
+      expect(backend.setState.mock.lastCall?.[0]).toBe("app");
+      expect(backend.setState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
     });
 
     test('can open scene from directory', async () => {
@@ -310,8 +342,8 @@ describe('App', () => {
 
       // XXX: Saves session info
       // Saves state info
-      expect(mockSetState.mock.lastCall?.[0]).toBe("app");
-      expect(mockSetState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
+      expect(backend.setState.mock.lastCall?.[0]).toBe("app");
+      expect(backend.setState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
     });
 
     test('can open code', async () => {
@@ -348,9 +380,9 @@ describe('App', () => {
 
       // XXX: Saves session info
       // Saves state info
-      expect(mockSetState).toHaveBeenCalled();
-      expect(mockSetState.mock.lastCall?.[0]).toBe("app");
-      expect(mockSetState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
+      expect(backend.setState).toHaveBeenCalled();
+      expect(backend.setState.mock.lastCall?.[0]).toBe("app");
+      expect(backend.setState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
     });
 
     test('can open release tab', async () => {
@@ -368,9 +400,9 @@ describe('App', () => {
 
       // XXX: Saves session info
       // Saves state info
-      expect(mockSetState).toHaveBeenCalled();
-      expect(mockSetState.mock.lastCall?.[0]).toBe("app");
-      expect(mockSetState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
+      expect(backend.setState).toHaveBeenCalled();
+      expect(backend.setState.mock.lastCall?.[0]).toBe("app");
+      expect(backend.setState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
     });
 
     test('can open image viewer', async () => {
@@ -394,9 +426,9 @@ describe('App', () => {
 
       // XXX: Saves session info
       // Saves state info
-      expect(mockSetState).toHaveBeenCalled();
-      expect(mockSetState.mock.lastCall?.[0]).toBe("app");
-      expect(mockSetState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
+      expect(backend.setState).toHaveBeenCalled();
+      expect(backend.setState.mock.lastCall?.[0]).toBe("app");
+      expect(backend.setState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
     });
 
     test('can open sprite from sprite sheet', async () => {
@@ -420,9 +452,9 @@ describe('App', () => {
 
       // XXX: Saves session info
       // Saves state info
-      expect(mockSetState).toHaveBeenCalled();
-      expect(mockSetState.mock.lastCall?.[0]).toBe("app");
-      expect(mockSetState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
+      expect(backend.setState).toHaveBeenCalled();
+      expect(backend.setState.mock.lastCall?.[0]).toBe("app");
+      expect(backend.setState.mock.lastCall?.[1]).toMatchObject({ currentTabIndex: 0 });
     });
   });
 
@@ -518,7 +550,7 @@ describe('App', () => {
 
       const projectDialog = wrapper.getComponent<typeof Modal>({ ref: 'projectDialog' });
       expect(projectDialog.props('show')).toBe(false);
-      expect(mockOpenProject).toHaveBeenCalledWith(project.name);
+      expect(backend.openProject).toHaveBeenCalledWith(project.name);
     });
 
     test('loads open tabs', async () => {
@@ -542,8 +574,6 @@ describe('App', () => {
       await flushPromises();
       await wrapper.vm.$nextTick();
 
-      expect(wrapper.vm.gameClass).not.toBeNull();
-
       // Opens tab w/ correct info
       const tabBar = wrapper.get({ ref: 'tabBar' });
       const tabElements = tabBar.findAll('a');
@@ -562,7 +592,7 @@ describe('App', () => {
 
   describe('load stored state (resume project)', () => {
     test('loads project', async () => {
-      mockGetState.mockResolvedValue({
+      backend.getState.mockResolvedValue({
         currentProject: project.name,
       });
 
@@ -581,7 +611,7 @@ describe('App', () => {
 
       const projectDialog = wrapper.getComponent<typeof Modal>({ ref: 'projectDialog' });
       expect(projectDialog.props('show')).toBe(true);
-      expect(mockOpenProject).not.toHaveBeenCalled();
+      expect(backend.openProject).not.toHaveBeenCalled();
 
       const modal = wrapper.getComponent(ProjectSelect);
       modal.vm.$emit('restore');
@@ -589,8 +619,7 @@ describe('App', () => {
       await wrapper.vm.$nextTick();
 
       expect(projectDialog.props('show')).toBe(false);
-      expect(mockOpenProject).toHaveBeenCalledWith(project.name);
-      expect(wrapper.vm.gameClass).not.toBeNull();
+      expect(backend.openProject).toHaveBeenCalledWith(project.name);
     });
 
     test('restores tabs', async () => {
@@ -598,7 +627,7 @@ describe('App', () => {
         { component: 'SceneEdit', path: 'LoadScene.json' },
         // { component: 'Release', path: 'bitwise.json' },
       ];
-      mockGetState.mockResolvedValue({
+      backend.getState.mockResolvedValue({
         currentProject: project.name,
         openTabs: tabs,
         currentTabIndex: 0,
@@ -623,8 +652,6 @@ describe('App', () => {
       await resumeButton.trigger('click');
       await flushPromises();
       await wrapper.vm.$nextTick();
-
-      expect(wrapper.vm.gameClass).not.toBeNull();
 
       // Opens tab w/ correct info
       const tabBar = wrapper.get({ ref: 'tabBar' });

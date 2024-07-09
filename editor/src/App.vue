@@ -289,12 +289,28 @@ export default Vue.defineComponent({
     },
 
     async openProject(name: string) {
+      if (this.project) {
+        this.project.removeAllListeners('loadstart');
+        this.project.removeAllListeners('loadend');
+        this.project.removeAllListeners('change');
+      }
+      console.log(`App: Opening project ${name}`);
       this.project = await this.backend.openProject(name);
-      this.assets = await this.project.getAssets();
       this.project.on('change', async () => {
+        console.log(`App: Change detected. Reloading assets.`);
         this.assets = await this.project.getAssets();
       });
+      this.project.on('loadstart', () => {
+        console.log('App: building new game class');
+        this.isBuilding = true;
+      });
+      this.project.on('loadend', async () => {
+        this.buildProject();
+      });
+      console.log(`App: Building project ${name}`);
       this.buildProject();
+      console.log(`App: Getting initial assets`);
+      this.assets = await this.project.getAssets();
     },
 
     saveStoredState() {
@@ -498,6 +514,7 @@ export default Vue.defineComponent({
     },
 
     async buildProject() {
+      this.isBuilding = true;
       const gameClass = await this.project.loadGameClass() as typeof Game;
 
       if (gameClass) {
@@ -508,6 +525,7 @@ export default Vue.defineComponent({
         }
         catch (e) {
           console.log(`Could not create new game: ${e}`);
+          this.isBuilding = false;
           return;
         }
 
@@ -528,6 +546,7 @@ export default Vue.defineComponent({
         }
       }
 
+      console.log('App: new game class ready');
       this.isBuilding = false;
     },
 
@@ -662,6 +681,9 @@ export default Vue.defineComponent({
         <span class="console-info">
           <span v-if="consoleErrors > 0"><i class="fa fa-hexagon-xmark"></i>{{ consoleErrors || 0 }}</span>
           <span v-if="consoleWarnings > 0"><i class="fa fa-triangle-exclamation"></i>{{ consoleWarnings || 0 }}</span>
+        </span>
+        <span class="tasks">
+          <span v-if="isBuilding">Building...</span>
         </span>
       </div>
       <div class="console-bottom">

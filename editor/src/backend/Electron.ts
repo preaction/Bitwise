@@ -48,6 +48,7 @@ export default class Electron extends EventEmitter implements Backend {
 
   async buildProject(projectName: string): Promise<string> {
     this.emit('buildstart', projectName);
+    console.log('backend/Electron: building project', projectName);
     const gameFile = await electron.buildProject(projectName);
     this.emit('buildend', projectName, gameFile);
     return gameFile;

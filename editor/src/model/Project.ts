@@ -40,7 +40,6 @@ export default class Project extends EventEmitter {
   private gameFile: string | null = null;
   private gameClass: typeof Game | null = null;
   private pendingChanges: ProjectChange[] = [];
-  private buildTimeout: null | ReturnType<typeof setTimeout> = null;
 
   constructor(backend: IBackend, name: string) {
     super();
@@ -60,21 +59,37 @@ export default class Project extends EventEmitter {
     return this.backend.writeItemData(this.name, path, data);
   }
 
-  async loadGameClass(): Promise<typeof Game> {
-    this.emit('loadstart');
-    if (!this.gameFile) {
-      this.gameFile = await this.backend.buildProject(this.name);
-      if (!this.gameFile) {
-        throw 'Error building project: No game file returned';
-      }
+  loadPromise: Promise<typeof Game> | null = null;
+  loadGameClass(): Promise<typeof Game> {
+    if (this.gameClass) {
+      return Promise.resolve(this.gameClass);
     }
-    const mod = await import( /* @vite-ignore */ this.gameFile);
-    this.emit('loadend', mod.default);
-    return mod.default;
+    if (this.loadPromise) {
+      return this.loadPromise;
+    }
+    return this.loadPromise = new Promise(async (resolve, reject) => {
+      this.emit('loadstart');
+      if (!this.gameFile) {
+        this.gameFile = await this.backend.buildProject(this.name);
+        if (!this.gameFile) {
+          reject('Error building project: No game file returned');
+        }
+      }
+      this.gameClass = await this._import(this.gameFile);
+      this.emit('loadend', this.gameClass);
+      resolve(this.gameClass);
+      this.loadPromise = null;
+    });
+  }
+
+  // This utility function is so we can mock it out in tests.
+  async _import(gameFile: string): Promise<typeof Game> {
+    const mod = await import( /* @vite-ignore */ gameFile);
+    return mod.default
   }
 
   assetPromise: Promise<Asset[]> | null = null;
-  async getAssets(): Promise<Asset[]> {
+  getAssets(): Promise<Asset[]> {
     if (this.assetPromise) {
       return this.assetPromise;
     }
@@ -132,8 +147,10 @@ export default class Project extends EventEmitter {
   }
 
   private onChange(changes: ProjectChange[]) {
+    console.log('model/Project: Got change');
     // If we do not have focus, queue up changes to process
     if (!document.hasFocus()) {
+      console.log('model/Project: Not in focus. Queuing change.');
       if (!this.pendingChanges?.length) {
         const processChanges = () => {
           this.processChanges(this.pendingChanges);
@@ -149,21 +166,17 @@ export default class Project extends EventEmitter {
   }
 
   private processChanges(changes: ProjectChange[]) {
+    console.log('model/Project: Processing changes');
     this.assets.splice(0, Infinity);
     this.assetPromise = null;
     this.emit('change');
 
     // If any ts/js file changed, build the project
-    if (changes.find(({ filename }) => filename && !filename.match(/(^|\/)\./) && filename.match(/\.[tj]s$/))) {
-      this.emit('loadstart');
-      if (this.buildTimeout) {
-        clearTimeout(this.buildTimeout);
-      }
-      this.buildTimeout = setTimeout(async () => {
-        this.gameFile = null;
-        await this.loadGameClass();
-        this.buildTimeout = null;
-      }, 1000);
+    if (this.gameFile && changes.find(({ filename }) => filename && !filename.match(/(^|\/)\./) && filename.match(/\.[tj]s$/))) {
+      console.log('model/Project: invalidating cached game class');
+      this.gameFile = null;
+      this.gameClass = null;
+      this.loadGameClass();
     }
   }
 
