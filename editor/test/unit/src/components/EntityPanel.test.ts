@@ -62,6 +62,33 @@ beforeEach(async () => {
         }
       },
     },
+    {
+      $schema: '1',
+      name: "Sprite",
+      type: "Sprite",
+      active: true,
+      components: {
+        Transform: {
+          x: 0, y: 0, z: 1,
+          rx: 0, ry: 0, rz: 0,
+          sx: 1, sy: 1, sz: 1,
+        },
+        Sprite: {
+          textureId: 0,
+        },
+        BoxCollider: {
+          ox: 0,
+          oy: 0,
+          oz: 0,
+          sx: 0,
+          sy: 0,
+          sz: 0,
+        },
+        RigidBody: {
+          mass: 1,
+        },
+      },
+    },
   ];
 
   game = new Game({});
@@ -254,7 +281,7 @@ describe('EntityPanel', () => {
       await wrapper.get(`[data-add-component="${componentName}"]`).trigger('click');
       expect(mockUpdate).toHaveBeenCalledTimes(1);
       let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
-      expect(newModelValue[newModelValue.length - 1].components).toHaveProperty(componentName);
+      expect(newModelValue[0].components).toHaveProperty(componentName);
 
       expect(entity.listComponents()).toContain(componentName);
     });
@@ -266,7 +293,7 @@ describe('EntityPanel', () => {
       expect(mockConfirm).toHaveBeenCalled();
       expect(mockUpdate).toHaveBeenCalledTimes(1);
       let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
-      expect(newModelValue[newModelValue.length - 1].components).not.toHaveProperty('OrthographicCamera');
+      expect(newModelValue[0].components).not.toHaveProperty('OrthographicCamera');
       expect(entity.listComponents()).not.toContain(componentName);
     });
 
@@ -278,7 +305,7 @@ describe('EntityPanel', () => {
       await entityPane.get(`[data-component=${componentName}] [name=${propName}]`).setValue(newValue);
       expect(mockUpdate).toHaveBeenCalledTimes(1);
       let newModelValue = mockUpdate.mock.lastCall?.[0] as EntityData[];
-      expect(newModelValue[newModelValue.length - 1].components?.Transform).toMatchObject({ [propName]: newValue.toString() });
+      expect(newModelValue[0].components?.Transform).toMatchObject({ [propName]: newValue.toString() });
       expect(entity.getComponent(componentName)).toMatchObject({ [propName]: newValue });
     });
 
@@ -402,6 +429,7 @@ describe('EntityPanel', () => {
         expect(onUpdate).toHaveBeenCalledWith([
           modelValue[1],
           modelValue[0],
+          modelValue[2],
         ]);
         // XXX: Check scene was updated correctly
       });
@@ -425,10 +453,12 @@ describe('EntityPanel', () => {
           offsetY: 0,
         };
         await wrapper.get(`[data-path=${modelValue[0].name}]`).trigger('drop', dropEvent);
+        await flushPromises();
 
         expect(onUpdate).toHaveBeenCalledWith([
           modelValue[1],
           modelValue[0],
+          modelValue[2],
         ]);
         // XXX: Check scene was updated correctly
       });
@@ -460,6 +490,7 @@ describe('EntityPanel', () => {
               modelValue[0],
             ],
           },
+          modelValue[2],
         ];
         expect(onUpdate).toHaveBeenCalledWith(expectModelValue);
         await wrapper.setProps({
@@ -502,6 +533,7 @@ describe('EntityPanel', () => {
             ...modelValue[1],
             children: undefined,
           },
+          modelValue[2],
         ];
         expect(onUpdate).toHaveBeenCalledWith(expectModelValue);
         await wrapper.setProps({
