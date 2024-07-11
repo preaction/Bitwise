@@ -1,29 +1,15 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+import BinaryToggle from "../BinaryToggle.vue";
 export default defineComponent({
+  components: { BinaryToggle },
   props: ['modelValue'],
   data() {
-    return {
-      vx: 0,
-      vy: 0,
-      vz: 0,
-      rx: 0,
-      ry: 0,
-      rz: 0,
-      lx: 1,
-      ly: 1,
-      lz: 1,
-      ax: 1,
-      ay: 1,
-      az: 1,
-      mass: 0,
-      ...this.modelValue,
-    }
+    return {}
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      this.$emit('update:modelValue', this.modelValue);
     },
   },
 });
@@ -32,45 +18,44 @@ export default defineComponent({
   <div>
     <div class="d-flex align-items-center">
       <label>Mass</label>
-      <input @change="update" v-model="$data.mass">
+      <input name="mass" @change="update" v-model.number="modelValue.mass">
     </div>
     <div class="d-flex position align-items-center">
       <span>Velocity</span>
       <label>X</label>
-      <input @change="update" v-model="$data.vx">
+      <input name="vx" @change="update" v-model.number="modelValue.vx">
       <label>Y</label>
-      <input @change="update" v-model="$data.vy">
+      <input name="vy" @change="update" v-model.number="modelValue.vy">
       <label>Z</label>
-      <input @change="update" v-model="$data.vz">
+      <input name="vz" @change="update" v-model.number="modelValue.vz">
     </div>
     <div class="d-flex position align-items-center">
       <span>Torque</span>
       <label>X</label>
-      <input @change="update" v-model="$data.rx">
+      <input name="rx" @change="update" v-model.number="modelValue.rx">
       <label>Y</label>
-      <input @change="update" v-model="$data.ry">
+      <input name="ry" @change="update" v-model.number="modelValue.ry">
       <label>Z</label>
-      <input @change="update" v-model="$data.rz">
+      <input name="rz" @change="update" v-model.number="modelValue.rz">
     </div>
     <div class="d-flex position align-items-center">
       <span>Freeze Position</span>
       <label>X</label>
-      <BinaryToggle @change="update" v-model="$data.lx" on="0" off="1" />
+      <BinaryToggle name="lx" @change="update" v-model.number="modelValue.lx" on="0" off="1" />
       <label>Y</label>
-      <BinaryToggle @change="update" v-model="$data.ly" on="0" off="1" />
+      <BinaryToggle name="ly" @change="update" v-model.number="modelValue.ly" on="0" off="1" />
       <label>Z</label>
-      <BinaryToggle @change="update" v-model="$data.lz" on="0" off="1" />
+      <BinaryToggle name="lz" @change="update" v-model.number="modelValue.lz" on="0" off="1" />
     </div>
     <div class="d-flex position align-items-center">
       <span>Freeze Rotation</span>
       <label>X</label>
-      <BinaryToggle @change="update" v-model="$data.ax" on="0" off="1" />
+      <BinaryToggle name="ax" @change="update" v-model.number="modelValue.ax" on="0" off="1" />
       <label>Y</label>
-      <BinaryToggle @change="update" v-model="$data.ay" on="0" off="1" />
+      <BinaryToggle name="ay" @change="update" v-model.number="modelValue.ay" on="0" off="1" />
       <label>Z</label>
-      <BinaryToggle @change="update" v-model="$data.az" on="0" off="1" />
+      <BinaryToggle name="az" @change="update" v-model.number="modelValue.az" on="0" off="1" />
     </div>
   </div>
 </template>
-<style>
-</style>
+<style></style>
