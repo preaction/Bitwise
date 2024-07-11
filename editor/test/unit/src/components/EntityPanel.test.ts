@@ -10,6 +10,8 @@ import OrthographicCameraEdit from '../../../../src/components/bitwise/Orthograp
 import SpriteEdit from '../../../../src/components/bitwise/Sprite.vue';
 import { Game } from '@fourstar/bitwise';
 import type { Entity, EntityData, Scene } from '@fourstar/bitwise';
+import Project from '../../../../src/model/Project.js';
+import Backend from '../../../mock/backend.js';
 
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
@@ -31,7 +33,9 @@ const componentForms = Vue.markRaw({
   OrthographicCamera: OrthographicCameraEdit,
   Sprite: SpriteEdit,
 });
+const project = new Project(new Backend(), "projectName");
 const provide = {
+  project,
   systemForms,
   componentForms,
   openTab: () => (null),
@@ -330,6 +334,42 @@ describe('EntityPanel', () => {
       ];
       await wrapper.setProps({ modelValue: newModelValue });
       expect(inputField.value).toBe(newValue.toString());
+      expect(entity.getComponent(componentName)).toMatchObject({ [propName]: newValue });
+    });
+
+    test('updates component data when selected entity changes', async () => {
+      await wrapper.get(`a[data-path=${modelValue[1].name}]`).trigger('click');
+
+      const componentName = 'Transform';
+      const propName = 'x';
+      const inputField = wrapper.vm.$el.querySelector(`[data-component=${componentName}] [name=${propName}]`);
+      expect(inputField.value).toBe(modelValue[1].components?.[componentName][propName].toString());
+
+      const newValue = 8;
+      await wrapper.get(`[data-component=${componentName}] [name=${propName}]`).setValue(newValue);
+      await flushPromises();
+      expect(mockUpdate).toHaveBeenCalled();
+      const newModelValue = [
+        modelValue[0],
+        {
+          ...modelValue[1],
+          components: {
+            ...modelValue[1].components,
+            [componentName]: {
+              ...(modelValue[1].components?.[componentName] ?? {}),
+              [propName]: newValue,
+            },
+          },
+        },
+        ...modelValue.slice(2),
+      ];
+      await wrapper.setProps({ modelValue: newModelValue });
+      await flushPromises();
+      expect(inputField.value).toBe(newValue.toString());
+      const entity = scene.getEntityByPath(modelValue[1].name);
+      if (!entity) {
+        throw `Could not find entity ${modelValue[1].name}`;
+      }
       expect(entity.getComponent(componentName)).toMatchObject({ [propName]: newValue });
     });
   });
