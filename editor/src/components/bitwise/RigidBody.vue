@@ -56,6 +56,13 @@ export default defineComponent({
       <label>Z</label>
       <BinaryToggle name="az" @change="update" v-model.number="modelValue.az" on="0" off="1" />
     </div>
+    <div class="d-flex position align-items-center">
+      <span>Drag</span>
+      <label>Linear</label>
+      <input name="ld" @change="update" v-model.number="modelValue.ld">
+      <label>Angular</label>
+      <input name="ad" @change="update" v-model.number="modelValue.ad">
+    </div>
   </div>
 </template>
 <style></style>

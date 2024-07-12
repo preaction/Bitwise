@@ -15,6 +15,8 @@ const defaultModelValue = {
   ax: 1, ay: 1, az: 1,
   // Other
   mass: 0,
+  ld: 0,
+  ad: 0,
 };
 let modelValue = { ...defaultModelValue };
 beforeEach(() => {
@@ -33,6 +35,8 @@ const testModelValue = {
   ax: 0, ay: 0, az: 0,
   // Other
   mass: 1,
+  ld: 1,
+  ad: 1,
 };
 
 describe('bitwise/RigidBody.vue', () => {

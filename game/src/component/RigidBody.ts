@@ -9,7 +9,7 @@ import Component from '../Component.js';
  * BoxCollider}) to be able to collide with other physical objects.
  */
 export default class RigidBody extends Component {
-  declare store:{
+  declare store: {
     mass: number[],
     vx: number[],
     vy: number[],
@@ -20,9 +20,11 @@ export default class RigidBody extends Component {
     lx: number[],
     ly: number[],
     lz: number[],
+    ld: number[],
     ax: number[],
     ay: number[],
     az: number[],
+    ad: number[],
   }
   get componentData() {
     return {
@@ -36,9 +38,11 @@ export default class RigidBody extends Component {
       lx: bitecs.Types.f32,
       ly: bitecs.Types.f32,
       lz: bitecs.Types.f32,
+      ld: bitecs.Types.f32,
       ax: bitecs.Types.f32,
       ay: bitecs.Types.f32,
       az: bitecs.Types.f32,
+      ad: bitecs.Types.f32,
     }
   }
 }

@@ -163,6 +163,26 @@ export default class Physics extends System {
     body.setLinearVelocity(avec);
   }
 
+  applyForce(eid: number, vec: three.Vector3) {
+    const body = this.bodies[eid];
+    if (!body) {
+      return;
+    }
+    const avec = new this.Ammo.btVector3(vec.x, vec.y, vec.z);
+    body.activate();
+    body.applyCentralForce(avec);
+  }
+
+  applyImpulse(eid: number, vec: three.Vector3) {
+    const body = this.bodies[eid];
+    if (!body) {
+      return;
+    }
+    const avec = new this.Ammo.btVector3(vec.x, vec.y, vec.z);
+    body.activate();
+    body.applyCentralImpulse(avec);
+  }
+
   start() {
     this.createColliders();
   }
@@ -216,8 +236,14 @@ export default class Physics extends System {
 
           let rbodyInfo = new this.Ammo.btRigidBodyConstructionInfo(mass, motionState, collider, inertia);
           body = new this.Ammo.btRigidBody(rbodyInfo);
+          // Linear and Angular Factor are how we prevent
+          // movement/rotation along certain axes
           body.setLinearFactor(new this.Ammo.btVector3(rigidBody.lx[eid], rigidBody.ly[eid], rigidBody.lz[eid]));
           body.setAngularFactor(new this.Ammo.btVector3(rigidBody.ax[eid], rigidBody.ay[eid], rigidBody.az[eid]));
+
+          // Damping is how quickly the object stops moving/rotating
+          // after force is no longer being applied
+          body.setDamping(rigidBody.ld[eid], rigidBody.ad[eid]);
 
           const velocity = new this.Ammo.btVector3(rigidBody.vx[eid], rigidBody.vy[eid], rigidBody.vz[eid]);
           body.applyCentralImpulse(velocity);
