@@ -13,10 +13,13 @@ export default class Sokoban extends System {
   gridMovement!: GridMovement;
   gridQuery!: bitecs.Query;
 
-  movement: three.Vector2 | null = null;
+  player: number = 0;
+  moveTo: three.Vector3;
+  velocity: three.Vector3;
+  moving: boolean = false;
+  moveDone: (x: number, y: number) => boolean;
 
   async init() {
-    console.log('Sokoban: init()');
     // Get references to Components and Systems from this.scene
     this.input = this.scene.getSystem(Input);
     this.physics = this.scene.getSystem(Physics);
@@ -25,10 +28,15 @@ export default class Sokoban extends System {
 
     // Create queries with bitecs.Query
     this.gridQuery = this.defineQuery([this.gridMovement]);
+
+    this.moveTo = new three.Vector3();
+    this.velocity = new three.Vector3();
   }
 
   start() {
-    console.log('Sokoban: start()');
+    // Get the player EID
+    this.player = this.gridQuery(this.world)[0];
+
     // Add event handlers
     this.input.watchKey('ArrowLeft', 'left');
     this.input.watchKey('ArrowRight', 'right');
@@ -45,61 +53,60 @@ export default class Sokoban extends System {
   }
 
   update(timeMilli: number) {
-    const moveLength = 250; // in ms
+    const eid = this.player;
     // Are we moving? If so, keep moving until we're done
-    if (this.movement) {
-      const player = this.gridQuery(this.world);
-      let moveAmount = timeMilli / moveLength;
-      if (this.movement.x > 0) {
-        moveAmount = Math.min(moveAmount, this.movement.x);
-        this.movement.x -= moveAmount;
-        for (const eid of player) {
-          this.transform.store.x[eid] += moveAmount;
-        }
-      }
-      else if (this.movement.x < 0) {
-        moveAmount = Math.max(-moveAmount, this.movement.x);
-        this.movement.x -= moveAmount;
-        for (const eid of player) {
-          this.transform.store.x[eid] += moveAmount;
-        }
-      }
-      else if (this.movement.y > 0) {
-        moveAmount = Math.min(moveAmount, this.movement.y);
-        this.movement.y -= moveAmount;
-        for (const eid of player) {
-          this.transform.store.y[eid] += moveAmount;
-        }
-      }
-      else if (this.movement.y < 0) {
-        moveAmount = Math.max(-moveAmount, this.movement.y);
-        this.movement.y -= moveAmount;
-        for (const eid of player) {
-          this.transform.store.y[eid] += moveAmount;
-        }
-      }
-
-      if (this.movement.x === 0 && this.movement.y === 0) {
-        this.movement = null;
+    if (this.moving) {
+      if (this.moveDone(this.transform.store.x[eid], this.transform.store.y[eid])) {
+        this.moving = false;
+        this.velocity.setScalar(0);
+        this.physics.setVelocity(eid, this.velocity);
+        this.physics.setPosition(eid, new three.Vector3(
+          Math.round(this.transform.store.x[eid]),
+          Math.round(this.transform.store.y[eid]),
+          this.transform.store.z[eid],
+        ));
+        console.log(`${eid}: Finished movement to ${Math.round(this.transform.store.x[eid])}, ${Math.round(this.transform.store.y[eid])}`);
       }
       else {
+        this.physics.applyForce(this.player, this.velocity);
         return;
       }
     }
 
     // Otherwise, should we start moving?
     const key = this.input.key;
+    const VELOCITY = 10;
     if (key.left) {
-      this.movement = new three.Vector2(-1, 0);
+      this.moving = true;
+      const toX = this.transform.store.x[eid] - 1;
+      this.moveDone = (x: number, y: number) => x <= toX;
+      console.log(`${eid}: Moving to ${toX}, ${this.transform.store.y[eid]}`);
+      this.velocity.set(-VELOCITY, 0, 0);
+      this.physics.applyForce(eid, this.velocity);
     }
     else if (key.right) {
-      this.movement = new three.Vector2(1, 0);
+      this.moving = true;
+      const toX = this.transform.store.x[eid] + 1;
+      this.moveDone = (x: number, y: number) => x >= toX;
+      console.log(`${eid}: Moving to ${toX}, ${this.transform.store.y[eid]}`);
+      this.velocity.set(VELOCITY, 0, 0);
+      this.physics.applyForce(eid, this.velocity);
     }
     else if (key.up) {
-      this.movement = new three.Vector2(0, 1);
+      this.moving = true;
+      const toY = this.transform.store.y[eid] + 1;
+      this.moveDone = (x: number, y: number) => y >= toY;
+      console.log(`${eid}: Moving to ${this.transform.store.x[eid]}, ${toY}`);
+      this.velocity.set(0, VELOCITY, 0);
+      this.physics.applyForce(eid, this.velocity);
     }
     else if (key.down) {
-      this.movement = new three.Vector2(0, -1);
+      this.moving = true;
+      const toY = this.transform.store.y[eid] - 1;
+      this.moveDone = (x: number, y: number) => y <= toY;
+      console.log(`${eid}: Moving to ${this.transform.store.x[eid]}, ${toY}`);
+      this.velocity.set(0, -VELOCITY, 0);
+      this.physics.applyForce(eid, this.velocity);
     }
   }
 

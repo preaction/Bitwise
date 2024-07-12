@@ -58,14 +58,14 @@
         "Transform": {
           "sx": "1",
           "sy": "1",
-          "sz": 1,
+          "sz": "1",
           "rx": "0",
           "ry": "0",
           "rz": "0",
           "rw": "0",
-          "x": 1,
-          "y": "0",
-          "z": "10"
+          "x": 2,
+          "y": 0,
+          "z": "1"
         },
         "Sprite": {
           "texture": {
@@ -88,7 +88,18 @@
           "ax": "0",
           "ay": "0",
           "az": "0",
-          "mass": "1"
+          "mass": 1,
+          "ld": 0,
+          "ad": 0
+        },
+        "BoxCollider": {
+          "trigger": 0,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 0.9,
+          "sy": 0.9,
+          "sz": 0.9
         }
       }
     },
@@ -129,9 +140,20 @@
           "ax": "0",
           "ay": "0",
           "az": "0",
-          "mass": 0
+          "mass": 0.001,
+          "ld": 1,
+          "ad": 1
         },
-        "BoxCollider": {}
+        "BoxCollider": {
+          "trigger": 0,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": "1",
+          "sy": "1",
+          "sz": "1"
+        },
+        "Crate": {}
       }
     },
     {
@@ -147,7 +169,7 @@
           "ry": 0,
           "rz": 0,
           "rw": 0,
-          "z": "1",
+          "z": "0.5",
           "y": 0,
           "x": 0
         },
@@ -157,7 +179,8 @@
             "path": "images/sokoban_spritesheet@2.xml/environment_02.png",
             "atlas": "images/sokoban_spritesheet@2.xml"
           }
-        }
+        },
+        "Drop": {}
       }
     },
     {
