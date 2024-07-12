@@ -6,7 +6,7 @@ import NullSystem from './system/Null.js';
 import NullComponent from './component/Null.js';
 import Entity, { EntityData, NewEntityData } from './Entity.js';
 import ProgressEvent from './event/ProgressEvent.js';
-import Game from './Game.js';
+import Game, { GameEvents } from './Game.js';
 
 /**
  * SceneState is the current state of the scene.
@@ -43,12 +43,19 @@ export type SceneData = {
   systems: any[],
 };
 
-export declare interface Scene {
-  addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
-  addEventListener(event: string, listener: Function): this;
-  removeEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
-  removeEventListener(event: string, listener: Function): this;
-}
+export type SceneEvents = {
+  progress: ProgressEvent,
+  resize: GameEvents["resize"],
+  init: {},
+  start: {},
+  pause: {},
+  resume: {},
+  stop: {},
+  beforeUpdate: {},
+  afterUpdate: {},
+  beforeRender: {},
+  afterRender: {},
+};
 
 /**
  * Scene is the top level of Three.JS Object3D. It also contains
@@ -70,7 +77,7 @@ export declare interface Scene {
  *           and the scene begins recieving update() calls.
  *  stop   - This stops the scene.
  */
-export class Scene extends three.EventDispatcher {
+export class Scene extends three.EventDispatcher<SceneEvents> {
   name: string = 'New Scene';
   game: Game;
   state: SceneState = SceneState.Stop;

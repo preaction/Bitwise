@@ -2,7 +2,7 @@
 import * as three from 'three';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import * as bitecs from 'bitecs';
-import System from '../System.js';
+import System, { SystemEvents } from '../System.js';
 import Scene from '../Scene.js';
 import TransformComponent from '../component/Transform.js';
 import ActiveComponent from '../component/Active.js';
@@ -90,7 +90,7 @@ export default class Render extends System {
     );
 
     // XXX: This should be an Entity/Component
-    this.ambientLight = new three.AmbientLight(0xffffff);
+    this.ambientLight = new three.AmbientLight(0xffffff, Math.PI);
     this.ambientLight.name = 'ambientLight';
 
     // Render currently has Sprite and OrthographicCamera
@@ -468,6 +468,7 @@ export default class Render extends System {
       // for it with the appropriate offsets.
       const glTexture = this.textures[textureId] = new three.Texture();
       glTexture.source = loadedSrc;
+      glTexture.colorSpace = three.SRGBColorSpace;
       promise = Promise.resolve(glTexture);
     }
     else if (loadedSrc instanceof Promise) {
@@ -476,6 +477,7 @@ export default class Render extends System {
       const glTexture = this.textures[textureId] = new three.Texture();
       promise = loadedSrc.then((srcGlTexture) => {
         glTexture.source = srcGlTexture.source;
+        glTexture.colorSpace = three.SRGBColorSpace;
         return glTexture;
       });
     }
@@ -485,6 +487,7 @@ export default class Render extends System {
       promise = this.sources[texture.src] = new Promise(
         (resolve, reject) => {
           const glTexture = this.loader.load(texture.src, resolve, undefined, reject)
+          glTexture.colorSpace = three.SRGBColorSpace;
           this.textures[textureId] = glTexture;
           this.sources[texture.src] = glTexture.source;
         },

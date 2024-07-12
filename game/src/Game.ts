@@ -61,11 +61,19 @@ export type GameConfig = {
   systems?: { [key: string]: typeof System },
 };
 
+export type GameEvents = {
+  start: {},
+  stop: {},
+  resize: { width: number, height: number },
+  beforeRender: {},
+  afterRender: {},
+};
+
 /**
  * Game is main game container. Games are made up of one or many Scenes.
  * Any number of Scenes may be active at once.
  */
-export default class Game extends three.EventDispatcher {
+export default class Game extends three.EventDispatcher<GameEvents> {
   canvas!: HTMLCanvasElement;
   load: Load;
   renderer!: three.WebGLRenderer;

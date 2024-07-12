@@ -10,6 +10,7 @@ import Render from '../../src/system/Render';
 import Texture from '../../src/Texture';
 import Load from '../../src/Load';
 import Atlas from '../../src/Atlas';
+import ProgressEvent from '../../src/event/ProgressEvent';
 
 function buildScene(): [Scene, Render] {
   const game = new Game({

@@ -145,10 +145,9 @@ export class Render extends RenderSystem {
     const scene = this.scene._scene;
     pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
     pointer.y = - (event.offsetY / canvas.clientHeight) * 2 + 1;
-    pointer.z = 0;
     this.pointerStart = pointer.clone().unproject(this.camera);
 
-    raycaster.setFromCamera(pointer, this.camera);
+    raycaster.setFromCamera(new three.Vector2(pointer.x, pointer.y), this.camera);
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
@@ -173,7 +172,7 @@ export class Render extends RenderSystem {
       pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
       pointer.y = - (event.offsetY / canvas.clientHeight) * 2 + 1;
 
-      raycaster.setFromCamera(pointer, this.camera);
+      raycaster.setFromCamera(new three.Vector2(pointer.x, pointer.y), this.camera);
       const intersects = raycaster.intersectObjects(scene.children, true);
 
       if (intersects.length > 0) {
@@ -262,7 +261,7 @@ export class Render extends RenderSystem {
       if (!box) { break; }
       box.removeFromParent();
     }
-    this.dispatchEvent({ type: "selectionChanged", eids: this.selected });
+    this.dispatchEvent({ type: "selectionChanged", eids: this.selected.map(obj => obj.userData.eid) });
   }
 
   selectObject(obj: three.Object3D) {
@@ -298,7 +297,6 @@ export class Render extends RenderSystem {
       const canvas = this.scene.game.canvas;
       pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
       pointer.y = - (event.offsetY / canvas.clientHeight) * 2 + 1;
-      pointer.z = 0;
       pointer.unproject(this.camera);
 
       // Allow a bare bit of movement

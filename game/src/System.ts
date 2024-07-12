@@ -3,20 +3,27 @@ import * as three from 'three';
 import * as bitecs from 'bitecs';
 import Scene from './Scene.js';
 import Component from './Component.js';
+import ProgressEvent from './event/ProgressEvent.js';
+
+export type SystemEvents = {
+  progress: ProgressEvent,
+  selectionChanged: { eids: number[] },
+  updateEntity: { eid: number, components: { [key: string]: unknown } },
+}
 
 /**
  * System is the main way to customize game behavior. All game mechanics
  * will be implemented in System classes. Systems are registered on the
  * Game object and instantiated for use by each Scene object.
  */
-export class System extends three.EventDispatcher {
-  name:string;
-  scene:Scene;
-  isNull:boolean = false;
+export class System extends three.EventDispatcher<SystemEvents> {
+  name: string;
+  scene: Scene;
+  isNull: boolean = false;
 
   /**
    */
-  constructor( name:string, scene:Scene ) {
+  constructor(name: string, scene: Scene) {
     super();
     this.name = name;
     this.scene = scene;
@@ -25,7 +32,7 @@ export class System extends three.EventDispatcher {
   /**
    * Get the bitecs.World for the scene.
    */
-  get world():bitecs.IWorld {
+  get world(): bitecs.IWorld {
     return this.scene.world;
   }
 
@@ -73,7 +80,7 @@ export class System extends three.EventDispatcher {
    * After the updates are completed, the render() method will be
    * called.
    */
-  update( timeMilli:number=0, timeTotal:number=0 ) { }
+  update(timeMilli: number = 0, timeTotal: number = 0) { }
 
   /**
    * The render() method is called for every frame while the scene is
@@ -88,33 +95,33 @@ export class System extends three.EventDispatcher {
   /**
    * Define a query for one or more Components.
    */
-  defineQuery( components:Component[] ):bitecs.Query {
+  defineQuery(components: Component[]): bitecs.Query {
     // XXX: We don't need the actual component instance, we can look
     // that up from the scene and make this one less step
     // XXX: We can make the Component do this instead. Components should
     // manage data and be our model layer. Systems are the controller
     // layer.
-    return this.scene.game.ecs.defineQuery(components.map( c => c.store ));
+    return this.scene.game.ecs.defineQuery(components.map(c => c.store));
   }
 
   /**
    * Define a query for when an entity starts being matched by a query.
    */
-  enterQuery( query:bitecs.Query ):bitecs.Query {
+  enterQuery(query: bitecs.Query): bitecs.Query {
     return this.scene.game.ecs.enterQuery(query);
   }
 
   /**
    * Define a query for when an entity stops being matched by a query.
    */
-  exitQuery( query:bitecs.Query ):bitecs.Query {
+  exitQuery(query: bitecs.Query): bitecs.Query {
     return this.scene.game.ecs.exitQuery(query);
   }
 
   /**
    * Remove a query.
    */
-  removeQuery( query:bitecs.Query ) {
+  removeQuery(query: bitecs.Query) {
     // XXX: Track queries automatically and clean them up when the scene
     // stops
     return this.scene.game.ecs.removeQuery(this.scene.world, query);
@@ -126,7 +133,7 @@ export class System extends three.EventDispatcher {
    * project. If your system has settings to edit in the Bitwise Editor,
    * you must also implement freeze() and thaw().
    */
-  static get editorComponent():string {
+  static get editorComponent(): string {
     return '';
   }
 
@@ -135,7 +142,7 @@ export class System extends three.EventDispatcher {
    * used as the modelValue for the editorComponent. The opposite of
    * thaw().
    */
-  freeze():any {
+  freeze(): any {
     return {};
   }
 
@@ -143,12 +150,7 @@ export class System extends three.EventDispatcher {
    * thaw() takes the object from the editorComponent and updates this
    * system's settings. The opposite of freeze().
    */
-  thaw(data:any) { }
-}
-
-export declare interface System {
-  addEventListener(event: 'progress', listener: (e: ProgressEvent) => void): this;
-  addEventListener(event: string, listener: Function): this;
+  thaw(data: any) { }
 }
 
 export default System;
