@@ -213,5 +213,41 @@ describe('Render', () => {
       expect(geometry.boundingBox).toEqual(expectBounds);
     });
 
+    test('update sprite geometry for repeated tiling', async () => {
+      const width = 80;
+      const height = 120;
+      const repeatX = 2;
+      const repeatY = 3;
+      const scale = scene.game.config.renderer.pixelScale = 128;
+      const texture = new Texture(new Load(), { path: 'image.png' });
+      mockThreeLoad.mockImplementation(
+        (path: string, resolve: (t: three.Texture) => void, _: any, reject: (e: any) => void) => {
+          const t = new three.Texture();
+          t.image = { height, width };
+          setTimeout(() => resolve(t), 0);
+          return t;
+        }
+      );
+      sprite.setComponent('Sprite', {
+        textureId: texture.textureId,
+        repeatX,
+        repeatY,
+      });
+      system.update(0);
+      // XXX: Why does this test fail unless we flush promises more than
+      // once?
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await flushPromises();
+
+      const threeScene = system.scene._scene;
+      const threeObject = threeScene.getObjectByName(sprite.name) as three.Mesh;
+      expect(threeObject).toBeInstanceOf(three.Mesh);
+
+      // Default sprite geometry is 1x1 box
+      const geometry = threeObject.geometry;
+      geometry.computeBoundingBox();
+      const expectBounds = new three.Box3(new three.Vector3(-0.5 * (width * repeatX / scale), -0.5 * (height * repeatY / scale), 0), new three.Vector3(0.5 * (width * repeatX / scale), 0.5 * (height * repeatY / scale), 0));
+      expect(geometry.boundingBox).toEqual(expectBounds);
+    });
   });
 });

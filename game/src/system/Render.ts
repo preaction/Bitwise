@@ -626,7 +626,9 @@ export default class Render extends System {
       const texture = Texture.getById(tid);
       const width = (texture.width || glTexture.image?.width || pixelScale) / pixelScale;
       const height = (texture.height || glTexture.image?.height || pixelScale) / pixelScale;
-      sprite.geometry = new three.PlaneGeometry(width, height);
+      const repeatX = this.spriteComponent.store.repeatX[eid] || 1;
+      const repeatY = this.spriteComponent.store.repeatY[eid] || 1;
+      sprite.geometry = new three.PlaneGeometry(width * repeatX, height * repeatY);
       //this.render();
     });
     const glTexture = this.textures[tid];
@@ -636,9 +638,65 @@ export default class Render extends System {
     return glTexture;
   }
 
+  createSpriteMaterial(eid: number, texture: three.Texture): three.Material {
+    const material = new three.MeshStandardMaterial({
+      map: texture,
+      alphaTest: 0.9,
+      alphaToCoverage: true,
+    });
+
+    const repeatX = this.spriteComponent.store.repeatX[eid] || 1;
+    const repeatY = this.spriteComponent.store.repeatY[eid] || 1;
+    texture.wrapS = three.RepeatWrapping;
+    texture.wrapT = three.RepeatWrapping;
+    material.userData.offset = { value: texture.offset || new three.Vector2(0, 0) };
+    material.userData.size = { value: texture.repeat || new three.Vector2(1, 1) };
+    material.userData.repeat = { value: new three.Vector2(repeatX, repeatY) };
+
+    material.onBeforeCompile = shader => {
+      // offset: The x/y coordinate of the texture in the image
+      shader.uniforms.offset = material.userData.offset;
+      // size: The width/height of the texture in the image
+      shader.uniforms.size = material.userData.size;
+      // repeat: The number of times to repeat the texture over the
+      // material
+      shader.uniforms.repeat = material.userData.repeat;
+
+      // Declare the vectors at the top
+      shader.fragmentShader = `
+        uniform vec2 offset;
+        uniform vec2 size;
+        uniform vec2 repeat;
+      ` + shader.fragmentShader;
+
+      // Replace the usual texture map fragment with a custom one that
+      // understands how to tile part of a sprite sheet.
+      // vMapUv is the regular location on the image we would be
+      // using, so we subtract the offset to get the original position
+      // relative to the texture (the part of the image we want to use).
+      // Then multiply by the number of tiles we want modulo the size
+      // of the texture to get the new position relative to the 
+      // texture. Then, add back the offset to get the real location
+      // on the image.
+      shader.fragmentShader = shader.fragmentShader.replace(
+        `#include <map_fragment>`,
+        `
+          #ifdef USE_MAP
+
+            vec2 spriteOffsetUv = vMapUv - offset;
+            vec4 texelColor = texture2D( map, mod(spriteOffsetUv * repeat, size) + offset );
+            diffuseColor *= texelColor;
+          #endif
+          `
+      );
+    };
+
+    return material;
+  }
+
   createSprite(eid: number): three.Mesh {
     const texture = this.loadTextureForSprite(eid);
-    const material = this.materials[eid] = new three.MeshStandardMaterial({ map: texture, alphaTest: 0.9, alphaToCoverage: true });
+    const material = this.materials[eid] = this.createSpriteMaterial(eid, texture);
     const geometry = new three.PlaneGeometry(1, 1);
     const sprite = this.objects[eid] = new three.Mesh(geometry, material);
     sprite.name = this.scene.getEntityById(eid).name;
@@ -656,7 +714,7 @@ export default class Render extends System {
     const tid = this.spriteComponent.store.textureId[eid];
     let texture = this.textures[tid] || this.loadTextureForSprite(eid);
     if (!this.materials[eid] || (this.materials[eid] as three.MeshStandardMaterial).map !== texture) {
-      const material = this.materials[eid] = new three.MeshStandardMaterial({ map: texture, alphaTest: 0.9, alphaToCoverage: true });
+      const material = this.materials[eid] = this.createSpriteMaterial(eid, texture);
       sprite.material = material;
     }
   }

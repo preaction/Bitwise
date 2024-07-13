@@ -1,7 +1,6 @@
 <script lang="ts">
-import { defineComponent, toRaw } from "vue";
+import { defineComponent } from "vue";
 import InputAsset from '../InputAsset.vue';
-import type { AssetRef } from "../../../../game/dist/Asset";
 
 export default defineComponent({
   props: ['modelValue', 'scene'],
@@ -35,6 +34,14 @@ export default defineComponent({
       <label class="me-1">Texture</label>
       <InputAsset name="texture" @update:modelValue="update" v-model="modelValue.texture" type="texture"
         drop-effect="link" />
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <label class="me-1">Repeat X</label>
+      <input name="repeatX" @change="update" v-model="modelValue.repeatX" type="number" min="1" />
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <label class="me-1">Repeat Y</label>
+      <input name="repeatY" @change="update" v-model="modelValue.repeatY" type="number" min="1" />
     </div>
   </div>
 </template>

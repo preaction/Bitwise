@@ -11,11 +11,15 @@ import Texture from '../Texture.js';
 export default class Sprite extends Component {
   declare store: {
     textureId: number[],
+    repeatX: number[],
+    repeatY: number[],
   }
 
   get componentData() {
     return {
       textureId: bitecs.Types.ui8,
+      repeatX: bitecs.Types.ui8,
+      repeatY: bitecs.Types.ui8,
     }
   }
 
@@ -26,12 +30,14 @@ export default class Sprite extends Component {
     delete data.textureId;
     return data;
   }
-  async thawEntity(eid: number, data: { [key: string]: any } = {}) {
+  async thawEntity(eid: number, rawData: { [key: string]: any } = {}) {
+    const data = { ...rawData };
     // Thaw can work with an ID, path, or ref
     let textureId = data.textureId;
     if (!textureId) {
       if (data.texturePath) {
         textureId = this.scene.game.load.texture(data.texturePath);
+        delete data.texturePath;
       }
       else if (data.texture) {
         if (typeof data.texture === 'string') {
@@ -41,8 +47,10 @@ export default class Sprite extends Component {
           const texture = await Asset.deref(this.scene.game.load, data.texture) as Texture;
           textureId = texture.textureId;
         }
+        delete data.texture;
       }
+      data.textureId = textureId;
     }
-    return super.thawEntity(eid, { textureId });
+    return super.thawEntity(eid, data);
   }
 }
