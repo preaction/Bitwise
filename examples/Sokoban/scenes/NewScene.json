@@ -188,179 +188,49 @@
     {
       "$schema": "1",
       "name": "Ground",
+      "type": "Entity",
       "active": true,
       "components": {
         "Transform": {
-          "x": "0",
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "x": 0,
           "y": "0",
-          "z": "0",
-          "rx": "0",
-          "ry": "0",
-          "rz": "0",
-          "rw": "0",
-          "sx": "1",
-          "sy": "1",
-          "sz": "1"
+          "z": "0"
+        },
+        "Sprite": {
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          },
+          "repeatX": 10,
+          "repeatY": 10
+        },
+        "RigidBody": {
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lx": 1,
+          "ly": 1,
+          "lz": "0",
+          "ax": "0",
+          "ay": "0",
+          "az": "0",
+          "mass": 0.1,
+          "ld": 1,
+          "ad": 1
         }
       },
-      "children": [
-        {
-          "$schema": "1",
-          "name": "New Entity (2)",
-          "type": "Entity",
-          "active": true,
-          "components": {
-            "Transform": {
-              "sx": 1,
-              "sy": 1,
-              "sz": 1,
-              "rx": 0,
-              "ry": 0,
-              "rz": 0,
-              "rw": 0,
-              "x": 0,
-              "y": 1,
-              "z": "0"
-            },
-            "Sprite": {
-              "texture": {
-                "$asset": "Texture",
-                "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
-                "atlas": "images/sokoban_spritesheet@2.xml"
-              },
-              "repeatX": 10,
-              "repeatY": 10
-            },
-            "RigidBody": {
-              "vx": 0,
-              "vy": 0,
-              "vz": 0,
-              "rx": 0,
-              "ry": 0,
-              "rz": 0,
-              "lx": 1,
-              "ly": 1,
-              "lz": "0",
-              "ax": "0",
-              "ay": "0",
-              "az": "0",
-              "mass": 0.1,
-              "ld": 1,
-              "ad": 1
-            }
-          },
-          "children": []
-        },
-        {
-          "$schema": "1",
-          "name": "New Entity (4)",
-          "type": "Entity",
-          "active": true,
-          "components": {
-            "Transform": {
-              "sx": 1,
-              "sy": 1,
-              "sz": 1,
-              "rx": 0,
-              "ry": 0,
-              "rz": 0,
-              "rw": 0,
-              "x": "1",
-              "y": 0,
-              "z": "0"
-            },
-            "Sprite": {
-              "texture": {
-                "$asset": "Texture",
-                "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
-                "atlas": "images/sokoban_spritesheet@2.xml"
-              }
-            }
-          }
-        },
-        {
-          "$schema": "1",
-          "name": "New Entity (3)",
-          "type": "Entity",
-          "active": true,
-          "components": {
-            "Transform": {
-              "sx": 1,
-              "sy": 1,
-              "sz": 1,
-              "rx": 0,
-              "ry": 0,
-              "rz": 0,
-              "rw": 0,
-              "x": "1",
-              "y": "1",
-              "z": "0"
-            },
-            "Sprite": {
-              "texture": {
-                "$asset": "Texture",
-                "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
-                "atlas": "images/sokoban_spritesheet@2.xml"
-              }
-            }
-          },
-          "children": []
-        },
-        {
-          "$schema": "1",
-          "name": "New Entity (5)",
-          "type": "Entity",
-          "active": true,
-          "components": {
-            "Transform": {
-              "sx": 1,
-              "sy": 1,
-              "sz": 1,
-              "rx": 0,
-              "ry": 0,
-              "rz": 0,
-              "rw": 0,
-              "x": 0,
-              "y": "2",
-              "z": "0"
-            },
-            "Sprite": {
-              "texture": {
-                "$asset": "Texture",
-                "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
-                "atlas": "images/sokoban_spritesheet@2.xml"
-              }
-            }
-          },
-          "children": []
-        },
-        {
-          "$schema": "1",
-          "name": "New Entity 8",
-          "active": true,
-          "components": {
-            "Transform": {
-              "x": "0",
-              "y": "0",
-              "z": "0",
-              "rx": "0",
-              "ry": "0",
-              "rz": "0",
-              "rw": "0",
-              "sx": "1",
-              "sy": "1",
-              "sz": "1"
-            },
-            "Sprite": {
-              "texture": {
-                "$asset": "Texture",
-                "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
-                "atlas": "images/sokoban_spritesheet@2.xml"
-              }
-            }
-          }
-        }
-      ]
+      "children": []
     }
   ],
   "editor": {

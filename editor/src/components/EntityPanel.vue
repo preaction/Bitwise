@@ -156,20 +156,24 @@ export default defineComponent({
       this.update();
     },
 
-    deleteEntity(entityData: EntityData) {
+    deleteEntity(path: string) {
+      const entityData = this.getEntityDataByPath(path);
       if (confirm(`Are you sure you want to delete "${entityData.name}"?`)) {
         if (this.selectedEntityData === entityData) {
           this.select(this.entities[0], this.entities[0].name);
         }
-        for (let i = 0; i < this.entities.length; i++) {
-          if (this.entities[i].path === entityData.path) {
-            this.entities.splice(i, 1);
-            break;
+        this.visitEntityDataPath(path, (entityData, parentData) => {
+          if (parentData) {
+            parentData.children.splice(parentData.children.indexOf(entityData), 1);
           }
+          else {
+            this.entities.splice(this.entities.indexOf(entityData), 1);
+          }
+        });
+        const entity = this.scene.getEntityByPath(path);
+        if (entity) {
+          this.scene.removeEntity(entity.id);
         }
-        const entity = this.scene.getEntityByPath(entityData.path);
-        this.scene.removeEntity(entity.id);
-        (this.$refs.tree as typeof Tree).removeNode(entityData);
         this.update();
       }
     },
@@ -309,18 +313,28 @@ export default defineComponent({
     },
 
     getEntityDataByPath(path: string) {
+      return this.visitEntityDataPath(path, (e) => e);
+    },
+
+    visitEntityDataPath<T>(path: string, cb: (entityData: EntityData, parentEntityData: EntityData | null) => T): T | null {
       const pathParts = path.split(/\//);
+      let parentNode: EntityData | null = null;
       let children = this.entities;
       for (let i = 0; i < pathParts.length; i++) {
         let leafNode = children.find(node => node.name === pathParts[i]);
         if (!leafNode) {
-          return null;
+          break;
         }
         if (i === pathParts.length - 1) {
-          return leafNode;
+          return cb(leafNode, parentNode);
+        }
+        if (!leafNode.children || !leafNode.children.length) {
+          break;
         }
         children = leafNode.children;
+        parentNode = leafNode;
       }
+      return null;
     },
 
     updateEntityName() {
@@ -390,7 +404,7 @@ export default defineComponent({
     <div class="scene-tree">
       <Tree ref="tree" v-for="entityData in entities" :key="entityData.name" :node="entityData" :onclick="select"
         :ondragstart="dragStart" :ondragover="dragOverEntity" :ondrop="dropEntity" default-type="Entity">
-        <template #menu="{ node: entityData }">
+        <template #menu="{ node: entityData, path }">
           <MenuButton>
             <template #button>
               <i data-test="entity-menu" class="fa-solid fa-ellipsis-vertical scene-tree-item-menu-button"></i>
@@ -398,7 +412,7 @@ export default defineComponent({
             <ul>
               <li @click.stop.prevent="createPrefab(entityData)">Create Prefab</li>
               <li data-test="duplicate" @click.stop.prevent="duplicateEntity(entityData)">Duplicate</li>
-              <li @click.stop.prevent="deleteEntity(entityData)">Delete</li>
+              <li data-test="delete" @click.stop.prevent="deleteEntity(path)">Delete</li>
             </ul>
           </MenuButton>
         </template>

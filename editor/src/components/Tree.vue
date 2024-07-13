@@ -179,15 +179,15 @@ defineExpose({
         <span data-test="name">{{ props.node.name }}</span>
       </span>
       <span class="asset-tree-item__menu">
-        <slot name="menu" :node="node" />
+        <slot name="menu" :node="node" :path="nodePath" />
       </span>
     </a>
     <div v-if="hasChildren && showChildren" class="children">
       <div v-for="child in props.node.children" :key="nodePath + '/' + child.name">
         <Tree ref="childTrees" :onclick="props.onclick" :ondblclick="props.ondblclick" :ondragstart="props.ondragstart"
           :ondragover="props.ondragover" :ondrop="props.ondrop" :node="child" :dirname="nodePath">
-          <template #menu="{ child: node }">
-            <slot name="menu" :node="node" />
+          <template #menu="{ node, path }">
+            <slot name="menu" :node="node" :path="path" />
           </template>
         </Tree>
       </div>

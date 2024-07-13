@@ -34,6 +34,18 @@ beforeAll(() => {
       dispatchEvent: jest.fn(),
     })),
   });
+
+  global.ResizeObserver = class ResizeObserver {
+    observe() {
+      // do nothing
+    }
+    unobserve() {
+      // do nothing
+    }
+    disconnect() {
+      // do nothing
+    }
+  };
 });
 
 const stubs = {
@@ -162,7 +174,7 @@ describe('SceneEdit', () => {
       const asset = new Asset(new Load(), "OldScene.json");
       asset.data = sceneData;
       modelValue = new Tab(project, asset);
-      mockReadItemData.mockReturnValue(Promise.resolve(JSON.stringify(sceneData)));
+      mockReadItemData.mockImplementation(() => Promise.resolve(JSON.stringify(sceneData)));
       mockWriteItemData.mockReturnValue(Promise.resolve());
     });
 
@@ -346,6 +358,47 @@ describe('SceneEdit', () => {
       expect(onUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ edited: true }),
       );
+    });
+
+    test('delete an entity', async () => {
+      sceneData.entities.push({
+        name: 'Entity 2',
+        components: {
+          Transform: {},
+          Sprite: {},
+        },
+      });
+      sceneData.entities.push({
+        name: 'Entity 3',
+        components: {
+          Transform: {},
+          Sprite: {},
+        },
+      });
+
+      const onUpdate = jest.fn();
+      const wrapper = mount(SceneEdit, {
+        attachTo: document.body,
+        props: {
+          modelValue,
+          onUpdate,
+        },
+        global: { provide },
+      });
+      wrapper.setData({ gameClass: Game });
+      await wrapper.vm.$nextTick();
+      await flushPromises();
+
+      const confirmSpy = jest.spyOn(global, 'confirm').mockReturnValue(true);
+      await wrapper.get(`[data-path="${sceneData.entities[1].name}"] [data-test=delete]`).trigger('click');
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(onUpdate).toHaveBeenCalled();
+
+      const newSceneData = wrapper.vm.sceneData;
+      expect(newSceneData?.entities).toEqual([sceneData.entities[0], sceneData.entities[2]]);
+
+      const editScene = wrapper.vm.editScene;
+      expect(editScene.getEntityByPath(sceneData.entities[1].name)).toBeFalsy();
     });
   });
 
