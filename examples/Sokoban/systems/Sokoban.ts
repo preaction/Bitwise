@@ -5,13 +5,19 @@ import { Scene, System } from '@fourstar/bitwise';
 import { Input, Physics } from '@fourstar/bitwise/system';
 import { Transform } from '@fourstar/bitwise/component';
 import GridMovement from '../components/GridMovement.ts';
+import CrateComponent from '../components/Crate.ts';
+import DropComponent from '../components/Drop.ts';
 
 export default class Sokoban extends System {
   input!: Input;
   physics!: Physics;
   transform!: Transform
   gridMovement!: GridMovement;
+  crateComponent!: CrateComponent;
+  dropComponent!: DropComponent;
+
   gridQuery!: bitecs.Query;
+  crateQuery!: bitecs.Query;
 
   player: number = 0;
   moveTo: three.Vector3;
@@ -25,12 +31,27 @@ export default class Sokoban extends System {
     this.physics = this.scene.getSystem(Physics);
     this.transform = this.scene.getComponent(Transform);
     this.gridMovement = this.scene.getComponent(GridMovement);
+    this.crateComponent = this.scene.getComponent(CrateComponent);
+    this.dropComponent = this.scene.getComponent(DropComponent);
 
     // Create queries with bitecs.Query
     this.gridQuery = this.defineQuery([this.gridMovement]);
+    this.crateQuery = this.defineQuery([this.crateComponent]);
+
+    // Set up event listeners
+    this.physics.watchEnterByQuery(this.crateQuery, this.crateEnter.bind(this));
+    this.physics.watchExitByQuery(this.crateQuery, this.crateLeave.bind(this));
 
     this.moveTo = new three.Vector3();
     this.velocity = new three.Vector3();
+  }
+
+  crateEnter(crateEid: number, eids: Set<number>) {
+    console.log(`${crateEid}: Collides: ${Array.from(eids).join(', ')}`);
+  }
+
+  crateLeave(crateEid: number, eids: Set<number>) {
+    console.log(`${crateEid}: Leaves: ${Array.from(eids).join(', ')}`);
   }
 
   start() {

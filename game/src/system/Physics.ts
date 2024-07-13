@@ -301,11 +301,27 @@ export default class Physics extends System {
     MANIFOLDS:
     for (let i = 0; i < numManifolds; i++) {
       let contactManifold = dispatcher.getManifoldByIndexInternal(i);
+
+      let numContacts = contactManifold.getNumContacts();
+      let contactPoints = 0;
+      for (let j = 0; j < numContacts; j++) {
+        let contactPoint = contactManifold.getContactPoint(j);
+        let distance = contactPoint.getDistance();
+        if (distance > 0.0) {
+          continue;
+        }
+        contactPoints++;
+      }
+
       // @ts-ignore // castObject is not declared correctly
       let rb0 = this.Ammo.castObject(contactManifold.getBody0(), this.Ammo.btCollisionObject);
       // @ts-ignore // castObject is not declared correctly
       let rb1 = this.Ammo.castObject(contactManifold.getBody1(), this.Ammo.btCollisionObject);
       const [from, to] = rb0.eid < rb1.eid ? [rb0.eid, rb1.eid] : [rb1.eid, rb0.eid];
+      if (!contactPoints) {
+        continue;
+      }
+      //console.log(`Found collision ${from}/${to} (contacts ${contactPoints})`);
 
       if (!newCollisions[from]) {
         newCollisions[from] = new Set<number>();
@@ -345,20 +361,6 @@ export default class Physics extends System {
         enters[to].add(from);
       }
 
-      // XXX: Some tutorials have told me to check the distance of the
-      // contact points, but not every manifold has a contact point. My
-      // best guess is that one object completely inside another object
-      // has a contact manifold, but no actual points of contact.
-      // let numContacts = contactManifold.getNumContacts();
-      // console.log( `Found collision ${from}/${to} (contacts ${numContacts})` );
-      // for ( let j = 0; j < numContacts; j++ ) {
-      //   let contactPoint = contactManifold.getContactPoint( j );
-      //   let distance = contactPoint.getDistance();
-      //   if ( distance > 0.0 ) {
-      //     continue;
-      //   }
-      //   continue MANIFOLDS;
-      // }
     }
 
     // Anything left in this.collisions is not in newCollisions

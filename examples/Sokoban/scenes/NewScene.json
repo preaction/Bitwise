@@ -63,7 +63,7 @@
           "ry": "0",
           "rz": "0",
           "rw": "0",
-          "x": 2,
+          "x": "4",
           "y": 0,
           "z": "1"
         },
@@ -111,7 +111,7 @@
         "Transform": {
           "z": "1",
           "y": "0",
-          "x": "0",
+          "x": "2",
           "rx": "0",
           "ry": "0",
           "rz": "0",
@@ -182,7 +182,33 @@
             "atlas": "images/sokoban_spritesheet@2.xml"
           }
         },
-        "Drop": {}
+        "Drop": {},
+        "BoxCollider": {
+          "sx": 1,
+          "sy": 1,
+          "sz": 2,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "trigger": 1
+        },
+        "RigidBody": {
+          "mass": 0,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lx": 0,
+          "ly": 0,
+          "lz": 0,
+          "az": 0,
+          "ay": 0,
+          "ax": 0,
+          "ld": 0,
+          "ad": 0
+        }
       }
     },
     {
@@ -209,8 +235,8 @@
             "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
             "atlas": "images/sokoban_spritesheet@2.xml"
           },
-          "repeatX": 10,
-          "repeatY": 10
+          "repeatX": 11,
+          "repeatY": 11
         },
         "RigidBody": {
           "vx": 0,
@@ -228,9 +254,117 @@
           "mass": 0.1,
           "ld": 1,
           "ad": 1
+        },
+        "BoxCollider": {
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
         }
       },
       "children": []
+    },
+    {
+      "$schema": "1",
+      "name": "Drop Green",
+      "active": true,
+      "components": {
+        "Transform": {
+          "z": "0.5",
+          "y": "1",
+          "x": "2"
+        },
+        "Sprite": {
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/environment_10.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          }
+        },
+        "Drop": {},
+        "BoxCollider": {
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "trigger": 1
+        },
+        "RigidBody": {
+          "mass": 0,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lx": 0,
+          "ax": 0,
+          "ay": 0,
+          "ly": 0,
+          "lz": 0,
+          "az": 0,
+          "ad": 0,
+          "ld": 0
+        }
+      }
+    },
+    {
+      "$schema": "1",
+      "name": "Green Box",
+      "active": true,
+      "components": {
+        "Transform": {
+          "z": "1",
+          "y": "-1",
+          "x": "2",
+          "rx": "0",
+          "ry": "0",
+          "rz": "0",
+          "rw": "0",
+          "sx": "1",
+          "sy": "1",
+          "sz": "1"
+        },
+        "Sprite": {
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/crate_05.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          },
+          "repeatY": 1,
+          "repeatX": 1
+        },
+        "Crate": {},
+        "BoxCollider": {
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "RigidBody": {
+          "mass": 0.1,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "lz": 0,
+          "az": 0,
+          "ay": 0,
+          "ax": 0,
+          "ld": 1,
+          "ad": 1,
+          "lx": 1,
+          "ly": 1
+        }
+      }
     }
   ],
   "editor": {
