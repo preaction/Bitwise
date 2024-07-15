@@ -93,14 +93,11 @@ import { defineComponent } from "vue";
 export default defineComponent({
   props: ['modelValue', 'scene'],
   data() {
-    return {
-      ...this.modelValue,
-    };
+    return {};
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      this.$emit( 'update:modelValue', this.modelValue );
     },
   },
 });
