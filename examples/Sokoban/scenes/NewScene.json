@@ -40,7 +40,9 @@
           "rw": 1,
           "sx": 1,
           "sy": 1,
-          "sz": 1
+          "sz": 1,
+          "x": "",
+          "y": ".5"
         },
         "OrthographicCamera": {
           "frustum": 10,
@@ -63,8 +65,8 @@
           "ry": "0",
           "rz": "0",
           "rw": "0",
-          "x": "4",
-          "y": 0,
+          "x": 0,
+          "y": -4,
           "z": "1"
         },
         "Sprite": {
@@ -72,7 +74,9 @@
             "$asset": "Texture",
             "path": "images/sokoban_spritesheet@2.xml/player_03.png",
             "atlas": "images/sokoban_spritesheet@2.xml"
-          }
+          },
+          "repeatX": 1,
+          "repeatY": 1
         },
         "GridMovement": {},
         "RigidBody": {
@@ -178,7 +182,7 @@
         "Sprite": {
           "texture": {
             "$asset": "Texture",
-            "path": "images/sokoban_spritesheet@2.xml/environment_02.png",
+            "path": "images/sokoban_spritesheet@2.xml/crate_27.png",
             "atlas": "images/sokoban_spritesheet@2.xml"
           }
         },
@@ -235,8 +239,8 @@
             "path": "images/sokoban_spritesheet@2.xml/ground_04.png",
             "atlas": "images/sokoban_spritesheet@2.xml"
           },
-          "repeatX": 11,
-          "repeatY": 11
+          "repeatX": 9,
+          "repeatY": 9
         },
         "RigidBody": {
           "vx": 0,
@@ -251,7 +255,7 @@
           "ax": "0",
           "ay": "0",
           "az": "0",
-          "mass": 0.1,
+          "mass": 0,
           "ld": 1,
           "ad": 1
         },
@@ -279,7 +283,7 @@
         "Sprite": {
           "texture": {
             "$asset": "Texture",
-            "path": "images/sokoban_spritesheet@2.xml/environment_10.png",
+            "path": "images/sokoban_spritesheet@2.xml/crate_30.png",
             "atlas": "images/sokoban_spritesheet@2.xml"
           }
         },
@@ -365,6 +369,209 @@
           "ly": 1
         }
       }
+    },
+    {
+      "$schema": "1",
+      "name": "Back wall",
+      "active": true,
+      "components": {
+        "Transform": {
+          "x": "3",
+          "y": 5,
+          "z": "1"
+        },
+        "Sprite": {
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/block_03.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          },
+          "repeatX": 5,
+          "repeatY": 1
+        },
+        "BoxCollider": {},
+        "RigidBody": {
+          "lx": 0,
+          "ly": 0,
+          "lz": 0,
+          "az": 0,
+          "ay": 0,
+          "ax": 0
+        }
+      }
+    },
+    {
+      "$schema": "1",
+      "name": "Back wall (2)",
+      "type": "Entity",
+      "active": true,
+      "components": {
+        "Transform": {
+          "x": -3,
+          "y": 5,
+          "z": "1",
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "repeatX": 5,
+          "repeatY": 1,
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/block_03.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          }
+        },
+        "BoxCollider": {},
+        "RigidBody": {
+          "mass": 1,
+          "lx": 0,
+          "ly": 0,
+          "lz": 0,
+          "az": 0,
+          "ay": 0,
+          "ax": 0
+        }
+      },
+      "children": []
+    },
+    {
+      "$schema": "1",
+      "name": "Right Wall",
+      "type": "Entity",
+      "active": true,
+      "components": {
+        "Transform": {
+          "x": "5",
+          "y": "0",
+          "z": "1",
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "repeatX": 1,
+          "repeatY": 9,
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/block_03.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          }
+        },
+        "RigidBody": {
+          "lx": 0,
+          "ly": 0,
+          "lz": 0,
+          "az": 0,
+          "ay": 0,
+          "ax": 0
+        },
+        "BoxCollider": {
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0
+        }
+      },
+      "children": []
+    },
+    {
+      "$schema": "1",
+      "name": "Left Wall",
+      "type": "Entity",
+      "active": true,
+      "components": {
+        "Transform": {
+          "x": "-5",
+          "y": 0,
+          "z": "1",
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "repeatX": 1,
+          "repeatY": 9,
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/block_03.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          }
+        },
+        "RigidBody": {
+          "lx": 0,
+          "ly": 0,
+          "lz": 0,
+          "az": 0,
+          "ay": 0,
+          "ax": 0
+        },
+        "BoxCollider": {}
+      },
+      "children": []
+    },
+    {
+      "$schema": "1",
+      "name": "Door (Open)",
+      "active": true,
+      "components": {
+        "Transform": {
+          "y": "4.81",
+          "z": "0"
+        },
+        "Sprite": {
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/crate_36.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          }
+        }
+      }
+    },
+    {
+      "$schema": "1",
+      "name": "Door (Closed)",
+      "type": "Entity",
+      "active": false,
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": "5",
+          "z": 1,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "rw": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
+        "Sprite": {
+          "repeatX": 0,
+          "repeatY": 0,
+          "texture": {
+            "$asset": "Texture",
+            "path": "images/sokoban_spritesheet@2.xml/crate_06.png",
+            "atlas": "images/sokoban_spritesheet@2.xml"
+          }
+        }
+      },
+      "children": []
     }
   ],
   "editor": {
