@@ -389,7 +389,11 @@
           "repeatX": 5,
           "repeatY": 1
         },
-        "BoxCollider": {},
+        "BoxCollider": {
+          "sx": 5,
+          "sy": 1,
+          "sz": 2
+        },
         "RigidBody": {
           "lx": 0,
           "ly": 0,
@@ -427,7 +431,11 @@
             "atlas": "images/sokoban_spritesheet@2.xml"
           }
         },
-        "BoxCollider": {},
+        "BoxCollider": {
+          "sx": 5,
+          "sy": 1,
+          "sz": 2
+        },
         "RigidBody": {
           "mass": 1,
           "lx": 0,
@@ -477,8 +485,8 @@
         },
         "BoxCollider": {
           "sx": 1,
-          "sy": 1,
-          "sz": 1,
+          "sy": 9,
+          "sz": 2,
           "ox": 0,
           "oy": 0,
           "oz": 0
@@ -521,7 +529,14 @@
           "ay": 0,
           "ax": 0
         },
-        "BoxCollider": {}
+        "BoxCollider": {
+          "sy": 9,
+          "sz": 2,
+          "sx": 1,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0
+        }
       },
       "children": []
     },
@@ -569,9 +584,55 @@
             "path": "images/sokoban_spritesheet@2.xml/crate_06.png",
             "atlas": "images/sokoban_spritesheet@2.xml"
           }
+        },
+        "BoxCollider": {},
+        "RigidBody": {
+          "lx": 0,
+          "ly": 0,
+          "lz": 0,
+          "az": 0,
+          "ay": 0,
+          "ax": 0,
+          "mass": 1
         }
       },
       "children": []
+    },
+    {
+      "$schema": "1",
+      "name": "Bottom Wall",
+      "active": true,
+      "components": {
+        "Transform": {
+          "x": "0",
+          "y": "-5",
+          "z": "0",
+          "rx": "0",
+          "ry": "0",
+          "rz": "0",
+          "sx": "1",
+          "sy": "1",
+          "sz": "1"
+        },
+        "BoxCollider": {
+          "sx": 9,
+          "sy": 1,
+          "sz": 2,
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "trigger": 0
+        },
+        "RigidBody": {
+          "mass": 1,
+          "lx": 0,
+          "ly": 0,
+          "lz": 0,
+          "ax": 0,
+          "ay": 0,
+          "az": 0
+        }
+      }
     }
   ],
   "editor": {
