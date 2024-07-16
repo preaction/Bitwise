@@ -97,7 +97,7 @@
   },
   "peerDependencies": {
     "ammojs-typed": "^1.0.6",
-    "bitecs": "^0.3.38",
+    "bitecs": "^0.3.40",
     "three": "^0.166.0"
   }
 }
