@@ -221,6 +221,7 @@ describe('EntityPanel', () => {
     test('create a new, blank entity', async () => {
       await wrapper.get('[data-test=new-entity] button').trigger('click');
       await wrapper.get('[data-test=new-entity] li:first-child').trigger('click');
+      await flushPromises();
 
       const newName = 'New Entity';
       expect(mockUpdate).toHaveBeenCalledTimes(1);
@@ -242,6 +243,17 @@ describe('EntityPanel', () => {
       expect((nameInput.element as HTMLInputElement).value).toBe(newName);
       const activeInput = entityPane.get('[name=active]')
       expect((activeInput.element as HTMLInputElement).checked).toBeTruthy();
+
+      // New, blank entity has Transform component with default values
+      const transformFields = {
+        x: 0, y: 0, z: 0,
+        sx: 1, sy: 1, sz: 1,
+        rx: 0, ry: 0, rz: 0, rw: 1,
+      };
+      for (const [field, value] of Object.entries(transformFields)) {
+        const fieldElement = entityPane.get(`[name=${field}]`);
+        expect((fieldElement.element as HTMLInputElement).value).toBe("" + value);
+      }
     });
 
     test('duplicate an entity', async () => {

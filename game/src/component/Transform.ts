@@ -43,5 +43,9 @@ export default class Transform extends Component {
     this.store.sx[eid] = 1;
     this.store.sy[eid] = 1;
     this.store.sz[eid] = 1;
+    this.store.rx[eid] = 0;
+    this.store.ry[eid] = 0;
+    this.store.rz[eid] = 0;
+    this.store.rw[eid] = 1;
   }
 }

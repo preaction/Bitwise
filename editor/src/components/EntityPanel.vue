@@ -118,15 +118,21 @@ export default defineComponent({
 
     async addEntity(...components: string[]) {
       if (!this.scene) return;
-      const entityData: EntityData = {
+
+      // Use the game framework to create the entity so that game
+      // Component classes can set up defaults and add dependent
+      // Components.
+      // XXX: Fix this to ensure entity path is unique before adding
+      // entity
+      const entity = this.scene.addEntity();
+      await entity.thaw({
         $schema: '1',
         name: 'New Entity',
         active: true,
-      };
-      entityData.components = {};
-      for (const c of components) {
-        entityData.components[c] = {};
-      }
+      });
+      await Promise.all(components.map(c => entity.addComponent(c, {})))
+
+      const entityData = entity.freeze();
       if (this.isPrefab) {
         this.entities[0].children ??= [];
         this.entities[0].children.push(entityData);
@@ -134,11 +140,6 @@ export default defineComponent({
       else {
         this.entities.push(entityData);
       }
-      // XXX: Fix this to ensure entity path is unique before adding
-      // entity
-
-      const entity = this.scene.addEntity();
-      await entity.thaw(entityData);
 
       this.selectedEntityPath = entity.path;
       this.selectedEntityData = entityData;
