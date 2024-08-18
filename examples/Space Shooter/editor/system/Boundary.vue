@@ -10,8 +10,8 @@ export default defineComponent({
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      this.$emit('update:modelValue', this.$data);
+      this.$emit('update', this.$data);
     },
   },
 });
@@ -20,7 +20,7 @@ export default defineComponent({
   <div>
     <div class="d-flex align-items-center">
       <label>Boundary</label>
-      <InputGameObject v-model="$data.boundaryPath" type="entity" @update="update" />
+      <InputEntity v-model="$data.boundaryPath" type="entity" @update="update" />
     </div>
   </div>
 </template>

@@ -22,8 +22,8 @@ export default defineComponent({
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      this.$emit('update:modelValue', this.$data);
+      this.$emit('update', this.$data);
     },
   },
 });
@@ -32,13 +32,12 @@ export default defineComponent({
   <div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Scene to Load</label>
-      <InputGameObject v-model="loadScenePath" type="scene" drop-effect="link" />
+      <InputAsset v-model="loadScenePath" type="scene" drop-effect="link" />
     </div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Progress Bar</label>
-      <InputGameObject v-model="progressEntityPath" type="entity" drop-effect="link" />
+      <InputEntity v-model="progressEntityPath" type="entity" drop-effect="link" />
     </div>
   </div>
 </template>
-<style>
-</style>
+<style></style>

@@ -3,8 +3,8 @@ import { defineComponent, toRaw } from "vue";
 import type Backend from "../Backend.js";
 import type Project from "../model/Project.js";
 export default defineComponent({
-  props: [ 'modelValue' ],
-  emits: [ 'update' ],
+  props: ['modelValue'],
+  emits: ['update'],
   inject: ['project', 'backend'],
   data() {
     return {
@@ -17,9 +17,9 @@ export default defineComponent({
     };
   },
   async created() {
-    const configJson = await this.getBackend().readItemData( this.projectName, 'bitwise.json' );
-    if ( configJson ) {
-      const config = JSON.parse( configJson );
+    const configJson = await this.getBackend().readItemData(this.projectName, 'bitwise.json');
+    if (configJson) {
+      const config = JSON.parse(configJson);
       this.release = {
         ...this.release,
         ...config.release,
@@ -27,23 +27,23 @@ export default defineComponent({
     }
   },
   computed: {
-    projectName():string {
+    projectName(): string {
       const project = this.project as Project;
       return project.name;
     },
   },
   methods: {
-    getBackend():Backend {
+    getBackend(): Backend {
       return this.backend as Backend;
     },
-    async releaseGame( type:string ) {
+    async releaseGame(type: string) {
       this.busy = true;
       let newConfig = {
         release: toRaw(this.release),
       };
-      const configJson = await this.getBackend().readItemData( this.projectName, 'bitwise.json' );
-      if ( configJson ) {
-        const config = JSON.parse( configJson );
+      const configJson = await this.getBackend().readItemData(this.projectName, 'bitwise.json');
+      if (configJson) {
+        const config = JSON.parse(configJson);
         newConfig = {
           ...config,
           ...newConfig,
@@ -51,9 +51,9 @@ export default defineComponent({
       }
       const backend = this.getBackend();
       await Promise.all([
-        backend.writeItemData( this.projectName, 'bitwise.json', JSON.stringify(newConfig, null, 2) ),
-        backend.releaseProject( this.projectName, 'zip' ),
-      ]).then( () => { this.busy = false } );
+        backend.writeItemData(this.projectName, 'bitwise.json', JSON.stringify(newConfig, null, 2)),
+        backend.releaseProject(this.projectName, 'zip'),
+      ]).then(() => { this.busy = false });
     },
   },
 });
@@ -66,12 +66,11 @@ export default defineComponent({
       <h6>Itch.io Browser Game</h6>
       <div>
         <label class="me-2">Initial Scene</label>
-        <InputGameObject data-testid="inputScene" v-model="release.zip.scene" type="scene" style="width: 30vw"/>
+        <InputAsset data-testid="inputScene" v-model="release.zip.scene" type="scene" style="width: 30vw" />
       </div>
       <button @click="releaseGame('zip')" :disabled="busy">Release</button>
     </section>
   </div>
 </template>
 
-<style>
-</style>
+<style></style>

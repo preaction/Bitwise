@@ -10,8 +10,8 @@ export default defineComponent({
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      this.$emit('update:modelValue', this.$data);
+      this.$emit('update', this.$data);
     },
   },
 });
@@ -20,9 +20,8 @@ export default defineComponent({
   <div>
     <div class="d-flex">
       <label>Weapon</label>
-      <InputGameObject class="flex-fill" v-model="$data.weapon" type="prefab" @update="update" />
+      <InputEntity class="flex-fill" v-model="$data.weapon" type="prefab" @update="update" />
     </div>
   </div>
 </template>
-<style>
-</style>
+<style></style>

@@ -5,7 +5,6 @@ export default defineComponent({
   methods: {
     update(data: any) {
       this.$emit('update:modelValue', data);
-      this.$emit('update', data);
     },
     dragover(event: DragEvent) {
       if (!event.dataTransfer) {
@@ -22,7 +21,6 @@ export default defineComponent({
       if (data) {
         event.preventDefault();
         event.dataTransfer.dropEffect = this.dropEffect || "link";
-        console.log(`drop data`, JSON.stringify(data));
         this.update(JSON.parse(data));
       }
       else {
@@ -39,7 +37,6 @@ export default defineComponent({
         return this.modelValue.split('/').pop();
       }
       if (typeof this.modelValue === 'object') {
-        console.log(this.modelValue);
         if (!this.modelValue.path) {
           return;
         }

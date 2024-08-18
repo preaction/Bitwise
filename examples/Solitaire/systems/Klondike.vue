@@ -34,8 +34,8 @@ export default defineComponent({
   },
   methods: {
     update() {
-      this.$emit( 'update:modelValue', this.$data );
-      this.$emit( 'update', this.$data );
+      this.$emit('update:modelValue', this.$data);
+      this.$emit('update', this.$data);
     },
   },
 });
@@ -44,25 +44,24 @@ export default defineComponent({
   <div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Deck</label>
-      <InputGameObject v-model="deckEntityPath" type="entity" drop-effect="link" />
+      <InputEntity v-model="deckEntityPath" type="entity" drop-effect="link" />
     </div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Discard</label>
-      <InputGameObject v-model="discardEntityPath" type="entity" drop-effect="link" />
+      <InputEntity v-model="discardEntityPath" type="entity" drop-effect="link" />
     </div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Menu Button</label>
-      <InputGameObject v-model="menuButtonEntityPath" type="entity" drop-effect="link" />
+      <InputEntity v-model="menuButtonEntityPath" type="entity" drop-effect="link" />
     </div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Menu</label>
-      <InputGameObject v-model="menuEntityPath" type="entity" drop-effect="link" />
+      <InputEntity v-model="menuEntityPath" type="entity" drop-effect="link" />
     </div>
     <div class="d-flex justify-content align-items-center">
       <label class="me-1">Win Dialog</label>
-      <InputGameObject v-model="winEntityPath" type="entity" drop-effect="link" />
+      <InputEntity v-model="winEntityPath" type="entity" drop-effect="link" />
     </div>
   </div>
 </template>
-<style>
-</style>
+<style></style>
