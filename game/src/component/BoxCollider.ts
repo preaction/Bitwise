@@ -10,7 +10,7 @@ import Component from '../Component.js';
  * obstacles.
  */
 export default class BoxCollider extends Component {
-  declare store:{
+  declare store: {
     trigger: number[],
     ox: number[],
     oy: number[],
@@ -29,5 +29,16 @@ export default class BoxCollider extends Component {
       sy: bitecs.Types.f32,
       sz: bitecs.Types.f32,
     }
+  }
+
+  addEntity(eid: number) {
+    super.addEntity(eid);
+    this.store.trigger[eid] = 0;
+    this.store.ox[eid] = 0;
+    this.store.oy[eid] = 0;
+    this.store.oz[eid] = 0;
+    this.store.sx[eid] = 1;
+    this.store.sy[eid] = 1;
+    this.store.sz[eid] = 1;
   }
 }

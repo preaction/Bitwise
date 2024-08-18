@@ -110,9 +110,12 @@ export default defineComponent({
       if (this.hasComponent(name)) {
         return;
       }
-      this.selectedEntityData.components ??= {}
-      this.selectedEntityData.components[name] = {};
+      // Use the game framework to add the component so that 
+      // Component classes can set up defaults and add dependent
+      // Components.
       this.selectedEntity.addComponent(name, {});
+      this.selectedEntityData.components ??= {}
+      this.selectedEntityData.components[name] = this.selectedEntity.getComponent(name);
       this.update();
     },
 

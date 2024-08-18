@@ -45,4 +45,23 @@ export default class RigidBody extends Component {
       ad: bitecs.Types.f32,
     }
   }
+
+  addEntity(eid: number) {
+    super.addEntity(eid);
+    this.store.mass[eid] = 0;
+    this.store.vx[eid] = 0;
+    this.store.vy[eid] = 0;
+    this.store.vz[eid] = 0;
+    this.store.rx[eid] = 0;
+    this.store.ry[eid] = 0;
+    this.store.rz[eid] = 0;
+    this.store.lx[eid] = 0;
+    this.store.ly[eid] = 0;
+    this.store.lz[eid] = 0;
+    this.store.ld[eid] = 0;
+    this.store.ax[eid] = 0;
+    this.store.ay[eid] = 0;
+    this.store.az[eid] = 0;
+    this.store.ad[eid] = 0;
+  }
 }

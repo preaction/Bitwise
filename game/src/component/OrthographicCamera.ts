@@ -12,7 +12,7 @@ import Component from '../Component.js';
  * sections of the screen in 3D games (like a UI overlay).
  */
 export default class OrthographicCamera extends Component {
-  declare store:{
+  declare store: {
     frustum: number[],
     zoom: number[],
     near: number[],
@@ -25,5 +25,13 @@ export default class OrthographicCamera extends Component {
       near: bitecs.Types.f32,
       far: bitecs.Types.f32,
     };
+  }
+
+  addEntity(eid: number) {
+    super.addEntity(eid);
+    this.store.frustum[eid] = 10;
+    this.store.zoom[eid] = 1;
+    this.store.near[eid] = 0;
+    this.store.far[eid] = 2000;
   }
 }

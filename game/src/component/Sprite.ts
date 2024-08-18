@@ -23,6 +23,12 @@ export default class Sprite extends Component {
     }
   }
 
+  addEntity(eid: number) {
+    super.addEntity(eid);
+    this.store.repeatX[eid] = 1;
+    this.store.repeatY[eid] = 1;
+  }
+
   freezeEntity(eid: number) {
     // Freeze always gives a texture ref
     const data = super.freezeEntity(eid);
