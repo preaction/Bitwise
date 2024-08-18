@@ -4,6 +4,9 @@ let instanceNumber = 0;
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
+const ONE_SECOND = 1000; // in milliseconds
+const HOVER_TIMEOUT = 1 * ONE_SECOND;
+
 type TabInfo = {
   id: string,
   label: string,
@@ -59,13 +62,28 @@ onMounted(() => {
   }
   showTab(firstShowingPanel ?? 0);
 })
+
+// Users should be able to switch between tabs while dragging something
+let dragSwitchTimeout: ReturnType<typeof setTimeout>;
+function dragEnterTab(index: number) {
+  dragSwitchTimeout = setTimeout(
+    () => {
+      showTab(index);
+    },
+    HOVER_TIMEOUT,
+  );
+}
+function dragLeaveTab() {
+  clearTimeout(dragSwitchTimeout);
+}
 </script>
 
 <template>
   <div :id="id" ref="tabview" class="tabview">
     <ul role="tablist">
       <li v-for="tab, i in tabs" role="tab" :aria-controls="tab.panelId" :id="tab.id"
-        :aria-selected="tab.selected || undefined" @click="showTab(i)">
+        :aria-selected="tab.selected || undefined" @click="showTab(i)" @dragenter="dragEnterTab(i)"
+        @dragleave="dragLeaveTab">
         {{ tab.label }}
       </li>
     </ul>
