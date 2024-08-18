@@ -17,7 +17,9 @@
     },
     {
       "name": "Sokoban",
-      "data": {}
+      "data": {
+        "doorEntity": "Door (Closed)"
+      }
     },
     {
       "name": "Physics",
@@ -37,12 +39,15 @@
       "components": {
         "Transform": {
           "z": 2000,
-          "rw": 1,
+          "rw": "1",
           "sx": 1,
           "sy": 1,
           "sz": 1,
-          "x": "",
-          "y": ".5"
+          "x": "0",
+          "y": ".5",
+          "rz": "0",
+          "ry": "0",
+          "rx": "0"
         },
         "OrthographicCamera": {
           "frustum": 10,
@@ -562,7 +567,7 @@
       "$schema": "1",
       "name": "Door (Closed)",
       "type": "Entity",
-      "active": false,
+      "active": true,
       "components": {
         "Transform": {
           "x": 0,
@@ -585,7 +590,14 @@
             "atlas": "images/sokoban_spritesheet@2.xml"
           }
         },
-        "BoxCollider": {},
+        "BoxCollider": {
+          "ox": 0,
+          "oy": 0,
+          "oz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1
+        },
         "RigidBody": {
           "lx": 0,
           "ly": 0,

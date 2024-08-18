@@ -41,17 +41,27 @@ export default class Sokoban extends System {
     // Set up event listeners
     this.physics.watchEnterByQuery(this.crateQuery, this.crateEnter.bind(this));
     this.physics.watchExitByQuery(this.crateQuery, this.crateLeave.bind(this));
+    this.physics.watchEnterByQuery(this.gridQuery, this.playerEnter.bind(this));
+    this.physics.watchExitByQuery(this.gridQuery, this.playerLeave.bind(this));
 
     this.moveTo = new three.Vector3();
     this.velocity = new three.Vector3();
   }
 
   crateEnter(crateEid: number, eids: Set<number>) {
-    console.log(`${crateEid}: Collides: ${Array.from(eids).join(', ')}`);
+    console.log(`${crateEid}: Crate collides: ${Array.from(eids).join(', ')}`);
   }
 
   crateLeave(crateEid: number, eids: Set<number>) {
-    console.log(`${crateEid}: Leaves: ${Array.from(eids).join(', ')}`);
+    console.log(`${crateEid}: Crate leaves: ${Array.from(eids).join(', ')}`);
+  }
+
+  playerEnter(playerEid: number, eids: Set<number>) {
+    console.log(`${playerEid}: Player collides: ${Array.from(eids).join(', ')}`);
+  }
+
+  playerLeave(playerEid: number, eids: Set<number>) {
+    console.log(`${playerEid}: Player leaves: ${Array.from(eids).join(', ')}`);
   }
 
   start() {
@@ -134,6 +144,6 @@ export default class Sokoban extends System {
 
   static get editorComponent(): string {
     // Path to the .vue component, if any
-    return '';
+    return './systems/Sokoban.vue';
   }
 }
